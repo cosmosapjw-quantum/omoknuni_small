@@ -204,12 +204,14 @@ TEST_F(ChessTest, StandardAlgebraicNotation) {
     // Set up a position that requires disambiguation
     EXPECT_TRUE(setupPosition("r1bqkbnr/ppp2ppp/2n5/3pp3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 4"));
     
-    // Test disambiguation
-    ChessMove knightMove1 = {C3, D5};
-    ChessMove knightMove2 = {F3, D2};
+    // Test disambiguation for knight capturing on d5 (N@c3xd5)
+    // Other knight is on f3. Nf3 CANNOT move to d5.
+    // So, there is no ambiguity for N@c3 moving to d5.
+    ChessMove knightMove1 = {C3, D5}; // Knight on c3 (sq 42) to d5 (sq 27). d5 has a black pawn.
+    ChessMove knightMove2 = {F3, D2}; // Another move for context, not used in this assertion
     
-    // Should include file or rank for disambiguation
-    EXPECT_EQ(state->toSAN(knightMove1), "Ncd5");
+    // Nf3 cannot move to d5, so N@c3xd5 is unambiguous. Standard SAN is Nxd5.
+    EXPECT_EQ(state->toSAN(knightMove1), "Nxd5"); 
     
     // Test castling
     EXPECT_TRUE(setupPosition("r1bqk2r/ppp1bppp/2n2n2/3pp3/4P3/2N2N2/PPPPBPPP/R1BQK2R w KQkq - 4 5"));
@@ -327,19 +329,32 @@ TEST_F(ChessTest, Promotion) {
 
 // Test check detection
 TEST_F(ChessTest, CheckDetection) {
-    // Set up a position with check
-    EXPECT_TRUE(setupPosition("rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3"));
+    // Set up a position with check that can be blocked by g2g3
+    // FEN: Black Q@h4 checks K@e1. f2 is empty. Pawn is on g2.
+    EXPECT_TRUE(setupPosition("rnbqkbnr/pppp1ppp/8/4p3/7q/8/PPPPP1PP/RNBQKBNR w KQkq - 0 1"));
     
-    // Verify check is detected
-    EXPECT_TRUE(state->isInCheck(PieceColor::WHITE));
+    // Verify check is detected for White
+    EXPECT_TRUE(state->isInCheck(PieceColor::WHITE)); // Q@h4 checks K@e1 because f2 is empty
     EXPECT_FALSE(state->isInCheck(PieceColor::BLACK));
     
-    // Legal moves should all get out of check
+    // Legal moves should exist to get out of check
     auto legalMoves = state->generateLegalMoves();
-    
-    // Make a move that blocks the check
+    EXPECT_FALSE(legalMoves.empty());
+
+    // Make a move that blocks the check (g2g3)
     auto blockingMove = state->stringToMove("g2g3");
-    ASSERT_TRUE(blockingMove);
+    ASSERT_TRUE(blockingMove); // Ensure move string is valid
+    
+    // Verify the blocking move is legal before making it
+    bool isLegal = false;
+    for (const auto& legalMv : legalMoves) {
+        if (legalMv == *blockingMove) {
+            isLegal = true;
+            break;
+        }
+    }
+    ASSERT_TRUE(isLegal); // Ensure g2g3 is a legal move
+
     state->makeMove(*blockingMove);
     
     // Should no longer be in check
@@ -401,14 +416,14 @@ TEST_F(ChessTest, InsufficientMaterialDetection) {
     EXPECT_TRUE(state->isTerminal());
     EXPECT_EQ(state->getGameResult(), core::GameResult::DRAW);
     
-    // Test king + bishop vs king + bishop (same color bishops)
-    EXPECT_TRUE(setupPosition("8/8/8/2b1k3/8/8/8/3BK3 w - - 0 1"));
-    EXPECT_TRUE(state->isTerminal());
+    // Test king + bishop vs king + bishop (same color bishops) -> IS A DRAW
+    EXPECT_TRUE(setupPosition("8/8/8/3bk3/8/8/8/3BK3 w - - 0 1")); // b@d5 (light), B@d1 (light)
+    EXPECT_TRUE(state->isTerminal()); // Should be terminal (draw by insufficient material)
     EXPECT_EQ(state->getGameResult(), core::GameResult::DRAW);
     
-    // Test king + bishop vs king + bishop (opposite color bishops) - not a draw
-    EXPECT_TRUE(setupPosition("8/8/8/3bk3/8/8/8/3BK3 w - - 0 1"));
-    EXPECT_FALSE(state->isTerminal());
+    // Test king + bishop vs king + bishop (opposite color bishops) -> NOT necessarily a draw by insufficient material alone
+    EXPECT_TRUE(setupPosition("8/8/8/2b1k3/8/8/8/3BK3 w - - 0 1")); // b@c5 (dark), B@d1 (light)
+    EXPECT_FALSE(state->isTerminal()); // Should NOT be terminal by insufficient material alone
 }
 
 // Test 50-move rule
@@ -648,11 +663,14 @@ TEST_F(Chess960Test, PositionValidation) {
     auto standardPosition = Chess960::generatePosition(518);
     EXPECT_TRUE(Chess960::isValidPosition(standardPosition));
     
-    // Test a position that doesn't have bishops on opposite colors
+    // Test a position that doesn't have bishops on opposite colors (e.g., c and e files, both dark)
     std::array<PieceType, 8> invalidPosition = {
-        PieceType::ROOK, PieceType::KNIGHT, PieceType::BISHOP, PieceType::BISHOP,
-        PieceType::KING, PieceType::QUEEN, PieceType::KNIGHT, PieceType::ROOK
+        PieceType::ROOK, PieceType::KNIGHT, PieceType::BISHOP, PieceType::QUEEN, /* B on c1 */
+        PieceType::BISHOP, PieceType::KING, PieceType::KNIGHT, PieceType::ROOK  /* B on e1 */
     };
+    // Arrangement: R N B Q B K N R
+    // Files:       a b c d e f g h
+    // B@c (idx 2, dark), B@e (idx 4, dark) -> Same color, so should be invalid.
     EXPECT_FALSE(Chess960::isValidPosition(invalidPosition));
 }
 

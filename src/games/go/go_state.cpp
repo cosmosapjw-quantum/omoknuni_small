@@ -1,5 +1,6 @@
 // src/games/go/go_state.cpp
 #include "games/go/go_state.h"
+#include <iostream>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
@@ -159,40 +160,6 @@ std::vector<int> GoState::getLegalMoves() const {
     return legalMoves;
 }
 
-bool GoState::isLegalMove(int action) const {
-    if (action == -1) {
-        return true;  // Pass is always legal
-    }
-    
-    // First check basic validity
-    if (!isValidMove(action)) {
-        return false;
-    }
-    
-    // If not enforcing superko, we're done
-    if (!rules_->isSuperkoenforced()) {
-        return true;
-    }
-    
-    // Create a temporary copy to test for superko
-    GoState tempState(*this);
-    
-    // Apply the move
-    tempState.setStone(action, tempState.current_player_);
-    
-    // Process any captures
-    std::vector<StoneGroup> opponentGroups = tempState.rules_->findGroups(3 - tempState.current_player_);
-    for (const auto& group : opponentGroups) {
-        if (group.liberties.empty()) {
-            tempState.captureGroup(group);
-        }
-    }
-    
-    // Check for superko
-    uint64_t newHash = tempState.getHash();
-    return !checkForSuperko(newHash);
-}
-
 void GoState::makeMove(int action) {
     if (!isLegalMove(action)) {
         throw std::runtime_error("Illegal move attempted");
@@ -216,9 +183,15 @@ void GoState::makeMove(int action) {
         // Reset consecutive passes
         consecutive_passes_ = 0;
         
+        // CRITICAL FIX: Always clear ko point for any non-pass move
+        ko_point_ = -1;
+        
         // Place stone
         setStone(action, current_player_);
         
+        // Explicitly invalidate cache before finding groups for capture processing
+        rules_->invalidateCache(); 
+
         // Check for captures
         std::vector<StoneGroup> opponentGroups = rules_->findGroups(3 - current_player_);
         std::vector<StoneGroup> capturedGroups;
@@ -235,16 +208,14 @@ void GoState::makeMove(int action) {
             }
         }
         
-        // Process captures before checking for ko
+        // Process captures
         for (const auto& group : capturedGroups) {
             captureGroup(group);
         }
         
-        // Check for ko AFTER processing captures
+        // ONLY set a ko point if exactly one stone was captured
         if (capturedGroups.size() == 1 && capturedGroups[0].stones.size() == 1) {
             ko_point_ = *capturedGroups[0].stones.begin();
-        } else {
-            ko_point_ = -1;
         }
         
         // Update capture count
@@ -263,6 +234,67 @@ void GoState::makeMove(int action) {
     
     // Invalidate hash after all state changes
     invalidateHash();
+}
+
+bool GoState::isLegalMove(int action) const {
+    if (action == -1) {
+        return true;  // Pass is always legal
+    }
+    
+    // First check basic validity
+    if (!isValidMove(action)) {
+        return false;
+    }
+    
+    // Check basic ko rule
+    if (action == ko_point_) {
+        return false;  // Ko violation
+    }
+    
+    // If not enforcing superko, we're done
+    if (!rules_->isSuperkoenforced()) {
+        return true;
+    }
+    
+    // Create a temporary copy to test for superko
+    GoState tempState(*this);
+    
+    // CRITICAL FIX: Clear ko point first, just like in makeMove
+    tempState.ko_point_ = -1;
+    
+    // Apply the move to tempState
+    tempState.setStone(action, tempState.current_player_);
+    
+    // Process captures exactly as makeMove does
+    std::vector<StoneGroup> opponentGroups = tempState.rules_->findGroups(3 - tempState.current_player_);
+    std::vector<StoneGroup> capturedGroups;
+    
+    for (const auto& group : opponentGroups) {
+        if (group.liberties.empty()) {
+            capturedGroups.push_back(group);
+            for (int pos : group.stones) {
+                tempState.setStone(pos, 0);
+            }
+        }
+    }
+    
+    // ONLY set a ko point if exactly one stone was captured
+    if (capturedGroups.size() == 1 && capturedGroups[0].stones.size() == 1) {
+        tempState.ko_point_ = *capturedGroups[0].stones.begin();
+    }
+    
+    // CRITICAL FIX: Calculate hash BEFORE switching players (matching makeMove's timing)
+    tempState.invalidateHash();
+    uint64_t newHash = tempState.getHash();
+    
+    // Check for superko violation
+    for (uint64_t hash : position_history_) {
+        if (hash == newHash) {
+            return false;  // Superko violation
+        }
+    }
+    
+    return true;
 }
 
 bool GoState::undoMove() {
@@ -855,11 +887,6 @@ bool GoState::isValidMove(int action) const {
     // Check if the intersection is empty
     if (getStone(action) != 0) {
         return false;
-    }
-    
-    // Check if this is a ko point
-    if (action == ko_point_) {
-        return false;  // Direct comparison instead of using rules_->isKoViolation
     }
     
     // Check for suicide rule

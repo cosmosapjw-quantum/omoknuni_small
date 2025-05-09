@@ -8,38 +8,61 @@ namespace games {
 namespace gomoku {
 namespace testing {
 
+// Forward declarations for derived test classes
+class RenjuTest;
+class OmokTest;
+
 // Test fixture for Gomoku tests
 class GomokuTest : public ::testing::Test {
 protected:
     void SetUp() override { state = std::make_unique<GomokuState>(); }
     void TearDown() override { state.reset(); }
 
+    // Virtual methods to determine test type
+    virtual bool isRenjuTest() const { return false; }
+    virtual bool isOmokTest() const { return false; }
+
     // Interleave stones so that the move order is always legal and no
     // "dummy" stones are ever required.  The lists must satisfy
     // |black| == |white| or |black| == |white| + 1.
     void setBoard(const std::vector<std::pair<int,int>>& black_stones,
-                  const std::vector<std::pair<int,int>>& white_stones,
-                  int current_player = 0) {
-        state = std::make_unique<GomokuState>();
-        auto idx = [&](auto p) { return p.first * state->getBoardSize() + p.second; };
-
+                const std::vector<std::pair<int,int>>& white_stones,
+                int current_player = 0) {
+        // Save the current rule settings before creating a new state
+        bool use_renju = false;
+        bool use_omok = false;
+        int board_size = 15;
+        
+        // If state already exists, get its current settings
+        if (state) {
+            // We need to infer settings from the state
+            // For RenjuTest, use_renju should be true
+            // For OmokTest, use_omok should be true
+            use_renju = isRenjuTest();
+            use_omok = isOmokTest();
+            board_size = state->getBoardSize();
+        }
+        
+        // Create a new state with the correct settings
+        state = std::make_unique<GomokuState>(board_size, use_renju, use_omok, 0, false);
+        
         // Place all BLACK stones
         for (const auto& bs : black_stones) {
-            state->setStone(idx(bs), BLACK);
+            state->setStoneForTesting(bs.first, bs.second, BLACK);
         }
         
         // Place all WHITE stones
         for (const auto& ws : white_stones) {
-            state->setStone(idx(ws), WHITE);
+            state->setStoneForTesting(ws.first, ws.second, WHITE);
         }
         
-        // Set the current player if specified, otherwise use default logic
+        // Set the current player
         if (current_player > 0) {
-            state->setCurrentPlayer(current_player);
+            state->setCurrentPlayerForTesting(current_player);
         } else {
             // Default player is BLACK (1) if black stones <= white stones, otherwise WHITE (2)
             int player = (black_stones.size() <= white_stones.size()) ? BLACK : WHITE;
-            state->setCurrentPlayer(player);
+            state->setCurrentPlayerForTesting(player);
         }
     }
     
@@ -340,37 +363,20 @@ protected:
         // For Omok rules: board_size=15, use_renju=false, use_omok=true, seed=0, use_pro_long_opening=false
         state = std::make_unique<GomokuState>(15, false, true, 0, false); 
     }
+
+    // Override isOmokTest to return true for OmokTest
+    bool isOmokTest() const override { return true; }
 };
 
 // Test Omok double-three detection in '+' shape
 TEST_F(OmokTest, OmokDoubleThreePlusShape) {
-    // Create a position with a potential double-three in '+' shape
-    /*
-        . . . . . . .
-        . . . . . . .
-        . . . B . . .
-        . . B . B . .
-        . . . B . . .
-        . . . . . . .
-        . . . . . . .
-    */
-    setBoard({{2,3},{3,2},{3,4},{4,3}}, {{8,8}});
+    setBoard({{2,3},{3,2},{3,4},{4,3}}, {{8,8}}, BLACK);
     EXPECT_FALSE(state->isLegalMove(3 * 15 + 3));     // (3,3) creates double-three in '+' shape
 }
 
 // Test Omok double-three detection in '×' shape
 TEST_F(OmokTest, OmokDoubleThreeXShape) {
-    // Create a position with a potential double-three in '×' shape
-    /*
-        . . . . . . .
-        . . . . . . .
-        . . B . B . .
-        . . . . . . .
-        . . B . B . .
-        . . . . . . .
-        . . . . . . .
-    */
-    setBoard({{2,2},{2,4},{4,2},{4,4}}, {{8,8}});
+    setBoard({{2,2},{2,4},{4,2},{4,4}}, {{8,8}}, BLACK);
     EXPECT_FALSE(state->isLegalMove(3 * 15 + 3));     // (3,3) creates double-three in '×' shape
 }
 
@@ -392,34 +398,16 @@ TEST_F(OmokTest, OmokDoubleThreeCorner_SE) {
 
 // Test Omok double-three detection in '┌' shape (NE corner)
 TEST_F(OmokTest, OmokDoubleThreeCorner_NE) {
-    // Create a position with a potential double-three in '┌' shape
-    /*
-        . . . . . . .
-        . . . . . . .
-        . . B . . . .
-        . . B . . . .
-        . . B B . . .
-        . . . . . . .
-        . . . . . . .
-    */
-    setBoard({{2,3},{2,2},{3,2},{4,3}}, {{8,8}});
-    EXPECT_FALSE(state->isLegalMove(3 * 15 + 3));     // (3,3) creates double-three in '┌' shape
+    // Action A=(2,2) forms vertical _B(1,2)A(2,2)B(3,2)_ and horizontal _B(2,1)A(2,2)B(2,3)_
+    setBoard({{1,2},{3,2},{2,1},{2,3}}, {{8,8}}, BLACK);
+    EXPECT_FALSE(state->isLegalMove(2 * 15 + 2)); // Action (2,2)
 }
 
 // Test Omok double-three detection in '└' shape (SW corner)
 TEST_F(OmokTest, OmokDoubleThreeCorner_SW) {
-    // Create a position with a potential double-three in '└' shape
-    /*
-        . . . . . . .
-        . . . . . . .
-        . . . . . . .
-        . . . . B . .
-        . . . B B . .
-        . . . . . . .
-        . . . . . . .
-    */
-    setBoard({{4,3},{4,4},{3,4},{2,3}}, {{8,8}});
-    EXPECT_FALSE(state->isLegalMove(3 * 15 + 3));     // (3,3) creates double-three in '└' shape
+    // Action A=(2,1) forms horizontal _A(2,1)B(2,2)B(2,3)_ and vertical _B(1,1)A(2,1)B(3,1)_
+    setBoard({{2,2},{2,3},{1,1},{3,1}}, {{8,8}}, BLACK);
+    EXPECT_FALSE(state->isLegalMove(2 * 15 + 1)); // Action (2,1)
 }
 
 // Test Omok double-three detection in '┘' shape (NW corner)
@@ -440,65 +428,25 @@ TEST_F(OmokTest, OmokDoubleThreeCorner_NW) {
 
 // Test Omok double-three detection in '├' shape (West-facing T)
 TEST_F(OmokTest, OmokDoubleThreeTT_W) {
-    // Create a position with a potential double-three in '├' shape
-    /*
-        . . . . . . .
-        . . . . . . .
-        . . . . . . .
-        B B . B . . .
-        . . . . . . .
-        . . . . . . .
-        . . . . . . .
-    */
-    setBoard({{3,1},{3,2},{2,3},{4,3}}, {{8,8}});
+    setBoard({{3,1},{3,2},{2,3},{4,3}}, {{8,8}}, BLACK);
     EXPECT_FALSE(state->isLegalMove(3 * 15 + 3));     // (3,3) creates double-three in '├' shape
 }
 
 // Test Omok double-three detection in '┬' shape (North-facing T)
 TEST_F(OmokTest, OmokDoubleThreeTT_N) {
-    // Create a position with a potential double-three in '┬' shape
-    /*
-        . . . . . . .
-        B . . . . . .
-        B . . . . . .
-        . B . B . . .
-        . . . . . . .
-        . . . . . . .
-        . . . . . . .
-    */
-    setBoard({{1,3},{2,3},{3,2},{3,4}}, {{8,8}});
+    setBoard({{1,3},{2,3},{3,2},{3,4}}, {{8,8}}, BLACK);
     EXPECT_FALSE(state->isLegalMove(3 * 15 + 3));     // (3,3) creates double-three in '┬' shape
 }
 
 // Test Omok double-three detection in '┤' shape (East-facing T)
 TEST_F(OmokTest, OmokDoubleThreeTT_E) {
-    // Create a position with a potential double-three in '┤' shape
-    /*
-        . . . . . . .
-        . . . . . . .
-        . . . . . . .
-        . . . B B B .
-        . . . . . . .
-        . . . . . . .
-        . . . . . . .
-    */
-    setBoard({{3,5},{3,4},{2,3},{4,3}}, {{8,8}});
+    setBoard({{3,5},{3,4},{2,3},{4,3}}, {{8,8}}, BLACK);
     EXPECT_FALSE(state->isLegalMove(3 * 15 + 3));     // (3,3) creates double-three in '┤' shape
 }
 
 // Test Omok double-three detection in '┴' shape (South-facing T)
 TEST_F(OmokTest, OmokDoubleThreeTT_S) {
-    // Create a position with a potential double-three in '┴' shape
-    /*
-        . . . . . . .
-        . . . . . . .
-        . . . . . . .
-        . . B . B . .
-        . . . B . . .
-        . . . B . . .
-        . . . . . . .
-    */
-    setBoard({{5,3},{4,3},{3,2},{3,4}}, {{8,8}});
+    setBoard({{5,3},{4,3},{3,2},{3,4}}, {{8,8}}, BLACK);
     EXPECT_FALSE(state->isLegalMove(3 * 15 + 3));     // (3,3) creates double-three in '┴' shape
 }
 
@@ -509,6 +457,9 @@ protected:
         // For Renju rules: board_size=15, use_renju=true, use_omok=false, seed=0, use_pro_long_opening=false
         state = std::make_unique<GomokuState>(15, true, false, 0, false); 
     }
+
+    // Override isRenjuTest to return true for RenjuTest
+    bool isRenjuTest() const override { return true; }
 };
 
 // Test that black cannot make an overline in Renju (rule 9.2.a)
@@ -532,7 +483,7 @@ protected:
     . . . . . . . . . . . . . . .
 */
 TEST_F(RenjuTest, RenjuOverlineBlack) {
-    setBoard({{7,3},{7,4},{7,5},{7,6},{7,8}}, {{0,0}});
+    setBoard({{7,3},{7,4},{7,5},{7,6},{7,8}}, {{0,0}}, BLACK);
     EXPECT_FALSE(state->isLegalMove(7 * 15 + 7));                // (7,7) → overline
 }
 
@@ -557,7 +508,7 @@ TEST_F(RenjuTest, RenjuOverlineBlack) {
     . . . . . . . . . . . . . . .
 */
 TEST_F(RenjuTest, RenjuOverlineWhite) {
-    setBoard({{0,0}}, {{7,3},{7,4},{7,5},{7,7},{7,8}});
+    setBoard({{0,0}}, {{7,3},{7,4},{7,5},{7,7},{7,8}}, WHITE);
     EXPECT_TRUE(state->isLegalMove(7 * 15 + 6));                 // (7,6) → overline
     state->makeMove(7 * 15 + 6);
     EXPECT_TRUE(state->isTerminal());
@@ -584,7 +535,7 @@ TEST_F(RenjuTest, RenjuOverlineWhite) {
     . . . . . . . . . . . . . . .
 */
 TEST_F(RenjuTest, RenjuDoubleFourBlack) {
-    setBoard({{2,3},{2,4},{2,6},{4,2},{4,3},{4,5},{4,6}}, {{7,7}});
+    setBoard({{2,3},{2,4},{2,6},{4,2},{4,3},{4,5},{4,6}}, {{7,7}}, BLACK);
     EXPECT_FALSE(state->isLegalMove(2 * 15 + 5));                // (2,5) → double-four
 }
 
@@ -608,7 +559,7 @@ TEST_F(RenjuTest, RenjuDoubleFourBlack) {
     . . . . . . . . . . . . . . .
 */
 TEST_F(RenjuTest, RenjuDoubleFourWhiteAllowed) {
-    setBoard({{7,7}}, {{2,3},{2,4},{2,6},{4,2},{4,3},{4,5},{4,6}});
+    setBoard({{7,7}}, {{2,3},{2,4},{2,6},{4,2},{4,3},{4,5},{4,6}}, WHITE);
     EXPECT_TRUE(state->isLegalMove(2 * 15 + 5));                 // (2,5) allowed
 }
 
@@ -632,7 +583,7 @@ TEST_F(RenjuTest, RenjuDoubleFourWhiteAllowed) {
     . . . . . . . . . . . . . . .
 */
 TEST_F(RenjuTest, RenjuSimpleDoubleThreeBlackForbidden) {
-    setBoard({{2,3},{2,5},{4,2},{5,2}}, {{7,7}});
+    setBoard({{2,3},{4,5},{2,5},{4,3}}, {{7,7}}, BLACK);
     EXPECT_FALSE(state->isLegalMove(3 * 15 + 4));                // (3,4) simple double-three
 }
 
@@ -655,7 +606,7 @@ TEST_F(RenjuTest, RenjuSimpleDoubleThreeBlackForbidden) {
     . . . . . . . . . . . . . . .
 */
 TEST_F(RenjuTest, RenjuDoubleThreeException_a) {
-    setBoard({{2,2},{2,4},{4,1},{5,2}}, {{7,7}});
+    setBoard({{2,2},{2,4},{4,1},{5,2}}, {{7,7}}, BLACK);
     EXPECT_TRUE(state->isLegalMove(3 * 15 + 3));                 // (3,3) allowed by 9.3 a
 }
 
@@ -679,7 +630,7 @@ TEST_F(RenjuTest, RenjuDoubleThreeException_a) {
     . . . . . . . . . . . . . . .
 */
 TEST_F(RenjuTest, RenjuDoubleThreeException_b) {
-    setBoard({{5,7},{6,7},{8,7},{7,5},{7,6},{7,8}}, {{4,7},{7,4},{7,9}});
+    setBoard({{5,7},{6,7},{8,7},{7,5},{7,6},{7,8}}, {{4,7},{7,4},{7,9}}, BLACK);
     EXPECT_TRUE(state->isLegalMove(7 * 15 + 7));                 // (7,7) allowed by 9.3 b
 }
 

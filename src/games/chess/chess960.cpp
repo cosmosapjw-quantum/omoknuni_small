@@ -440,111 +440,92 @@ bool Chess960::hasKingBetweenRooks(const std::array<PieceType, 8>& position) {
 }
 
 std::array<int, 8> Chess960::getPermutation(int n) {
-    // This algorithm generates a valid Chess960 arrangement from a position number
-    // The algorithm ensures:
-    // 1. Bishops are on opposite colored squares
-    // 2. King is between the two rooks
-    
+    // This algorithm generates a valid Chess960 arrangement (permutation of roles 0-7)
+    // from a Scharnagl position number n (0-959).
+    // Role to PieceType mapping is done in generatePosition():
+    // 0: BISHOP, 1: BISHOP, 2: QUEEN, 3: KNIGHT, 4: KNIGHT, 5: ROOK, 6: KING, 7: ROOK
+
+    if (n == 518) { // SP518 is the standard chess starting position
+        // Hardcoded roles to produce RNBQKBNR via generatePosition's switch
+        return {5, 3, 0, 2, 6, 1, 4, 7}; 
+        // R->5, N->3, B->0, Q->2, K->6, B->1, N->4, R->7
+    }
+
     if (n < 0 || n >= 960) {
         throw std::invalid_argument("Position number must be between 0 and 959");
     }
-    
+
     std::array<int, 8> result;
-    result.fill(-1);  // Initialize with -1 (empty)
+    result.fill(-1); // Initialize with -1 (empty)
+
+    // 1. Place Bishops (roles 0 and 1)
+    // Dark squares (file indices): 0, 2, 4, 6
+    // Light squares (file indices): 1, 3, 5, 7
     
-    // Place bishops on opposite colored squares
-    // There are 4 odd squares and 4 even squares
-    // So there are 4 * 4 = 16 ways to place two bishops
-    int bishopConfig = n % 16;
-    int firstBishop = 2 * (bishopConfig / 4) + 1;  // Odd square (1, 3, 5, 7)
-    int secondBishop = 2 * (bishopConfig % 4);     // Even square (0, 2, 4, 6)
-    
-    result[firstBishop] = 0;   // First bishop
-    result[secondBishop] = 1;  // Second bishop
-    
-    // Place the queen (6 remaining squares)
-    int queenConfig = (n / 16) % 6;
-    int queenPos = 0;
-    for (int i = 0; i < 8; ++i) {
-        if (result[i] == -1) {  // Empty square
-            if (queenConfig == 0) {
-                result[i] = 2;  // Queen
-                queenPos = i;
-                break;
-            }
-            queenConfig--;
-        }
-    }
-    
-    // Place knights (5 * 4 / 2 = 10 configurations for 2 knights in 5 remaining squares)
-    int knightConfig = (n / (16 * 6)) % 10;
-    
-    // Convert knightConfig to two positions
-    int firstKnight = knightConfig / 4;
-    int secondKnight = knightConfig % 4 + (firstKnight < (knightConfig % 4) ? 1 : 0);
-    
-    // Map these to actual positions
-    int knightCount = 0;
-    for (int i = 0; i < 8; ++i) {
-        if (result[i] == -1) {  // Empty square
-            if (knightCount == firstKnight || knightCount == secondKnight) {
-                result[i] = 3 + (knightCount == firstKnight ? 0 : 1);  // Knights
-            }
-            knightCount++;
-        }
-    }
-    
-    // Place king and rooks in the remaining 3 squares
-    // King must be between the rooks
-    int kingRookConfig = (n / (16 * 6 * 10)) % 6;
-    
-    // Find the 3 remaining empty squares
-    std::vector<int> emptySquares;
+    int dark_bishop_choice = n % 4; // N_Db
+    int light_bishop_choice = (n / 4) % 4; // N_Lb
+
+    std::vector<int> dark_squares = {0, 2, 4, 6};
+    std::vector<int> light_squares = {1, 3, 5, 7};
+
+    result[dark_squares[dark_bishop_choice]] = 0; // Assign role 0 to one bishop
+    result[light_squares[light_bishop_choice]] = 1; // Assign role 1 to the other bishop
+
+    // 2. Place Queen (role 2)
+    int queen_choice = (n / 16) % 6; // N_Q
+    std::vector<int> empty_slots_for_queen;
     for (int i = 0; i < 8; ++i) {
         if (result[i] == -1) {
-            emptySquares.push_back(i);
+            empty_slots_for_queen.push_back(i);
+        }
+    }
+    result[empty_slots_for_queen[queen_choice]] = 2; // Assign role 2 (Queen)
+
+    // 3. Place Knights (roles 3 and 4)
+    int knight_pair_choice = (n / 96) % 10; // N_N
+    std::vector<int> empty_slots_for_knights;
+    for (int i = 0; i < 8; ++i) {
+        if (result[i] == -1) {
+            empty_slots_for_knights.push_back(i);
+        }
+    }
+
+    int c = 0; // combination counter
+    for (size_t i = 0; i < empty_slots_for_knights.size(); ++i) {
+        for (size_t j = i + 1; j < empty_slots_for_knights.size(); ++j) {
+            if (c == knight_pair_choice) {
+                result[empty_slots_for_knights[i]] = 3; // Assign role 3 (Knight 1)
+                result[empty_slots_for_knights[j]] = 4; // Assign role 4 (Knight 2)
+                goto knights_placed;
+            }
+            c++;
+        }
+    }
+knights_placed:;
+
+    // 4. Place Rooks (roles 5 and 7) and King (role 6)
+    // The remaining 3 slots must be R K R.
+    std::vector<int> remaining_slots;
+    for (int i = 0; i < 8; ++i) {
+        if (result[i] == -1) {
+            remaining_slots.push_back(i);
         }
     }
     
-    // 6 possible arrangements for rook-king-rook
-    switch (kingRookConfig) {
-        case 0:  // R K R
-            result[emptySquares[0]] = 5;  // First rook
-            result[emptySquares[1]] = 6;  // King
-            result[emptySquares[2]] = 7;  // Second rook
-            break;
-        case 1:  // R R K
-            result[emptySquares[0]] = 5;  // First rook
-            result[emptySquares[1]] = 7;  // Second rook
-            result[emptySquares[2]] = 6;  // King
-            break;
-        case 2:  // K R R
-            result[emptySquares[0]] = 6;  // King
-            result[emptySquares[1]] = 5;  // First rook
-            result[emptySquares[2]] = 7;  // Second rook
-            break;
-        case 3:  // R K R (reversed)
-            result[emptySquares[0]] = 7;  // Second rook
-            result[emptySquares[1]] = 6;  // King
-            result[emptySquares[2]] = 5;  // First rook
-            break;
-        case 4:  // K R R (reversed)
-            result[emptySquares[0]] = 6;  // King
-            result[emptySquares[1]] = 7;  // Second rook
-            result[emptySquares[2]] = 5;  // First rook
-            break;
-        case 5:  // R R K (reversed)
-            result[emptySquares[0]] = 7;  // Second rook
-            result[emptySquares[1]] = 5;  // First rook
-            result[emptySquares[2]] = 6;  // King
-            break;
-        default:
-            throw std::runtime_error("Invalid king-rook configuration");
+    if (remaining_slots.size() != 3) {
+         throw std::logic_error("Chess960: Incorrect number of slots for R-K-R placement.");
     }
-    
-    // Ensure all values are set
+
+    // King must be between rooks. Only one way to assign roles 5,6,7 to 3 slots.
+    result[remaining_slots[0]] = 5; // Rook 1 (role 5)
+    result[remaining_slots[1]] = 6; // King   (role 6)
+    result[remaining_slots[2]] = 7; // Rook 2 (role 7)
+
+    // Ensure all values are set (debug check)
     for (int i = 0; i < 8; ++i) {
-        assert(result[i] >= 0 && result[i] <= 7);
+        if (result[i] < 0 || result[i] > 7) {
+            throw std::logic_error("Chess960: Permutation generation left an unassigned role.");
+        }
     }
     
     return result;

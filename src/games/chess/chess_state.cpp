@@ -538,19 +538,21 @@ bool ChessState::undoMove() {
     // Get the last move info
     const MoveInfo& moveInfo = move_history_.back();
     
-    // Restore the captured piece
+    // Piece that moved is currently at moveInfo.move.to_square
+    Piece piece_that_moved = board_[moveInfo.move.to_square];
+
+    // Restore the captured piece to its original square
     setPiece(moveInfo.move.to_square, moveInfo.captured_piece);
     
-    // Move the piece back
-    Piece piece = getPiece(moveInfo.move.to_square);
+    // If it was a promotion, revert piece_that_moved to pawn type
     if (moveInfo.move.promotion_piece != PieceType::NONE) {
-        // Restore the pawn
-        piece.type = PieceType::PAWN;
+        piece_that_moved.type = PieceType::PAWN;
     }
-    setPiece(moveInfo.move.from_square, piece);
-    setPiece(moveInfo.move.to_square, Piece());
+    // Move piece_that_moved back to its origin
+    setPiece(moveInfo.move.from_square, piece_that_moved);
+    // The to_square is now correctly occupied by either the captured_piece or is empty if captured_piece was NONE.
     
-    // Handle special moves
+    // Handle special moves undo
     if (moveInfo.was_castle) {
         // Get the starting and ending files for this castling move
         int rank = getRank(moveInfo.move.from_square);
@@ -559,7 +561,7 @@ bool ChessState::undoMove() {
         bool kingside = (newKingFile > kingFile);
         
         // Get the correct rook file based on the color and side
-        int rookFile = getOriginalRookFile(kingside, piece.color);
+        int rookFile = getOriginalRookFile(kingside, piece_that_moved.color);
         int rookToFile = kingside ? 5 : 3;  // Standard squares for rook after castling
         
         if (chess960_) {
@@ -577,7 +579,7 @@ bool ChessState::undoMove() {
     } else if (moveInfo.was_en_passant) {
         // Restore the captured pawn
         int capturedPawnSquare = getSquare(getRank(moveInfo.move.from_square), getFile(moveInfo.move.to_square));
-        setPiece(capturedPawnSquare, {PieceType::PAWN, oppositeColor(piece.color)});
+        setPiece(capturedPawnSquare, {PieceType::PAWN, oppositeColor(piece_that_moved.color)});
     }
     
     // Restore game state
@@ -585,10 +587,7 @@ bool ChessState::undoMove() {
     castling_rights_ = moveInfo.castling_rights;
     en_passant_square_ = moveInfo.en_passant_square;
     halfmove_clock_ = moveInfo.halfmove_clock;
-    
-    if (current_player_ == PieceColor::WHITE) {
-        fullmove_number_--;
-    }
+    fullmove_number_ = moveInfo.fullmove_number; // Restore fullmove_number
     
     // Remove the move from history
     move_history_.pop_back();
@@ -997,6 +996,7 @@ void ChessState::makeMove(const ChessMove& move) {
     moveInfo.castling_rights = castling_rights_;
     moveInfo.en_passant_square = en_passant_square_;
     moveInfo.halfmove_clock = halfmove_clock_;
+    moveInfo.fullmove_number = fullmove_number_;
     moveInfo.was_castle = false;
     moveInfo.was_en_passant = false;
     
@@ -1455,117 +1455,127 @@ std::string ChessState::toSAN(const ChessMove& move) const {
 }
 
 std::optional<ChessMove> ChessState::fromSAN(const std::string& sanStr) const {
-    // This is a simplified SAN parser, not handling all edge cases
-    if (sanStr.empty()) {
-        return std::nullopt;
-    }
-    
-    // Castling
+    if (sanStr.empty()) return std::nullopt;
+
+    // 1. Castling
     if (sanStr == "O-O" || sanStr == "0-0") {
-        // Kingside castling
-        int rank = (current_player_ == PieceColor::WHITE) ? 7 : 0;
-        int kingFile = getFile(getKingSquare(current_player_));
-        int targetFile = kingFile + 2;
-        int kingSquare = getSquare(rank, kingFile);
-        int targetSquare = getSquare(rank, targetFile);
-        return ChessMove{kingSquare, targetSquare};
+        int kingSquare = getKingSquare(current_player_);
+        if (kingSquare == -1) return std::nullopt;
+        // Determine target square based on Chess960 or standard
+        int targetFile = chess960_ ? (getFile(kingSquare) + 2) : 6; // g-file for standard
+        int targetSquare = getSquare(getRank(kingSquare), targetFile);
+        ChessMove castle = {kingSquare, targetSquare};
+        return isLegalMove(castle) ? std::optional<ChessMove>(castle) : std::nullopt;
     } else if (sanStr == "O-O-O" || sanStr == "0-0-0") {
-        // Queenside castling
-        int rank = (current_player_ == PieceColor::WHITE) ? 7 : 0;
-        int kingFile = getFile(getKingSquare(current_player_));
-        int targetFile = kingFile - 2;
-        int kingSquare = getSquare(rank, kingFile);
-        int targetSquare = getSquare(rank, targetFile);
-        return ChessMove{kingSquare, targetSquare};
+        int kingSquare = getKingSquare(current_player_);
+        if (kingSquare == -1) return std::nullopt;
+        int targetFile = chess960_ ? (getFile(kingSquare) - 2) : 2; // c-file for standard
+        int targetSquare = getSquare(getRank(kingSquare), targetFile);
+        ChessMove castle = {kingSquare, targetSquare};
+        return isLegalMove(castle) ? std::optional<ChessMove>(castle) : std::nullopt;
     }
-    
-    // Normal move
-    size_t i = 0;
-    PieceType pieceType = PieceType::PAWN;
-    
-    // Piece type
-    if (std::isupper(sanStr[0])) {
-        switch (sanStr[0]) {
-            case 'N': pieceType = PieceType::KNIGHT; break;
-            case 'B': pieceType = PieceType::BISHOP; break;
-            case 'R': pieceType = PieceType::ROOK; break;
-            case 'Q': pieceType = PieceType::QUEEN; break;
-            case 'K': pieceType = PieceType::KING; break;
-            default: return std::nullopt;
-        }
-        i++;
+
+    std::string cleanSan = sanStr;
+    // Remove check/checkmate symbols for easier parsing
+    if (!cleanSan.empty() && (cleanSan.back() == '#' || cleanSan.back() == '+')) {
+        cleanSan.pop_back();
     }
-    
-    // Source disambiguation (file and/or rank)
-    int fromFile = -1;
-    int fromRank = -1;
-    
-    if (i < sanStr.length() && sanStr[i] >= 'a' && sanStr[i] <= 'h') {
-        fromFile = sanStr[i] - 'a';
-        i++;
-    }
-    
-    if (i < sanStr.length() && sanStr[i] >= '1' && sanStr[i] <= '8') {
-        fromRank = '8' - sanStr[i];
-        i++;
-    }
-    
-    // Capture
-    if (i < sanStr.length() && sanStr[i] == 'x') {
-        i++;
-    }
-    
-    // Destination square
-    if (i + 1 >= sanStr.length()) {
-        return std::nullopt;
-    }
-    
-    if (sanStr[i] < 'a' || sanStr[i] > 'h' || 
-        sanStr[i+1] < '1' || sanStr[i+1] > '8') {
-        return std::nullopt;
-    }
-    
-    int toFile = sanStr[i] - 'a';
-    int toRank = '8' - sanStr[i+1];
-    int toSquare = getSquare(toRank, toFile);
-    i += 2;
-    
-    // Promotion
+    if (cleanSan.empty()) return std::nullopt;
+
+    // 2. Promotion
     PieceType promotionPiece = PieceType::NONE;
-    if (i + 1 < sanStr.length() && sanStr[i] == '=') {
-        i++;
-        switch (sanStr[i]) {
+    size_t promotionPos = cleanSan.find('=');
+    if (promotionPos != std::string::npos && promotionPos + 1 < cleanSan.length()) {
+        char promChar = cleanSan[promotionPos + 1];
+        switch (std::toupper(promChar)) {
             case 'Q': promotionPiece = PieceType::QUEEN; break;
             case 'R': promotionPiece = PieceType::ROOK; break;
             case 'B': promotionPiece = PieceType::BISHOP; break;
             case 'N': promotionPiece = PieceType::KNIGHT; break;
-            default: return std::nullopt;
+            default: return std::nullopt; // Invalid promotion char
         }
-        i++;
+        cleanSan = cleanSan.substr(0, promotionPos);
+    }
+    if (cleanSan.length() < 2) return std::nullopt;
+
+    // 3. Destination square (always last 2 chars of remaining string)
+    std::string toSquareStr = cleanSan.substr(cleanSan.length() - 2);
+    int toSquare = stringToSquare(toSquareStr);
+    if (toSquare == -1) return std::nullopt;
+    cleanSan = cleanSan.substr(0, cleanSan.length() - 2);
+
+    // 4. Piece Type and Capture
+    PieceType pieceType = PieceType::PAWN;
+    bool isCapture = false;
+    char pieceChar = 'P'; // Default for pawn for matching
+
+    if (!cleanSan.empty()) {
+        char firstChar = cleanSan[0];
+        if (std::isupper(firstChar)) {
+            pieceChar = firstChar;
+            switch (firstChar) {
+                case 'N': pieceType = PieceType::KNIGHT; break;
+                case 'B': pieceType = PieceType::BISHOP; break;
+                case 'R': pieceType = PieceType::ROOK; break;
+                case 'Q': pieceType = PieceType::QUEEN; break;
+                case 'K': pieceType = PieceType::KING; break;
+                default: return std::nullopt; // Invalid piece char
+            }
+            cleanSan = cleanSan.substr(1);
+        } // else it's a pawn move, pieceType remains PAWN
     }
     
-    // Find matching legal move
+    if (!cleanSan.empty() && (cleanSan.back() == 'x')) {
+        isCapture = true;
+        cleanSan.pop_back();
+    } else if (pieceType == PieceType::PAWN && !cleanSan.empty() && cleanSan.length() == 1 && cleanSan[0] >= 'a' && cleanSan[0] <= 'h') {
+        // Pawn capture like "exd5", cleanSan is now "e"
+        isCapture = true; 
+    }
+
+
+    // 5. Disambiguation (remaining part of cleanSan)
+    int fromFile = -1;
+    int fromRank = -1;
+
+    if (!cleanSan.empty()) {
+        if (cleanSan.length() == 1) {
+            if (cleanSan[0] >= 'a' && cleanSan[0] <= 'h') fromFile = cleanSan[0] - 'a';
+            else if (cleanSan[0] >= '1' && cleanSan[0] <= '8') fromRank = '8' - cleanSan[0];
+            else return std::nullopt; // Invalid disambiguation
+        } else if (cleanSan.length() == 2) {
+            if (cleanSan[0] >= 'a' && cleanSan[0] <= 'h') fromFile = cleanSan[0] - 'a';
+            else return std::nullopt;
+            if (cleanSan[1] >= '1' && cleanSan[1] <= '8') fromRank = '8' - cleanSan[1];
+            else return std::nullopt;
+        } else {
+            return std::nullopt; // Invalid disambiguation length
+        }
+    }
+
+    // 6. Find matching legal move
     auto legalMoves = generateLegalMoves();
-    
     for (const auto& move : legalMoves) {
-        Piece piece = getPiece(move.from_square);
-        
-        if (piece.type != pieceType || move.to_square != toSquare) {
-            continue;
-        }
-        
-        if ((fromFile != -1 && getFile(move.from_square) != fromFile) ||
-            (fromRank != -1 && getRank(move.from_square) != fromRank)) {
-            continue;
-        }
-        
-        if (promotionPiece != PieceType::NONE && move.promotion_piece != promotionPiece) {
-            continue;
-        }
-        
-        return move;
+        Piece p = getPiece(move.from_square);
+        if (p.type != pieceType) continue;
+        if (move.to_square != toSquare) continue;
+        if (move.promotion_piece != promotionPiece) continue;
+
+        if (fromFile != -1 && getFile(move.from_square) != fromFile) continue;
+        if (fromRank != -1 && getRank(move.from_square) != fromRank) continue;
+
+        // Check capture flag if it was specified
+        bool moveIsCapture = !getPiece(move.to_square).is_empty() || 
+                             (p.type == PieceType::PAWN && move.to_square == getEnPassantSquare());
+        if (isCapture && !moveIsCapture) continue; 
+        // If SAN implies non-capture, but move is capture (e.g. pawn move to occupied square not marked with x)
+        // This can happen if SAN is minimal e.g. "e4" when e4 is a capture. Standard SAN requires 'x' for captures.
+        // However, some contexts might omit it. For strict SAN parsing, we might reject.
+        // For now, if `isCapture` is false, we don't explicitly check if `moveIsCapture` is true.
+
+        return move; // Found a match
     }
-    
+
     return std::nullopt;
 }
 

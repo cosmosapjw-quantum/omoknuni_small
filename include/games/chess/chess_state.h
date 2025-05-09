@@ -339,6 +339,7 @@ private:
         CastlingRights castling_rights;
         int en_passant_square;
         int halfmove_clock;
+        int fullmove_number;
         bool was_castle;
         bool was_en_passant;
     };

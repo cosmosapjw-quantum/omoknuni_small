@@ -3,7 +3,7 @@
 
 // Define export/import macros for DLL functionality
 #if defined(_MSC_VER)
-    #if defined(ALPHAZERO_EXPORTS)
+    #if defined(ALPHAZERO_EXPORTS) || defined(alphazero_EXPORTS)
         #define ALPHAZERO_API __declspec(dllexport)
     #else
         #define ALPHAZERO_API __declspec(dllimport)

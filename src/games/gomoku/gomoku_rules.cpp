@@ -1,1276 +1,878 @@
-// gomoku_rules.cpp
+// File: gomoku_rules.cpp
 #include "games/gomoku/gomoku_rules.h"
-#include <algorithm>
-#include <cmath>
-#include <iostream>
-#include <vector>
-#include <set>
+#include <stdexcept> // For std::runtime_error
+#include <algorithm> // For std::sort, std::set_intersection, etc.
 #include <map>
-#include <tuple>
-#include <random>
-#include <functional>
+#include <numeric> // For std::gcd
+#include <set>     // For std::set
 
 namespace alphazero {
 namespace games {
 namespace gomoku {
 
-// Helper for the full board scan part of is_five_in_a_row
-// Counts N in a row from (r,c) in direction (dr,dc), checking up to 5 stones.
-int GomokuRules::check_line_from_point(int r, int c, int dr, int dc, int p_idx) const {
-    int count = 0;
-    for (int k=0; k<5; ++k) {
-        int nr = r + k*dr;
-        int nc = c + k*dc;
-        if (in_bounds_(nr,nc) && is_bit_set_(p_idx, coords_to_action_(nr,nc))) {
+GomokuRules::GomokuRules(int board_size) : board_size_(board_size) {
+    if (board_size <= 0) {
+        throw std::invalid_argument("Board size must be positive.");
+    }
+}
+
+void GomokuRules::setBoardAccessor(
+    std::function<bool(int, int)> is_bit_set,
+    std::function<bool(int)> is_any_bit_set,
+    std::function<int(int, int)> coords_to_action,
+    std::function<std::pair<int, int>(int)> action_to_coords,
+    std::function<bool(int, int)> in_bounds) {
+    is_bit_set_ = is_bit_set;
+    is_any_bit_set_ = is_any_bit_set;
+    coords_to_action_ = coords_to_action;
+    action_to_coords_ = action_to_coords;
+    in_bounds_ = in_bounds;
+}
+
+bool GomokuRules::is_empty_spot(int r, int c, const std::function<bool(int, int)>& board_accessor) const {
+    if (!this->in_bounds_(r, c)) return false;
+    int action = this->coords_to_action_(r, c);
+    return !board_accessor(0, action) && !board_accessor(1, action);
+}
+
+int GomokuRules::get_line_length_at_action(int action, int player_idx, const std::function<bool(int,int)>& board_accessor, int dr, int dc) const {
+    auto [r_start, c_start] = this->action_to_coords_(action);
+    if (!board_accessor(player_idx, action)) {
+        return 0;
+    }
+
+    int count = 1; // Start with the stone at action
+
+    // Count in positive direction
+    for (int i = 1; i < this->board_size_; ++i) {
+        int nr = r_start + i * dr;
+        int nc = c_start + i * dc;
+        if (this->in_bounds_(nr, nc) && board_accessor(player_idx, this->coords_to_action_(nr, nc))) {
             count++;
         } else {
-            break; // Stop counting if out of bounds or opponent/empty stone
-        }
-    }
-    return count;
-}
-
-// Line and pattern detection
-bool GomokuRules::is_five_in_a_row(int action, int player) const {
-    // Player index is 0-based internally (BLACK-1=0, WHITE-1=1)
-    int p_idx = player - 1;
-    if (p_idx < 0 || p_idx > 1) return false; // Invalid player
-    
-    if (action >= 0) {
-        // Check if the move `action` by `player` results in a win.
-        auto [x, y] = action_to_coords_(action);
-        
-        // Ensure the stone is actually there (should be if called after a move)
-        if (!is_bit_set_(p_idx, action)) {
-            // This might happen if called hypothetically, but typically indicates an issue.
-            return false; 
-        }
-        
-        // Define the 4 axes/lines to check
-        const int DIRS[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}}; 
-
-        for (auto& dir : DIRS) {
-            int dx = dir[0];
-            int dy = dir[1];
-            int count = 1; // Count the stone at (x,y)
-
-            // Count in the + (dx, dy) direction
-            for (int i = 1; i < 5; ++i) { // Check up to 4 more stones
-                int nx = x + i * dx;
-                int ny = y + i * dy;
-                if (in_bounds_(nx, ny) && is_bit_set_(p_idx, coords_to_action_(nx, ny))) {
-                    count++;
-                } else {
-                    break;
-                }
-            }
-            // Count in the - (dx, dy) direction
-            for (int i = 1; i < 5; ++i) { // Check up to 4 more stones
-                int nx = x - i * dx;
-                int ny = y - i * dy;
-                if (in_bounds_(nx, ny) && is_bit_set_(p_idx, coords_to_action_(nx, ny))) {
-                    count++;
-                } else {
-                    break;
-                }
-            }
-            // If total count is 5 or more, it's a win
-            if (count >= 5) return true;
-        }
-        return false; // No win from this specific move
-    }
-    
-    // If action == -1, scan the whole board for 5-in-a-row for the specified player.
-    // This is typically used for terminal state check after passes or for initial state validation.
-    // Use the check_line_from_point helper for efficiency.
-    for (int r = 0; r < board_size_; ++r) {
-        for (int c = 0; c < board_size_; ++c) {
-            if (!is_bit_set_(p_idx, coords_to_action_(r, c))) {
-                continue; // Skip if not player's stone
-            }
-            
-            // Check from (r,c) in 4 unique directions: H->, V down, Diag \ down, Diag / down-left
-            if (check_line_from_point(r, c, 1, 0, p_idx) >= 5) return true; // H
-            if (check_line_from_point(r, c, 0, 1, p_idx) >= 5) return true; // V (assuming (0,1) is down)
-            if (check_line_from_point(r, c, 1, 1, p_idx) >= 5) return true; // Diag \ 
-            if (check_line_from_point(r, c, -1, 1, p_idx) >= 5) return true; // Diag / (assuming (-1,1) is down-left)
-        }
-    }
-    
-    return false; // No 5-in-a-row found on the board
-}
-
-int GomokuRules::count_direction(int x0, int y0, int dx, int dy, int p_idx) const {
-    int count = 1;  // Start with 1 for the stone at (x0, y0)
-    
-    // Count in positive direction
-    for (int i = 1; i < 6; i++) {  // Max count would be 5
-        int nx = x0 + i * dx;
-        int ny = y0 + i * dy;
-        
-        if (!in_bounds_(nx, ny) || !is_bit_set_(p_idx, coords_to_action_(nx, ny))) {
             break;
         }
-        
-        count++;
     }
     
-    // Count in negative direction only if dx and dy are not 0 (to prevent double-counting for full board scan)
-    if (dx != 0 || dy != 0) {
-        for (int i = 1; i < 6; i++) {
-            int nx = x0 - i * dx;
-            int ny = y0 - i * dy;
-            
-            if (!in_bounds_(nx, ny) || !is_bit_set_(p_idx, coords_to_action_(nx, ny))) {
+    // Count in negative direction
+    for (int i = 1; i < this->board_size_; ++i) {
+        int nr = r_start - i * dr;
+        int nc = c_start - i * dc;
+        if (this->in_bounds_(nr, nc) && board_accessor(player_idx, this->coords_to_action_(nr, nc))) {
+            count++;
+        } else {
+            break;
+        }
+    }
+    
+    return count;
+}
+
+bool GomokuRules::is_five_in_a_row(int action, int player, bool allow_overline) const {
+    if (!is_bit_set_ || !action_to_coords_ || !coords_to_action_ || !in_bounds_) {
+        return false; // Essential accessors not set
+    }
+
+    int p_idx = player - 1;
+    if (p_idx < 0 || p_idx > 1) return false;
+
+    auto current_board_state_accessor = [this](int p_check_idx, int act_check){
+        return this->is_bit_set_(p_check_idx, act_check);
+    };
+
+    const int DIRS[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+
+    auto check_from_point = [&](int r_check, int c_check) {
+        int current_action_to_check = this->coords_to_action_(r_check, c_check);
+        if (!current_board_state_accessor(p_idx, current_action_to_check)) {
+            return false;
+        }
+
+        for (auto& dir : DIRS) {
+            int length = this->get_line_length_at_action(current_action_to_check, p_idx, current_board_state_accessor, dir[0], dir[1]);
+            if (allow_overline) {
+                if (length >= 5) return true;
+            } else {
+                if (length == 5) return true;
+            }
+        }
+        return false;
+    };
+
+    if (action >= 0) { // Check from the specific point
+        auto [r, c] = this->action_to_coords_(action);
+        return check_from_point(r, c);
+    } else { // Scan entire board
+        for (int r_scan = 0; r_scan < this->board_size_; ++r_scan) {
+            for (int c_scan = 0; c_scan < this->board_size_; ++c_scan) {
+                if (current_board_state_accessor(p_idx, this->coords_to_action_(r_scan, c_scan))) {
+                    if (check_from_point(r_scan, c_scan)) return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+
+// --- Omok Forbidden Move Logic ---
+bool GomokuRules::omok_is_six_in_a_row(int action, int player_idx, const std::function<bool(int, int)>& hypothetical_board_state) const {
+    if (player_idx != 0) return false; // Only for Black
+
+    const int DIRS[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
+    for (auto& dir : DIRS) {
+        int length = this->get_line_length_at_action(action, player_idx, hypothetical_board_state, dir[0], dir[1]);
+        if (length >= 6) return true;
+    }
+    return false;
+}
+
+bool GomokuRules::check_omok_open_three_in_direction(int action, int player_idx, const std::function<bool(int, int)>& board_accessor, int dr, int dc) const {
+    auto [r_action, c_action] = this->action_to_coords_(action);
+
+    for (int i = 0; i < 3; ++i) { 
+        int r_start_of_3 = r_action - i * dr;
+        int c_start_of_3 = c_action - i * dc;
+        
+        bool is_line_of_3 = true;
+        for(int k=0; k<3; ++k) {
+            int r_k = r_start_of_3 + k * dr;
+            int c_k = c_start_of_3 + k * dc;
+            if (!this->in_bounds_(r_k, c_k) || !board_accessor(player_idx, this->coords_to_action_(r_k, c_k))) {
+                is_line_of_3 = false;
                 break;
             }
-            
-            count++;
+        }
+
+        if (is_line_of_3) {
+            int r_before = r_start_of_3 - dr;
+            int c_before = c_start_of_3 - dc;
+            int r_after = r_start_of_3 + 3 * dr; 
+            int c_after = c_start_of_3 + 3 * dc;
+
+            if (this->is_empty_spot(r_before, c_before, board_accessor) && 
+                this->is_empty_spot(r_after, c_after, board_accessor)) {
+                return true; 
+            }
         }
     }
-    
-    return count;
-}
-
-// Renju rule checks
-bool GomokuRules::is_black_renju_forbidden(int action) const {
-    // First, check if the action already has a stone
-    if (is_bit_set_(0, action) || is_bit_set_(1, action)) {
-        return true; // Already occupied
-    }
-    
-    // For correct testing behavior, we'll disable the complex rule checks
-    // for now since we've refactored to a bitboard representation
-    
-    // Check for overline
-    if (renju_is_overline(action)) {
-        return true;
-    }
-    
-    // Check for double-four or more
-    if (renju_double_four_or_more(action)) {
-        return true;
-    }
-    
-    // Check for double-three or more
-    if (!is_allowed_double_three(action)) {
-        return true;
-    }
-    
     return false;
 }
 
-bool GomokuRules::renju_is_overline(int action) const {
-    auto [x, y] = action_to_coords_(action);
-    int p_idx = 0;  // BLACK (in Renju, overline only applies to Black)
-    
-    // Temporary place the stone to check
-    bool hasOverline = false;
-    
-    // Check all 4 directions for 6+ in a row
-    // Horizontal
-    if (count_direction(x, y, 1, 0, p_idx) + count_direction(x, y, -1, 0, p_idx) - 1 > 5) {
-        hasOverline = true;
-    }
-    
-    // Vertical
-    if (!hasOverline && (count_direction(x, y, 0, 1, p_idx) + count_direction(x, y, 0, -1, p_idx) - 1 > 5)) {
-        hasOverline = true;
-    }
-    
-    // Diagonal
-    if (!hasOverline && (count_direction(x, y, 1, 1, p_idx) + count_direction(x, y, -1, -1, p_idx) - 1 > 5)) {
-        hasOverline = true;
-    }
-    
-    // Anti-diagonal
-    if (!hasOverline && (count_direction(x, y, 1, -1, p_idx) + count_direction(x, y, -1, 1, p_idx) - 1 > 5)) {
-        hasOverline = true;
-    }
-    
-    return hasOverline;
-}
+bool GomokuRules::omok_makes_double_three(int action, int player_idx, const std::function<bool(int, int)>& board_accessor) const {
+    if (player_idx != 0) return false; // Only for Black
 
-bool GomokuRules::renju_double_four_or_more(int action) const {
-    // Temporarily consider the current action as a black stone
-    auto is_bit_set_temp = [this, action](int p_idx, int a) {
-        if (a == action && p_idx == 0) { // Black is trying to place here
-            return true;
-        }
-        return is_bit_set_(p_idx, a);
-    };
+    int open_three_directions_count = 0;
+    const int DIRS[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}}; 
     
-    // Store original accessor
-    auto original_is_bit_set = is_bit_set_;
-    
-    // Replace with temporary accessor to include hypothetical stone
-    const_cast<GomokuRules*>(this)->is_bit_set_ = is_bit_set_temp;
-    
-    // Count fours with hypothetical stone
-    int c4 = renju_count_all_fours();
-    
-    // Restore original accessor
-    const_cast<GomokuRules*>(this)->is_bit_set_ = original_is_bit_set;
-    
-    return (c4 >= 2);
-}
-
-bool GomokuRules::renju_double_three_or_more(int action) const {
-    // Temporarily consider the current action as a black stone
-    auto is_bit_set_temp = [this, action](int p_idx, int a) {
-        if (a == action && p_idx == 0) { // Black is trying to place here
-            return true;
-        }
-        return is_bit_set_(p_idx, a);
-    };
-    
-    // Get the unified set of three patterns.
-    std::vector<std::set<int>> three_patterns = get_three_patterns_for_action(action);
-    
-    // If 2 or more distinct three patterns exist, then it's a double-three.
-    return (three_patterns.size() >= 2);
-}
-
-int GomokuRules::renju_count_all_fours() const {
-    int bs = board_size_;
-    std::set<std::pair<std::set<int>, int>> found_fours;
-    std::vector<std::pair<int, int>> directions = {{0,1}, {1,0}, {1,1}, {-1,1}};
-    
-    for (int x = 0; x < bs; x++) {
-        for (int y = 0; y < bs; y++) {
-            for (auto [dx, dy] : directions) {
-                std::vector<std::pair<int, int>> line_cells;
-                int xx = x, yy = y;
-                int step = 0;
-                
-                while (step < 7) {
-                    if (!in_bounds_(xx, yy)) {
-                        break;
-                    }
-                    line_cells.push_back({xx, yy});
-                    xx += dx;
-                    yy += dy;
-                    step++;
-                }
-                
-                for (int window_size : {5, 6, 7}) {
-                    if (line_cells.size() < window_size) {
-                        break;
-                    }
-                    
-                    for (size_t start_idx = 0; start_idx <= line_cells.size() - window_size; start_idx++) {
-                        std::vector<std::pair<int, int>> segment(
-                            line_cells.begin() + start_idx,
-                            line_cells.begin() + start_idx + window_size
-                        );
-                        
-                        if (renju_is_four_shape(segment)) {
-                            std::set<int> black_positions = positions_of_black(segment);
-                            bool unified = try_unify_four_shape(found_fours, black_positions, black_positions.size());
-                            
-                            if (!unified) {
-                                found_fours.insert({black_positions, black_positions.size()});
-                            }
-                        }
-                    }
-                }
-            }
+    for (auto& dir : DIRS) {
+        if (this->check_omok_open_three_in_direction(action, player_idx, board_accessor, dir[0], dir[1])) {
+            open_three_directions_count++;
         }
     }
     
-    return found_fours.size();
+    return open_three_directions_count >= 2;
 }
 
-int GomokuRules::renju_count_all_threes(int action) const {
-    int bs = board_size_;
-    std::set<std::set<int>> found_threes;
-    std::vector<std::pair<int, int>> directions = {{0, 1}, {1, 0}, {1, 1}, {-1, 1}};
-    
-    for (int x = 0; x < bs; x++) {
-        for (int y = 0; y < bs; y++) {
-            for (auto [dx, dy] : directions) {
-                std::vector<std::pair<int, int>> line_cells;
-                int xx = x, yy = y;
-                int step = 0;
-                
-                while (step < 7) {
-                    if (!in_bounds_(xx, yy)) {
-                        break;
-                    }
-                    line_cells.push_back({xx, yy});
-                    xx += dx;
-                    yy += dy;
-                    step++;
-                }
-                
-                for (int window_size : {5, 6}) {
-                    if (line_cells.size() < window_size) {
-                        break;
-                    }
-                    
-                    for (size_t start_idx = 0; start_idx <= line_cells.size() - window_size; start_idx++) {
-                        std::vector<std::pair<int, int>> segment(
-                            line_cells.begin() + start_idx,
-                            line_cells.begin() + start_idx + window_size
-                        );
-                        
-                        if (renju_is_three_shape(segment)) {
-                            std::set<int> black_positions = positions_of_black(segment);
-                            std::set<int> new_fs(black_positions);
-                            
-                            if (!try_unify_three_shape(found_threes, new_fs, action)) {
-                                found_threes.insert(new_fs);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    return found_threes.size();
-}
-
-// Omok rule checks
 bool GomokuRules::is_black_omok_forbidden(int action) const {
-    // First, check if the action already has a stone
-    if (is_bit_set_(0, action) || is_bit_set_(1, action)) {
-        return true; // Already occupied
+    if (!is_bit_set_ || !is_any_bit_set_ || !coords_to_action_ || !action_to_coords_ || !in_bounds_) {
+         throw std::runtime_error("GomokuRules not properly initialized with board accessors.");
     }
-    
-    // For correct testing behavior, we'll disable the complex rule checks
-    // for now since we've refactored to a bitboard representation
-    
-    // Check for overline -- Omok allows overlines, so this check is incorrect
-    // if (omok_is_overline(action)) {
-    //     return true;
-    // }
-    
-    // Check for double-three
-    if (omok_check_double_three_strict(action)) {
-        return true;
-    }
-    
-    return false;
-}
 
-bool GomokuRules::omok_is_overline(int action) const {
-    auto [x, y] = action_to_coords_(action);
-    int p_idx = 0;  // BLACK (in Omok, overline only applies to Black)
-
-    // Check all 4 directions for 6+ in a row
-    // Horizontal
-    if (count_direction(x, y, 1, 0, p_idx) + count_direction(x, y, -1, 0, p_idx) - 1 > 5) {
-        return true;
-    }
+    int p_idx_moving = 0; // Black
     
-    // Vertical
-    if (count_direction(x, y, 0, 1, p_idx) + count_direction(x, y, 0, -1, p_idx) - 1 > 5) {
-        return true;
-    }
-    
-    // Diagonal
-    if (count_direction(x, y, 1, 1, p_idx) + count_direction(x, y, -1, -1, p_idx) - 1 > 5) {
-        return true;
-    }
-    
-    // Anti-diagonal
-    if (count_direction(x, y, 1, -1, p_idx) + count_direction(x, y, -1, 1, p_idx) - 1 > 5) {
-        return true;
-    }
-    
-    return false;
-}
-
-bool GomokuRules::omok_check_double_three_strict(int action) const {
-    // Temporarily consider the current action as a black stone
-    auto is_bit_set_temp = [this, action](int p_idx, int a) {
-        if (a == action && p_idx == 0) { // Black is trying to place here
-            return true;
-        }
-        return is_bit_set_(p_idx, a);
+    auto is_bit_set_hypothetical = [this, action, p_idx_moving](int p_idx_check, int a_check) {
+        if (a_check == action && p_idx_check == p_idx_moving) return true; 
+        return this->is_bit_set_(p_idx_check, a_check); 
     };
-    
-    // Store original accessor
-    auto original_is_bit_set = is_bit_set_;
-    
-    // Replace with temporary accessor
-    const_cast<GomokuRules*>(this)->is_bit_set_ = is_bit_set_temp;
-    
-    // Get the global three patterns after placing the stone
-    std::vector<std::set<int>> patterns = get_open_three_patterns_globally();
-    
-    // Restore original accessor
-    const_cast<GomokuRules*>(this)->is_bit_set_ = original_is_bit_set;
-    
-    int n = patterns.size();
-    
-    if (n < 2) {
-        return false;
+
+    if (this->omok_is_six_in_a_row(action, p_idx_moving, is_bit_set_hypothetical)) {
+        return true;
     }
-    
-    // Check if any two patterns are connected (Omok-specific rule)
-    for (int i = 0; i < n; i++) {
-        for (int j = i + 1; j < n; j++) {
-            if (are_patterns_connected(patterns[i], patterns[j])) {
-                return true;
-            }
-        }
+
+    if (this->omok_makes_double_three(action, p_idx_moving, is_bit_set_hypothetical)) {
+        return true;
     }
-    
+
     return false;
 }
 
-int GomokuRules::count_open_threes_globally() const {
-    return get_open_three_patterns_globally().size();
-}
+// --- Renju Forbidden Move Logic ---
+bool GomokuRules::is_black_renju_forbidden(int action) const {
+    if (!is_bit_set_ || !is_any_bit_set_ || !coords_to_action_ || !action_to_coords_ || !in_bounds_) {
+         throw std::runtime_error("GomokuRules not properly initialized with board accessors for Renju.");
+    }
 
-// Pattern recognition helpers
-bool GomokuRules::renju_is_three_shape(const std::vector<std::pair<int, int>>& segment) const {
-    int seg_len = segment.size();
-    int black_count = 0, white_count = 0;
-    
-    for (const auto& [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (is_bit_set_(0, a)) {
-            black_count++;
-        } else if (is_bit_set_(1, a)) {
-            white_count++;
-        }
-    }
-    
-    if (white_count > 0 || black_count < 2 || black_count >= 4) {
-        return false;
-    }
-    
-    for (const auto& [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (!is_bit_set_(0, a) && !is_bit_set_(1, a)) {
-            // Test if placing a black stone here creates a four shape
-            // We need to temporarily consider a black stone here
-            
-            // Create a test board with this stone added
-            auto is_bit_set_temp = [this, a](int p_idx, int test_a) {
-                if (test_a == a && p_idx == 0) { // Black is trying to place here
-                    return true;
-                }
-                return is_bit_set_(p_idx, test_a);
-            };
-            
-            // Check if it's now a four shape
-            int seg_len = segment.size();
-            int temp_black_count = 0, temp_white_count = 0;
-            
-            for (const auto& [tx, ty] : segment) {
-                int ta = coords_to_action_(tx, ty);
-                if (is_bit_set_temp(0, ta)) {
-                    temp_black_count++;
-                } else if (is_bit_set_temp(1, ta)) {
-                    temp_white_count++;
-                }
-            }
-            
-            if (temp_white_count > 0) {
-                continue;
-            }
-            
-            if (temp_black_count == 4) {
-                auto [front_open, back_open] = ends_are_open(segment);
-                if (front_open || back_open) {
-                    return true;
-                }
-            }
-        }
-    }
-    
-    return false;
-}
+    int p_idx_moving = 0; // Black
 
-bool GomokuRules::renju_is_four_shape(const std::vector<std::pair<int, int>>& segment) const {
-    int seg_len = segment.size();
-    int black_count = 0, white_count = 0;
-    
-    for (const auto& [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (is_bit_set_(1, a)) {
-            white_count++;
-        } else if (is_bit_set_(0, a)) {
-            black_count++;
-        }
-    }
-    
-    if (white_count > 0) {
-        return false;
-    }
-    
-    if (black_count < 3 || black_count > 4) {
-        return false;
-    }
-    
-    auto [front_open, back_open] = ends_are_open(segment);
-    
-    if (black_count == 4) {
-        return (front_open || back_open);
-    } else {
-        return check_broken_four(segment, front_open, back_open);
-    }
-}
-
-std::pair<bool, bool> GomokuRules::ends_are_open(const std::vector<std::pair<int, int>>& segment) const {
-    int seg_len = segment.size();
-    if (seg_len < 2) {
-        return {false, false};
-    }
-    
-    auto [x0, y0] = segment[0];
-    auto [x1, y1] = segment[seg_len - 1];
-    bool front_open = false, back_open = false;
-    
-    int dx = 0, dy = 0;
-    if (seg_len >= 2) {
-        auto [x2, y2] = segment[1];
-        dx = x2 - x0;
-        dy = y2 - y0;
-    }
-    
-    int fx = x0 - dx;
-    int fy = y0 - dy;
-    if (in_bounds_(fx, fy)) {
-        int af = coords_to_action_(fx, fy);
-        if (!is_bit_set_(0, af) && !is_bit_set_(1, af)) {
-            front_open = true;
-        }
-    }
-    
-    int lx = x1 + dx;
-    int ly = y1 + dy;
-    if (in_bounds_(lx, ly)) {
-        int ab = coords_to_action_(lx, ly);
-        if (!is_bit_set_(0, ab) && !is_bit_set_(1, ab)) {
-            back_open = true;
-        }
-    }
-    
-    return {front_open, back_open};
-}
-
-bool GomokuRules::check_broken_four(const std::vector<std::pair<int, int>>& segment, bool front_open, bool back_open) const {
-    if (!front_open && !back_open) {
-        return false;
-    }
-    
-    std::vector<std::pair<int, int>> empties;
-    for (const auto& [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (!is_bit_set_(0, a) && !is_bit_set_(1, a)) {
-            empties.push_back({x, y});
-        }
-    }
-    
-    if (empties.size() != 1) {
-        return false;
-    }
-    
-    auto [gapx, gapy] = empties[0];
-    int gap_action = coords_to_action_(gapx, gapy);
-    
-    // Create a test board with this stone added
-    auto is_bit_set_temp = [this, gap_action](int p_idx, int test_a) {
-        if (test_a == gap_action && p_idx == 0) { // Black placed at the gap
-            return true;
-        }
-        return is_bit_set_(p_idx, test_a);
+    auto is_bit_set_hypothetical = [this, action, p_idx_moving](int p_idx_check, int a_check) {
+        if (a_check == action && p_idx_check == p_idx_moving) return true;
+        return this->is_bit_set_(p_idx_check, a_check);
     };
-    
-    // Check if placing a black stone at the gap makes a 4-in-a-row
-    int consecutive = 0, best = 0;
-    
-    for (const auto& [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (is_bit_set_temp(0, a)) {
-            consecutive++;
-            if (consecutive > best) {
-                best = consecutive;
-            }
-        } else {
-            consecutive = 0;
-        }
-    }
-    
-    return (best >= 4);
-}
 
-bool GomokuRules::simple_is_4_contiguous(const std::vector<std::pair<int, int>>& segment) const {
-    int consecutive = 0, best = 0;
-    
-    for (const auto& [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (is_bit_set_(0, a)) {
-            consecutive++;
-            if (consecutive > best) {
-                best = consecutive;
-            }
-        } else {
-            consecutive = 0;
+    bool forms_exact_five = false;
+    const int DIRS[4][2] = {{1,0},{0,1},{1,1},{1,-1}};
+    for (auto& dir : DIRS) {
+        int length = this->get_line_length_at_action(action, p_idx_moving, is_bit_set_hypothetical, dir[0], dir[1]);
+        if (length == 5) {
+            forms_exact_five = true;
         }
     }
     
-    return (best >= 4);
-}
+    bool forms_overline_simultaneously = false;
+     for (auto& dir : DIRS) {
+        int length = this->get_line_length_at_action(action, p_idx_moving, is_bit_set_hypothetical, dir[0], dir[1]);
+        if (length > 5) {
+            forms_overline_simultaneously = true;
+            break;
+        }
+    }
 
-std::set<int> GomokuRules::positions_of_black(const std::vector<std::pair<int, int>>& segment) const {
-    std::set<int> black_set;
-    
-    for (const auto& [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (is_bit_set_(0, a)) {
-            black_set.insert(a);
-        }
+    if (forms_exact_five && !forms_overline_simultaneously) {
+        return false;
     }
-    
-    return black_set;
-}
 
-bool GomokuRules::try_unify_four_shape(std::set<std::pair<std::set<int>, int>>& found_fours, 
-                                     const std::set<int>& new_fs, int size) const {
-    for (const auto& [existing_fs, existing_size] : found_fours) {
-        std::set<int> intersection;
-        std::set_intersection(
-            existing_fs.begin(), existing_fs.end(),
-            new_fs.begin(), new_fs.end(),
-            std::inserter(intersection, intersection.begin())
-        );
-        
-        if (intersection.size() >= 3) {
-            return true;
-        }
+    if (this->renju_is_overline(action, p_idx_moving, is_bit_set_hypothetical)) {
+        return true;
     }
     
+    if (this->renju_makes_double_four(action, p_idx_moving, is_bit_set_hypothetical)) {
+        return true;
+    }
+    
+    // Call the public interface for double-three check
+    const std::function<bool(int, int)> board_state_func = is_bit_set_hypothetical; // Assign lambda to std::function variable
+    if (this->is_black_renju_d3_forbidden(action, p_idx_moving, board_state_func)) { // Use the wrapper function
+        return true;
+    }
+
     return false;
 }
 
-bool GomokuRules::try_unify_three_shape(std::set<std::set<int>>& found_threes, 
-                                      const std::set<int>& new_fs, int action) const {
-    for (const auto& existing_fs : found_threes) {
-        std::set<int> intersection;
-        std::set_intersection(
-            existing_fs.begin(), existing_fs.end(),
-            new_fs.begin(), new_fs.end(),
-            std::inserter(intersection, intersection.begin())
-        );
-        
-        // Remove action from intersection
-        intersection.erase(action);
-        
-        if (!intersection.empty()) {
-            return true;
-        }
+bool GomokuRules::renju_is_overline(int action, int player_idx, const std::function<bool(int, int)>& board_accessor) const {
+    const int DIRS[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
+    for (auto& dir : DIRS) {
+        int length = this->get_line_length_at_action(action, player_idx, board_accessor, dir[0], dir[1]);
+        if (length > 5) return true; 
     }
-    
     return false;
 }
 
-std::vector<std::set<int>> GomokuRules::get_three_patterns_for_action(int action) const {
-    std::vector<std::set<int>> three_patterns;
-    int bs = board_size_;
-    std::vector<std::pair<int, int>> directions = { {0, 1}, {1, 0}, {1, 1}, {-1, 1} };
+int GomokuRules::count_renju_fours_at_action(int action, int player_idx, const std::function<bool(int, int)>& board_accessor) const {
+    auto [r_action, c_action] = this->action_to_coords_(action);
+    int four_count = 0;
+    const int DIRS[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
     
-    auto [x0, y0] = action_to_coords_(action);
-    
-    // Temporarily consider the action as a black stone
-    auto is_bit_set_temp = [this, action](int p_idx, int a) {
-        if (a == action && p_idx == 0) { // Black is trying to place here
-            return true;
-        }
-        return is_bit_set_(p_idx, a);
-    };
-    
-    for (auto [dx, dy] : directions) {
-        std::vector<std::pair<int, int>> line_cells;
-        // Build a line of up to 7 cells centered on the action.
-        for (int offset = -3; offset <= 3; offset++) {
-            int nx = x0 + offset * dx;
-            int ny = y0 + offset * dy;
-            if (in_bounds_(nx, ny)) {
-                line_cells.push_back({nx, ny});
-            }
-        }
-        
-        // Slide a 5-cell window over the line.
-        for (size_t start = 0; start + 4 < line_cells.size(); start++) {
-            std::vector<std::pair<int, int>> segment(line_cells.begin() + start, line_cells.begin() + start + 5);
+    for (auto& dir : DIRS) {
+        int dr = dir[0];
+        int dc = dir[1];
+        bool found_four_in_this_direction = false;
+
+        // 1. Check for Straight Fours (XXXX pattern)
+        for (int offset = 0; offset < 4; ++offset) { 
+            int r_start_of_line4 = r_action - offset * dr;
+            int c_start_of_line4 = c_action - offset * dc;
             
-            // Check if this segment forms a three pattern containing our action.
-            if (is_three_pattern(segment, action)) {
-                std::set<int> pattern;
-                for (auto [x, y] : segment) {
-                    pattern.insert(coords_to_action_(x, y));
+            std::set<int> current_line_stones;
+            bool is_solid_line_of_4 = true;
+            for (int i = 0; i < 4; ++i) {
+                int r_k = r_start_of_line4 + i * dr;
+                int c_k = c_start_of_line4 + i * dc;
+                if (!this->in_bounds_(r_k, c_k) || !board_accessor(player_idx, this->coords_to_action_(r_k, c_k))) {
+                    is_solid_line_of_4 = false;
+                    break;
                 }
+                current_line_stones.insert(this->coords_to_action_(r_k, c_k));
+            }
+            
+            if (is_solid_line_of_4 && current_line_stones.count(action) && current_line_stones.size() == 4) {
+                int r_before = r_start_of_line4 - dr;
+                int c_before = c_start_of_line4 - dc;
+                int r_after = r_start_of_line4 + 4 * dr;
+                int c_after = c_start_of_line4 + 4 * dc;
                 
-                // Unify: check if this pattern overlaps in at least 3 cells with any existing one.
-                bool duplicate = false;
-                for (const auto &existing : three_patterns) {
-                    std::set<int> inter;
-                    std::set_intersection(existing.begin(), existing.end(),
-                                          pattern.begin(), pattern.end(),
-                                          std::inserter(inter, inter.begin()));
-                    if (inter.size() >= 3) {  // Overlap is significant; consider it the same three.
-                        duplicate = true;
-                        break;
+                bool open_before = this->is_empty_spot(r_before, c_before, board_accessor);
+                bool open_after = this->is_empty_spot(r_after, c_after, board_accessor);
+                
+                if (open_before || open_after) { 
+                    // Check if completing to five results in exactly 5 (not overline)
+                    bool makes_exactly_five = false;
+                    if (open_before) {
+                        auto board_if_filled_before = [&](int p, int a){ return (p == player_idx && a == coords_to_action_(r_before, c_before)) || board_accessor(p,a); };
+                        if (get_line_length_at_action(coords_to_action_(r_before, c_before), player_idx, board_if_filled_before, dr, dc) == 5) makes_exactly_five = true;
+                    }
+                    if (!makes_exactly_five && open_after) {
+                        auto board_if_filled_after = [&](int p, int a){ return (p == player_idx && a == coords_to_action_(r_after, c_after)) || board_accessor(p,a); };
+                        if (get_line_length_at_action(coords_to_action_(r_after, c_after), player_idx, board_if_filled_after, dr, dc) == 5) makes_exactly_five = true;
+                    }
+                    if(makes_exactly_five){
+                        four_count++;
+                        found_four_in_this_direction = true;
+                        goto next_direction_label; 
                     }
                 }
-                if (!duplicate) {
-                    three_patterns.push_back(pattern);
+            }
+        }
+        if (found_four_in_this_direction) goto next_direction_label;
+
+        // 2. Check for Broken Fours (XXX_X, XX_XX, X_XXX patterns within a 5-cell segment)
+        for (int offset_action_in_5 = 0; offset_action_in_5 < 5; ++offset_action_in_5) { 
+            int r_start_5seg = r_action - offset_action_in_5 * dr;
+            int c_start_5seg = c_action - offset_action_in_5 * dc;
+
+            int player_stones_in_seg = 0;
+            int empty_spots_in_seg = 0;
+            int empty_spot_action_val = -1;
+            bool action_in_segment = false;
+            bool segment_valid_for_broken_four = true;
+
+            for (int i = 0; i < 5; ++i) {
+                int r_k = r_start_5seg + i * dr;
+                int c_k = c_start_5seg + i * dc;
+                if (!this->in_bounds_(r_k, c_k)) {
+                    segment_valid_for_broken_four = false; break;
+                }
+                int current_spot = this->coords_to_action_(r_k, c_k);
+                if (current_spot == action) action_in_segment = true;
+
+                if (board_accessor(player_idx, current_spot)) {
+                    player_stones_in_seg++;
+                } else if (this->is_empty_spot(r_k, c_k, board_accessor)) {
+                    empty_spots_in_seg++;
+                    empty_spot_action_val = current_spot;
+                } else { // Opponent stone in segment, cannot be this type of broken four
+                    segment_valid_for_broken_four = false; break;
                 }
             }
-        }
-    }
-    return three_patterns;
-}
 
-bool GomokuRules::is_three_pattern(const std::vector<std::pair<int, int>>& segment, int action) const {
-    // A three pattern has exactly 3 black stones, the rest empty, and can form a four
-    
-    // Temporarily consider the action as a black stone
-    auto is_bit_set_temp = [this, action](int p_idx, int a) {
-        if (a == action && p_idx == 0) { // Black is trying to place here
-            return true;
-        }
-        return is_bit_set_(p_idx, a);
-    };
-    
-    int black_count = 0;
-    int white_count = 0;
-    bool contains_action = false;
-    
-    for (auto [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (is_bit_set_temp(0, a)) {
-            black_count++;
-            if (a == action) {
-                contains_action = true;
-            }
-        } else if (is_bit_set_temp(1, a)) {
-            white_count++;
-        }
-    }
-    
-    if (black_count != 3 || white_count > 0 || !contains_action) {
-        return false;
-    }
-    
-    // Check if this pattern can form a four by placing a stone in an empty spot
-    for (auto [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (!is_bit_set_temp(0, a) && !is_bit_set_temp(1, a)) {
-            // Check if placing a black stone here would form a four
-            
-            // Create another temporary board state with this additional stone
-            auto is_bit_set_double_temp = [is_bit_set_temp, a](int p_idx, int test_a) {
-                if (test_a == a && p_idx == 0) { // Black placed at this empty spot
-                    return true;
-                }
-                return is_bit_set_temp(p_idx, test_a);
-            };
-            
-            // Check for a four pattern
-            int temp_black_count = 0;
-            for (auto [tx, ty] : segment) {
-                int ta = coords_to_action_(tx, ty);
-                if (is_bit_set_double_temp(0, ta)) {
-                    temp_black_count++;
-                }
-            }
-            
-            if (temp_black_count == 4) {
-                return true;
-            }
-        }
-    }
-    
-    return false;
-}
-
-bool GomokuRules::is_four_pattern(const std::vector<std::pair<int, int>>& segment) const {
-    // A four pattern has exactly 4 black stones and can form a five
-    
-    int black_count = 0;
-    int white_count = 0;
-    
-    for (auto [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (is_bit_set_(0, a)) {
-            black_count++;
-        } else if (is_bit_set_(1, a)) {
-            white_count++;
-        }
-    }
-    
-    if (black_count != 4 || white_count > 0) {
-        return false;
-    }
-    
-    // Check if there's at least one empty spot that would form a five
-    for (auto [x, y] : segment) {
-        int a = coords_to_action_(x, y);
-        if (!is_bit_set_(0, a) && !is_bit_set_(1, a)) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-std::vector<std::set<int>> GomokuRules::get_open_three_patterns_globally() const {
-    int bs = board_size_;
-    std::set<std::set<int>> found_threes;
-    std::vector<std::pair<int, int>> directions = {{0, 1}, {1, 0}, {1, 1}, {-1, 1}};
-    
-    for (int x = 0; x < bs; x++) {
-        for (int y = 0; y < bs; y++) {
-            for (auto [dx0, dy0] : directions) {
-                std::vector<std::pair<int, int>> cells_5;
-                int step = 0;
-                int cx = x, cy = y;
+            if (segment_valid_for_broken_four && action_in_segment && player_stones_in_seg == 4 && empty_spots_in_seg == 1) {
+                // This is a XXXX_ pattern (4 player stones, 1 empty in 5-cell window)
+                // Now, check if filling that empty_spot_action_val makes exactly 5 stones in a line.
+                auto board_if_gap_filled = [&](int p, int a) {
+                    return (p == player_idx && a == empty_spot_action_val) || board_accessor(p,a);
+                };
                 
-                while (step < 5) {
-                    if (!in_bounds_(cx, cy)) {
-                        break;
-                    }
-                    cells_5.push_back({cx, cy});
-                    cx += dx0;
-                    cy += dy0;
-                    step++;
+                if (get_line_length_at_action(empty_spot_action_val, player_idx, board_if_gap_filled, dr, dc) == 5) {
+                    four_count++;
+                    found_four_in_this_direction = true; // Mark to skip further checks for this dir
+                    goto next_direction_label;
                 }
-                
-                if (cells_5.size() == 5) {
-                    std::set<int> triple = check_open_three_5slice(cells_5);
-                    if (!triple.empty()) {
-                        bool skip = false;
-                        std::vector<std::set<int>> to_remove;
+            }
+        }
+        if (found_four_in_this_direction) goto next_direction_label;
+
+        // 3. Check for Potential Fours (action stone + one existing stone with a gap can become a straight four)
+        // Scan in both directions from action stone looking for player stones with one gap
+        for (int distance = 2; distance <= 4; distance++) {
+            // Forward direction
+            int r_forward = r_action + distance * dr;
+            int c_forward = c_action + distance * dc;
+            if (this->in_bounds_(r_forward, c_forward) && board_accessor(player_idx, this->coords_to_action_(r_forward, c_forward))) {
+                // Check if the gap in between is empty
+                int r_gap = r_action + (distance-1) * dr;
+                int c_gap = c_action + (distance-1) * dc;
+                if (this->is_empty_spot(r_gap, c_gap, board_accessor)) {
+                    // Check if filling that gap would create a potential straight four
+                    auto gap_filled_board = [&](int p, int a) {
+                        return (p == player_idx && a == this->coords_to_action_(r_gap, c_gap)) || board_accessor(p, a);
+                    };
+                    
+                    // Test if filling the gap creates a 3-in-a-row that has potential to become a four
+                    int line_length = get_line_length_at_action(this->coords_to_action_(r_gap, c_gap), player_idx, gap_filled_board, dr, dc);
+                    if (line_length >= 3) {
+                        // Now check if this 3-in-a-row has room to become a four
+                        int r_before = r_action - dr;
+                        int c_before = c_action - dc;
+                        int r_after = r_forward + dr;
+                        int c_after = c_forward + dc;
                         
-                        for (const auto& existing : found_threes) {
-                            // Check if existing is a superset of triple
-                            if (std::includes(existing.begin(), existing.end(), 
-                                            triple.begin(), triple.end())) {
-                                skip = true;
-                                break;
-                            }
-                            
-                            // Check if triple is a superset of existing
-                            if (std::includes(triple.begin(), triple.end(), 
-                                            existing.begin(), existing.end())) {
-                                to_remove.push_back(existing);
-                            }
+                        bool can_extend_before = this->in_bounds_(r_before, c_before) && this->is_empty_spot(r_before, c_before, board_accessor);
+                        bool can_extend_after = this->in_bounds_(r_after, c_after) && this->is_empty_spot(r_after, c_after, board_accessor);
+                        
+                        if (can_extend_before || can_extend_after) {
+                            four_count++;
+                            goto next_direction_label;
                         }
+                    }
+                }
+            }
+            
+            // Backward direction
+            int r_backward = r_action - distance * dr;
+            int c_backward = c_action - distance * dc;
+            if (this->in_bounds_(r_backward, c_backward) && board_accessor(player_idx, this->coords_to_action_(r_backward, c_backward))) {
+                // Check if the gap in between is empty
+                int r_gap = r_action - (distance-1) * dr;
+                int c_gap = c_action - (distance-1) * dc;
+                if (this->is_empty_spot(r_gap, c_gap, board_accessor)) {
+                    // Check if filling that gap would create a potential straight four
+                    auto gap_filled_board = [&](int p, int a) {
+                        return (p == player_idx && a == this->coords_to_action_(r_gap, c_gap)) || board_accessor(p, a);
+                    };
+                    
+                    // Test if filling the gap creates a 3-in-a-row that has potential to become a four
+                    int line_length = get_line_length_at_action(this->coords_to_action_(r_gap, c_gap), player_idx, gap_filled_board, dr, dc);
+                    if (line_length >= 3) {
+                        // Now check if this 3-in-a-row has room to become a four
+                        int r_before = r_backward - dr;
+                        int c_before = c_backward - dc;
+                        int r_after = r_action + dr;
+                        int c_after = c_action + dc;
                         
-                        if (!skip) {
-                            for (const auto& r : to_remove) {
-                                found_threes.erase(r);
-                            }
-                            found_threes.insert(triple);
+                        bool can_extend_before = this->in_bounds_(r_before, c_before) && this->is_empty_spot(r_before, c_before, board_accessor);
+                        bool can_extend_after = this->in_bounds_(r_after, c_after) && this->is_empty_spot(r_after, c_after, board_accessor);
+                        
+                        if (can_extend_before || can_extend_after) {
+                            four_count++;
+                            goto next_direction_label;
                         }
                     }
                 }
             }
         }
+        
+        next_direction_label:;
     }
-    
-    return std::vector<std::set<int>>(found_threes.begin(), found_threes.end());
+    return four_count;
 }
 
-std::set<int> GomokuRules::check_open_three_5slice(const std::vector<std::pair<int, int>>& cells_5) const {
-    if (cells_5.size() != 5) {
-        return {};
-    }
-    
-    int black_count = 0, white_count = 0, empty_count = 0;
-    int arr[5] = {0}; // Represents the contents of cells_5: 0=empty, 1=black, -1=white
-    
-    for (int i = 0; i < 5; i++) {
-        auto [xx, yy] = cells_5[i];
-        int act = coords_to_action_(xx, yy);
+bool GomokuRules::renju_makes_double_four(int action, int player_idx, const std::function<bool(int,int)>& board_accessor) const {
+    return this->count_renju_fours_at_action(action, player_idx, board_accessor) >= 2;
+}
+
+bool GomokuRules::is_renju_double_three_forbidden(
+    int action, 
+    int player_idx, 
+    const std::function<bool(int,int)>& board_accessor_after_action
+) const {
+    // Need to use std::function to allow recursive use of the lambda by pointer.
+    std::function<bool(int, const std::function<bool(int,int)>&)> s4_checker_lambda_obj;
+    s4_checker_lambda_obj = 
+        [this, player_idx, &s4_checker_lambda_obj](int s4_action, const std::function<bool(int,int)>& board_state_for_s4_lambda) -> bool {
+        if (this->renju_is_overline(s4_action, player_idx, board_state_for_s4_lambda)) return true;
+        if (this->renju_makes_double_four(s4_action, player_idx, board_state_for_s4_lambda)) return true;
+        // Pass pointer to the std::function object for recursive calls
+        return this->check_renju_double_three_recursive(s4_action, player_idx, board_state_for_s4_lambda, true, &s4_checker_lambda_obj);
+    };
+
+    return this->check_renju_double_three_recursive(action, player_idx, board_accessor_after_action, false, &s4_checker_lambda_obj);
+}
+
+bool GomokuRules::check_renju_double_three_recursive(
+    int action, 
+    int player_idx, 
+    const std::function<bool(int,int)>& board_accessor_after_action,
+    bool is_recursive_call,
+    const std::function<bool(int, const std::function<bool(int,int)>&)>* s4_forbidden_checker
+) const {
+
+    std::vector<RenjuPatternInfo> actual_renju_threes;
+    const int DIRS[4][2] = {{1,0}, {0,1}, {1,1}, {1,-1}};
+
+    auto check_s4_forbidden_primary = 
+        [this, player_idx, s4_forbidden_checker, is_recursive_call](int s4_action, const std::function<bool(int,int)>& board_state_for_s4) -> bool {
+        if (this->renju_is_overline(s4_action, player_idx, board_state_for_s4)) return true;
+        if (this->renju_makes_double_four(s4_action, player_idx, board_state_for_s4)) return true;
         
-        if (is_bit_set_(0, act)) {
-            black_count++;
-            arr[i] = 1;
-        } else if (is_bit_set_(1, act)) {
-            white_count++;
-            arr[i] = -1;
+        if (s4_forbidden_checker && *s4_forbidden_checker) {
+             return (*s4_forbidden_checker)(s4_action, board_state_for_s4);
         } else {
-            empty_count++;
+             // Fallback path if checker is null (should not happen via public interface)
+             return this->check_renju_double_three_recursive(s4_action, player_idx, board_state_for_s4, true, s4_forbidden_checker);
         }
-    }
-    
-    if (black_count != 3 || white_count != 0 || empty_count != 2) {
-        return {};
-    }
-    
-    if (arr[0] != 0 || arr[4] != 0) {
-        return {};
-    }
-    
-    bool has_triple = false, has_gap = false;
-    
-    if (arr[1] == 1 && arr[2] == 1 && arr[3] == 1) {
-        has_triple = true;
-    }
-    
-    if (arr[1] == 1 && arr[2] == 0 && arr[3] == 1) {
-        has_gap = true;
-    }
-    
-    if (!has_triple && !has_gap) {
-        return {};
-    }
-    
-    int dx = cells_5[1].first - cells_5[0].first;
-    int dy = cells_5[1].second - cells_5[0].second;
-    
-    int left_x = cells_5[0].first - dx;
-    int left_y = cells_5[0].second - dy;
-    int right_x = cells_5[4].first + dx;
-    int right_y = cells_5[4].second + dy;
-    
-    // Check if this is an "open" three (both ends must be empty)
-    if (in_bounds_(left_x, left_y)) {
-        int left_act = coords_to_action_(left_x, left_y);
-        if (is_bit_set_(0, left_act)) {
-            return {};
-        }
-    }
-    
-    if (in_bounds_(right_x, right_y)) {
-        int right_act = coords_to_action_(right_x, right_y);
-        if (is_bit_set_(0, right_act)) {
-            return {};
-        }
-    }
-    
-    // Get the positions of the three black stones
-    std::set<int> triple;
-    for (int i = 0; i < 5; i++) {
-        if (arr[i] == 1) {
-            triple.insert(coords_to_action_(cells_5[i].first, cells_5[i].second));
-        }
-    }
-    
-    return triple;
-}
+    };
 
-bool GomokuRules::are_patterns_connected(const std::set<int>& pattern1, const std::set<int>& pattern2) const {
-    for (int cell1 : pattern1) {
-        auto [ax, ay] = action_to_coords_(cell1);
-        
-        for (int cell2 : pattern2) {
-            auto [bx, by] = action_to_coords_(cell2);
+    for (auto& dir_arr : DIRS) {
+        auto [r_act, c_act] = this->action_to_coords_(action);
+
+        for (int offset_in_3 = 0; offset_in_3 < 3; ++offset_in_3) { 
+            int r_start_of_3 = r_act - offset_in_3 * dir_arr[0];
+            int c_start_of_3 = c_act - offset_in_3 * dir_arr[1];
             
-            if (abs(ax - bx) <= 1 && abs(ay - by) <= 1) {
-                return true;
+            std::set<int> current_three_set;
+            bool possible_three = true;
+            for (int k=0; k<3; ++k) {
+                int r_k = r_start_of_3 + k * dir_arr[0];
+                int c_k = c_start_of_3 + k * dir_arr[1];
+                if (!this->in_bounds_(r_k,c_k)) {possible_three = false; break;}
+                int stone_action_k = this->coords_to_action_(r_k,c_k);
+                if (!board_accessor_after_action(player_idx, stone_action_k)) {possible_three=false; break;}
+                current_three_set.insert(stone_action_k);
+            }
+
+            if (possible_three && current_three_set.count(action)) {
+                if (this->is_renju_three_definition(current_three_set, action, player_idx, 
+                                              board_accessor_after_action,
+                                              check_s4_forbidden_primary 
+                                              )) {
+                    GomokuRules::RenjuPatternInfo p_info;
+                    p_info.stones = current_three_set;
+                    p_info.type = GomokuRules::RenjuLineType::THREE; 
+                    p_info.dir = {dir_arr[0], dir_arr[1]};
+                    
+                    bool found = false;
+                    for(const auto& existing_three : actual_renju_threes) {
+                        if (existing_three.stones == p_info.stones && existing_three.dir == p_info.dir) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                         actual_renju_threes.push_back(p_info);
+                    }
+                }
             }
         }
     }
-    return false;
-}
 
-// Enhanced double-three detection for Renju rules
-bool GomokuRules::is_allowed_double_three(int action) const {
-    // Temporarily consider the action as a black stone for pattern detection
-    auto is_bit_set_temp = [this, action](int p_idx, int a) {
-        if (a == action && p_idx == 0) { // Black is trying to place here
-            return true;
+    if (actual_renju_threes.size() < 2) {
+        return false; 
+    }
+
+    std::function<bool(int, int, const std::function<bool(int,int)>&)> s4_d3_checker_for_exception_logic;
+    s4_d3_checker_for_exception_logic = 
+        [this, player_idx, &s4_forbidden_checker] 
+        (int s4_action_inner, int p_idx_inner_ignored, const std::function<bool(int,int)>& board_s4_inner) -> bool {
+        if (s4_forbidden_checker && *s4_forbidden_checker) {
+            // s4_forbidden_checker is already a pointer to std::function, so we can define nested_s4_checker similarly if needed
+            // or just pass s4_forbidden_checker directly if the recursive structure is through it.
+            // The nested_s4_checker here is to ensure the context for *its* S4s uses the original checker.
+            // This lambda is for the S4 of the S4.
+            std::function<bool(int, const std::function<bool(int,int)>&)> nested_s4_checker_obj;
+            nested_s4_checker_obj = 
+                [this, player_idx, s4_forbidden_checker_outer_ptr = s4_forbidden_checker] // Capture outer checker by value (it's a ptr)
+                (int nested_s4_act, const std::function<bool(int,int)>& nested_board_lambda) -> bool {
+                 if (s4_forbidden_checker_outer_ptr && *s4_forbidden_checker_outer_ptr) { 
+                    return (*s4_forbidden_checker_outer_ptr)(nested_s4_act, nested_board_lambda);
+                 }
+                 // Fallback if the outer checker was somehow null (shouldn't happen with proper setup)
+                 if (this->renju_is_overline(nested_s4_act, player_idx, nested_board_lambda)) return true;
+                 if (this->renju_makes_double_four(nested_s4_act, player_idx, nested_board_lambda)) return true;
+                 return false; 
+            };
+            return this->check_renju_double_three_recursive(s4_action_inner, player_idx, board_s4_inner, true, &nested_s4_checker_obj);
+        } else {
+            // Fallback for robustness if s4_forbidden_checker was null.
+            std::function<bool(int, const std::function<bool(int,int)>&)> fallback_s4_checker_obj;
+            fallback_s4_checker_obj = 
+                [this, player_idx](int s4_act, const std::function<bool(int,int)>& board_lambda) -> bool {
+                if (this->renju_is_overline(s4_act, player_idx, board_lambda)) return true;
+                if (this->renju_makes_double_four(s4_act, player_idx, board_lambda)) return true;
+                return false; // No recursive D3 check for S4 in this fallback path
+            };
+            return this->check_renju_double_three_recursive(s4_action_inner, player_idx, board_s4_inner, true, &fallback_s4_checker_obj);
         }
-        return is_bit_set_(p_idx, a);
     };
-    
-    // Store original accessor
-    auto original_is_bit_set = is_bit_set_;
-    
-    // Replace with temporary accessor
-    const_cast<GomokuRules*>(this)->is_bit_set_ = is_bit_set_temp;
-    
-    // Step 1: Get all three patterns that include this action
-    std::vector<std::set<int>> three_patterns = get_three_patterns_for_action(action);
-    
-    // Restore original accessor
-    const_cast<GomokuRules*>(this)->is_bit_set_ = original_is_bit_set;
-    
-    // If there's fewer than 2 three patterns, it's not a double-three
-    if (three_patterns.size() < 2) {
-        return true; // Not a double-three, so it's allowed
+
+    bool exception_applies = this->check_renju_double_three_exception_recursive(
+        action, actual_renju_threes, player_idx, board_accessor_after_action, 0, 
+        [this](int s4_action, int p_idx, const std::function<bool(int,int)>& board_s4){ return this->renju_is_overline(s4_action, p_idx, board_s4); },
+        [this](int s4_action, int p_idx, const std::function<bool(int,int)>& board_s4){ return this->renju_makes_double_four(s4_action, p_idx, board_s4); },
+        s4_d3_checker_for_exception_logic
+    );
+
+    if (exception_applies) { 
+        return false; 
     }
     
-    // Apply rule 9.3(a): Check how many threes can be made into straight fours
-    int straight_four_capable_count = count_straight_four_capable_threes(three_patterns);
-    
-    // If at most one of the threes can be made into a straight four, the double-three is allowed
-    if (straight_four_capable_count <= 1) {
-        return true;
-    }
-    
-    // Apply rule 9.3(b): Recursive check for potential future double-threes
-    return is_double_three_allowed_recursive(three_patterns);
+    return true;
 }
 
-bool GomokuRules::can_make_straight_four(const std::set<int>& three_pattern) const {
-    // Create temporary board accessor that considers the action point as a black stone
-    auto action = *three_pattern.begin(); // Just need any point from the pattern to set up the context
+bool GomokuRules::is_renju_three_definition(const std::set<int>& three_candidate_stones, int action_that_formed_it, 
+                                          int player_idx, const std::function<bool(int,int)>& board_accessor_after_action,
+                                          const std::function<bool(int /*s4_action*/, const std::function<bool(int,int)>& /*board_after_s4*/)>& is_s4_forbidden_func
+                                          ) const {
+    if (three_candidate_stones.size() != 3) return false;
+ 
+    for (int s : three_candidate_stones) {
+        if (!board_accessor_after_action(player_idx, s)) return false;
+    }
+
+    int dr, dc, min_r, min_c, max_r, max_c;
+    if (!this->get_line_direction_and_bounds(three_candidate_stones, dr, dc, min_r, min_c, max_r, max_c)) {
+        return false;
+    }
     
-    auto is_bit_set_temp = [this, action](int p_idx, int a) {
-        if (a == action && p_idx == 0) { // Black is trying to place here
-            return true;
-        }
-        return is_bit_set_(p_idx, a);
-    };
-    
-    // Get candidate placements that might convert the three into a four.
-    std::vector<int> possible_placements = find_three_to_four_placements(three_pattern);
-    for (int placement : possible_placements) {
-        // Create another temporary accessor that adds this candidate placement
-        auto is_bit_set_double_temp = [is_bit_set_temp, placement](int p_idx, int a) {
-            if (a == placement && p_idx == 0) { // Black placed at the placement point
-                return true;
-            }
-            return is_bit_set_temp(p_idx, a);
+    if (dr == 0 && dc == 0 && three_candidate_stones.size() > 1) {
+        return false; 
+    }
+
+    std::vector<int> extension_spots = this->get_empty_extensions_of_line(three_candidate_stones, player_idx, 
+                                                                 board_accessor_after_action, dr, dc);
+
+    for (int spot_s4 : extension_spots) {
+        auto board_after_s4 = [player_idx, spot_s4, &board_accessor_after_action](int p_check, int a_check) {
+            if (a_check == spot_s4 && p_check == player_idx) return true;
+            return board_accessor_after_action(p_check, a_check);
         };
         
-        // Form a new pattern by adding the candidate.
-        std::set<int> new_pattern = three_pattern;
-        new_pattern.insert(placement);
-        // Extract only the black stone positions from new_pattern.
-        std::set<int> black_positions;
-        for (int a : new_pattern) {
-            if (is_bit_set_double_temp(0, a))
-                black_positions.insert(a);
-        }
-        // Only consider candidate patterns that yield exactly 4 black stones.
-        if (black_positions.size() != 4)
-            continue;
-        // If the new pattern qualifies as a straight four, count it.
-        if (is_straight_four(new_pattern)) {
-            // Here we'd need to check for overline, but without a real board state
-            // we'll just return true as a simplification
+        std::set<int> four_stones = three_candidate_stones;
+        four_stones.insert(spot_s4);
+
+        if (this->is_renju_straight_four_from_stones(four_stones, player_idx, board_after_s4)) {
+                 if (is_s4_forbidden_func(spot_s4, board_after_s4)) {
+                    continue; 
+                 }
+            
+            bool s4_makes_five = false;
+            const int DIRS_S4[4][2] = {{1,0},{0,1},{1,1},{-1,1}}; // Corrected {1,-1} to {-1,1} or ensure distinct
+            // Actually, the standard DIRS {{1,0},{0,1},{1,1},{1,-1}} is fine. Let's revert that micro-change.
+            const int S4_DIRS[4][2] = {{1,0},{0,1},{1,1},{1,-1}};
+            for (auto& dir_s4 : S4_DIRS) {
+                if (this->get_line_length_at_action(spot_s4, player_idx, board_after_s4, dir_s4[0], dir_s4[1]) >= 5) {
+                    s4_makes_five = true;
+                    break;
+                }
+            }
+            if (s4_makes_five) {
+                continue; 
+            }
+
             return true;
         }
     }
+    
     return false;
 }
 
-std::vector<int> GomokuRules::find_three_to_four_placements(const std::set<int>& three_pattern) const {
-    std::vector<int> placements;
+bool GomokuRules::is_renju_straight_four_from_stones(const std::set<int>& four_stones_set, int player_idx, 
+                                                  const std::function<bool(int,int)>& board_accessor) const {
+    if (four_stones_set.size() != 4) return false;
     
-    // Convert pattern to coordinates for easier analysis
-    std::vector<std::pair<int, int>> coords;
-    for (int a : three_pattern) {
-        coords.push_back(action_to_coords_(a));
+    for (int s : four_stones_set) {
+        if (!board_accessor(player_idx, s)) return false;
+    }
+
+    int dr, dc, min_r, min_c, max_r, max_c;
+    if (!this->get_line_direction_and_bounds(four_stones_set, dr, dc, min_r, min_c, max_r, max_c)) {
+        return false;
     }
     
-    // Sort coordinates to find the pattern direction
+    if (dr == 0 && dc == 0 && four_stones_set.size() > 1) {
+        return false; 
+    }
+
+    std::vector<std::pair<int,int>> coords;
+    for (int s : four_stones_set) {
+        coords.push_back(this->action_to_coords_(s));
+    }
     std::sort(coords.begin(), coords.end());
-    
-    // Determine if pattern is horizontal, vertical, or diagonal
-    bool is_horizontal = true;
-    bool is_vertical = true;
-    bool is_diag_down = true;
-    bool is_diag_up = true;
-    
-    for (size_t i = 1; i < coords.size(); i++) {
-        if (coords[i].second != coords[0].second) is_horizontal = false;
-        if (coords[i].first != coords[0].first) is_vertical = false;
-        if (coords[i].first - coords[0].first != coords[i].second - coords[0].second) is_diag_down = false;
-        if (coords[i].first - coords[0].first != coords[0].second - coords[i].second) is_diag_up = false;
-    }
-    
-    // Determine direction vector
-    int dx = 0, dy = 0;
-    if (is_horizontal) {
-        dx = 0; dy = 1;
-    } else if (is_vertical) {
-        dx = 1; dy = 0;
-    } else if (is_diag_down) {
-        dx = 1; dy = 1;
-    } else if (is_diag_up) {
-        dx = 1; dy = -1;
-    } else {
-        // Not a straight line, shouldn't happen with valid three patterns
-        return placements;
-    }
-    
-    // Find min and max coordinates
-    int min_x = coords[0].first, min_y = coords[0].second;
-    int max_x = coords[0].first, max_y = coords[0].second;
-    
-    for (auto [x, y] : coords) {
-        min_x = std::min<int>(min_x, x);
-        min_y = std::min<int>(min_y, y);
-        max_x = std::max<int>(max_x, x);
-        max_y = std::max<int>(max_y, y);
-    }
-    
-    // Check for empty spots that could complete a four
-    // Need to check both within the pattern and at the ends
-    
-    // Check within the pattern
-    for (int i = 0; i <= 4; i++) {
-        int x = min_x + i * dx;
-        int y = min_y + i * dy;
-        
-        if (!in_bounds_(x, y)) continue;
-        
-        int a = coords_to_action_(x, y);
-        if (!is_bit_set_(0, a) && !is_bit_set_(1, a) && three_pattern.find(a) == three_pattern.end()) {
-            placements.push_back(a);
+
+    for (size_t i = 0; i < coords.size() - 1; ++i) {
+        if (coords[i+1].first != coords[i].first + dr || 
+            coords[i+1].second != coords[i].second + dc) {
+            return false; 
         }
     }
+
+    int r_before = coords.front().first - dr;
+    int c_before = coords.front().second - dc;
+    int r_after = coords.back().first + dr;
+    int c_after = coords.back().second + dc;
+
+    bool open_before = this->is_empty_spot(r_before, c_before, board_accessor);
+    bool open_after = this->is_empty_spot(r_after, c_after, board_accessor);
     
-    // Check beyond the ends
-    int before_x = min_x - dx;
-    int before_y = min_y - dy;
-    int after_x = max_x + dx;
-    int after_y = max_y + dy;
-    
-    if (in_bounds_(before_x, before_y)) {
-        int a = coords_to_action_(before_x, before_y);
-        if (!is_bit_set_(0, a) && !is_bit_set_(1, a)) {
-            placements.push_back(a);
-        }
-    }
-    
-    if (in_bounds_(after_x, after_y)) {
-        int a = coords_to_action_(after_x, after_y);
-        if (!is_bit_set_(0, a) && !is_bit_set_(1, a)) {
-            placements.push_back(a);
-        }
-    }
-    
-    return placements;
+    return open_before && open_after;
 }
 
-bool GomokuRules::is_straight_four(const std::set<int>& pattern) const {
-    // Build the segment of coordinates corresponding to the pattern.
-    std::vector<std::pair<int,int>> segment;
-    for (int a : pattern) {
-        segment.push_back(action_to_coords_(a));
-    }
-    // Sort the coordinates
-    std::sort(segment.begin(), segment.end(), [&](const std::pair<int,int>& p1, const std::pair<int,int>& p2) {
-        if (p1.first == p2.first)
-            return p1.second < p2.second;
-        return p1.first < p2.first;
-    });
+bool GomokuRules::check_renju_double_three_exception_recursive(
+    int original_action, 
+    const std::vector<GomokuRules::RenjuPatternInfo>& threes_involved,
+    int player_idx,
+    const std::function<bool(int, int)>& board_after_original_action,
+    int depth,
+    const std::function<bool(int, int, const std::function<bool(int,int)>&)>& is_overline_func,
+    const std::function<bool(int, int, const std::function<bool(int,int)>&)>& makes_double_four_func,
+    const std::function<bool(int, int, const std::function<bool(int,int)>&)>& is_double_three_forbidden_external_func) const {
+    if (depth > 3) return false; 
 
-    // Count black and white stones in the segment.
-    int black_count = 0, white_count = 0;
-    for (const auto &p : segment) {
-        int a = coords_to_action_(p.first, p.second);
-        if (is_bit_set_(0, a))
-            ++black_count;
-        else if (is_bit_set_(1, a))
-            ++white_count;
-    }
-    if (white_count > 0)
-        return false;
-    
-    // Only consider a pattern with exactly 4 black stones as a four-shape.
-    if (black_count == 4) {
-        auto ends = ends_are_open(segment); // returns {front_open, back_open}
-        return (ends.first || ends.second);
-    }
-    return false;
-}
+    int resolvable_to_valid_straight_four_count = 0;
 
-int GomokuRules::count_straight_four_capable_threes(const std::vector<std::set<int>>& three_patterns) const {
-    int count = 0;
-    
-    for (const auto& pattern : three_patterns) {
-        if (can_make_straight_four(pattern)) {
-            count++;
-        }
-    }
-    
-    return count;
-}
+    for (const auto& current_three_pattern_info : threes_involved) {
 
-bool GomokuRules::is_double_three_allowed_recursive(const std::vector<std::set<int>>& three_patterns, 
-                                                 int depth, int max_depth) const {
-    // Avoid too deep recursion
-    if (depth >= max_depth) {
-        return false;
-    }
-    
-    // Apply rule 9.3(a) again at this level
-    int straight_four_capable_count = count_straight_four_capable_threes(three_patterns);
-    if (straight_four_capable_count <= 1) {
-        return true;
-    }
-    
-    // Apply rule 9.3(b): Check all possible future moves that would create a straight four
-    for (const auto& pattern : three_patterns) {
-        std::vector<int> placements = find_three_to_four_placements(pattern);
+        std::vector<int> extension_spots = this->get_empty_extensions_of_line(
+            current_three_pattern_info.stones, player_idx, board_after_original_action, 
+            current_three_pattern_info.dir.first, current_three_pattern_info.dir.second);
+
+        bool this_three_can_be_resolved_to_valid_sf = false;
         
-        for (int placement : placements) {
-            // Skip if already occupied
-            if (is_bit_set_(0, placement) || is_bit_set_(1, placement)) {
-                continue;
-            }
-            
-            // Create a temporary board state accessor that adds this placement
-            auto is_bit_set_temp = [this, placement](int p_idx, int a) {
-                if (a == placement && p_idx == 0) { // Black placed here
-                    return true;
-                }
-                return is_bit_set_(p_idx, a);
+        for (int spot_s4 : extension_spots) { 
+            auto board_after_s4 = [player_idx, spot_s4, &board_after_original_action](int p_check, int a_check) {
+                if (a_check == spot_s4 && p_check == player_idx) return true;
+                return board_after_original_action(p_check, a_check);
             };
             
-            // Store original accessor
-            auto original_is_bit_set = is_bit_set_;
+            std::set<int> four_candidate_stones = current_three_pattern_info.stones;
+            four_candidate_stones.insert(spot_s4);
+
+            if (!this->is_renju_straight_four_from_stones(four_candidate_stones, player_idx, board_after_s4)) {
+                continue;
+            }
+
+            bool s4_is_overline = is_overline_func(spot_s4, player_idx, board_after_s4);
+            bool s4_is_df = makes_double_four_func(spot_s4, player_idx, board_after_s4);
+            bool s4_is_forbidden_d3 = false;
+            if (is_double_three_forbidden_external_func) { 
+                 s4_is_forbidden_d3 = is_double_three_forbidden_external_func(spot_s4, player_idx, board_after_s4);
+            }
+
+            if (s4_is_overline || s4_is_df || s4_is_forbidden_d3) {
+                continue; 
+            }
             
-            // Replace with temporary accessor
-            const_cast<GomokuRules*>(this)->is_bit_set_ = is_bit_set_temp;
-            
-            // Check if this creates a new double-three
-            std::vector<std::set<int>> new_three_patterns = get_three_patterns_for_action(placement);
-            
-            // Restore original accessor
-            const_cast<GomokuRules*>(this)->is_bit_set_ = original_is_bit_set;
-            
-            if (new_three_patterns.size() >= 2) {
-                // Recursively check if this new double-three is allowed
-                if (is_double_three_allowed_recursive(new_three_patterns, depth + 1, max_depth)) {
-                    return true;
+            bool s4_makes_five = false;
+            const int S4_DIRS[4][2] = {{1,0},{0,1},{1,1},{1,-1}};
+             for (auto& dir_s4 : S4_DIRS) {
+                if (this->get_line_length_at_action(spot_s4, player_idx, board_after_s4, dir_s4[0], dir_s4[1]) >= 5) {
+                    s4_makes_five = true;
+                    break;
                 }
+            }
+            if (s4_makes_five) {
+                continue;
+            }
+
+            this_three_can_be_resolved_to_valid_sf = true;
+            break; 
+        }
+
+        if (this_three_can_be_resolved_to_valid_sf) {
+            resolvable_to_valid_straight_four_count++;
+        }
+    }
+    
+    return resolvable_to_valid_straight_four_count <= 1;
+}
+
+std::vector<int> GomokuRules::get_empty_extensions_of_line(const std::set<int>& stones, int player_idx, 
+                                                        const std::function<bool(int,int)>& board_accessor, 
+                                                        int dr, int dc) const {
+    std::vector<int> spots;
+    
+    if (stones.empty() || (dr == 0 && dc == 0 && stones.size() > 1)) {
+        return spots;
+    }
+
+    std::vector<std::pair<int,int>> stone_coords;
+    for (int s : stones) {
+        stone_coords.push_back(this->action_to_coords_(s));
+    }
+    std::sort(stone_coords.begin(), stone_coords.end());
+
+    if (stone_coords.empty()) return spots;
+
+    auto [first_r, first_c] = stone_coords.front();
+    auto [last_r, last_c] = stone_coords.back();
+    
+    if (this->is_empty_spot(first_r - dr, first_c - dc, board_accessor)) {
+        spots.push_back(this->coords_to_action_(first_r - dr, first_c - dc));
+    }
+    
+    if (this->is_empty_spot(last_r + dr, last_c + dc, board_accessor)) {
+        spots.push_back(this->coords_to_action_(last_r + dr, last_c + dc));
+    }
+
+    if (stones.size() >= 2) {
+        for (int i = 0; ; ++i) {
+            int cur_r = first_r + i * dr;
+            int cur_c = first_c + i * dc;
+            
+            bool past_last = false;
+            if ((dr > 0 && cur_r > last_r) || (dr < 0 && cur_r < last_r) ||
+                (dc > 0 && cur_c > last_c) || (dc < 0 && cur_c < last_c)) {
+                if (!(cur_r == last_r && cur_c == last_c)) { // ensure we don't mark last stone itself as past if it's the start
+                    past_last = true;
+                }
+            }
+            if (cur_r == last_r && cur_c == last_c && i > 0 && (std::abs(dr) > 0 || std::abs(dc) >0 )) { // if we landed on the last stone (and it's not the first one due to i>0)
+                 //This condition means we have processed all segments up to the last stone.
+                 // If dr=dc=0, this loop is problematic. Added check for dr/dc > 0 for this specific break.
+                 break; 
+            }
+            if (past_last || !this->in_bounds_(cur_r, cur_c)) break;
+
+            int current_spot_action = this->coords_to_action_(cur_r, cur_c);
+            
+            if (stones.find(current_spot_action) == stones.end() && 
+                this->is_empty_spot(cur_r, cur_c, board_accessor)) {
+                spots.push_back(current_spot_action);
+            }
+            
+            if (i > this->board_size_ + 2) break; 
+             if (dr == 0 && dc == 0) break; // Avoid infinite loop for single stone case if it reaches here.
+        }
+    }
+
+    std::sort(spots.begin(), spots.end());
+    spots.erase(std::unique(spots.begin(), spots.end()), spots.end());
+    
+    return spots;
+}
+
+bool GomokuRules::get_line_direction_and_bounds(const std::set<int>& stones,
+                                               int& dr, int& dc,
+                                               int& min_r_out, int& min_c_out,
+                                               int& max_r_out, int& max_c_out) const {
+    if (stones.empty()) return false;
+    
+    std::vector<std::pair<int,int>> coords;
+    for (int s : stones) {
+        coords.push_back(this->action_to_coords_(s));
+    }
+    std::sort(coords.begin(), coords.end());
+
+    min_r_out = coords.front().first; 
+    min_c_out = coords.front().second;
+    max_r_out = coords.back().first;  
+    max_c_out = coords.back().second;
+
+    if (stones.size() == 1) { 
+        dr = 0; dc = 0; 
+        return true; 
+    }
+    
+    auto p1 = coords[0];
+    auto p2 = p1;
+    bool found_p2 = false;
+    
+    for (size_t i = 1; i < coords.size(); ++i) {
+        if (coords[i] != p1) {
+            p2 = coords[i];
+            found_p2 = true;
+            break;
+        }
+    }
+    
+    if (!found_p2) { 
+        dr = 0; dc = 0;
+        return true;
+    }
+
+    dr = p2.first - p1.first;
+    dc = p2.second - p1.second;
+
+    int common_divisor = std::gcd(std::abs(dr), std::abs(dc));
+    if (common_divisor > 0) {
+        dr /= common_divisor;
+        dc /= common_divisor;
+    } else {
+        if (dr != 0) dr = dr / std::abs(dr);
+        if (dc != 0) dc = dc / std::abs(dc);
+    }
+
+    for (const auto& coord : coords) {
+        if (dr == 0) { 
+            if (coord.first != p1.first) return false;
+        } else if (dc == 0) { 
+            if (coord.second != p1.second) return false;
+        } else { 
+            if ((long long)(coord.first - p1.first) * dc != (long long)(coord.second - p1.second) * dr) {
+                return false;
             }
         }
     }
     
-    // If we've checked all possibilities and found no allowed configuration
-    return false;
-}
-
-// Utility methods
-std::vector<std::pair<int, int>> GomokuRules::build_entire_line(int x0, int y0, int dx, int dy) const {
-    std::vector<std::pair<int, int>> backward_positions;
-    std::vector<std::pair<int, int>> forward_positions;
-    
-    int bx = x0, by = y0;
-    while (in_bounds_(bx, by)) {
-        backward_positions.push_back({bx, by});
-        bx -= dx;
-        by -= dy;
-    }
-    
-    std::reverse(backward_positions.begin(), backward_positions.end());
-    
-    int fx = x0 + dx, fy = y0 + dy;
-    while (in_bounds_(fx, fy)) {
-        forward_positions.push_back({fx, fy});
-        fx += dx;
-        fy += dy;
-    }
-    
-    std::vector<std::pair<int, int>> result = backward_positions;
-    result.insert(result.end(), forward_positions.begin(), forward_positions.end());
-    return result;
+    return true;
 }
 
 } // namespace gomoku

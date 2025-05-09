@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include "core/export_macros.h"
+#include "core/illegal_move_exception.h"
 
 namespace alphazero {
 namespace core {
@@ -28,31 +29,6 @@ enum class GameResult {
     WIN_PLAYER1,
     WIN_PLAYER2,
     DRAW
-};
-
-/**
- * @brief Exception for illegal moves
- */
-class ALPHAZERO_API IllegalMoveException : public std::runtime_error {
-public:
-    /**
-     * @brief Constructor
-     * 
-     * @param message Error message
-     * @param action The illegal action
-     */
-    IllegalMoveException(const std::string& message, int action)
-        : std::runtime_error(message), action_(action) {}
-    
-    /**
-     * @brief Get the illegal action
-     * 
-     * @return The illegal action
-     */
-    int getAction() const { return action_; }
-
-private:
-    int action_;
 };
 
 /**
