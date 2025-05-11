@@ -1,0 +1,43 @@
+# config.yaml
+
+# Game settings
+game: gomoku
+board_size: 15
+
+# Neural network settings
+network:
+  num_res_blocks: 10
+  num_filters: 128
+
+# Model paths
+model_path: models/best_model.pt
+
+# MCTS settings
+mcts:
+  num_simulations: 800
+  num_threads: 4
+  batch_size: 8
+  exploration_constant: 1.5
+  virtual_loss: 3
+  add_dirichlet_noise: true
+  dirichlet_alpha: 0.3
+  dirichlet_epsilon: 0.25
+  temperature: 1.0
+  batch_timeout_ms: 5
+
+# Self-play settings
+self_play:
+  num_games: 50
+  num_parallel_games: 4
+  max_moves: 0  # 0 means calculate based on board size
+  temperature_threshold: 30
+  high_temperature: 1.0
+  low_temperature: 0.1
+  output_dir: data/selfplay
+  output_format: json
+
+# Evaluation settings
+evaluation:
+  num_games: 20
+  num_parallel_games: 4
+  max_moves: 0  # 0 means calculate based on board size

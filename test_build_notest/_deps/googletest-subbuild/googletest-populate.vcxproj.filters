@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\696b42f3ea74edc624457eedb9ad19b0\googletest-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\696b42f3ea74edc624457eedb9ad19b0\googletest-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\696b42f3ea74edc624457eedb9ad19b0\googletest-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\696b42f3ea74edc624457eedb9ad19b0\googletest-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\696b42f3ea74edc624457eedb9ad19b0\googletest-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\696b42f3ea74edc624457eedb9ad19b0\googletest-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\696b42f3ea74edc624457eedb9ad19b0\googletest-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\696b42f3ea74edc624457eedb9ad19b0\googletest-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\252c08aa9237b1d58a42c6fad606eedb\googletest-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\c60dc2c28782cd004b555a5b40301b1c\googletest-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\Dropbox\personal_projects\omoknuni_small\test_build_notest\_deps\googletest-subbuild\CMakeFiles\googletest-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{50DC4AFF-6203-339E-864C-2057A8F97474}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

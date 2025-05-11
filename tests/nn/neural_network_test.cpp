@@ -1,0 +1,156 @@
+// tests/nn/neural_network_test.cpp
+#include <gtest/gtest.h>
+#ifdef WITH_TORCH
+#include "nn/neural_network_factory.h"
+#include "nn/resnet_model.h"
+#include "games/gomoku/gomoku_state.h"
+#include <torch/torch.h>
+#include <memory>
+#include <vector>
+#include <ctime>
+
+using namespace alphazero;
+
+class NeuralNetworkTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Create a small model for fast testing
+        model = nn::NeuralNetworkFactory::createResNet(17, 9, 2, 32);
+    }
+    
+    std::shared_ptr<nn::ResNetModel> model;
+};
+
+// Test model creation
+TEST_F(NeuralNetworkTest, ModelCreation) {
+    ASSERT_TRUE(model);
+    EXPECT_EQ(model->getInputShape()[0], 17);
+    EXPECT_EQ(model->getInputShape()[1], 9);
+    EXPECT_EQ(model->getInputShape()[2], 9);
+    EXPECT_EQ(model->getPolicySize(), 81);  // 9x9 board
+}
+
+// Test forward pass
+TEST_F(NeuralNetworkTest, ForwardPass) {
+    // Create dummy input tensor
+    torch::Tensor input = torch::zeros({1, 17, 9, 9});
+    
+    // Run forward pass
+    auto [policy, value] = model->forward(input);
+    
+    // Check shapes
+    EXPECT_EQ(policy.sizes(), std::vector<int64_t>({1, 81}));
+    EXPECT_EQ(value.sizes(), std::vector<int64_t>({1, 1}));
+    
+    // Check value range
+    EXPECT_GE(value.item<float>(), -1.0f);
+    EXPECT_LE(value.item<float>(), 1.0f);
+    
+    // Check policy sums to 1 (log_softmax is used in forward)
+    torch::Tensor policy_probs = torch::exp(policy);
+    float sum = policy_probs.sum().item<float>();
+    EXPECT_NEAR(sum, 1.0f, 1e-6);
+}
+
+// Test inference with game states
+TEST_F(NeuralNetworkTest, Inference) {
+    // Create Gomoku state
+    auto gomoku = std::make_unique<games::gomoku::GomokuState>(9);
+    
+    // Make a few moves
+    gomoku->makeMove(4 * 9 + 4);  // Center
+    gomoku->makeMove(3 * 9 + 3);  // Top-left of center
+    
+    // Create batch
+    std::vector<std::unique_ptr<core::IGameState>> states;
+    states.push_back(std::move(gomoku));
+    
+    // Run inference
+    auto outputs = model->inference(states);
+    
+    // Check results
+    ASSERT_EQ(outputs.size(), 1);
+    EXPECT_EQ(outputs[0].policy.size(), 81);
+    
+    // Check policy is valid probability distribution
+    float sum = 0.0f;
+    for (float p : outputs[0].policy) {
+        EXPECT_GE(p, 0.0f);
+        EXPECT_LE(p, 1.0f);
+        sum += p;
+    }
+    EXPECT_NEAR(sum, 1.0f, 1e-6);
+    
+    // Check value is in valid range
+    EXPECT_GE(outputs[0].value, -1.0f);
+    EXPECT_LE(outputs[0].value, 1.0f);
+}
+
+// Test save and load
+TEST_F(NeuralNetworkTest, SaveLoad) {
+    // Generate a unique filename
+    std::string filename = "test_model_" + std::to_string(std::time(nullptr)) + ".pt";
+    
+    // Initialize model with random weights
+    for (auto& p : model->parameters()) {
+        p.data().normal_(0.0, 0.1);
+    }
+    
+    // Get a parameter tensor for later comparison
+    torch::Tensor first_param = model->parameters()[0];
+    std::vector<float> before_save;
+    auto accessor = first_param.data_ptr<float>();
+    for (int i = 0; i < 3; i++) {
+        before_save.push_back(accessor[i]);
+    }
+    
+    // Save the model
+    model->save(filename);
+    
+    // Create a new model with different initial weights
+    auto new_model = nn::NeuralNetworkFactory::createResNet(17, 9, 2, 32);
+    for (auto& p : new_model->parameters()) {
+        p.data().fill_(0.0);
+    }
+    
+    // Confirm weights are different
+    torch::Tensor new_first_param = new_model->parameters()[0];
+    auto new_accessor = new_first_param.data_ptr<float>();
+    bool different = false;
+    for (int i = 0; i < 3; i++) {
+        if (before_save[i] != new_accessor[i]) {
+            different = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(different);
+    
+    // Load the saved model
+    new_model->load(filename);
+    
+    // Confirm weights are now the same
+    new_first_param = new_model->parameters()[0];
+    new_accessor = new_first_param.data_ptr<float>();
+    for (int i = 0; i < 3; i++) {
+        EXPECT_FLOAT_EQ(before_save[i], new_accessor[i]);
+    }
+    
+    // Clean up
+    std::remove(filename.c_str());
+}
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+#else
+// Dummy test when torch is not available
+TEST(DummyTest, NoTorchAvailable) {
+    SUCCEED() << "Neural network tests are skipped when WITH_TORCH is OFF";
+}
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+#endif // WITH_TORCH

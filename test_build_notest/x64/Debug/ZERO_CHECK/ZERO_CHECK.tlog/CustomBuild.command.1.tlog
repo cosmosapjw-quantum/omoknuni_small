@@ -1,0 +1,10 @@
+^D:\DROPBOX\PERSONAL_PROJECTS\OMOKNUNI_SMALL\TEST_BUILD_NOTEST\CMAKEFILES\B7F3BF20EC83873C31580D4B2172F189\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Dropbox/personal_projects/omoknuni_small -BD:/Dropbox/personal_projects/omoknuni_small/test_build_notest --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Dropbox/personal_projects/omoknuni_small/test_build_notest/AlphaZero.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

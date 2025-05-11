@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\core\igamestate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\core\game_export.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\games\chess\chess_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\games\chess\chess_rules.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\games\chess\chess960.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\games\go\go_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\games\go\go_rules.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\games\gomoku\gomoku_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\games\gomoku\gomoku_rules.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\utils\zobrist_hash.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\utils\attack_defense_module.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\utils\hash_specializations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\mcts\mcts_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\mcts\evaluation_types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\mcts\mcts_evaluator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\mcts\mcts_engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\selfplay\self_play_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\training\training_data_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Dropbox\personal_projects\omoknuni_small\src\evaluation\model_evaluator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\Dropbox\personal_projects\omoknuni_small\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="C:\Users\cosmo\vcpkg\installed\x64-windows\share\nlohmann_json\nlohmann_json.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{0468FD04-5CB4-3074-A9F0-59F16F43BD3F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
