@@ -4,18 +4,24 @@
 #include <random>
 #include <limits>
 #include <algorithm>
+#include <iostream>
 
 namespace alphazero {
 namespace mcts {
 
 MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state, MCTSNode* parent)
-    : state_(std::move(state)), 
-      parent_(parent), 
-      action_(-1), 
-      visit_count_(0), 
-      value_sum_(0.0f), 
+    : state_(std::move(state)),
+      parent_(parent),
+      action_(-1),
+      visit_count_(0),
+      value_sum_(0.0f),
       virtual_loss_count_(0),
       prior_probability_(0.0f) {
+
+    // Safety check - ensure we have a valid state
+    if (!state_) {
+        throw std::invalid_argument("Cannot create MCTSNode with null state");
+    }
 }
 
 MCTSNode::~MCTSNode() {
@@ -125,6 +131,11 @@ bool MCTSNode::isLeaf() const {
 }
 
 bool MCTSNode::isTerminal() const {
+    if (!state_) {
+        // This is a safety check - a node should always have a state
+        return true; // Consider a node with no state as terminal
+    }
+
     return state_->isTerminal();
 }
 

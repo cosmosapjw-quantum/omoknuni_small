@@ -5,6 +5,7 @@
  * @brief Export macros for AlphaZero library
  *
  * This file contains macros for properly exporting symbols from shared libraries.
+ * Supports both Windows and Linux platforms.
  */
 
 // Define export/import macros for the AlphaZero library

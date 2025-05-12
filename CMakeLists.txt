@@ -1,6 +1,9 @@
 # cmake_minimum_required(VERSION 3.20)          # 3.14 → 3.20 for generator-expr fixes
 cmake_minimum_required(VERSION 3.20)
-cmake_policy(SET CMP0146 OLD)                 # keep your chosen policy
+# Only set CMP0146 policy if CMake version supports it
+if(POLICY CMP0146)
+    cmake_policy(SET CMP0146 OLD)             # keep your chosen policy
+endif()
 
 # Set CUDA architectures early to influence compiler detection for CUDA 12.8+
 # This helps avoid nvcc trying to compile for deprecated default architectures like sm_52 during its ID check.
@@ -9,26 +12,59 @@ cmake_policy(SET CMP0146 OLD)                 # keep your chosen policy
 # message(STATUS "Early setting CMAKE_CUDA_ARCHITECTURES to: ${CMAKE_CUDA_ARCHITECTURES} to aid CUDA compiler ID.")
 
 # ─────────────────────────────── vcpkg integration ─────────────────────────
-if(EXISTS "$ENV{USERPROFILE}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+# Windows vcpkg path
+if(WIN32 AND EXISTS "$ENV{USERPROFILE}/vcpkg/scripts/buildsystems/vcpkg.cmake")
     set(CMAKE_TOOLCHAIN_FILE
         "$ENV{USERPROFILE}/vcpkg/scripts/buildsystems/vcpkg.cmake"
         CACHE STRING "Vcpkg toolchain file")
-    message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+    message(STATUS "Using vcpkg toolchain (Windows): ${CMAKE_TOOLCHAIN_FILE}")
 
     list(APPEND CMAKE_PREFIX_PATH  "$ENV{USERPROFILE}/vcpkg/installed/x64-windows")
     list(APPEND CMAKE_LIBRARY_PATH "$ENV{USERPROFILE}/vcpkg/installed/x64-windows/lib")
     list(APPEND CMAKE_INCLUDE_PATH "$ENV{USERPROFILE}/vcpkg/installed/x64-windows/include")
+# Linux vcpkg path
+elseif(UNIX AND NOT APPLE AND EXISTS "$ENV{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+    set(CMAKE_TOOLCHAIN_FILE
+        "$ENV{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        CACHE STRING "Vcpkg toolchain file")
+    message(STATUS "Using vcpkg toolchain (Linux): ${CMAKE_TOOLCHAIN_FILE}")
+
+    list(APPEND CMAKE_PREFIX_PATH  "$ENV{HOME}/vcpkg/installed/x64-linux")
+    list(APPEND CMAKE_LIBRARY_PATH "$ENV{HOME}/vcpkg/installed/x64-linux/lib")
+    list(APPEND CMAKE_INCLUDE_PATH "$ENV{HOME}/vcpkg/installed/x64-linux/include")
+# Allow user to manually specify vcpkg path
+elseif(DEFINED ENV{VCPKG_ROOT} AND EXISTS "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+    set(CMAKE_TOOLCHAIN_FILE
+        "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        CACHE STRING "Vcpkg toolchain file")
+    message(STATUS "Using vcpkg toolchain from VCPKG_ROOT: ${CMAKE_TOOLCHAIN_FILE}")
+
+    if(WIN32)
+        list(APPEND CMAKE_PREFIX_PATH  "$ENV{VCPKG_ROOT}/installed/x64-windows")
+        list(APPEND CMAKE_LIBRARY_PATH "$ENV{VCPKG_ROOT}/installed/x64-windows/lib")
+        list(APPEND CMAKE_INCLUDE_PATH "$ENV{VCPKG_ROOT}/installed/x64-windows/include")
+    elseif(UNIX AND NOT APPLE)
+        list(APPEND CMAKE_PREFIX_PATH  "$ENV{VCPKG_ROOT}/installed/x64-linux")
+        list(APPEND CMAKE_LIBRARY_PATH "$ENV{VCPKG_ROOT}/installed/x64-linux/lib")
+        list(APPEND CMAKE_INCLUDE_PATH "$ENV{VCPKG_ROOT}/installed/x64-linux/include")
+    endif()
 endif()
 
 project(AlphaZero VERSION 0.1.0 LANGUAGES CXX)
 
-# ────────────────────────────────────── Threads (Win) ──────────────────────────
-if(WIN32)
-    find_package(Threads QUIET)
-    if(Threads_FOUND)
+# ────────────────────────────────────── Threads ──────────────────────────
+find_package(Threads QUIET)
+if(Threads_FOUND)
+    if(WIN32)
         message(STATUS "Found Threads (pthreads via vcpkg): ${CMAKE_THREAD_LIBS_INIT}")
     else()
+        message(STATUS "Found Threads: ${CMAKE_THREAD_LIBS_INIT}")
+    endif()
+else()
+    if(WIN32)
         message(WARNING "pthreads:x64-windows not found – threading disabled.")
+    else()
+        message(WARNING "Threads not found – threading disabled.")
     endif()
 endif()
 
@@ -102,9 +138,13 @@ endif()
 
 # ───────────────────────────────────── Torch / CUDA ────────────────────────────
 if(WITH_TORCH)
-    # --- cuDNN hints (edit if your layout differs) ----------------------------
+    # --- cuDNN hints (platform-specific) ----------------------------
     # User needs to ensure CUDNN_ROOT points to a cuDNN version compatible with the detected CUDA_VERSION
-    set(CUDNN_ROOT "C:/Program Files/NVIDIA/CUDNN/v9.7" CACHE PATH "cuDNN root directory (MUST match CUDA version used by Torch)")
+    if(WIN32)
+        set(CUDNN_ROOT "C:/Program Files/NVIDIA/CUDNN/v9.7" CACHE PATH "cuDNN root directory (MUST match CUDA version used by Torch)")
+    elseif(UNIX AND NOT APPLE)
+        set(CUDNN_ROOT "/usr/local/cuda/cudnn" CACHE PATH "cuDNN root directory (MUST match CUDA version used by Torch)")
+    endif()
     message(STATUS "Providing CUDNN_ROOT hint to PyTorch: ${CUDNN_ROOT}")
     # PyTorch's find_package(CUDNN) should use CUDNN_ROOT to find include/library.
     # We remove previously forced CUDNN_INCLUDE_DIR, CUDNN_LIBRARY, CUDNN_FOUND, USE_CUDNN
@@ -120,29 +160,36 @@ if(WITH_TORCH)
             set(TORCH_CUDA_VERSION "${CUDA_VERSION_STRING}" CACHE STRING "Pre-set CUDA version for Torch" FORCE)
             message(STATUS "Setting TORCH_CUDA_VERSION to ${TORCH_CUDA_VERSION} to aid Torch's CUDA detection.")
         endif()
-        
+
         # Explicitly set CUDA architectures to avoid auto-detection failures
         set(CMAKE_CUDA_ARCHITECTURES "70;75;80;86")
         message(STATUS "Explicitly setting CUDA architectures to: ${CMAKE_CUDA_ARCHITECTURES}")
-        
+
         # Alternative NVCC flags approach if needed
         set(TORCH_NVCC_FLAGS "-gencode=arch=compute_70,code=sm_70 -gencode=arch=compute_75,code=sm_75 -gencode=arch=compute_80,code=sm_80 -gencode=arch=compute_86,code=sm_86")
         message(STATUS "Setting explicit TORCH_NVCC_FLAGS: ${TORCH_NVCC_FLAGS}")
-        
+
         # Skip Torch's GPU detection by setting the architecture list directly
         set(TORCH_CUDA_ARCH_LIST "7.0;7.5;8.0;8.6" CACHE STRING "CUDA architectures for PyTorch" FORCE)
         message(STATUS "Setting TORCH_CUDA_ARCH_LIST to: ${TORCH_CUDA_ARCH_LIST}")
-        
+
         if(NOT TARGET CUDA::nvToolsExt)
-            set(NVPERF_HOST_LIB "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/extras/CUPTI/lib64/nvperf_host.lib")
+            if(WIN32)
+                set(NVPERF_HOST_LIB "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/extras/CUPTI/lib64/nvperf_host.lib")
+                set(NVPERF_HOST_INCLUDE "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/extras/CUPTI/include")
+            elseif(UNIX AND NOT APPLE)
+                set(NVPERF_HOST_LIB "/usr/local/cuda/extras/CUPTI/lib64/libnvperf_host.so")
+                set(NVPERF_HOST_INCLUDE "/usr/local/cuda/extras/CUPTI/include")
+            endif()
+
             if(EXISTS "${NVPERF_HOST_LIB}")
-                message(STATUS "Using nvperf_host.lib as replacement for nvToolsExt")
+                message(STATUS "Using nvperf_host as replacement for nvToolsExt: ${NVPERF_HOST_LIB}")
                 add_library(CUDA::nvToolsExt UNKNOWN IMPORTED)
                 set_target_properties(CUDA::nvToolsExt PROPERTIES
                     IMPORTED_LOCATION "${NVPERF_HOST_LIB}"
-                    INTERFACE_INCLUDE_DIRECTORIES "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/extras/CUPTI/include")
+                    INTERFACE_INCLUDE_DIRECTORIES "${NVPERF_HOST_INCLUDE}")
             else()
-                message(WARNING "nvperf_host.lib not found, creating interface-only target")
+                message(WARNING "nvperf_host not found, creating interface-only target")
                 add_library(CUDA::nvToolsExt INTERFACE IMPORTED)
             endif()
         endif()
@@ -150,7 +197,25 @@ if(WITH_TORCH)
         message(WARNING "CUDA toolkit not found – Torch will build CPU-only.")
     endif()
 
-    set(Torch_DIR "C:/libtorch/share/cmake/Torch" CACHE PATH "Torch_DIR")
+    # Platform-specific PyTorch paths
+    if(WIN32)
+        set(DEFAULT_TORCH_DIR "C:/libtorch/share/cmake/Torch")
+    elseif(UNIX AND NOT APPLE)
+        set(DEFAULT_TORCH_DIR "/usr/local/lib/python3/dist-packages/torch/share/cmake/Torch")
+        # Check if exists in common locations for Linux
+        if(NOT EXISTS "${DEFAULT_TORCH_DIR}")
+            # Try to find in other common locations
+            foreach(PYTHON_VERSION 3.6 3.7 3.8 3.9 3.10 3.11 3.12)
+                set(CANDIDATE_PATH "/usr/local/lib/python${PYTHON_VERSION}/dist-packages/torch/share/cmake/Torch")
+                if(EXISTS "${CANDIDATE_PATH}")
+                    set(DEFAULT_TORCH_DIR "${CANDIDATE_PATH}")
+                    break()
+                endif()
+            endforeach()
+        endif()
+    endif()
+
+    set(Torch_DIR "${DEFAULT_TORCH_DIR}" CACHE PATH "Torch_DIR")
     find_package(Torch REQUIRED)
 
     file(REAL_PATH "${Torch_DIR}/../../../lib" Torch_LIB_DIR)
@@ -269,6 +334,30 @@ endif()
 find_package(nlohmann_json CONFIG REQUIRED)
 message(STATUS "Found nlohmann_json: ${nlohmann_json_VERSION}")
 
+# Add json include directory explicitly on Linux
+if(UNIX AND NOT APPLE)
+    find_path(NLOHMANN_JSON_INCLUDE_DIR nlohmann/json.hpp PATHS /usr/include /usr/local/include /home/cosmos/anaconda3/include)
+    if(NLOHMANN_JSON_INCLUDE_DIR)
+        message(STATUS "Found nlohmann_json include dir: ${NLOHMANN_JSON_INCLUDE_DIR}")
+        include_directories(BEFORE SYSTEM ${NLOHMANN_JSON_INCLUDE_DIR})
+
+        # Copy the entire nlohmann directory if it exists
+        execute_process(
+            COMMAND bash -c "mkdir -p \"${CMAKE_BINARY_DIR}/include\" && cp -r \"${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann\" \"${CMAKE_BINARY_DIR}/include/\""
+            RESULT_VARIABLE copy_result
+        )
+
+        if(copy_result EQUAL 0)
+            message(STATUS "Copied nlohmann directory to build directory")
+            include_directories(BEFORE "${CMAKE_BINARY_DIR}/include")
+        else()
+            message(WARNING "Failed to copy nlohmann directory. Build may fail.")
+        endif()
+    else()
+        message(FATAL_ERROR "Could not find nlohmann/json.hpp header file. Please install nlohmann_json library.")
+    endif()
+endif()
+
 find_package(yaml-cpp CONFIG REQUIRED)
 message(STATUS "Found yaml-cpp: ${yaml-cpp_VERSION}")
 
@@ -368,73 +457,91 @@ else()
     target_compile_options(alphazero PRIVATE -Wall -Wextra -Wno-unknown-pragmas -Wno-unused-parameter -Wno-sign-compare)
 endif()
 
-# ───────────────────────────── Torch DLL copy helper ──────────────────────────
-if(WIN32 AND WITH_TORCH)
-    set(TORCH_CORE_DLLS
-        "c10.dll"
-        "torch.dll"
-        "torch_cpu.dll"
-        "torch_global_deps.dll" # Often bundles other dependencies like OpenMP runtimes
-        "asmjit.dll"
-        "fbgemm.dll"
-        "dnnl.dll"
-        "libiomp5md.dll"        # Intel OpenMP runtime
-        "libiompstubs5md.dll"   # Intel OpenMP stubs - problematic one, copy if exists
-        "pthreadpool.dll"
-        "uv.dll"
-    )
-
-    set(TORCH_CUDA_DLLS "")
-    if(CUDA_FOUND) # Or could check TORCH_USE_CUDA after find_package(Torch)
-        set(TORCH_CUDA_DLLS
-            "c10_cuda.dll"
-            "torch_cuda.dll"
-            "nvfuser_codegen.dll"
+# ───────────────────────────── Runtime Library Copy Helper ──────────────────────────
+if(WITH_TORCH)
+    if(WIN32)
+        # Windows: Copy DLLs
+        set(TORCH_CORE_DLLS
+            "c10.dll"
+            "torch.dll"
+            "torch_cpu.dll"
+            "torch_global_deps.dll" # Often bundles other dependencies like OpenMP runtimes
+            "asmjit.dll"
+            "fbgemm.dll"
+            "dnnl.dll"
+            "libiomp5md.dll"        # Intel OpenMP runtime
+            "libiompstubs5md.dll"   # Intel OpenMP stubs - problematic one, copy if exists
+            "pthreadpool.dll"
+            "uv.dll"
         )
-        # Try to find any cuDNN runtime DLLs bundled with PyTorch in its lib directory
-        file(GLOB BUNDLED_CUDNN_DLLS RELATIVE "${Torch_LIB_DIR}" "${Torch_LIB_DIR}/cudnn*.dll")
-        if(BUNDLED_CUDNN_DLLS)
-            message(STATUS "Found bundled cuDNN DLLs in Torch lib: ${BUNDLED_CUDNN_DLLS}")
-            list(APPEND TORCH_CUDA_DLLS ${BUNDLED_CUDNN_DLLS})
-        endif()
-        file(GLOB BUNDLED_ZLIB_DLLS RELATIVE "${Torch_LIB_DIR}" "${Torch_LIB_DIR}/zlib*.dll") # e.g. zlibwapi.dll for cuDNN
-        if(BUNDLED_ZLIB_DLLS)
-            message(STATUS "Found bundled zlib DLLs in Torch lib: ${BUNDLED_ZLIB_DLLS}")
-            list(APPEND TORCH_CUDA_DLLS ${BUNDLED_ZLIB_DLLS})
-        endif()
-    endif()
 
-    set(ALL_TORCH_DLLS ${TORCH_CORE_DLLS} ${TORCH_CUDA_DLLS})
-    list(REMOVE_DUPLICATES ALL_TORCH_DLLS)
-
-    set(TARGET_CONFIGS Debug Release RelWithDebInfo MinSizeRel)
-    # If CMAKE_CONFIGURATION_TYPES is set (e.g. by Visual Studio generator), prefer it.
-    # Otherwise, if it's a single-config generator, CMAKE_BUILD_TYPE will be the one.
-    # The explicit list above is a fallback for wider compatibility in copy logic.
-    if(CMAKE_CONFIGURATION_TYPES)
-        set(EFFECTIVE_CONFIGS ${CMAKE_CONFIGURATION_TYPES})
-    elseif(CMAKE_BUILD_TYPE)
-        set(EFFECTIVE_CONFIGS ${CMAKE_BUILD_TYPE})
-    else()
-        set(EFFECTIVE_CONFIGS ${TARGET_CONFIGS}) # Fallback to the full list
-    endif()
-
-    message(STATUS "Preparing to copy selected PyTorch runtime DLLs to output directories.")
-    foreach(CONFIG ${EFFECTIVE_CONFIGS})
-        set(DEST_DIR "${CMAKE_BINARY_DIR}/bin/${CONFIG}")
-        file(MAKE_DIRECTORY "${DEST_DIR}") # Ensure directory exists
-
-        message(STATUS "Copying PyTorch DLLs for ${CONFIG} configuration to ${DEST_DIR}")
-        foreach(DLL_NAME ${ALL_TORCH_DLLS})
-            set(DLL_PATH "${Torch_LIB_DIR}/${DLL_NAME}")
-            if(EXISTS "${DLL_PATH}")
-                file(COPY "${DLL_PATH}" DESTINATION "${DEST_DIR}")
-            else()
-                # Be less alarming for potentially optional DLLs.
-                message(STATUS "Skipping copy of non-existent or optional DLL: ${DLL_PATH} for ${CONFIG} config.")
+        set(TORCH_CUDA_DLLS "")
+        if(CUDA_FOUND) # Or could check TORCH_USE_CUDA after find_package(Torch)
+            set(TORCH_CUDA_DLLS
+                "c10_cuda.dll"
+                "torch_cuda.dll"
+                "nvfuser_codegen.dll"
+            )
+            # Try to find any cuDNN runtime DLLs bundled with PyTorch in its lib directory
+            file(GLOB BUNDLED_CUDNN_DLLS RELATIVE "${Torch_LIB_DIR}" "${Torch_LIB_DIR}/cudnn*.dll")
+            if(BUNDLED_CUDNN_DLLS)
+                message(STATUS "Found bundled cuDNN DLLs in Torch lib: ${BUNDLED_CUDNN_DLLS}")
+                list(APPEND TORCH_CUDA_DLLS ${BUNDLED_CUDNN_DLLS})
             endif()
+            file(GLOB BUNDLED_ZLIB_DLLS RELATIVE "${Torch_LIB_DIR}" "${Torch_LIB_DIR}/zlib*.dll") # e.g. zlibwapi.dll for cuDNN
+            if(BUNDLED_ZLIB_DLLS)
+                message(STATUS "Found bundled zlib DLLs in Torch lib: ${BUNDLED_ZLIB_DLLS}")
+                list(APPEND TORCH_CUDA_DLLS ${BUNDLED_ZLIB_DLLS})
+            endif()
+        endif()
+
+        set(ALL_TORCH_DLLS ${TORCH_CORE_DLLS} ${TORCH_CUDA_DLLS})
+        list(REMOVE_DUPLICATES ALL_TORCH_DLLS)
+
+        set(TARGET_CONFIGS Debug Release RelWithDebInfo MinSizeRel)
+        # If CMAKE_CONFIGURATION_TYPES is set (e.g. by Visual Studio generator), prefer it.
+        # Otherwise, if it's a single-config generator, CMAKE_BUILD_TYPE will be the one.
+        # The explicit list above is a fallback for wider compatibility in copy logic.
+        if(CMAKE_CONFIGURATION_TYPES)
+            set(EFFECTIVE_CONFIGS ${CMAKE_CONFIGURATION_TYPES})
+        elseif(CMAKE_BUILD_TYPE)
+            set(EFFECTIVE_CONFIGS ${CMAKE_BUILD_TYPE})
+        else()
+            set(EFFECTIVE_CONFIGS ${TARGET_CONFIGS}) # Fallback to the full list
+        endif()
+
+        message(STATUS "Preparing to copy selected PyTorch runtime DLLs to output directories.")
+        foreach(CONFIG ${EFFECTIVE_CONFIGS})
+            set(DEST_DIR "${CMAKE_BINARY_DIR}/bin/${CONFIG}")
+            file(MAKE_DIRECTORY "${DEST_DIR}") # Ensure directory exists
+
+            message(STATUS "Copying PyTorch DLLs for ${CONFIG} configuration to ${DEST_DIR}")
+            foreach(DLL_NAME ${ALL_TORCH_DLLS})
+                set(DLL_PATH "${Torch_LIB_DIR}/${DLL_NAME}")
+                if(EXISTS "${DLL_PATH}")
+                    file(COPY "${DLL_PATH}" DESTINATION "${DEST_DIR}")
+                else()
+                    # Be less alarming for potentially optional DLLs.
+                    message(STATUS "Skipping copy of non-existent or optional DLL: ${DLL_PATH} for ${CONFIG} config.")
+                endif()
+            endforeach()
         endforeach()
-    endforeach()
+    elseif(UNIX AND NOT APPLE)
+        # Linux: Set rpath for executables
+        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${Torch_LIB_DIR}")
+        set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+        # Create a script to set LD_LIBRARY_PATH for running tests
+        if(BUILD_TESTS)
+            file(WRITE "${CMAKE_BINARY_DIR}/run_tests.sh" "#!/bin/bash\n")
+            file(APPEND "${CMAKE_BINARY_DIR}/run_tests.sh" "export LD_LIBRARY_PATH=\"${Torch_LIB_DIR}:$LD_LIBRARY_PATH\"\n")
+            file(APPEND "${CMAKE_BINARY_DIR}/run_tests.sh" "cd \"${CMAKE_BINARY_DIR}\"\n")
+            file(APPEND "${CMAKE_BINARY_DIR}/run_tests.sh" "ctest \"$@\"\n")
+            execute_process(COMMAND chmod +x "${CMAKE_BINARY_DIR}/run_tests.sh")
+            message(STATUS "Created test runner script: ${CMAKE_BINARY_DIR}/run_tests.sh")
+        endif()
+    endif()
 endif()
 
 # ───────────────────────────── Example executables ────────────────────────────
@@ -486,10 +593,10 @@ if(BUILD_TESTS)
         else()
             target_compile_definitions(${name} PRIVATE GTEST_LINKED_AS_SHARED_LIBRARY=0)
         endif()
-        
+
         # Common libraries for all tests
         target_link_libraries(${name} PRIVATE alphazero)
-        
+
         # Add the appropriate gtest libraries
         # Make sure to include the GTest include directories
         get_target_property(GTEST_INCLUDE_DIRS GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
@@ -497,11 +604,11 @@ if(BUILD_TESTS)
             target_include_directories(${name} PRIVATE ${GTEST_INCLUDE_DIRS})
         else()
             # Fallback - add FetchContent's googletest source directories
-            target_include_directories(${name} PRIVATE 
+            target_include_directories(${name} PRIVATE
                 "${CMAKE_BINARY_DIR}/_deps/googletest-src/googletest/include"
                 "${CMAKE_BINARY_DIR}/_deps/googletest-src/googlemock/include")
         endif()
-        
+
         if (${name} STREQUAL "all_tests" OR ${name} STREQUAL "core_tests")
             # These tests (all_tests, core_tests) provide their own main.cpp
             target_link_libraries(${name} PRIVATE GTest::gmock GTest::gtest)
@@ -517,18 +624,28 @@ if(BUILD_TESTS)
         if(OpenMP_CXX_FOUND)
             target_link_libraries(${name} PRIVATE OpenMP::OpenMP_CXX)
         endif()
-        
+
         # Make sure each test executable links to the correct runtime libraries
         if(MSVC)
             # Use multithreaded DLL runtime - same as the alphazero library
             target_compile_options(${name} PRIVATE "/MD$<$<CONFIG:Debug>:d>")
         endif()
-        
+
+        # Set RPATH for Linux builds to find libalphazero.so
+        if(UNIX AND NOT APPLE)
+            set_target_properties(${name} PROPERTIES
+                INSTALL_RPATH "${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE};${CMAKE_INSTALL_PREFIX}/lib;${Torch_LIB_DIR}"
+                BUILD_WITH_INSTALL_RPATH TRUE
+                INSTALL_RPATH_USE_LINK_PATH TRUE
+            )
+        endif()
+
         add_test(NAME ${name} COMMAND ${name})
-        
-        # For Windows shared library builds, set the PATH environment variable
-        # to include the vcpkg directory with the GTest DLLs and the test executable's directory
+
+        # Set up platform-specific environment variables for tests
         if(WIN32 AND GTEST_IS_SHARED)
+            # For Windows shared library builds, set the PATH environment variable
+            # to include the vcpkg directory with the GTest DLLs and the test executable's directory
             file(TO_NATIVE_PATH "$ENV{USERPROFILE}/vcpkg/installed/x64-windows/bin" VCPKG_BIN_NATIVE_PATH)
             file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/bin" PROJECT_BIN_DIR_NATIVE_PART)
             # $<CONFIG> will be evaluated by CTest at test time.
@@ -536,6 +653,15 @@ if(BUILD_TESTS)
 
             set_tests_properties(${name} PROPERTIES
                 ENVIRONMENT "PATH=${VCPKG_BIN_NATIVE_PATH};${CTEST_CONFIG_SPECIFIC_BIN_PATH};$ENV{PATH}")
+        elseif(UNIX AND NOT APPLE)
+            # For Linux, set LD_LIBRARY_PATH for shared libraries
+            if(GTEST_IS_SHARED OR WITH_TORCH)
+                set(VCPKG_LIB_PATH "$ENV{HOME}/vcpkg/installed/x64-linux/lib")
+                set(PROJECT_LIB_PATH "${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE}")
+                set(TEST_LD_LIBRARY_PATH "${PROJECT_LIB_PATH}:${VCPKG_LIB_PATH}:${Torch_LIB_DIR}:$ENV{LD_LIBRARY_PATH}")
+                set_tests_properties(${name} PROPERTIES
+                    ENVIRONMENT "LD_LIBRARY_PATH=${TEST_LD_LIBRARY_PATH}")
+            endif()
         endif()
     endfunction()
 

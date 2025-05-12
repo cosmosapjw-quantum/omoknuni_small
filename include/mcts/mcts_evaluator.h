@@ -44,6 +44,9 @@ public:
     float getAverageBatchSize() const;
     std::chrono::milliseconds getAverageBatchLatency() const;
     size_t getTotalEvaluations() const;
+
+    // Get direct access to the inference function (for serial mode)
+    InferenceFunction getInferenceFunction() const { return inference_fn_; }
     
 private:
     // Worker thread function

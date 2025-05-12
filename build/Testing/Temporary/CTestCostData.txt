@@ -1,0 +1,14 @@
+core_tests 1 0.987127
+chess_tests 1 0.483331
+go_tests 1 0.631012
+gomoku_tests 1 0.505272
+neural_network_test 1 0.478901
+mcts_with_nn_test 1 0.488933
+self_play_manager_test 1 0.483226
+training_data_manager_test 1 0.628565
+model_evaluator_test 1 0.485088
+transposition_table_test 1 0.492367
+transposition_integration_test 0 0
+mcts_tests 0 0
+all_tests 0 0
+---

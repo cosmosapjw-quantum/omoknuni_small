@@ -1,0 +1,446 @@
+Start testing: May 12 17:04 KST
+----------------------------------------------------------
+1/13 Testing: core_tests
+1/13 Test: core_tests
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/core_tests"
+Directory: /home/cosmos/omoknuni_small/build
+"core_tests" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 7 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 3 tests from IGameStateTest
+[ RUN      ] IGameStateTest.BasicFunctionality
+[       OK ] IGameStateTest.BasicFunctionality (2 ms)
+[ RUN      ] IGameStateTest.GamePlay
+[       OK ] IGameStateTest.GamePlay (0 ms)
+[ RUN      ] IGameStateTest.IllegalMove
+[       OK ] IGameStateTest.IllegalMove (0 ms)
+[----------] 3 tests from IGameStateTest (2 ms total)
+
+[----------] 4 tests from GameExportTest
+[ RUN      ] GameExportTest.GameRegistryWorks
+[       OK ] GameExportTest.GameRegistryWorks (0 ms)
+[ RUN      ] GameExportTest.GameFactoryWorks
+[       OK ] GameExportTest.GameFactoryWorks (0 ms)
+[ RUN      ] GameExportTest.GameSerializerWorks
+[       OK ] GameExportTest.GameSerializerWorks (0 ms)
+[ RUN      ] GameExportTest.GameTypeConversionWorks
+[       OK ] GameExportTest.GameTypeConversionWorks (0 ms)
+[----------] 4 tests from GameExportTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 7 tests from 2 test suites ran. (2 ms total)
+[  PASSED  ] 7 tests.
+<end of output>
+Test time =   3.27 sec
+----------------------------------------------------------
+Test Passed.
+"core_tests" end time: May 12 17:04 KST
+"core_tests" time elapsed: 00:00:03
+----------------------------------------------------------
+
+2/13 Testing: chess_tests
+2/13 Test: chess_tests
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/chess_tests"
+Directory: /home/cosmos/omoknuni_small/build
+"chess_tests" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 24 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 20 tests from ChessTest
+[ RUN      ] ChessTest.Initialization
+[       OK ] ChessTest.Initialization (0 ms)
+[ RUN      ] ChessTest.PieceOperations
+[       OK ] ChessTest.PieceOperations (0 ms)
+[ RUN      ] ChessTest.FENConversion
+[       OK ] ChessTest.FENConversion (0 ms)
+[ RUN      ] ChessTest.LegalMoves
+[       OK ] ChessTest.LegalMoves (0 ms)
+[ RUN      ] ChessTest.MoveRepresentation
+[       OK ] ChessTest.MoveRepresentation (0 ms)
+[ RUN      ] ChessTest.StandardAlgebraicNotation
+[       OK ] ChessTest.StandardAlgebraicNotation (0 ms)
+[ RUN      ] ChessTest.Castling
+[       OK ] ChessTest.Castling (0 ms)
+[ RUN      ] ChessTest.EnPassant
+[       OK ] ChessTest.EnPassant (0 ms)
+[ RUN      ] ChessTest.Promotion
+[       OK ] ChessTest.Promotion (0 ms)
+[ RUN      ] ChessTest.CheckDetection
+[       OK ] ChessTest.CheckDetection (0 ms)
+[ RUN      ] ChessTest.CheckmateDetection
+[       OK ] ChessTest.CheckmateDetection (0 ms)
+[ RUN      ] ChessTest.StalemateDetection
+[       OK ] ChessTest.StalemateDetection (0 ms)
+[ RUN      ] ChessTest.InsufficientMaterialDetection
+[       OK ] ChessTest.InsufficientMaterialDetection (0 ms)
+[ RUN      ] ChessTest.FiftyMoveRule
+[       OK ] ChessTest.FiftyMoveRule (0 ms)
+[ RUN      ] ChessTest.UndoMove
+[       OK ] ChessTest.UndoMove (0 ms)
+[ RUN      ] ChessTest.CloneAndEquality
+[       OK ] ChessTest.CloneAndEquality (0 ms)
+[ RUN      ] ChessTest.MoveHistoryTracking
+[       OK ] ChessTest.MoveHistoryTracking (0 ms)
+[ RUN      ] ChessTest.TensorRepresentation
+[       OK ] ChessTest.TensorRepresentation (0 ms)
+[ RUN      ] ChessTest.GameValidation
+[       OK ] ChessTest.GameValidation (0 ms)
+[ RUN      ] ChessTest.ThreefoldRepetition
+[       OK ] ChessTest.ThreefoldRepetition (0 ms)
+[----------] 20 tests from ChessTest (1 ms total)
+
+[----------] 4 tests from Chess960Test
+[ RUN      ] Chess960Test.PositionGeneration
+[       OK ] Chess960Test.PositionGeneration (0 ms)
+[ RUN      ] Chess960Test.PositionValidation
+[       OK ] Chess960Test.PositionValidation (0 ms)
+[ RUN      ] Chess960Test.Chess960FENHandling
+[       OK ] Chess960Test.Chess960FENHandling (0 ms)
+[ RUN      ] Chess960Test.Chess960Castling
+[       OK ] Chess960Test.Chess960Castling (0 ms)
+[----------] 4 tests from Chess960Test (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 24 tests from 2 test suites ran. (1 ms total)
+[  PASSED  ] 24 tests.
+<end of output>
+Test time =   0.45 sec
+----------------------------------------------------------
+Test Passed.
+"chess_tests" end time: May 12 17:04 KST
+"chess_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/13 Testing: go_tests
+3/13 Test: go_tests
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/go_tests"
+Directory: /home/cosmos/omoknuni_small/build
+"go_tests" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 20 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 20 tests from GoTest
+[ RUN      ] GoTest.Initialization
+[       OK ] GoTest.Initialization (1 ms)
+[ RUN      ] GoTest.BasicMoves
+[       OK ] GoTest.BasicMoves (0 ms)
+[ RUN      ] GoTest.PassMoves
+[       OK ] GoTest.PassMoves (0 ms)
+[ RUN      ] GoTest.Captures
+[       OK ] GoTest.Captures (0 ms)
+[ RUN      ] GoTest.SuicideRule
+[       OK ] GoTest.SuicideRule (0 ms)
+[ RUN      ] GoTest.KoRule
+[       OK ] GoTest.KoRule (0 ms)
+[ RUN      ] GoTest.SuperkoRuleExtended
+[       OK ] GoTest.SuperkoRuleExtended (0 ms)
+[ RUN      ] GoTest.LibertyCounting
+[       OK ] GoTest.LibertyCounting (0 ms)
+[ RUN      ] GoTest.ChineseScoringRules
+[       OK ] GoTest.ChineseScoringRules (1 ms)
+[ RUN      ] GoTest.JapaneseScoringRules
+[       OK ] GoTest.JapaneseScoringRules (1 ms)
+[ RUN      ] GoTest.DeadStoneMarking
+[       OK ] GoTest.DeadStoneMarking (1 ms)
+[ RUN      ] GoTest.UndoMove
+[       OK ] GoTest.UndoMove (0 ms)
+[ RUN      ] GoTest.CloneAndEquality
+[       OK ] GoTest.CloneAndEquality (0 ms)
+[ RUN      ] GoTest.MoveHistoryTracking
+[       OK ] GoTest.MoveHistoryTracking (0 ms)
+[ RUN      ] GoTest.TensorRepresentation
+[       OK ] GoTest.TensorRepresentation (0 ms)
+[ RUN      ] GoTest.StringConversion
+[       OK ] GoTest.StringConversion (0 ms)
+[ RUN      ] GoTest.BoardRepresentation
+[       OK ] GoTest.BoardRepresentation (0 ms)
+[ RUN      ] GoTest.DifferentBoardSizes
+[       OK ] GoTest.DifferentBoardSizes (0 ms)
+[ RUN      ] GoTest.MultipleCaptures
+[       OK ] GoTest.MultipleCaptures (0 ms)
+[ RUN      ] GoTest.GameValidation
+[       OK ] GoTest.GameValidation (0 ms)
+[----------] 20 tests from GoTest (6 ms total)
+
+[----------] Global test environment tear-down
+[==========] 20 tests from 1 test suite ran. (6 ms total)
+[  PASSED  ] 20 tests.
+<end of output>
+Test time =   0.45 sec
+----------------------------------------------------------
+Test Passed.
+"go_tests" end time: May 12 17:04 KST
+"go_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/13 Testing: gomoku_tests
+4/13 Test: gomoku_tests
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/gomoku_tests"
+Directory: /home/cosmos/omoknuni_small/build
+"gomoku_tests" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 28 tests from 3 test suites.
+[----------] Global test environment set-up.
+[----------] 11 tests from GomokuTest
+[ RUN      ] GomokuTest.Initialization
+[       OK ] GomokuTest.Initialization (0 ms)
+[ RUN      ] GomokuTest.LegalMoves
+[       OK ] GomokuTest.LegalMoves (0 ms)
+[ RUN      ] GomokuTest.WinDetectionHorizontal
+[       OK ] GomokuTest.WinDetectionHorizontal (1 ms)
+[ RUN      ] GomokuTest.WinDetectionVertical
+[       OK ] GomokuTest.WinDetectionVertical (0 ms)
+[ RUN      ] GomokuTest.WinDetectionDiagonal
+[       OK ] GomokuTest.WinDetectionDiagonal (0 ms)
+[ RUN      ] GomokuTest.WinDetectionAntiDiagonal
+[       OK ] GomokuTest.WinDetectionAntiDiagonal (0 ms)
+[ RUN      ] GomokuTest.OverlineStandardAllowedAndWins
+[       OK ] GomokuTest.OverlineStandardAllowedAndWins (0 ms)
+[ RUN      ] GomokuTest.StalemateDetection
+[       OK ] GomokuTest.StalemateDetection (0 ms)
+[ RUN      ] GomokuTest.CloneEqualityAndUndoRedo
+[       OK ] GomokuTest.CloneEqualityAndUndoRedo (0 ms)
+[ RUN      ] GomokuTest.MoveHistoryAndTensor
+[       OK ] GomokuTest.MoveHistoryAndTensor (0 ms)
+[ RUN      ] GomokuTest.Validation
+[       OK ] GomokuTest.Validation (0 ms)
+[----------] 11 tests from GomokuTest (7 ms total)
+
+[----------] 10 tests from OmokTest
+[ RUN      ] OmokTest.OmokDoubleThreePlusShape
+[       OK ] OmokTest.OmokDoubleThreePlusShape (0 ms)
+[ RUN      ] OmokTest.OmokDoubleThreeXShape
+[       OK ] OmokTest.OmokDoubleThreeXShape (0 ms)
+[ RUN      ] OmokTest.OmokDoubleThreeCorner_SE
+[       OK ] OmokTest.OmokDoubleThreeCorner_SE (0 ms)
+[ RUN      ] OmokTest.OmokDoubleThreeCorner_NE
+[       OK ] OmokTest.OmokDoubleThreeCorner_NE (0 ms)
+[ RUN      ] OmokTest.OmokDoubleThreeCorner_SW
+[       OK ] OmokTest.OmokDoubleThreeCorner_SW (0 ms)
+[ RUN      ] OmokTest.OmokDoubleThreeCorner_NW
+[       OK ] OmokTest.OmokDoubleThreeCorner_NW (0 ms)
+[ RUN      ] OmokTest.OmokDoubleThreeTT_W
+[       OK ] OmokTest.OmokDoubleThreeTT_W (0 ms)
+[ RUN      ] OmokTest.OmokDoubleThreeTT_N
+[       OK ] OmokTest.OmokDoubleThreeTT_N (0 ms)
+[ RUN      ] OmokTest.OmokDoubleThreeTT_E
+[       OK ] OmokTest.OmokDoubleThreeTT_E (0 ms)
+[ RUN      ] OmokTest.OmokDoubleThreeTT_S
+[       OK ] OmokTest.OmokDoubleThreeTT_S (0 ms)
+[----------] 10 tests from OmokTest (7 ms total)
+
+[----------] 7 tests from RenjuTest
+[ RUN      ] RenjuTest.RenjuOverlineBlack
+[       OK ] RenjuTest.RenjuOverlineBlack (1 ms)
+[ RUN      ] RenjuTest.RenjuOverlineWhite
+[       OK ] RenjuTest.RenjuOverlineWhite (0 ms)
+[ RUN      ] RenjuTest.RenjuDoubleFourBlack
+[       OK ] RenjuTest.RenjuDoubleFourBlack (1 ms)
+[ RUN      ] RenjuTest.RenjuDoubleFourWhiteAllowed
+[       OK ] RenjuTest.RenjuDoubleFourWhiteAllowed (0 ms)
+[ RUN      ] RenjuTest.RenjuSimpleDoubleThreeBlackForbidden
+[       OK ] RenjuTest.RenjuSimpleDoubleThreeBlackForbidden (1 ms)
+[ RUN      ] RenjuTest.RenjuDoubleThreeException_a
+[       OK ] RenjuTest.RenjuDoubleThreeException_a (1 ms)
+[ RUN      ] RenjuTest.RenjuDoubleThreeException_b
+[       OK ] RenjuTest.RenjuDoubleThreeException_b (1 ms)
+[----------] 7 tests from RenjuTest (8 ms total)
+
+[----------] Global test environment tear-down
+[==========] 28 tests from 3 test suites ran. (23 ms total)
+[  PASSED  ] 28 tests.
+<end of output>
+Test time =   0.76 sec
+----------------------------------------------------------
+Test Passed.
+"gomoku_tests" end time: May 12 17:04 KST
+"gomoku_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/13 Testing: neural_network_test
+5/13 Test: neural_network_test
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/neural_network_test"
+Directory: /home/cosmos/omoknuni_small/build
+"neural_network_test" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from DummyTest
+[ RUN      ] DummyTest.NoTorchAvailable
+[       OK ] DummyTest.NoTorchAvailable (0 ms)
+[----------] 1 test from DummyTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.45 sec
+----------------------------------------------------------
+Test Passed.
+"neural_network_test" end time: May 12 17:04 KST
+"neural_network_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/13 Testing: mcts_with_nn_test
+6/13 Test: mcts_with_nn_test
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/mcts_with_nn_test"
+Directory: /home/cosmos/omoknuni_small/build
+"mcts_with_nn_test" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MCTSWithNNTest
+[ RUN      ] MCTSWithNNTest.WithoutTorchTest
+[       OK ] MCTSWithNNTest.WithoutTorchTest (0 ms)
+[----------] 1 test from MCTSWithNNTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.45 sec
+----------------------------------------------------------
+Test Passed.
+"mcts_with_nn_test" end time: May 12 17:04 KST
+"mcts_with_nn_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/13 Testing: self_play_manager_test
+7/13 Test: self_play_manager_test
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/self_play_manager_test"
+Directory: /home/cosmos/omoknuni_small/build
+"self_play_manager_test" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from SelfPlayManagerTest
+[ RUN      ] SelfPlayManagerTest.WithoutTorchTest
+[       OK ] SelfPlayManagerTest.WithoutTorchTest (0 ms)
+[----------] 1 test from SelfPlayManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.44 sec
+----------------------------------------------------------
+Test Passed.
+"self_play_manager_test" end time: May 12 17:04 KST
+"self_play_manager_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/13 Testing: training_data_manager_test
+8/13 Test: training_data_manager_test
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/training_data_manager_test"
+Directory: /home/cosmos/omoknuni_small/build
+"training_data_manager_test" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TrainingDataManagerTest
+[ RUN      ] TrainingDataManagerTest.WithoutTorchTest
+[       OK ] TrainingDataManagerTest.WithoutTorchTest (0 ms)
+[----------] 1 test from TrainingDataManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.45 sec
+----------------------------------------------------------
+Test Passed.
+"training_data_manager_test" end time: May 12 17:04 KST
+"training_data_manager_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/13 Testing: model_evaluator_test
+9/13 Test: model_evaluator_test
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/model_evaluator_test"
+Directory: /home/cosmos/omoknuni_small/build
+"model_evaluator_test" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ModelEvaluatorTest
+[ RUN      ] ModelEvaluatorTest.WithoutTorchTest
+[       OK ] ModelEvaluatorTest.WithoutTorchTest (0 ms)
+[----------] 1 test from ModelEvaluatorTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.66 sec
+----------------------------------------------------------
+Test Passed.
+"model_evaluator_test" end time: May 12 17:04 KST
+"model_evaluator_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/13 Testing: transposition_table_test
+10/13 Test: transposition_table_test
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/transposition_table_test"
+Directory: /home/cosmos/omoknuni_small/build
+"transposition_table_test" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 4 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 4 tests from TranspositionTableTest
+[ RUN      ] TranspositionTableTest.BasicOperations
+[       OK ] TranspositionTableTest.BasicOperations (0 ms)
+[ RUN      ] TranspositionTableTest.ReplacementPolicy
+[       OK ] TranspositionTableTest.ReplacementPolicy (0 ms)
+[ RUN      ] TranspositionTableTest.ThreadSafety
+[       OK ] TranspositionTableTest.ThreadSafety (2 ms)
+[ RUN      ] TranspositionTableTest.MCTSIntegration
+[       OK ] TranspositionTableTest.MCTSIntegration (0 ms)
+[----------] 4 tests from TranspositionTableTest (3 ms total)
+
+[----------] Global test environment tear-down
+[==========] 4 tests from 1 test suite ran. (3 ms total)
+[  PASSED  ] 4 tests.
+<end of output>
+Test time =   0.44 sec
+----------------------------------------------------------
+Test Passed.
+"transposition_table_test" end time: May 12 17:04 KST
+"transposition_table_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/13 Testing: transposition_integration_test
+11/13 Test: transposition_integration_test
+Command: "/home/cosmos/omoknuni_small/build/bin/Release/transposition_integration_test"
+Directory: /home/cosmos/omoknuni_small/build
+"transposition_integration_test" start time: May 12 17:04 KST
+Output:
+----------------------------------------------------------
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TranspositionIntegrationTest
+[ RUN      ] TranspositionIntegrationTest.SearchWithTranspositionTable
+Transposition table hit rate: 0
+[       OK ] TranspositionIntegrationTest.SearchWithTranspositionTable (11 ms)
+[----------] 1 test from TranspositionIntegrationTest (11 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (11 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.47 sec
+----------------------------------------------------------
+Test Passed.
+"transposition_integration_test" end time: May 12 17:04 KST
+"transposition_integration_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
