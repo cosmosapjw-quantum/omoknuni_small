@@ -1,4 +1,0 @@
-D:/Dropbox/personal_projects/omoknuni_small/test_build_notest/CMakeFiles/alphazero.dir
-D:/Dropbox/personal_projects/omoknuni_small/test_build_notest/CMakeFiles/INSTALL.dir
-D:/Dropbox/personal_projects/omoknuni_small/test_build_notest/CMakeFiles/ALL_BUILD.dir
-D:/Dropbox/personal_projects/omoknuni_small/test_build_notest/CMakeFiles/ZERO_CHECK.dir

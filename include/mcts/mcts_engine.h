@@ -11,6 +11,7 @@
 #include <chrono>
 #include "mcts/mcts_node.h"
 #include "mcts/mcts_evaluator.h"
+#include "mcts/transposition_table.h"
 #include "core/igamestate.h"
 #include "core/export_macros.h"
 #include "nn/neural_network.h"
@@ -69,6 +70,12 @@ struct ALPHAZERO_API MCTSStats {
     
     // Nodes per second
     float nodes_per_second = 0.0f;
+
+    // Transposition table hit rate
+    float tt_hit_rate = 0.0f;
+    
+    // Transposition table size
+    size_t tt_size = 0;
 };
 
 struct ALPHAZERO_API SearchResult {
@@ -135,6 +142,39 @@ public:
     // Get the last search statistics
     const MCTSStats& getLastStats() const;
 
+    /**
+     * @brief Enable or disable the transposition table
+     * 
+     * @param use Whether to use the transposition table
+     */
+    void setUseTranspositionTable(bool use);
+    
+    /**
+     * @brief Check if the transposition table is enabled
+     * 
+     * @return true if enabled, false otherwise
+     */
+    bool isUsingTranspositionTable() const;
+    
+    /**
+     * @brief Set the size of the transposition table
+     * 
+     * @param size_mb Size in megabytes
+     */
+    void setTranspositionTableSize(size_t size_mb);
+    
+    /**
+     * @brief Clear the transposition table
+     */
+    void clearTranspositionTable();
+    
+    /**
+     * @brief Get the hit rate of the transposition table
+     * 
+     * @return Hit rate (0.0 to 1.0)
+     */
+    float getTranspositionTableHitRate() const;
+
 private:
     // Internal search method
     void runSearch(const core::IGameState& state);
@@ -146,7 +186,7 @@ private:
     std::pair<MCTSNode*, std::vector<MCTSNode*>> selectLeafNode(MCTSNode* root);
     
     // Expand and evaluate a leaf node
-    float expandAndEvaluate(MCTSNode* leaf);
+    float expandAndEvaluate(MCTSNode* leaf, const std::vector<MCTSNode*>& path);
     
     // Back up value through the tree
     void backPropagate(std::vector<MCTSNode*>& path, float value);
@@ -183,6 +223,12 @@ private:
     
     // Random generator for stochastic actions
     std::mt19937 random_engine_;
+
+    // Transposition table
+    std::unique_ptr<TranspositionTable> transposition_table_;
+    
+    // Whether to use the transposition table
+    bool use_transposition_table_;
 };
 
 } // namespace mcts

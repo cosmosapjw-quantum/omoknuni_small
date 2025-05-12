@@ -1,5 +1,12 @@
-cmake_minimum_required(VERSION 3.20)          # 3.14 → 3.20 for generator-expr fixes
+# cmake_minimum_required(VERSION 3.20)          # 3.14 → 3.20 for generator-expr fixes
+cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0146 OLD)                 # keep your chosen policy
+
+# Set CUDA architectures early to influence compiler detection for CUDA 12.8+
+# This helps avoid nvcc trying to compile for deprecated default architectures like sm_52 during its ID check.
+# Using one of the target architectures (e.g., 86 for Ada Lovelace or Hopper H100 if appropriate, or a common one like 75 for Turing)
+# set(CMAKE_CUDA_ARCHITECTURES "86" CACHE STRING "CUDA architectures for compiler detection and build")
+# message(STATUS "Early setting CMAKE_CUDA_ARCHITECTURES to: ${CMAKE_CUDA_ARCHITECTURES} to aid CUDA compiler ID.")
 
 # ─────────────────────────────── vcpkg integration ─────────────────────────
 if(EXISTS "$ENV{USERPROFILE}/vcpkg/scripts/buildsystems/vcpkg.cmake")
@@ -53,7 +60,7 @@ option(BUILD_PYTHON_BINDINGS  "Build Python bindings (DISABLED due to pybind11 i
 option(BUILD_TESTS            "Build tests"            ON)
 option(WITH_TORCH             "Build with PyTorch"     ON)
 option(BUILD_SHARED_LIBS      "Build shared libs"      ON)
-option(BUILD_EXAMPLES         "Build examples"         ON)
+option(BUILD_EXAMPLES         "Build examples"         OFF)
 
 include(GNUInstallDirs)
 
@@ -98,33 +105,10 @@ if(WITH_TORCH)
     # --- cuDNN hints (edit if your layout differs) ----------------------------
     # User needs to ensure CUDNN_ROOT points to a cuDNN version compatible with the detected CUDA_VERSION
     set(CUDNN_ROOT "C:/Program Files/NVIDIA/CUDNN/v9.7" CACHE PATH "cuDNN root directory (MUST match CUDA version used by Torch)")
-    # The following paths are derived assuming a standard cuDNN layout for a *specific* CUDA version.
-    # If CUDA toolkit is 12.6, these paths should correspond to cuDNN for CUDA 12.6.
-    # Currently, user's CUDNN_ROOT points to v9.7 which seems to have a 12.8 subdir. This will likely cause issues if Torch uses CUDA 12.6.
-    set(CUDNN_INCLUDE_DIR_PATH "${CUDNN_ROOT}/include/12.8") # This path component (12.8) should match the CUDA version Torch will use.
-    set(CUDNN_LIBRARY_DIR_PATH "${CUDNN_ROOT}/lib/12.8/x64")   # Same here for 12.8.
-    set(CUDNN_LIBRARY_FILE_PATH "${CUDNN_LIBRARY_DIR_PATH}/cudnn.lib")
-
-    set(CUDNN_INCLUDE_DIR "${CUDNN_INCLUDE_DIR_PATH}" CACHE PATH "Path to cuDNN include directory" FORCE)
-    set(CUDNN_LIBRARY "${CUDNN_LIBRARY_FILE_PATH}" CACHE FILEPATH "Path to cuDNN library" FORCE)
-    set(CUDNN_ROOT_DIR "${CUDNN_ROOT}" CACHE PATH "Path to cuDNN root directory (alternative hint)" FORCE)
-
-    set(ENV{CUDNN_LIBRARY}      "${CUDNN_LIBRARY_FILE_PATH}")
-    set(ENV{CUDNN_INCLUDE_DIR}  "${CUDNN_INCLUDE_DIR_PATH}")
-    set(ENV{CUDNN_ROOT_DIR}     "${CUDNN_ROOT}")
-    
-    message(STATUS "Configuring with cuDNN hints:")
-    message(STATUS "  CUDNN_ROOT (user hint): ${CUDNN_ROOT}")
-    message(STATUS "  CUDNN_INCLUDE_DIR (cache hint for Torch): ${CUDNN_INCLUDE_DIR}")
-    message(STATUS "  CUDNN_LIBRARY (cache hint for Torch): ${CUDNN_LIBRARY}")
-    message(STATUS "  CUDNN_ROOT_DIR (cache hint for Torch): ${CUDNN_ROOT_DIR}")
-
-    if(NOT EXISTS "${CUDNN_INCLUDE_DIR}")
-        message(WARNING "cuDNN include directory (pointed to by CUDNN_INCLUDE_DIR) not found: ${CUDNN_INCLUDE_DIR}")
-    endif()
-    if(NOT EXISTS "${CUDNN_LIBRARY}")
-        message(WARNING "cuDNN library (pointed to by CUDNN_LIBRARY) not found: ${CUDNN_LIBRARY}")
-    endif()
+    message(STATUS "Providing CUDNN_ROOT hint to PyTorch: ${CUDNN_ROOT}")
+    # PyTorch's find_package(CUDNN) should use CUDNN_ROOT to find include/library.
+    # We remove previously forced CUDNN_INCLUDE_DIR, CUDNN_LIBRARY, CUDNN_FOUND, USE_CUDNN
+    # and related ENV VARS to let PyTorch's detection logic work more naturally.
 
     find_package(CUDA QUIET) # Find CUDA first to get CUDA_VERSION_STRING
     if(CUDA_FOUND)
@@ -137,14 +121,26 @@ if(WITH_TORCH)
             message(STATUS "Setting TORCH_CUDA_VERSION to ${TORCH_CUDA_VERSION} to aid Torch's CUDA detection.")
         endif()
         
+        # Explicitly set CUDA architectures to avoid auto-detection failures
+        set(CMAKE_CUDA_ARCHITECTURES "70;75;80;86")
+        message(STATUS "Explicitly setting CUDA architectures to: ${CMAKE_CUDA_ARCHITECTURES}")
+        
+        # Alternative NVCC flags approach if needed
+        set(TORCH_NVCC_FLAGS "-gencode=arch=compute_70,code=sm_70 -gencode=arch=compute_75,code=sm_75 -gencode=arch=compute_80,code=sm_80 -gencode=arch=compute_86,code=sm_86")
+        message(STATUS "Setting explicit TORCH_NVCC_FLAGS: ${TORCH_NVCC_FLAGS}")
+        
+        # Skip Torch's GPU detection by setting the architecture list directly
+        set(TORCH_CUDA_ARCH_LIST "7.0;7.5;8.0;8.6" CACHE STRING "CUDA architectures for PyTorch" FORCE)
+        message(STATUS "Setting TORCH_CUDA_ARCH_LIST to: ${TORCH_CUDA_ARCH_LIST}")
+        
         if(NOT TARGET CUDA::nvToolsExt)
-            set(NVPERF_HOST_LIB "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/extras/CUPTI/lib64/nvperf_host.lib")
+            set(NVPERF_HOST_LIB "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/extras/CUPTI/lib64/nvperf_host.lib")
             if(EXISTS "${NVPERF_HOST_LIB}")
                 message(STATUS "Using nvperf_host.lib as replacement for nvToolsExt")
                 add_library(CUDA::nvToolsExt UNKNOWN IMPORTED)
                 set_target_properties(CUDA::nvToolsExt PROPERTIES
                     IMPORTED_LOCATION "${NVPERF_HOST_LIB}"
-                    INTERFACE_INCLUDE_DIRECTORIES "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/extras/CUPTI/include")
+                    INTERFACE_INCLUDE_DIRECTORIES "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/extras/CUPTI/include")
             else()
                 message(WARNING "nvperf_host.lib not found, creating interface-only target")
                 add_library(CUDA::nvToolsExt INTERFACE IMPORTED)
@@ -192,24 +188,49 @@ if(BUILD_PYTHON_BINDINGS)
     find_package(pybind11 QUIET)
     if(pybind11_FOUND)
         message(STATUS "Building Python bindings with pybind11 ${pybind11_VERSION}")
-        # find_package(pybind11) should make pybind11_add_module available.
-        # However, if it doesn't (e.g. due to how pybind11 is installed/packaged),
-        # explicitly including pybind11.cmake might be necessary.
-        # It defines python_add_library which pybind11_add_module uses.
-        if(NOT COMMAND python_add_library) # Check if the command is already known
-            if(pybind11_cmake_dir_from_python AND EXISTS "${pybind11_cmake_dir_from_python}/pybind11.cmake")
-                message(STATUS "python_add_library not found, explicitly including ${pybind11_cmake_dir_from_python}/pybind11.cmake")
-                include("${pybind11_cmake_dir_from_python}/pybind11.cmake")
-            elseif(pybind11_DIR AND EXISTS "${pybind11_DIR}/pybind11.cmake") # Fallback if pybind11_DIR was set
-                message(STATUS "python_add_library not found, explicitly including ${pybind11_DIR}/pybind11.cmake")
-                include("${pybind11_DIR}/pybind11.cmake")
-            else()
-                message(WARNING "python_add_library command is not defined and could not locate pybind11.cmake to include it.")
-                set(BUILD_PYTHON_BINDINGS OFF)
-                message(WARNING "Disabling Python bindings due to python_add_library missing.")
+
+        # If essential pybind11 commands are not available after find_package, try to include pybind11.cmake manually.
+        # We check for both python_add_library (original check) and pybind11_add_module (modern command).
+        if(NOT COMMAND python_add_library AND NOT COMMAND pybind11_add_module)
+            set(PYBIND11_CMAKE_FILE_TO_INCLUDE "") # Reset variable
+
+            # Attempt 1: Use path from pybind11.get_cmake_dir()
+            if(pybind11_cmake_dir_from_python)
+                set(CANDIDATE_PATH_FROM_PYTHON "${pybind11_cmake_dir_from_python}/pybind11.cmake")
+                file(TO_CMAKE_PATH "${CANDIDATE_PATH_FROM_PYTHON}" NORMALIZED_PATH_PYTHON)
+                if(EXISTS "${NORMALIZED_PATH_PYTHON}")
+                    set(PYBIND11_CMAKE_FILE_TO_INCLUDE "${NORMALIZED_PATH_PYTHON}")
+                endif()
             endif()
+
+            # Attempt 2: Fallback to pybind11_DIR (if different from python derived path and Attempt 1 failed)
+            if(PYBIND11_CMAKE_FILE_TO_INCLUDE STREQUAL "" AND pybind11_DIR)
+                if(NOT pybind11_cmake_dir_from_python OR NOT ("${pybind11_DIR}" STREQUAL "${pybind11_cmake_dir_from_python}"))
+                    set(CANDIDATE_PATH_FROM_DIR "${pybind11_DIR}/pybind11.cmake")
+                    file(TO_CMAKE_PATH "${CANDIDATE_PATH_FROM_DIR}" NORMALIZED_PATH_DIR)
+                    if(EXISTS "${NORMALIZED_PATH_DIR}")
+                        set(PYBIND11_CMAKE_FILE_TO_INCLUDE "${NORMALIZED_PATH_DIR}")
+                    endif()
+                endif()
+            endif()
+
+            if(NOT PYBIND11_CMAKE_FILE_TO_INCLUDE STREQUAL "")
+                message(STATUS "Manually including ${PYBIND11_CMAKE_FILE_TO_INCLUDE} to define pybind11 commands.")
+                include("${PYBIND11_CMAKE_FILE_TO_INCLUDE}")
+                # Check again if commands are available after include
+                if(NOT COMMAND python_add_library AND NOT COMMAND pybind11_add_module)
+                    message(WARNING "Pybind11 commands (python_add_library/pybind11_add_module) still not available after including ${PYBIND11_CMAKE_FILE_TO_INCLUDE}.")
+                    set(BUILD_PYTHON_BINDINGS OFF) # Disable bindings if include didn't make commands available
+                else()
+                    message(STATUS "Pybind11 commands now available after manual include.")
+                endif()
+            else()
+                message(WARNING "Required pybind11 commands not found, and could not locate pybind11.cmake to include it (tried paths derived from python executable and pybind11_DIR).")
+                set(BUILD_PYTHON_BINDINGS OFF) # Disable bindings if .cmake file not found/included
+            endif()
+        else()
+            message(STATUS "Pybind11 commands (python_add_library or pybind11_add_module) already available after find_package.")
         endif()
-        set(PYBIND11_FOUND TRUE)
     else()
         message(WARNING "pybind11 not found - Python bindings will be disabled. Searched CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
         set(BUILD_PYTHON_BINDINGS OFF)
@@ -279,6 +300,7 @@ set(MCTS_SOURCES
     src/mcts/evaluation_types.cpp
     src/mcts/mcts_evaluator.cpp
     src/mcts/mcts_engine.cpp
+    src/mcts/transposition_table.cpp
 )
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp
@@ -348,16 +370,71 @@ endif()
 
 # ───────────────────────────── Torch DLL copy helper ──────────────────────────
 if(WIN32 AND WITH_TORCH)
-    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Debug")
-    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Release")
-    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/RelWithDebInfo")
-    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/MinSizeRel")
-    
-    message(STATUS "Copying PyTorch runtime DLLs to output directories")
-    file(COPY "${Torch_LIB_DIR}/" DESTINATION "${CMAKE_BINARY_DIR}/bin/Debug")
-    file(COPY "${Torch_LIB_DIR}/" DESTINATION "${CMAKE_BINARY_DIR}/bin/Release")
-    file(COPY "${Torch_LIB_DIR}/" DESTINATION "${CMAKE_BINARY_DIR}/bin/RelWithDebInfo")
-    file(COPY "${Torch_LIB_DIR}/" DESTINATION "${CMAKE_BINARY_DIR}/bin/MinSizeRel")
+    set(TORCH_CORE_DLLS
+        "c10.dll"
+        "torch.dll"
+        "torch_cpu.dll"
+        "torch_global_deps.dll" # Often bundles other dependencies like OpenMP runtimes
+        "asmjit.dll"
+        "fbgemm.dll"
+        "dnnl.dll"
+        "libiomp5md.dll"        # Intel OpenMP runtime
+        "libiompstubs5md.dll"   # Intel OpenMP stubs - problematic one, copy if exists
+        "pthreadpool.dll"
+        "uv.dll"
+    )
+
+    set(TORCH_CUDA_DLLS "")
+    if(CUDA_FOUND) # Or could check TORCH_USE_CUDA after find_package(Torch)
+        set(TORCH_CUDA_DLLS
+            "c10_cuda.dll"
+            "torch_cuda.dll"
+            "nvfuser_codegen.dll"
+        )
+        # Try to find any cuDNN runtime DLLs bundled with PyTorch in its lib directory
+        file(GLOB BUNDLED_CUDNN_DLLS RELATIVE "${Torch_LIB_DIR}" "${Torch_LIB_DIR}/cudnn*.dll")
+        if(BUNDLED_CUDNN_DLLS)
+            message(STATUS "Found bundled cuDNN DLLs in Torch lib: ${BUNDLED_CUDNN_DLLS}")
+            list(APPEND TORCH_CUDA_DLLS ${BUNDLED_CUDNN_DLLS})
+        endif()
+        file(GLOB BUNDLED_ZLIB_DLLS RELATIVE "${Torch_LIB_DIR}" "${Torch_LIB_DIR}/zlib*.dll") # e.g. zlibwapi.dll for cuDNN
+        if(BUNDLED_ZLIB_DLLS)
+            message(STATUS "Found bundled zlib DLLs in Torch lib: ${BUNDLED_ZLIB_DLLS}")
+            list(APPEND TORCH_CUDA_DLLS ${BUNDLED_ZLIB_DLLS})
+        endif()
+    endif()
+
+    set(ALL_TORCH_DLLS ${TORCH_CORE_DLLS} ${TORCH_CUDA_DLLS})
+    list(REMOVE_DUPLICATES ALL_TORCH_DLLS)
+
+    set(TARGET_CONFIGS Debug Release RelWithDebInfo MinSizeRel)
+    # If CMAKE_CONFIGURATION_TYPES is set (e.g. by Visual Studio generator), prefer it.
+    # Otherwise, if it's a single-config generator, CMAKE_BUILD_TYPE will be the one.
+    # The explicit list above is a fallback for wider compatibility in copy logic.
+    if(CMAKE_CONFIGURATION_TYPES)
+        set(EFFECTIVE_CONFIGS ${CMAKE_CONFIGURATION_TYPES})
+    elseif(CMAKE_BUILD_TYPE)
+        set(EFFECTIVE_CONFIGS ${CMAKE_BUILD_TYPE})
+    else()
+        set(EFFECTIVE_CONFIGS ${TARGET_CONFIGS}) # Fallback to the full list
+    endif()
+
+    message(STATUS "Preparing to copy selected PyTorch runtime DLLs to output directories.")
+    foreach(CONFIG ${EFFECTIVE_CONFIGS})
+        set(DEST_DIR "${CMAKE_BINARY_DIR}/bin/${CONFIG}")
+        file(MAKE_DIRECTORY "${DEST_DIR}") # Ensure directory exists
+
+        message(STATUS "Copying PyTorch DLLs for ${CONFIG} configuration to ${DEST_DIR}")
+        foreach(DLL_NAME ${ALL_TORCH_DLLS})
+            set(DLL_PATH "${Torch_LIB_DIR}/${DLL_NAME}")
+            if(EXISTS "${DLL_PATH}")
+                file(COPY "${DLL_PATH}" DESTINATION "${DEST_DIR}")
+            else()
+                # Be less alarming for potentially optional DLLs.
+                message(STATUS "Skipping copy of non-existent or optional DLL: ${DLL_PATH} for ${CONFIG} config.")
+            endif()
+        endforeach()
+    endforeach()
 endif()
 
 # ───────────────────────────── Example executables ────────────────────────────
@@ -390,14 +467,25 @@ if(BUILD_TESTS)
         list(APPEND MCTS_TEST_SOURCES tests/mcts/mcts_test.cpp)
     endif()
 
+    # Check if googletest is built as static or shared library
+    get_target_property(gtest_type GTest::gtest TYPE)
+    if(gtest_type STREQUAL "SHARED_LIBRARY")
+        set(GTEST_IS_SHARED TRUE)
+        message(STATUS "GoogleTest is built as shared library - adjusting test configuration")
+    else()
+        set(GTEST_IS_SHARED FALSE)
+        message(STATUS "GoogleTest is built as ${gtest_type} - treating as static library")
+    endif()
+
     function(make_test name)
         add_executable(${name} ${ARGN})
 
-        # Tell tests that GTest is being linked statically.
-        # This definition should be set to 0 or OFF.
-        # We ensure BUILD_SHARED_LIBS is OFF when gtest itself is configured,
-        # and this definition ensures the test code itself sees gtest as static.
-        target_compile_definitions(${name} PRIVATE GTEST_LINKED_AS_SHARED_LIBRARY=0)
+        # Set GTest linkage definition based on actual library type
+        if(GTEST_IS_SHARED)
+            target_compile_definitions(${name} PRIVATE GTEST_LINKED_AS_SHARED_LIBRARY=1)
+        else()
+            target_compile_definitions(${name} PRIVATE GTEST_LINKED_AS_SHARED_LIBRARY=0)
+        endif()
         
         # Common libraries for all tests
         target_link_libraries(${name} PRIVATE alphazero)
@@ -437,6 +525,18 @@ if(BUILD_TESTS)
         endif()
         
         add_test(NAME ${name} COMMAND ${name})
+        
+        # For Windows shared library builds, set the PATH environment variable
+        # to include the vcpkg directory with the GTest DLLs and the test executable's directory
+        if(WIN32 AND GTEST_IS_SHARED)
+            file(TO_NATIVE_PATH "$ENV{USERPROFILE}/vcpkg/installed/x64-windows/bin" VCPKG_BIN_NATIVE_PATH)
+            file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/bin" PROJECT_BIN_DIR_NATIVE_PART)
+            # $<CONFIG> will be evaluated by CTest at test time.
+            set(CTEST_CONFIG_SPECIFIC_BIN_PATH "${PROJECT_BIN_DIR_NATIVE_PART}/$<CONFIG>")
+
+            set_tests_properties(${name} PROPERTIES
+                ENVIRONMENT "PATH=${VCPKG_BIN_NATIVE_PATH};${CTEST_CONFIG_SPECIFIC_BIN_PATH};$ENV{PATH}")
+        endif()
     endfunction()
 
     make_test(core_tests    tests/core_tests_main.cpp ${CORE_TEST_SOURCES})
@@ -448,6 +548,8 @@ if(BUILD_TESTS)
     make_test(self_play_manager_test tests/selfplay/self_play_manager_test.cpp)
     make_test(training_data_manager_test tests/training/training_data_manager_test.cpp)
     make_test(model_evaluator_test tests/evaluation/model_evaluator_test.cpp)
+    make_test(transposition_table_test tests/mcts/transposition_table_test.cpp)
+    make_test(transposition_integration_test tests/mcts/transposition_integration_test.cpp)
     if(MCTS_TEST_SOURCES)
         make_test(mcts_tests ${MCTS_TEST_SOURCES})
     endif()
@@ -456,16 +558,20 @@ if(BUILD_TESTS)
                              ${GO_TEST_SOURCES} ${GOMOKU_TEST_SOURCES}
                              ${MCTS_TEST_SOURCES})
     
-    # Check if googletest was built as static libraries as expected
+    # Increase stack size for all_tests on MSVC to prevent stack overflow
+    if(MSVC AND TARGET all_tests)
+        target_link_options(all_tests PRIVATE "/STACK:8388608") # 8MB
+    endif()
+    
+    # Accept shared library for GTest
     if(TARGET GTest::gtest)
         get_target_property(gtest_type GTest::gtest TYPE)
         if(gtest_type STREQUAL "INTERFACE_LIBRARY" OR gtest_type STREQUAL "STATIC_LIBRARY")
-            # INTERFACE_LIBRARY is also acceptable if it correctly links to a static one
-            message(STATUS "GoogleTest (GTest::gtest) found as ${gtest_type}, assuming static linkage as per vcpkg default.")
-        elseif(NOT gtest_type STREQUAL "STATIC_LIBRARY")
-            message(WARNING "GoogleTest (GTest::gtest) is of type ${gtest_type}, not STATIC_LIBRARY. This may cause linking errors if not intended.")
+            message(STATUS "GoogleTest (GTest::gtest) found as ${gtest_type}, static linkage will be used.")
+        elseif(gtest_type STREQUAL "SHARED_LIBRARY")
+            message(STATUS "GoogleTest (GTest::gtest) found as shared library, adjusted build settings accordingly.")
         else()
-            message(STATUS "GoogleTest is correctly building as static libraries.")
+            message(WARNING "GoogleTest (GTest::gtest) is of type ${gtest_type}, which is unexpected. Watch for linking errors.")
         endif()
     else()
         message(WARNING "GTest::gtest target not found after find_package(GTest). This is unexpected.")

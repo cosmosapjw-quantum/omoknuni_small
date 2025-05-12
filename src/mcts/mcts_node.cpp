@@ -1,6 +1,7 @@
 // src/mcts/mcts_node.cpp
 #include "mcts/mcts_node.h"
 #include <cmath>
+#include <random>
 #include <limits>
 #include <algorithm>
 
@@ -72,6 +73,10 @@ void MCTSNode::expand() {
     
     // Get legal moves
     std::vector<int> legal_moves = state_->getLegalMoves();
+    
+    // Shuffle legal moves to break move order bias
+    static thread_local std::mt19937 rng(std::random_device{}());
+    std::shuffle(legal_moves.begin(), legal_moves.end(), rng);
     
     // Create a child for each legal move
     for (int move : legal_moves) {

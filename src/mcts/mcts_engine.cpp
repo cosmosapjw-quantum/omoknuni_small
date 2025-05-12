@@ -18,23 +18,52 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
       shutdown_(false),
       active_simulations_(0),
       search_running_(false),
-      random_engine_(std::random_device()()) {
+      random_engine_(std::random_device()()),
+      transposition_table_(std::make_unique<TranspositionTable>(128)), // 128 MB default
+      use_transposition_table_(true) {
     
     // Start the evaluator
     evaluator_->start();
 }
 
-MCTSEngine::MCTSEngine(InferenceFunction inference_func, const MCTSSettings& settings)
+MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& settings)
     : settings_(settings),
       evaluator_(std::make_unique<MCTSEvaluator>(
-          inference_func, settings.batch_size, settings.batch_timeout)),
+          std::move(inference_fn), settings.batch_size, settings.batch_timeout)),
       shutdown_(false),
       active_simulations_(0),
       search_running_(false),
-      random_engine_(std::random_device()()) {
+      random_engine_(std::random_device()()),
+      transposition_table_(std::make_unique<TranspositionTable>(128)), // 128 MB default
+      use_transposition_table_(true) {
     
     // Start the evaluator
     evaluator_->start();
+}
+
+void MCTSEngine::setUseTranspositionTable(bool use) {
+    use_transposition_table_ = use;
+}
+
+bool MCTSEngine::isUsingTranspositionTable() const {
+    return use_transposition_table_;
+}
+
+void MCTSEngine::setTranspositionTableSize(size_t size_mb) {
+    transposition_table_ = std::make_unique<TranspositionTable>(size_mb);
+}
+
+void MCTSEngine::clearTranspositionTable() {
+    if (transposition_table_) {
+        transposition_table_->clear();
+    }
+}
+
+float MCTSEngine::getTranspositionTableHitRate() const {
+    if (transposition_table_) {
+        return transposition_table_->hitRate();
+    }
+    return 0.0f;
 }
 
 MCTSEngine::MCTSEngine(MCTSEngine&& other) noexcept
@@ -228,56 +257,28 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
     // Reset statistics
     last_stats_ = MCTSStats();
     
-    // Create a new root node
-    root_ = std::make_unique<MCTSNode>(state.clone());
-
-    // Initial expansion and evaluation of the root node to ensure its visit count is > 0
-    // before simulations try to select children from it. This allows priors to work.
-    if (root_->getVisitCount() == 0) { 
-        root_->expand(); // Create children of the root.
+    // Check if we should use the transposition table
+    if (use_transposition_table_) {
+        // Try to find the position in the transposition table
+        uint64_t hash = state.getHash();
+        MCTSNode* existing_node = transposition_table_->get(hash);
         
-        // Evaluate the root state with the neural network.
-        auto state_clone = root_->getState().clone();
-        // Note: MCTSEvaluator is designed to handle requests asynchronously.
-        // For this initial root evaluation, a direct/synchronous call might be conceptually simpler
-        // but we'll use the existing evaluator for consistency.
-        auto future = evaluator_->evaluateState(root_.get(), std::move(state_clone));
-        auto nn_output = future.get(); // Wait for the evaluation.
-
-        // Set prior probabilities for root's children based on NN output.
-        root_->setPriorProbabilities(nn_output.policy);
-        
-        // Update root node's statistics. This is like a mini-backpropagation for the root itself.
-        // The value from NN is from the current player's perspective at the root.
-        root_->update(nn_output.value); // visit_count becomes 1, value_sum is updated.
-    }
-    
-    // Create worker threads if needed
-    if (worker_threads_.empty()) {
-        worker_threads_.reserve(settings_.num_threads);
-        for (int i = 0; i < settings_.num_threads; ++i) {
-            worker_threads_.emplace_back([this]() {
-                while (!shutdown_) {
-                    // Wait for work
-                    {
-                        std::unique_lock<std::mutex> lock(cv_mutex_);
-                        cv_.wait(lock, [this]() {
-                            return active_simulations_.load() > 0 || shutdown_;
-                        });
-                        
-                        if (shutdown_) break;
-                    }
-                    
-                    // Run a simulation
-                    if (root_ && search_running_) {
-                        runSimulation(root_.get());
-                    }
-                    
-                    // Decrement active simulation count
-                    active_simulations_.fetch_sub(1, std::memory_order_relaxed);
-                }
-            });
+        if (existing_node) {
+            // Found in transposition table, use its state to create a new root
+            root_.reset(); // Release old root
+            // Create a new root node from the state of the existing_node
+            root_ = std::make_unique<MCTSNode>(existing_node->getState().clone());
+            // TODO: Consider if statistics from existing_node (visits, value) should be copied to the new root_
+        } else {
+            // Not found, create a new root
+            root_ = std::make_unique<MCTSNode>(state.clone());
+            
+            // Store in transposition table
+            transposition_table_->store(hash, root_.get(), 0);
         }
+    } else {
+        // Not using transposition table, always create a new root
+        root_ = std::make_unique<MCTSNode>(state.clone());
     }
     
     // Add Dirichlet noise to root node policy for exploration
@@ -324,6 +325,12 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
     
     last_stats_.total_nodes = count;
     last_stats_.max_depth = max_depth;
+    
+    // Add transposition table stats
+    if (use_transposition_table_) {
+        last_stats_.tt_hit_rate = transposition_table_->hitRate();
+        last_stats_.tt_size = transposition_table_->size();
+    }
 }
 
 void MCTSEngine::runSimulation(MCTSNode* root) {
@@ -331,7 +338,7 @@ void MCTSEngine::runSimulation(MCTSNode* root) {
     auto [leaf, path] = selectLeafNode(root);
     
     // Expansion and evaluation phase
-    float value = expandAndEvaluate(leaf);
+    float value = expandAndEvaluate(leaf, path);
     
     // Backpropagation phase
     backPropagate(path, value);
@@ -353,6 +360,20 @@ std::pair<MCTSNode*, std::vector<MCTSNode*>> MCTSEngine::selectLeafNode(MCTSNode
         // Apply virtual loss to selected child
         node->addVirtualLoss();
         
+        // Check transposition table for this node
+        if (use_transposition_table_ && !node->isTerminal()) {
+            uint64_t hash = node->getState().getHash();
+            MCTSNode* transposition = transposition_table_->get(hash);
+            
+            if (transposition) {
+                // Found in transposition table
+                // Replace current node in path with transposition node
+                path.push_back(transposition);
+                node = transposition;
+                continue;
+            }
+        }
+        
         // Add to path
         path.push_back(node);
     }
@@ -360,48 +381,86 @@ std::pair<MCTSNode*, std::vector<MCTSNode*>> MCTSEngine::selectLeafNode(MCTSNode
     return {node, path};
 }
 
-float MCTSEngine::expandAndEvaluate(MCTSNode* node_selected_as_leaf) {
-    // Path 1: Node is terminal
-    if (node_selected_as_leaf->isTerminal()) {
-        auto result = node_selected_as_leaf->getState().getGameResult();
+float MCTSEngine::expandAndEvaluate(MCTSNode* leaf, const std::vector<MCTSNode*>& path) {
+    // If terminal, return the terminal value
+    if (leaf->isTerminal()) {
+        auto result = leaf->getState().getGameResult();
+        
+        // Convert game result to value
         if (result == core::GameResult::WIN_PLAYER1) {
-            return node_selected_as_leaf->getState().getCurrentPlayer() == 1 ? 1.0f : -1.0f;
+            return leaf->getState().getCurrentPlayer() == 1 ? 1.0f : -1.0f;
         } else if (result == core::GameResult::WIN_PLAYER2) {
-            return node_selected_as_leaf->getState().getCurrentPlayer() == 2 ? 1.0f : -1.0f;
+            return leaf->getState().getCurrentPlayer() == 2 ? 1.0f : -1.0f;
         } else {
             return 0.0f; // Draw
         }
     }
-
-    // Path 2: Node is new (never fully evaluated and backpropagated)
-    // We use visit_count == 0 as the primary indicator for first full processing.
-    // MCTSNode::expand() has internal mutex to protect children creation.
-    if (node_selected_as_leaf->getVisitCount() == 0) {
-        node_selected_as_leaf->expand(); // Creates children if they don't exist.
-                                         // Sets uniform priors on children if this node's policy vector isn't set yet.
+    
+    // If the node has not been visited yet, evaluate it with the neural network
+    if (leaf->getVisitCount() == 0) {
+        // Expand the node
+        leaf->expand();
         
-        auto state_clone = node_selected_as_leaf->getState().clone();
-        auto future = evaluator_->evaluateState(node_selected_as_leaf, std::move(state_clone));
-        auto nn_output = future.get();
-
-        node_selected_as_leaf->setPriorProbabilities(nn_output.policy); // Sets policy on this node, and updates children's individual priors.
-        return nn_output.value; // This value will be backpropagated.
+        // Store in transposition table
+        if (use_transposition_table_) {
+            uint64_t hash = leaf->getState().getHash();
+            transposition_table_->store(hash, leaf, path.size()); // Use path length as depth
+        }
+        
+        // Evaluate the state with the neural network
+        auto state_clone = leaf->getState().clone();
+        auto future = evaluator_->evaluateState(leaf, std::move(state_clone));
+        
+        // Wait for the result
+        auto result = future.get();
+        
+        // Set prior probabilities for children
+        leaf->setPriorProbabilities(result.policy);
+        
+        // Return the value from neural network
+        return result.value;
     }
-
-    // Path 3: Node was already visited (visit_count > 0).
-    // selectLeafNode THOUGHT this was a leaf (or terminal, which is handled above).
-    // Check if it's *still* a leaf (e.g., expansion yielded no children due to no legal moves).
-    if (node_selected_as_leaf->isLeaf()) {
-        return 0.0f; // Visited, but it's a dead-end leaf.
+    
+    // If the node is already expanded but has no children (e.g., all moves illegal)
+    if (leaf->isLeaf() && leaf->getVisitCount() > 0) {
+        return 0.0f; // Default to draw
     }
-
-    // Path 4: Node was visited (visit_count > 0), selectLeafNode thought it was a leaf,
-    // BUT it's NOT a leaf anymore (it has children populated by another thread).
-    // This means it's an internal node that has (or is being) ALREADY evaluated and its policy processed.
-    // For this simulation path, we treat it as reaching an already explored state.
-    // Return its current known value for backpropagation.
-    // Since mockNN value is 0, this will be 0, which is consistent.
-    return node_selected_as_leaf->getValue(); 
+    
+    // Otherwise, expand and evaluate a randomly chosen child
+    leaf->expand();
+    
+    // If no children, return 0 (draw)
+    if (leaf->getChildren().empty()) {
+        return 0.0f;
+    }
+    
+    // Get all children
+    auto& children = leaf->getChildren();
+    // Create a shuffled index vector to randomize child selection
+    std::vector<size_t> indices(children.size());
+    std::iota(indices.begin(), indices.end(), 0); // Fill with 0, 1, 2, ...
+    std::shuffle(indices.begin(), indices.end(), random_engine_);
+    // Choose the first child after shuffling
+    MCTSNode* child = children[indices[0]];
+    
+    // Store child in transposition table
+    if (use_transposition_table_) {
+        uint64_t hash = child->getState().getHash();
+        transposition_table_->store(hash, child, path.size() + 1); // Use path length as depth
+    }
+    
+    // Evaluate with neural network
+    auto state_clone = child->getState().clone();
+    auto future = evaluator_->evaluateState(child, std::move(state_clone));
+    
+    // Wait for the result
+    auto result = future.get();
+    
+    // Set prior probabilities for new children
+    child->setPriorProbabilities(result.policy);
+    
+    // Return the negation of the value (because it's from the opponent's perspective)
+    return -result.value;
 }
 
 void MCTSEngine::backPropagate(std::vector<MCTSNode*>& path, float value) {
