@@ -6,5 +6,5 @@ CXX_DEFINES = -DALPHAZERO_EXPORTS -DENABLE_CUDA_FALLBACK=1 -DJSON_DIAGNOSTICS=0 
 
 CXX_INCLUDES = -I/home/cosmos/omoknuni_small/include -I/home/cosmos/omoknuni_small/src -isystem /opt/libtorch-2.7.0-cu128/include -isystem /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include -isystem /usr/local/cuda-12.8/include -isystem /usr/local/cuda/include
 
-CXX_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0 -Wno-deprecated-declarations -D_GLIBCXX_USE_CXX11_ABI=0 -fopenmp -g -fPIC -Wall -Wextra -mavx2 -Wno-unknown-pragmas -Wno-unused-parameter -Wno-sign-compare -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -std=gnu++17
+CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=0 -fopenmp -O3 -DNDEBUG -fPIC -Wall -Wextra -mavx2 -O3 -Wno-unknown-pragmas -Wno-unused-parameter -Wno-sign-compare -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -std=gnu++17
 

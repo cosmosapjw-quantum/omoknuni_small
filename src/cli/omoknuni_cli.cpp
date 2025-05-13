@@ -1,6 +1,9 @@
 // src/cli/omoknuni_cli.cpp
 #include "cli/cli_manager.h"
 #include "core/game_export.h"
+#include "games/gomoku/gomoku_state.h"
+#include "games/chess/chess_state.h"
+#include "games/go/go_state.h"
 #include <iostream>
 #include <cstdio>
 #include <string>
@@ -113,11 +116,13 @@ bool check_library(const char* libname) {
 
 // Simple diagnostic version with enhanced debugging
 int main(int argc, char** argv) {
-    // Immediate basic console output for debugging
-    fprintf(stderr, "omoknuni_cli starting...\n");
+    // Immediate basic console output for debugging with timestamp
+    fprintf(stderr, "[DEBUG-INIT] omoknuni_cli starting...\n");
     fflush(stderr);
     // Setup watchdog timer to prevent infinite hanging
     setup_watchdog();
+    fprintf(stderr, "[DEBUG-INIT] Watchdog timer set up\n");
+    fflush(stderr);
 
     // Set debug level from environment variable if present
     const char* debug_env = getenv("OMOKNUNI_DEBUG");
@@ -189,7 +194,26 @@ int main(int argc, char** argv) {
     debug_print(BASIC, "Checking for alphazero library only");
 
     // First check alphazero library - only check this one
-    bool has_alphazero = check_library("libalphazero.so");
+    // Look in both the current directory and the build/lib/Debug directory
+    const char* search_paths[] = {
+        "libalphazero.so",                      // Current directory
+        "./build/lib/Debug/libalphazero.so",    // Debug build
+        "./build/lib/Release/libalphazero.so",  // Release build
+        "../lib/Debug/libalphazero.so",         // Relative from bin/Debug
+        "../lib/Release/libalphazero.so"        // Relative from bin/Release
+    };
+    
+    bool has_alphazero = false;
+    for (const char* path : search_paths) {
+        debug_print(DETAILED, "Trying to load library from: %s", path);
+        fprintf(stderr, "Trying to load library from: %s\n", path);
+        has_alphazero = check_library(path);
+        if (has_alphazero) {
+            debug_print(BASIC, "Successfully loaded library from: %s", path);
+            fprintf(stderr, "Successfully loaded library from: %s\n", path);
+            break;
+        }
+    }
 
     debug_print(BASIC, "Library status summary:");
     debug_print(BASIC, "  alphazero: %s", has_alphazero ? "YES" : "NO");
@@ -207,22 +231,89 @@ int main(int argc, char** argv) {
         reset_watchdog();
 
         debug_print(BASIC, "Registering game implementations");
+        fprintf(stderr, "[DEBUG-INIT] About to register games\n");
+        fflush(stderr);
 
         // Register basic game implementations in core
         alphazero::core::GameRegistry::instance().registerGame(
             alphazero::core::GameType::GOMOKU,
             []() {
-                debug_print(DETAILED, "Creating GOMOKU game instance");
-                return nullptr; // Stub implementation
+                fprintf(stderr, "[DEBUG-INIT] Creating GOMOKU game instance\n");
+                fflush(stderr);
+                try {
+                    return std::make_unique<alphazero::games::gomoku::GomokuState>();
+                } catch (const std::exception& e) {
+                    fprintf(stderr, "[DEBUG-ERROR] Exception creating GOMOKU game: %s\n", e.what());
+                    fflush(stderr);
+                    throw;
+                } catch (...) {
+                    fprintf(stderr, "[DEBUG-ERROR] Unknown exception creating GOMOKU game\n");
+                    fflush(stderr);
+                    throw;
+                }
             }
         );
+        
+        fprintf(stderr, "[DEBUG-INIT] GOMOKU game registered\n");
+        fflush(stderr);
+        
+        alphazero::core::GameRegistry::instance().registerGame(
+            alphazero::core::GameType::CHESS,
+            []() {
+                fprintf(stderr, "[DEBUG-INIT] Creating CHESS game instance\n");
+                fflush(stderr);
+                try {
+                    return std::make_unique<alphazero::games::chess::ChessState>();
+                } catch (const std::exception& e) {
+                    fprintf(stderr, "[DEBUG-ERROR] Exception creating CHESS game: %s\n", e.what());
+                    fflush(stderr);
+                    throw;
+                } catch (...) {
+                    fprintf(stderr, "[DEBUG-ERROR] Unknown exception creating CHESS game\n");
+                    fflush(stderr);
+                    throw;
+                }
+            }
+        );
+        
+        fprintf(stderr, "[DEBUG-INIT] CHESS game registered\n");
+        fflush(stderr);
+        
+        alphazero::core::GameRegistry::instance().registerGame(
+            alphazero::core::GameType::GO,
+            []() {
+                fprintf(stderr, "[DEBUG-INIT] Creating GO game instance\n");
+                fflush(stderr);
+                try {
+                    return std::make_unique<alphazero::games::go::GoState>();
+                } catch (const std::exception& e) {
+                    fprintf(stderr, "[DEBUG-ERROR] Exception creating GO game: %s\n", e.what());
+                    fflush(stderr);
+                    throw;
+                } catch (...) {
+                    fprintf(stderr, "[DEBUG-ERROR] Unknown exception creating GO game\n");
+                    fflush(stderr);
+                    throw;
+                }
+            }
+        );
+        
+        fprintf(stderr, "[DEBUG-INIT] GO game registered\n");
+        fflush(stderr);
 
         debug_print(BASIC, "Creating CLI manager");
+        fprintf(stderr, "[DEBUG-INIT] About to create CLI manager\n");
+        fflush(stderr);
 
         // Create CLI manager
         alphazero::cli::CLIManager cli;
 
+        fprintf(stderr, "[DEBUG-INIT] CLI manager created\n");
+        fflush(stderr);
+        
         debug_print(BASIC, "Adding command handlers");
+        fprintf(stderr, "[DEBUG-INIT] About to add command handlers\n");
+        fflush(stderr);
 
         // Add dummy commands that just print help
         cli.addCommand("self-play", "Generate self-play games for training",
@@ -261,11 +352,16 @@ int main(int argc, char** argv) {
         debug_print(BASIC, "Running CLI manager with %d arguments", argc);
         printf("Running CLI with %d arguments\n", argc);
         fflush(stdout); // Force immediate output
+        
+        fprintf(stderr, "[DEBUG-INIT] All command handlers added\n");
+        fflush(stderr);
 
         // Reset watchdog before running CLI
         reset_watchdog();
 
         debug_print(BASIC, "Calling cli.run() - if the program hangs after this message, the issue is in CLIManager::run()");
+        fprintf(stderr, "[DEBUG-INIT] About to call cli.run()\n");
+        fflush(stderr);
 
         // Run with watchdog checking
         int result = -1;
@@ -274,7 +370,16 @@ int main(int argc, char** argv) {
             return 1;
         }
 
+        fprintf(stderr, "[DEBUG-INIT] Calling CLIManager::run with argc=%d\n", argc);
+        for (int i = 0; i < argc; i++) {
+            fprintf(stderr, "[DEBUG-INIT]   argv[%d] = %s\n", i, argv[i]);
+        }
+        fflush(stderr);
+        
         result = cli.run(argc, argv);
+        
+        fprintf(stderr, "[DEBUG-INIT] cli.run() returned %d\n", result);
+        fflush(stderr);
 
         // Cancel watchdog timer since we've completed successfully
         cancel_watchdog();

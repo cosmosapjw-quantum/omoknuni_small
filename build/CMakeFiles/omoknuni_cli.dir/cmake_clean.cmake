@@ -7,8 +7,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/omoknuni_cli.dir/src/nn/neural_network_factory.cpp.o.d"
   "CMakeFiles/omoknuni_cli.dir/src/nn/resnet_model.cpp.o"
   "CMakeFiles/omoknuni_cli.dir/src/nn/resnet_model.cpp.o.d"
-  "bin/Debug/omoknuni_cli"
-  "bin/Debug/omoknuni_cli.pdb"
+  "bin/Release/omoknuni_cli"
+  "bin/Release/omoknuni_cli.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

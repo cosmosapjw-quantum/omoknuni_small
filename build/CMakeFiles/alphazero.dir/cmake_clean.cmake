@@ -51,8 +51,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/alphazero.dir/src/utils/memory_debug.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o"
   "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o.d"
-  "lib/Debug/libalphazero.pdb"
-  "lib/Debug/libalphazero.so"
+  "lib/Release/libalphazero.pdb"
+  "lib/Release/libalphazero.so"
 )
 
 # Per-language clean rules from dependency scanning.
