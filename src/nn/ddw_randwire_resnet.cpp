@@ -1,7 +1,6 @@
 #include "nn/ddw_randwire_resnet.h"
 #include <fstream>
 #include <queue>
-#include <iostream> // Use standard iostream instead of spdlog
 
 namespace alphazero {
 namespace nn {
@@ -488,68 +487,40 @@ void DDWRandWireResNet::_initialize_weights() {
 }
 
 void DDWRandWireResNet::save(const std::string& path) {
-    try {
-        auto self = shared_from_this();
-        torch::save(self, path);
-        std::cout << "Model saved to " << path << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Failed to save model: " << e.what() << std::endl;
-        throw;
-    }
+    auto self = shared_from_this();
+    torch::save(self, path);
 }
 
 void DDWRandWireResNet::load(const std::string& path) {
-    try {
-        auto self = shared_from_this();
-        torch::load(self, path);
-        std::cout << "Model loaded from " << path << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Failed to load model: " << e.what() << std::endl;
-        throw;
-    }
+    auto self = shared_from_this();
+    torch::load(self, path);
 }
 
 void DDWRandWireResNet::export_to_torchscript(const std::string& path, std::vector<int64_t> input_shape) {
+    // Set model to evaluation mode
+    eval();
+    
+    // Create dummy input for tracing
+    if (input_shape[1] == 0) {
+        input_shape[1] = input_channels_;
+    }
+    if (input_shape[2] == 0 || input_shape[3] == 0) {
+        input_shape[2] = input_shape[3] = 8;  // Default board size
+    }
+    
+    torch::Tensor dummy_input = torch::zeros(input_shape);
+    
+    // Save model
     try {
-        // Set model to evaluation mode
-        eval();
-        
-        // Create dummy input for tracing
-        if (input_shape[1] == 0) {
-            input_shape[1] = input_channels_;
-        }
-        if (input_shape[2] == 0 || input_shape[3] == 0) {
-            input_shape[2] = input_shape[3] = 8;  // Default board size
-        }
-        
-        torch::Tensor dummy_input = torch::zeros(input_shape);
-        
-        // Trace the model
+        // Try direct save first
         torch::jit::script::Module traced_module;
-        try {
-            // Save directly
-            traced_module.save(path);
-            std::cout << "Model exported to TorchScript format at " << path << std::endl;
-            return;
-        } catch (const c10::Error& e) {
-            std::cerr << "Failed to save model: " << e.what() << ". Trying alternative method." << std::endl;
-        }
-        
-        try {
-            // Alternative save method
-            auto model_copy = std::dynamic_pointer_cast<torch::nn::Module>(shared_from_this());
-            if (!model_copy) {
-                throw std::runtime_error("Failed to cast model to Module");
-            }
+        traced_module.save(path);
+    } catch (const c10::Error&) {
+        // Fall back to alternative save method
+        auto model_copy = std::dynamic_pointer_cast<torch::nn::Module>(shared_from_this());
+        if (model_copy) {
             torch::save(model_copy, path);
-            std::cout << "Model exported to regular format at " << path << std::endl;
-        } catch (const std::exception& e) {
-            std::cerr << "Failed to export model: " << e.what() << std::endl;
-            throw;
         }
-    } catch (const std::exception& e) {
-        std::cerr << "Failed to export model to TorchScript: " << e.what() << std::endl;
-        throw;
     }
 }
 

@@ -10,7 +10,7 @@ network:
   num_filters: 64
 
 # Model paths
-model_path: models/best_model.pt
+model_path: /tmp/test_model.pt
 
 # MCTS settings
 mcts:

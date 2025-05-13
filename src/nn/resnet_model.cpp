@@ -1,6 +1,5 @@
 // src/nn/resnet_model.cpp
 #include "nn/resnet_model.h"
-#include <iostream>
 #include <stdexcept>
 
 namespace alphazero {
@@ -42,6 +41,7 @@ ResNetModel::ResNetModel(int64_t input_channels, int64_t board_size,
     }
     
     // Input layers
+    // Always create input layer with the actual channel count needed (17 for Gomoku)
     input_conv_ = torch::nn::Conv2d(torch::nn::Conv2dOptions(input_channels_, num_filters, 3)
                                   .padding(1).bias(false));
     input_bn_ = torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(num_filters));
@@ -109,8 +109,16 @@ torch::Tensor ResNetModel::prepareInputTensor(const std::vector<std::unique_ptr<
     batch_tensors.reserve(states.size());
     
     for (const auto& state : states) {
-        // Get enhanced tensor representation
-        auto tensor = state->getEnhancedTensorRepresentation();
+        // Get tensor representation based on input channels
+        std::vector<std::vector<std::vector<float>>> tensor;
+        
+        // Use regular tensor representation for games expecting 3 channels
+        if (input_channels_ == 3) {
+            tensor = state->getTensorRepresentation();
+        } else {
+            // Use enhanced tensor for games expecting more channels
+            tensor = state->getEnhancedTensorRepresentation();
+        }
         
         // Convert to torch tensor
         std::vector<int64_t> dims = {static_cast<int64_t>(tensor.size()),
@@ -190,25 +198,13 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
 }
 
 void ResNetModel::save(const std::string& path) {
-    try {
-        auto self = shared_from_this();
-        torch::save(self, path);
-        std::cout << "Model saved to " << path << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Failed to save model: " << e.what() << std::endl;
-        throw;
-    }
+    auto self = shared_from_this();
+    torch::save(self, path);
 }
 
 void ResNetModel::load(const std::string& path) {
-    try {
-        auto self = shared_from_this();
-        torch::load(self, path);
-        std::cout << "Model loaded from " << path << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Failed to load model: " << e.what() << std::endl;
-        throw;
-    }
+    auto self = shared_from_this();
+    torch::load(self, path);
 }
 
 std::vector<int64_t> ResNetModel::getInputShape() const {

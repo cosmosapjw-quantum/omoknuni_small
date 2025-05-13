@@ -1,18 +1,15 @@
 // src/mcts/mcts_engine.cpp
 #include "mcts/mcts_engine.h"
+#include "mcts/mcts_node.h"
+#include "utils/debug_monitor.h"
 #include <algorithm>
 #include <cmath>
 #include <numeric>
 #include <iostream>
 #include <random>
-#include "utils/debug_monitor.h"
-#include "utils/memory_debug.h"
 
-// Enable detailed debugging
-#define MCTS_DEBUG 1
-
-// Use shortened namespace for debug functions
-namespace ad = alphazero::debug;
+// Disable detailed debugging
+#define MCTS_DEBUG 0
 
 namespace alphazero {
 namespace mcts {
@@ -539,12 +536,10 @@ void MCTSEngine::runSimulation(MCTSNode* root) {
         try {
             value = expandAndEvaluate(leaf, path);
         } catch (const std::bad_alloc& e) {
-            std::cerr << "MEMORY ERROR during expansion/evaluation: " << e.what() << std::endl;
-            // Provide a default value to allow simulation to continue
+            // Removed std::cerr
             value = 0.0f;
         } catch (const std::exception& e) {
-            std::cerr << "Error during expansion/evaluation: " << e.what() << std::endl;
-            // Provide a default value
+            // Removed std::cerr
             value = 0.0f;
         }
 
@@ -562,7 +557,7 @@ void MCTSEngine::runSimulation(MCTSNode* root) {
         debug::SystemMonitor::instance().recordTiming("BackpropagationTime", backprop_time);
 
     } catch (const std::exception& e) {
-        std::cerr << "FATAL ERROR in simulation: " << e.what() << std::endl;
+        // Removed std::cerr
     }
 
     DEBUG_THREAD_STATUS("simulation_complete", "Completed MCTS simulation");
@@ -605,26 +600,9 @@ std::pair<MCTSNode*, std::vector<MCTSNode*>> MCTSEngine::selectLeafNode(MCTSNode
 }
 
 float MCTSEngine::expandAndEvaluate(MCTSNode* leaf, const std::vector<MCTSNode*>& path) {
-    // Take memory snapshot at start of expansion
-    ad::takeMemorySnapshot("MCTSEngine_ExpandEvaluate_Start");
-
-    // Get thread ID for logging
-    static thread_local int thread_id = -1;
-    if (thread_id == -1) {
-        std::hash<std::thread::id> hasher;
-        thread_id = hasher(std::this_thread::get_id()) % 10000; // Keep 4 digits for readability
-    }
-
-    std::string expand_prefix = "T" + std::to_string(thread_id) + "_Expand";
-
-    // If terminal, return the terminal value
+    // Removed std::cout print statements
     if (leaf->isTerminal()) {
         auto result = leaf->getState().getGameResult();
-
-        std::cout << expand_prefix << ": Terminal node found with game result: "
-                  << static_cast<int>(result) << std::endl;
-
-        // Convert game result to value
         float value = 0.0f;
         if (result == core::GameResult::WIN_PLAYER1) {
             value = leaf->getState().getCurrentPlayer() == 1 ? 1.0f : -1.0f;
@@ -633,180 +611,47 @@ float MCTSEngine::expandAndEvaluate(MCTSNode* leaf, const std::vector<MCTSNode*>
         } else {
             value = 0.0f; // Draw
         }
-
-        std::cout << expand_prefix << ": Terminal value: " << value
-                  << " for player " << leaf->getState().getCurrentPlayer() << std::endl;
-
-        // Take memory snapshot for terminal nodes
-        ad::takeMemorySnapshot("MCTSEngine_ExpandEvaluate_Terminal");
-
         return value;
     }
     
     // If the node has not been visited yet, evaluate it with the neural network
     if (leaf->getVisitCount() == 0) {
-        std::cout << expand_prefix << ": Unvisited node - expanding and evaluating with neural network" << std::endl;
-
-        // Take memory snapshot before expansion
-        ad::takeMemorySnapshot("MCTSEngine_BeforeExpand");
-
-        auto expand_start = std::chrono::steady_clock::now();
-
-        // Expand the node
         leaf->expand();
-
-        auto expand_time = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - expand_start).count() / 1000.0;
-
-        std::cout << expand_prefix << ": Node expanded in " << expand_time
-                  << "ms, created " << leaf->getChildren().size() << " children" << std::endl;
-
-        // Take memory snapshot after expansion
-        ad::takeMemorySnapshot("MCTSEngine_AfterExpand");
-
-        // Store in transposition table
         if (use_transposition_table_) {
             uint64_t hash = leaf->getState().getHash();
-            std::cout << expand_prefix << ": Storing node in transposition table, hash="
-                      << hash << ", depth=" << path.size() << std::endl;
-
-            auto tt_start = std::chrono::steady_clock::now();
-            transposition_table_->store(hash, leaf, path.size()); // Use path length as depth
-            auto tt_time = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::steady_clock::now() - tt_start).count() / 1000.0;
-
-            std::cout << expand_prefix << ": Transposition table store completed in "
-                      << tt_time << "ms" << std::endl;
+            transposition_table_->store(hash, leaf, path.size());
         }
-
-        // Special fast path for serial mode (no worker threads)
         if (settings_.num_threads == 0) {
-            std::cout << expand_prefix << ": Using serial mode direct inference path" << std::endl;
-
-            // Clone the state
-            auto clone_start = std::chrono::steady_clock::now();
             auto state_clone = leaf->getState().clone();
-            auto clone_time = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::steady_clock::now() - clone_start).count() / 1000.0;
-
-            std::cout << expand_prefix << ": State cloned in " << clone_time << "ms" << std::endl;
-
-            // Create direct vector for inference function
             std::vector<std::unique_ptr<core::IGameState>> states;
             states.push_back(std::move(state_clone));
-
-            // Call inference function directly without going through evaluator
-            std::cout << expand_prefix << ": Calling neural network directly" << std::endl;
-
-            auto nn_start = std::chrono::steady_clock::now();
             auto outputs = evaluator_->getInferenceFunction()(states);
-            auto nn_time = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::steady_clock::now() - nn_start).count() / 1000.0;
-
-            std::cout << expand_prefix << ": Neural network inference completed in "
-                      << nn_time << "ms" << std::endl;
-
             if (!outputs.empty()) {
-                // Take memory snapshot after NN evaluation
-                ad::takeMemorySnapshot("MCTSEngine_AfterNNEval_Serial");
-
-                std::cout << expand_prefix << ": Setting prior probabilities for "
-                          << leaf->getChildren().size() << " children" << std::endl;
-
-                // Log policy information
-                std::cout << expand_prefix << ": Policy summary - size: " << outputs[0].policy.size()
-                          << ", value: " << outputs[0].value << std::endl;
-
-                // Set prior probabilities for children
                 leaf->setPriorProbabilities(outputs[0].policy);
-
-                // Return the value from neural network
                 return outputs[0].value;
             } else {
-                std::cout << expand_prefix << ": WARNING - Neural network inference failed, using fallback" << std::endl;
-
-                // Fallback if inference failed - return neutral value and use uniform policy
                 int action_space_size = leaf->getState().getActionSpaceSize();
                 std::vector<float> uniform_policy(action_space_size, 1.0f / action_space_size);
-
-                std::cout << expand_prefix << ": Setting uniform policy for "
-                          << leaf->getChildren().size() << " children (action space: "
-                          << action_space_size << ")" << std::endl;
-
                 leaf->setPriorProbabilities(uniform_policy);
                 return 0.0f;
             }
         } else {
-            std::cout << expand_prefix << ": Using parallel evaluator path" << std::endl;
-
-            // Normal path through evaluator thread
-            auto clone_start = std::chrono::steady_clock::now();
             auto state_clone = leaf->getState().clone();
-            auto clone_time = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::steady_clock::now() - clone_start).count() / 1000.0;
-
-            std::cout << expand_prefix << ": State cloned in " << clone_time << "ms" << std::endl;
-
-            // Take memory snapshot before evaluation
-            ad::takeMemorySnapshot("MCTSEngine_BeforeEvaluatorCall");
-
-            auto eval_submit_start = std::chrono::steady_clock::now();
             auto future = evaluator_->evaluateState(leaf, std::move(state_clone));
-            auto eval_submit_time = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::steady_clock::now() - eval_submit_start).count() / 1000.0;
-
-            std::cout << expand_prefix << ": Evaluation state submitted in "
-                      << eval_submit_time << "ms, waiting for result..." << std::endl;
-
-            // Wait for the result
-            auto wait_start = std::chrono::steady_clock::now();
             auto result = future.get();
-            auto wait_time = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::steady_clock::now() - wait_start).count() / 1000.0;
-
-            std::cout << expand_prefix << ": Evaluation completed after waiting "
-                      << wait_time << "ms" << std::endl;
-
-            // Take memory snapshot after evaluation
-            ad::takeMemorySnapshot("MCTSEngine_AfterEvaluatorCall");
-
-            // Log policy information
-            std::cout << expand_prefix << ": Policy summary - size: " << result.policy.size()
-                      << ", value: " << result.value << std::endl;
-
-            // Set prior probabilities for children
             leaf->setPriorProbabilities(result.policy);
-
-            // Return the value from neural network
             return result.value;
         }
     }
     
     // If the node is already expanded but has no children (e.g., all moves illegal)
     if (leaf->isLeaf() && leaf->getVisitCount() > 0) {
-        std::cout << expand_prefix << ": Already visited leaf node with no children - treating as draw" << std::endl;
-        ad::takeMemorySnapshot("MCTSEngine_ExpandEvaluate_LeafWithVisits");
         return 0.0f; // Default to draw
     }
 
     // Otherwise, expand and evaluate a randomly chosen child
-    std::cout << expand_prefix << ": Expanding leaf node with " << leaf->getVisitCount()
-              << " visits" << std::endl;
-
-    auto expand_start = std::chrono::steady_clock::now();
     leaf->expand();
-    auto expand_time = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::steady_clock::now() - expand_start).count() / 1000.0;
-
-    std::cout << expand_prefix << ": Expanded node in " << expand_time
-              << "ms, created " << leaf->getChildren().size() << " children" << std::endl;
-
-    // Take memory snapshot after expansion
-    ad::takeMemorySnapshot("MCTSEngine_ExpandEvaluate_AfterExpand");
-
-    // If no children, return 0 (draw)
     if (leaf->getChildren().empty()) {
-        std::cout << expand_prefix << ": No legal moves available after expansion - treating as draw" << std::endl;
         return 0.0f;
     }
 
@@ -819,181 +664,48 @@ float MCTSEngine::expandAndEvaluate(MCTSNode* leaf, const std::vector<MCTSNode*>
     // Choose the first child after shuffling
     MCTSNode* child = children[indices[0]];
 
-    std::cout << expand_prefix << ": Randomly selected child " << indices[0]
-              << " of " << children.size() << " available children" << std::endl;
-
     // Store child in transposition table
     if (use_transposition_table_) {
         uint64_t hash = child->getState().getHash();
-
-        std::cout << expand_prefix << ": Storing child in transposition table, hash="
-                  << hash << ", depth=" << (path.size() + 1) << std::endl;
-
-        auto tt_start = std::chrono::steady_clock::now();
         transposition_table_->store(hash, child, path.size() + 1); // Use path length as depth
-        auto tt_time = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - tt_start).count() / 1000.0;
-
-        std::cout << expand_prefix << ": Transposition table store completed in "
-                  << tt_time << "ms" << std::endl;
     }
 
     // Special fast path for serial mode (no worker threads)
     if (settings_.num_threads == 0) {
-        std::cout << expand_prefix << ": Using serial mode direct inference path for child" << std::endl;
-
-        // Clone the state
-        auto clone_start = std::chrono::steady_clock::now();
         auto state_clone = child->getState().clone();
-        auto clone_time = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - clone_start).count() / 1000.0;
-
-        std::cout << expand_prefix << ": Child state cloned in " << clone_time << "ms" << std::endl;
-
-        // Create direct vector for inference function
         std::vector<std::unique_ptr<core::IGameState>> states;
         states.push_back(std::move(state_clone));
-
-        // Call inference function directly without going through evaluator
-        std::cout << expand_prefix << ": Calling neural network directly for child" << std::endl;
-
-        auto nn_start = std::chrono::steady_clock::now();
         auto outputs = evaluator_->getInferenceFunction()(states);
-        auto nn_time = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - nn_start).count() / 1000.0;
-
-        std::cout << expand_prefix << ": Child neural network inference completed in "
-                  << nn_time << "ms" << std::endl;
-
         if (!outputs.empty()) {
-            // Take memory snapshot after NN evaluation
-            ad::takeMemorySnapshot("MCTSEngine_ChildAfterNNEval_Serial");
-
-            // Log policy information
-            std::cout << expand_prefix << ": Child policy summary - size: " << outputs[0].policy.size()
-                      << ", value: " << outputs[0].value << std::endl;
-
-            // Set prior probabilities for children
             child->setPriorProbabilities(outputs[0].policy);
-
-            // Return the negated value from neural network (opponent perspective)
             return -outputs[0].value;
         } else {
-            std::cout << expand_prefix << ": WARNING - Child neural network inference failed, using fallback" << std::endl;
-
-            // Fallback if inference failed - return neutral value and use uniform policy
             int action_space_size = child->getState().getActionSpaceSize();
             std::vector<float> uniform_policy(action_space_size, 1.0f / action_space_size);
-
-            std::cout << expand_prefix << ": Setting uniform policy for child with action space: "
-                      << action_space_size << std::endl;
-
             child->setPriorProbabilities(uniform_policy);
             return 0.0f;
         }
     } else {
-        std::cout << expand_prefix << ": Using parallel evaluator path for child" << std::endl;
-
-        // Normal path through evaluator thread
-        auto clone_start = std::chrono::steady_clock::now();
         auto state_clone = child->getState().clone();
-        auto clone_time = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - clone_start).count() / 1000.0;
-
-        std::cout << expand_prefix << ": Child state cloned in " << clone_time << "ms" << std::endl;
-
-        // Take memory snapshot before evaluation
-        ad::takeMemorySnapshot("MCTSEngine_BeforeChildEvaluatorCall");
-
-        auto eval_submit_start = std::chrono::steady_clock::now();
         auto future = evaluator_->evaluateState(child, std::move(state_clone));
-        auto eval_submit_time = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - eval_submit_start).count() / 1000.0;
-
-        std::cout << expand_prefix << ": Child evaluation state submitted in "
-                  << eval_submit_time << "ms, waiting for result..." << std::endl;
-
-        // Wait for the result
-        auto wait_start = std::chrono::steady_clock::now();
         auto result = future.get();
-        auto wait_time = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - wait_start).count() / 1000.0;
-
-        std::cout << expand_prefix << ": Child evaluation completed after waiting "
-                  << wait_time << "ms" << std::endl;
-
-        // Take memory snapshot after evaluation
-        ad::takeMemorySnapshot("MCTSEngine_AfterChildEvaluatorCall");
-
-        // Log policy information
-        std::cout << expand_prefix << ": Child policy summary - size: " << result.policy.size()
-                  << ", value: " << result.value << std::endl;
-
-        // Set prior probabilities for new children
         child->setPriorProbabilities(result.policy);
-
-        // Return the negation of the value (because it's from the opponent's perspective)
         return -result.value;
     }
 }
 
 void MCTSEngine::backPropagate(std::vector<MCTSNode*>& path, float value) {
-    // Take memory snapshot at start of backpropagation
-    ad::takeMemorySnapshot("MCTSEngine_BackpropStart");
-
-    // Get thread ID for logging
-    static thread_local int thread_id = -1;
-    if (thread_id == -1) {
-        std::hash<std::thread::id> hasher;
-        thread_id = hasher(std::this_thread::get_id()) % 10000; // Keep 4 digits for readability
-    }
-
-    std::string backprop_prefix = "T" + std::to_string(thread_id) + "_Backprop";
-
-    std::cout << backprop_prefix << ": Starting backpropagation with initial value: " << value
-              << " for path of length " << path.size() << std::endl;
-
-    // Invert value for opponent's turn
+    // Removed std::cout print statements
     bool invert = false;
-
-    // Backpropagate from leaf to root
     int depth = path.size() - 1;
     for (auto it = path.rbegin(); it != path.rend(); ++it) {
         MCTSNode* node = *it;
-
-        // Take snapshot occasionally during backpropagation
-        if (depth % 10 == 0) {
-            ad::takeMemorySnapshot("MCTSEngine_Backprop_Depth" + std::to_string(depth));
-        }
-
         float update_value = invert ? -value : value;
-        int old_visits = node->getVisitCount();
-        float old_value = node->getValue();
-
-        std::cout << backprop_prefix << ": Updating node at depth " << depth
-                  << " from visits=" << old_visits << ", value=" << old_value
-                  << " with update value=" << update_value << std::endl;
-
-        // Remove virtual loss
         node->removeVirtualLoss();
-
-        // Update statistics
         node->update(update_value);
-
-        std::cout << backprop_prefix << ": Node updated to visits=" << node->getVisitCount()
-                  << ", value=" << node->getValue() << std::endl;
-
-        // Invert for next level
         invert = !invert;
         depth--;
     }
-
-    std::cout << backprop_prefix << ": Backpropagation complete, root node now has "
-              << path[0]->getVisitCount() << " visits and value="
-              << path[0]->getValue() << std::endl;
-
-    // Take memory snapshot at end of backpropagation
-    ad::takeMemorySnapshot("MCTSEngine_BackpropEnd");
 }
 
 std::vector<float> MCTSEngine::getActionProbabilities(MCTSNode* root, float temperature) {

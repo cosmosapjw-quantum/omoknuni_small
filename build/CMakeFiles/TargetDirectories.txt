@@ -1,9 +1,0 @@
-/home/cosmos/omoknuni_small/build/CMakeFiles/alphazero_py.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/alphazero.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/omoknuni_cli.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/edit_cache.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/rebuild_cache.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/list_install_components.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/install.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/install/local.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/install/strip.dir

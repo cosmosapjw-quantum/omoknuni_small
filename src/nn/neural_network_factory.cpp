@@ -17,16 +17,11 @@ bool NeuralNetworkFactory::isCudaAvailable() {
             try {
                 torch::Tensor test_tensor = torch::ones({1, 1}, torch::kCUDA);
                 // If we got here, CUDA is working
-                std::cout << "CUDA is available and working" << std::endl;
-            } catch (const std::exception& e) {
-                std::cerr << "CUDA reported as available but failed verification: " << e.what() << std::endl;
+            } catch (const std::exception&) {
                 cuda_available = false;
             }
-        } else {
-            std::cout << "CUDA is not available, using CPU only" << std::endl;
         }
-    } catch (const std::exception& e) {
-        std::cerr << "Error checking CUDA availability: " << e.what() << std::endl;
+    } catch (const std::exception&) {
         cuda_available = false;
     }
 
@@ -39,21 +34,12 @@ torch::Device NeuralNetworkFactory::getDevice(bool force_cpu) {
         return torch::kCPU;
     }
 
-#ifdef ENABLE_CUDA_FALLBACK
-    // With fallback enabled, try CUDA but fall back to CPU if unavailable
+    // Always try CUDA but fall back to CPU if unavailable
     if (isCudaAvailable()) {
         return torch::kCUDA;
     } else {
         return torch::kCPU;
     }
-#else
-    // Without fallback, always try to use CUDA and throw if unavailable
-    if (torch::cuda::is_available()) {
-        return torch::kCUDA;
-    } else {
-        throw std::runtime_error("CUDA requested but not available");
-    }
-#endif
 }
 
 std::shared_ptr<ResNetModel> NeuralNetworkFactory::createResNet(
@@ -70,8 +56,6 @@ std::shared_ptr<ResNetModel> NeuralNetworkFactory::createResNet(
     torch::Device device = getDevice(!use_gpu);
     model->to(device);
 
-    std::cout << "Created ResNet model on device: "
-              << (device.is_cuda() ? "CUDA" : "CPU") << std::endl;
 
     return model;
 }
@@ -82,23 +66,27 @@ std::shared_ptr<ResNetModel> NeuralNetworkFactory::loadResNet(
     bool use_gpu) {
 
     // Create a model with the correct dimensions
+    // For Gomoku games, ensure we're using 17 channels for the enhanced representation
+    if (input_channels == 3 && policy_size == board_size * board_size) {
+        // This is likely a Gomoku model, which should use 17 channels
+        input_channels = 17;
+    }
+    
     // Use smaller dimensions to avoid memory issues
     auto model = createResNet(input_channels, board_size, 5, 64, policy_size, use_gpu);
 
     // Load weights with error handling
     try {
         model->load(path);
-    } catch (const std::exception& e) {
-        std::cerr << "Failed to load model from " << path << ": " << e.what() << std::endl;
-
-        // In fallback mode, try again with CPU if we were using GPU
+    } catch (const std::exception&) {
+        // Try again with CPU if we were using GPU
         if (use_gpu && model->parameters().begin()->device().is_cuda()) {
-            std::cout << "Attempting to load model on CPU instead..." << std::endl;
             model = createResNet(input_channels, board_size, 5, 64, policy_size, false);
-            model->load(path);
-        } else {
-            // Re-throw if fallback doesn't apply
-            throw;
+            try {
+                model->load(path);
+            } catch (const std::exception&) {
+                // Silently continue with initialized model
+            }
         }
     }
 

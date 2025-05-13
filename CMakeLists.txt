@@ -100,7 +100,7 @@ endif()
 
 # ───────────────────────────────────── Options ─────────────────────────────────
 option(BUILD_PYTHON_BINDINGS  "Build Python bindings (DISABLED due to pybind11 issues)"  ON)
-option(BUILD_TESTS            "Build tests"            OFF)
+option(BUILD_TESTS            "Build tests"            ON)
 option(WITH_TORCH             "Build with PyTorch"     ON)
 option(BUILD_SHARED_LIBS      "Build shared libs"      ON)
 option(BUILD_EXAMPLES         "Build examples"         OFF)
@@ -692,7 +692,7 @@ set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp)
 set(CHESS_SOURCES     src/games/chess/chess_state.cpp src/games/chess/chess_rules.cpp src/games/chess/chess960.cpp)
 set(GO_SOURCES        src/games/go/go_state.cpp   src/games/go/go_rules.cpp)
 set(GOMOKU_SOURCES    src/games/gomoku/gomoku_state.cpp src/games/gomoku/gomoku_rules.cpp)
-set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/memory_debug.cpp src/utils/debug_monitor.cpp)
+set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp)
 
 # Conditionally define NN_SOURCES based on WITH_TORCH
 set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty

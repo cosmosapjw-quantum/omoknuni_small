@@ -1,19 +1,20 @@
 // src/selfplay/self_play_manager.cpp
 #include "selfplay/self_play_manager.h"
-#include <chrono>
-#include <thread>
-#include <fstream>
-#include <filesystem>
-#include "nlohmann/json.hpp"
-#include <iostream>
-#include <iomanip>
-#include <sstream>
+#include "mcts/mcts_engine.h"
+#include "utils/debug_monitor.h"
 #include "games/chess/chess_state.h"
 #include "games/go/go_state.h"
 #include "games/gomoku/gomoku_state.h"
+#include <vector>
+#include <string>
+#include <memory>
+#include <future>
+#include <chrono>
+#include <iomanip>
+#include <iostream>
+#include <filesystem>
+#include <nlohmann/json.hpp>
 #include "core/game_export.h"
-#include "utils/debug_monitor.h"
-#include "utils/memory_debug.h"
 
 namespace alphazero {
 namespace selfplay {
@@ -26,9 +27,7 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
       settings_(settings),
       active_games_(0) {
 
-    // Start memory monitoring for debugging
-    debug::startMemoryMonitoring();
-    debug::takeMemorySnapshot("SelfPlayManager_Constructor_Start");
+    // Initialize self-play manager
 
     // Initialize random number generator
     if (settings_.random_seed < 0) {
@@ -41,24 +40,19 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     // Create MCTS engines for each worker thread
     engines_.reserve(settings_.num_parallel_games);
     for (int i = 0; i < settings_.num_parallel_games; ++i) {
-        debug::takeMemorySnapshot("Before_Creating_MCTSEngine_" + std::to_string(i));
         try {
             engines_.emplace_back(std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings));
-            debug::takeMemorySnapshot("After_Creating_MCTSEngine_" + std::to_string(i));
         } catch (const std::exception& e) {
             std::cerr << "Error creating MCTS engine " << i << ": " << e.what() << std::endl;
-            debug::takeMemorySnapshot("Error_Creating_MCTSEngine_" + std::to_string(i));
             throw;
         }
     }
 
-    debug::takeMemorySnapshot("SelfPlayManager_Constructor_End");
 }
 
 std::vector<GameData> SelfPlayManager::generateGames(core::GameType game_type,
                                                     int num_games,
                                                     int board_size) {
-    debug::takeMemorySnapshot("GenerateGames_Start");
 
     std::vector<GameData> games;
     games.reserve(num_games);
@@ -68,7 +62,6 @@ std::vector<GameData> SelfPlayManager::generateGames(core::GameType game_type,
     int batch_number = 0;
 
     while (remaining_games > 0) {
-        debug::takeMemorySnapshot("GenerateGames_Batch_" + std::to_string(batch_number) + "_Start");
 
         int batch_size = std::min(remaining_games, settings_.num_parallel_games);
         std::vector<std::thread> threads;
@@ -92,8 +85,8 @@ std::vector<GameData> SelfPlayManager::generateGames(core::GameType game_type,
             thread.join();
         }
 
-        // Print memory status after each batch
-        DEBUG_PRINT_MEMORY_USAGE();
+        // Print status after each batch
+        std::cout << "Completed batch " << batch_number << " with " << batch_size << " games." << std::endl;
 
         // Add results to games vector
         games.insert(games.end(), batch_results.begin(), batch_results.end());
@@ -102,32 +95,26 @@ std::vector<GameData> SelfPlayManager::generateGames(core::GameType game_type,
         remaining_games -= batch_size;
         batch_number++;
 
-        debug::takeMemorySnapshot("GenerateGames_Batch_" + std::to_string(batch_number) + "_End");
     }
 
-    debug::takeMemorySnapshot("GenerateGames_End");
     return games;
 }
 
 void SelfPlayManager::gameWorker(core::GameType game_type, int board_size,
                                const std::string& game_id, GameData* result) {
     std::string worker_id = "Worker_" + game_id;
-    debug::takeMemorySnapshot(worker_id + "_Start");
 
     try {
         *result = generateGame(game_type, board_size, game_id);
-        debug::takeMemorySnapshot(worker_id + "_Success");
     } catch (const std::bad_alloc& e) {
         std::cerr << "Memory allocation error in game worker " << game_id
                  << ": " << e.what() << std::endl;
-        debug::takeMemorySnapshot(worker_id + "_BadAlloc");
         // Create an empty result
         result->game_id = game_id + "_ERROR";
         result->game_type = game_type;
         result->board_size = board_size;
     } catch (const std::exception& e) {
         std::cerr << "Error in game worker " << game_id << ": " << e.what() << std::endl;
-        debug::takeMemorySnapshot(worker_id + "_Exception");
         // Create an empty result
         result->game_id = game_id + "_ERROR";
         result->game_type = game_type;
@@ -135,13 +122,11 @@ void SelfPlayManager::gameWorker(core::GameType game_type, int board_size,
     }
 
     active_games_--;
-    debug::takeMemorySnapshot(worker_id + "_End");
 }
 
 GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
                                       const std::string& game_id) {
     std::string game_prefix = "Game_" + game_id;
-    debug::takeMemorySnapshot(game_prefix + "_Start");
 
     // Select a thread-specific MCTS engine
     int thread_id = 0;
@@ -155,7 +140,6 @@ GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
     std::uniform_int_distribution<int> pos_dist(0, settings_.num_start_positions - 1);
     int position_id = pos_dist(rng_);
 
-    debug::takeMemorySnapshot(game_prefix + "_BeforeCreateGame");
 
     // Create game
     auto game = createGame(game_type, board_size, position_id);
@@ -163,7 +147,6 @@ GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
         throw std::runtime_error("Failed to create game state");
     }
 
-    debug::takeMemorySnapshot(game_prefix + "_AfterCreateGame");
 
     // Prepare game data
     GameData data;
@@ -191,7 +174,6 @@ GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
     int move_count = 0;
     while (!game->isTerminal() && static_cast<int>(data.moves.size()) < max_moves) {
         std::string move_prefix = game_prefix + "_Move" + std::to_string(move_count);
-        debug::takeMemorySnapshot(move_prefix + "_Start");
 
         // Set temperature based on move number
         auto current_settings = engine.getSettings();
@@ -204,13 +186,11 @@ GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
                                               data.moves.empty();  // Only on first move
         engine.updateSettings(current_settings);
 
-        debug::takeMemorySnapshot(move_prefix + "_BeforeSearch");
 
         try {
             // Run search
             auto result = engine.search(*game);
 
-            debug::takeMemorySnapshot(move_prefix + "_AfterSearch");
 
             // Store move and policy
             data.moves.push_back(result.action);
@@ -227,19 +207,16 @@ GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
                 } else if (game_result == core::GameResult::WIN_PLAYER2) {
                     data.winner = 2;
                 }
-                debug::takeMemorySnapshot(move_prefix + "_GameTerminal");
                 break;
             }
         } catch (const std::bad_alloc& e) {
             std::cerr << "Memory allocation error during search in game " << game_id
                      << " at move " << move_count << ": " << e.what() << std::endl;
-            debug::takeMemorySnapshot(move_prefix + "_BadAlloc");
             // Exit the loop and return partial game data
             break;
         } catch (const std::exception& e) {
             std::cerr << "Error during search in game " << game_id
                      << " at move " << move_count << ": " << e.what() << std::endl;
-            debug::takeMemorySnapshot(move_prefix + "_Exception");
             // Exit the loop and return partial game data
             break;
         }
@@ -249,12 +226,9 @@ GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
         if (move_count % 10 == 0) {
             // Print progress every 10 moves
             std::cout << "Game " << game_id << ": Completed " << move_count
-                     << " moves, memory usage: "
-                     << (debug::MemoryTracker::instance().getCurrentUsage() / (1024 * 1024))
-                     << " MB" << std::endl;
+                     << " moves" << std::endl;
         }
 
-        debug::takeMemorySnapshot(move_prefix + "_End");
     }
     
     // End time

@@ -3,11 +3,6 @@
 #include "mcts/mcts_node.h"
 #include <algorithm>
 #include <iostream>
-#include "utils/debug_monitor.h"
-#include "utils/memory_debug.h"
-
-// Use shortened namespace for debug functions
-namespace ad = alphazero::debug;
 
 namespace alphazero {
 namespace mcts {
@@ -81,7 +76,6 @@ size_t MCTSEvaluator::getTotalEvaluations() const {
 }
 
 void MCTSEvaluator::processBatches() {
-    DEBUG_THREAD_STATUS("evaluator_thread_start", "Starting neural network evaluator thread");
 
     // Performance stats tracking with minimal variables
     size_t total_batch_count = 0;
@@ -89,35 +83,24 @@ void MCTSEvaluator::processBatches() {
 
     while (!shutdown_flag_) {
         // Collect a batch of states - without detailed status updates
-        DEBUG_THREAD_STATUS("evaluator_collecting", "");
         auto batch = collectBatch();
 
         if (!batch.empty()) {
             // Process the batch
-            DEBUG_THREAD_STATUS("evaluator_processing_batch", "Size: " + std::to_string(batch.size()));
             processBatch(batch);
 
-            // Record simple batch statistics without verbose output
+            // Update batch statistics
             total_batch_count++;
             total_batch_size += batch.size();
-
-            // Only log basic stats occasionally to reduce overhead
-            if (total_batch_count % 50 == 0) {
-                float avg_batch_size = total_batch_size / static_cast<float>(total_batch_count);
-                debug::SystemMonitor::instance().recordResourceUsage("AvgBatchSize", avg_batch_size);
-            }
         } else {
             // To avoid tight loops when queue is empty
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
 
-    DEBUG_THREAD_STATUS("evaluator_thread_exit", "Neural network evaluator thread exiting");
 }
 
 std::vector<EvaluationRequest> MCTSEvaluator::collectBatch() {
-    // Use timing without verbose logging
-    debug::ScopedTimer timer("MCTSEvaluator::collectBatch");
 
     std::vector<EvaluationRequest> batch;
     batch.reserve(batch_size_);
@@ -139,8 +122,6 @@ std::vector<EvaluationRequest> MCTSEvaluator::collectBatch() {
 
     // If we already have a full batch, return it
     if (batch.size() >= batch_size_) {
-        // Minimal logging
-        DEBUG_THREAD_STATUS("evaluator_batch_full", "Collected full batch immediately");
         return batch;
     }
 
@@ -185,23 +166,14 @@ std::vector<EvaluationRequest> MCTSEvaluator::collectBatch() {
         }
     }
 
-    // Record metrics without excessive logging
+    // Calculate collection time
     auto collection_time = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - start_time).count();
-
-    // Only record metrics, no console output
-    if (batch.size() > 0) {
-        float batch_efficiency = static_cast<float>(batch.size()) / batch_size_ * 100.0f;
-        debug::SystemMonitor::instance().recordResourceUsage("BatchEfficiency", batch_efficiency);
-        debug::SystemMonitor::instance().recordTiming("BatchCollectionTime", collection_time);
-    }
 
     return batch;
 }
 
 void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
-    debug::ScopedTimer timer("MCTSEvaluator::processBatch");
-    DEBUG_THREAD_STATUS("evaluator_inference_start", "Starting neural network inference for batch of " + std::to_string(batch.size()));
 
     auto start_time = std::chrono::steady_clock::now();
 
@@ -210,7 +182,6 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
     states.reserve(batch.size());
 
     {
-        debug::ScopedTimer prep_timer("MCTSEvaluator::prepareStates");
 
         for (auto& request : batch) {
             if (!request.state) {
@@ -224,7 +195,6 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
     // Run batch inference with minimal logging
     std::vector<NetworkOutput> outputs;
     {
-        debug::ScopedTimer nn_timer("MCTSEvaluator::runInference");
 
         try {
             outputs = inference_fn_(states);
@@ -259,7 +229,6 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
 
     // Distribute results to requesters via promises
     {
-        debug::ScopedTimer dist_timer("MCTSEvaluator::distributeResults");
 
         for (size_t i = 0; i < batch.size(); ++i) {
             try {
@@ -281,13 +250,8 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
     auto end_time = std::chrono::steady_clock::now();
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
-    // Record only essential metrics
-    debug::SystemMonitor::instance().recordTiming("BatchProcessingTime", elapsed_ms);
-    debug::SystemMonitor::instance().recordResourceUsage("BatchSize", batch.size());
-
     // Calculate per-state processing time
     float ms_per_state = batch.size() > 0 ? elapsed_ms / static_cast<float>(batch.size()) : 0.0f;
-    debug::SystemMonitor::instance().recordTiming("MsPerState", ms_per_state);
 
     // Update counters
     int batch_id = total_batches_.fetch_add(1, std::memory_order_relaxed);
@@ -295,8 +259,6 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
     cumulative_batch_size_.fetch_add(batch.size(), std::memory_order_relaxed);
     cumulative_batch_time_ms_.fetch_add(elapsed_ms, std::memory_order_relaxed);
 
-    DEBUG_THREAD_STATUS("evaluator_inference_complete",
-                       "Finished neural network inference for batch of " + std::to_string(batch.size()));
 }
 
 } // namespace mcts
