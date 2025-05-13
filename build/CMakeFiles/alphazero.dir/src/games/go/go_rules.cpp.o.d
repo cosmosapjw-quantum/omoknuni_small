@@ -1,85 +1,110 @@
 CMakeFiles/alphazero.dir/src/games/go/go_rules.cpp.o: \
  /home/cosmos/omoknuni_small/src/games/go/go_rules.cpp \
- /home/cosmos/anaconda3/x86_64-conda-linux-gnu/sysroot/usr/include/stdc-predef.h \
+ /usr/include/stdc-predef.h \
  /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/vector \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/requires_hosted.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/x86_64-conda-linux-gnu/bits/c++config.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/x86_64-conda-linux-gnu/bits/os_defines.h \
- /home/cosmos/anaconda3/x86_64-conda-linux-gnu/sysroot/usr/include/features.h \
- /home/cosmos/anaconda3/x86_64-conda-linux-gnu/sysroot/usr/include/sys/cdefs.h \
- /home/cosmos/anaconda3/x86_64-conda-linux-gnu/sysroot/usr/include/bits/wordsize.h \
- /home/cosmos/anaconda3/x86_64-conda-linux-gnu/sysroot/usr/include/gnu/stubs.h \
- /home/cosmos/anaconda3/x86_64-conda-linux-gnu/sysroot/usr/include/gnu/stubs-64.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/x86_64-conda-linux-gnu/bits/cpu_defines.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/pstl/pstl_config.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_algobase.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/functexcept.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/exception_defines.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/cpp_type_traits.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/ext/type_traits.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/ext/numeric_traits.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_pair.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/type_traits \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/version.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/move.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/utility.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_iterator_base_types.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_iterator_base_funcs.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/concept_check.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/debug/assertions.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_iterator.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/ptr_traits.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/debug/debug.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/predefined_ops.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bit \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/concepts \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/allocator.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/x86_64-conda-linux-gnu/bits/c++allocator.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/new_allocator.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/new \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/exception.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/memoryfwd.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_construct.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_uninitialized.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/ext/alloc_traits.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/alloc_traits.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_vector.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/initializer_list \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_bvector.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/functional_hash.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/hash_bytes.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/refwrap.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/invoke.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_function.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/backward/binders.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/range_access.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/vector.tcc \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/memory_resource.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/cstddef \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/stddef.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/uses_allocator.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/uses_allocator_args.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/tuple \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/unordered_set \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/unordered_set.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/hashtable.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/hashtable_policy.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/ext/aligned_buffer.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/enable_special_members.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/node_handle.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/erase_if.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/functional \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/std_function.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/typeinfo \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/unordered_map \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/unordered_map.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/array \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/compare \
+ /usr/include/c++/11/vector /usr/include/c++/11/bits/stl_algobase.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
+ /usr/include/features.h /usr/include/features-time64.h \
+ /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+ /usr/include/x86_64-linux-gnu/bits/timesize.h \
+ /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+ /usr/include/x86_64-linux-gnu/bits/long-double.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h \
+ /usr/include/c++/11/pstl/pstl_config.h \
+ /usr/include/c++/11/bits/functexcept.h \
+ /usr/include/c++/11/bits/exception_defines.h \
+ /usr/include/c++/11/bits/cpp_type_traits.h \
+ /usr/include/c++/11/ext/type_traits.h \
+ /usr/include/c++/11/ext/numeric_traits.h \
+ /usr/include/c++/11/bits/stl_pair.h /usr/include/c++/11/bits/move.h \
+ /usr/include/c++/11/type_traits \
+ /usr/include/c++/11/bits/stl_iterator_base_types.h \
+ /usr/include/c++/11/bits/stl_iterator_base_funcs.h \
+ /usr/include/c++/11/bits/concept_check.h \
+ /usr/include/c++/11/debug/assertions.h \
+ /usr/include/c++/11/bits/stl_iterator.h \
+ /usr/include/c++/11/bits/ptr_traits.h /usr/include/c++/11/debug/debug.h \
+ /usr/include/c++/11/bits/predefined_ops.h \
+ /usr/include/c++/11/bits/allocator.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/c++allocator.h \
+ /usr/include/c++/11/ext/new_allocator.h /usr/include/c++/11/new \
+ /usr/include/c++/11/bits/exception.h \
+ /usr/include/c++/11/bits/memoryfwd.h \
+ /usr/include/c++/11/bits/stl_construct.h \
+ /usr/include/c++/11/bits/stl_uninitialized.h \
+ /usr/include/c++/11/ext/alloc_traits.h \
+ /usr/include/c++/11/bits/alloc_traits.h \
+ /usr/include/c++/11/bits/stl_vector.h \
+ /usr/include/c++/11/initializer_list \
+ /usr/include/c++/11/bits/stl_bvector.h \
+ /usr/include/c++/11/bits/functional_hash.h \
+ /usr/include/c++/11/bits/hash_bytes.h \
+ /usr/include/c++/11/bits/range_access.h \
+ /usr/include/c++/11/bits/vector.tcc /usr/include/c++/11/unordered_set \
+ /usr/include/c++/11/ext/aligned_buffer.h \
+ /usr/include/c++/11/bits/stl_function.h \
+ /usr/include/c++/11/backward/binders.h \
+ /usr/include/c++/11/bits/hashtable.h \
+ /usr/include/c++/11/bits/hashtable_policy.h /usr/include/c++/11/tuple \
+ /usr/include/c++/11/utility /usr/include/c++/11/bits/stl_relops.h \
+ /usr/include/c++/11/array /usr/include/c++/11/bits/uses_allocator.h \
+ /usr/include/c++/11/bits/invoke.h \
+ /usr/include/c++/11/bits/enable_special_members.h \
+ /usr/include/c++/11/bits/node_handle.h \
+ /usr/include/c++/11/bits/unordered_set.h \
+ /usr/include/c++/11/bits/erase_if.h /usr/include/c++/11/functional \
+ /usr/include/c++/11/bits/refwrap.h \
+ /usr/include/c++/11/bits/std_function.h /usr/include/c++/11/typeinfo \
+ /usr/include/c++/11/unordered_map \
+ /usr/include/c++/11/bits/unordered_map.h \
+ /usr/include/c++/11/bits/stl_algo.h /usr/include/c++/11/cstdlib \
+ /usr/include/stdlib.h \
+ /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+ /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+ /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+ /usr/include/x86_64-linux-gnu/bits/floatn.h \
+ /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+ /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+ /usr/include/x86_64-linux-gnu/sys/types.h \
+ /usr/include/x86_64-linux-gnu/bits/types.h \
+ /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+ /usr/include/x86_64-linux-gnu/bits/time64.h \
+ /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-intn.h /usr/include/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/endianness.h \
+ /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+ /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+ /usr/include/x86_64-linux-gnu/sys/select.h \
+ /usr/include/x86_64-linux-gnu/bits/select.h \
+ /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+ /usr/include/x86_64-linux-gnu/bits/select2.h \
+ /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+ /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+ /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+ /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+ /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+ /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h /usr/include/alloca.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib.h \
+ /usr/include/c++/11/bits/std_abs.h \
+ /usr/include/c++/11/bits/algorithmfwd.h \
+ /usr/include/c++/11/bits/stl_heap.h \
+ /usr/include/c++/11/bits/stl_tempbuf.h \
+ /usr/include/c++/11/bits/uniform_int_dist.h \
  /home/cosmos/omoknuni_small/include/core/export_macros.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/queue \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/deque \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_deque.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/deque.tcc \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_heap.h \
- /home/cosmos/anaconda3/lib/gcc/x86_64-conda-linux-gnu/14.2.0/include/c++/bits/stl_queue.h
+ /usr/include/c++/11/queue /usr/include/c++/11/deque \
+ /usr/include/c++/11/bits/stl_deque.h /usr/include/c++/11/bits/deque.tcc \
+ /usr/include/c++/11/bits/stl_queue.h

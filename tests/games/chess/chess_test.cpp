@@ -9,6 +9,7 @@
 #include <unordered_set>
 
 namespace alphazero {
+namespace games {
 namespace chess {
 namespace testing {
 
@@ -747,6 +748,7 @@ TEST_F(Chess960Test, Chess960Castling) {
 
 }  // namespace testing
 }  // namespace chess
+}  // namespace games
 }  // namespace alphazero
 
 // Include test main at the end

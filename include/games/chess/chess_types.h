@@ -3,6 +3,7 @@
 #define CHESS_TYPES_H
 
 namespace alphazero {
+namespace games {
 namespace chess {
 
 // Piece type definitions
@@ -24,6 +25,7 @@ enum class PieceColor {
 };
 
 } // namespace chess
+} // namespace games
 } // namespace alphazero
 
 #endif // CHESS_TYPES_H 

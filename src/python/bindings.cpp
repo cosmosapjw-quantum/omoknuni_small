@@ -281,11 +281,11 @@ public:
 private:
     std::unique_ptr<core::IGameState> createGame(const std::string& game_type) {
         if (game_type == "chess") {
-            return std::make_unique<chess::ChessState>();
+            return std::make_unique<games::chess::ChessState>();
         } else if (game_type == "go") {
-            return std::make_unique<go::GoState>();
+            return std::make_unique<games::go::GoState>();
         } else if (game_type == "gomoku") {
-            return std::make_unique<gomoku::GomokuState>();
+            return std::make_unique<games::gomoku::GomokuState>();
         } else {
             return nullptr;
         }
@@ -381,13 +381,13 @@ PYBIND11_MODULE(alphazero_py, m) {
     });
     
     // Game-specific classes
-    py::class_<chess::ChessState, core::IGameState>(m, "ChessState")
+    py::class_<games::chess::ChessState, core::IGameState>(m, "ChessState")
         .def(py::init<>());
-    
-    py::class_<go::GoState, core::IGameState>(m, "GoState")
+
+    py::class_<games::go::GoState, core::IGameState>(m, "GoState")
         .def(py::init<>());
-    
-    py::class_<gomoku::GomokuState, core::IGameState>(m, "GomokuState")
+
+    py::class_<games::gomoku::GomokuState, core::IGameState>(m, "GomokuState")
         .def(py::init<>());
 }
 

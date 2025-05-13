@@ -10,6 +10,7 @@
 #include <cmath>
 
 namespace alphazero {
+namespace games {
 namespace chess {
 
 // ChessState constructor
@@ -1580,4 +1581,5 @@ std::optional<ChessMove> ChessState::fromSAN(const std::string& sanStr) const {
 }
 
 } // namespace chess
+} // namespace games
 } // namespace alphazero

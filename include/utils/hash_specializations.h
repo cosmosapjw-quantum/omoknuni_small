@@ -8,13 +8,15 @@
 
 // Forward declarations for game-specific structures
 namespace alphazero {
-    namespace chess {
-        struct Piece;
-        struct CastlingRights;
-    }
-    
-    namespace go {
-        struct StoneGroup;
+    namespace games {
+        namespace chess {
+            struct Piece;
+            struct CastlingRights;
+        }
+
+        namespace go {
+            struct StoneGroup;
+        }
     }
 }
 
@@ -53,20 +55,20 @@ namespace std {
     
     // Specialization of hash for Chess::Piece
     template<>
-    struct hash<alphazero::chess::Piece> {
-        size_t operator()(const alphazero::chess::Piece& p) const;
+    struct hash<alphazero::games::chess::Piece> {
+        size_t operator()(const alphazero::games::chess::Piece& p) const;
     };
-    
+
     // Specialization of hash for Chess::CastlingRights
     template<>
-    struct hash<alphazero::chess::CastlingRights> {
-        size_t operator()(const alphazero::chess::CastlingRights& cr) const;
+    struct hash<alphazero::games::chess::CastlingRights> {
+        size_t operator()(const alphazero::games::chess::CastlingRights& cr) const;
     };
-    
+
     // Specialization of hash for Go::StoneGroup
     template<>
-    struct hash<alphazero::go::StoneGroup> {
-        size_t operator()(const alphazero::go::StoneGroup& sg) const;
+    struct hash<alphazero::games::go::StoneGroup> {
+        size_t operator()(const alphazero::games::go::StoneGroup& sg) const;
     };
 }
 

@@ -9,6 +9,7 @@
 #include "core/export_macros.h"
 
 namespace alphazero {
+namespace games {
 namespace go {
 
 /**
@@ -151,6 +152,7 @@ private:
 };
 
 } // namespace go
+} // namespace games
 } // namespace alphazero
 
 #endif // GO_RULES_H

@@ -8,6 +8,7 @@
 #include <unordered_set>
 
 namespace alphazero {
+namespace games {
 namespace go {
 namespace testing {
 
@@ -746,6 +747,7 @@ TEST_F(GoTest, GameValidation) {
 
 }  // namespace testing
 }  // namespace go
+}  // namespace games
 }  // namespace alphazero
 
 // Include test main at the end

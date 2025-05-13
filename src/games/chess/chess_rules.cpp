@@ -5,6 +5,7 @@
 #include <array>
 
 namespace alphazero {
+namespace games {
 namespace chess {
 
 // Helper constant arrays for knight and king moves
@@ -756,4 +757,5 @@ bool ChessRules::moveExposesKing(const ChessState& state, const ChessMove& move,
 }
 
 } // namespace chess
+} // namespace games
 } // namespace alphazero

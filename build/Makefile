@@ -65,16 +65,6 @@ CMAKE_BINARY_DIR = /home/cosmos/omoknuni_small/build
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target test
-test:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
-	/usr/bin/ctest --force-new-ctest-process $(ARGS)
-.PHONY : test
-
-# Special rule for the target test
-test/fast: test
-.PHONY : test/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
@@ -172,368 +162,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named Experimental
+# Target rules for targets named alphazero_py
 
 # Build rule for target.
-Experimental: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Experimental
-.PHONY : Experimental
+alphazero_py: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 alphazero_py
+.PHONY : alphazero_py
 
 # fast build rule for target.
-Experimental/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Experimental.dir/build.make CMakeFiles/Experimental.dir/build
-.PHONY : Experimental/fast
-
-#=============================================================================
-# Target rules for targets named Nightly
-
-# Build rule for target.
-Nightly: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Nightly
-.PHONY : Nightly
-
-# fast build rule for target.
-Nightly/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Nightly.dir/build.make CMakeFiles/Nightly.dir/build
-.PHONY : Nightly/fast
-
-#=============================================================================
-# Target rules for targets named Continuous
-
-# Build rule for target.
-Continuous: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Continuous
-.PHONY : Continuous
-
-# fast build rule for target.
-Continuous/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Continuous.dir/build.make CMakeFiles/Continuous.dir/build
-.PHONY : Continuous/fast
-
-#=============================================================================
-# Target rules for targets named NightlyMemoryCheck
-
-# Build rule for target.
-NightlyMemoryCheck: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 NightlyMemoryCheck
-.PHONY : NightlyMemoryCheck
-
-# fast build rule for target.
-NightlyMemoryCheck/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/NightlyMemoryCheck.dir/build.make CMakeFiles/NightlyMemoryCheck.dir/build
-.PHONY : NightlyMemoryCheck/fast
-
-#=============================================================================
-# Target rules for targets named NightlyStart
-
-# Build rule for target.
-NightlyStart: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 NightlyStart
-.PHONY : NightlyStart
-
-# fast build rule for target.
-NightlyStart/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/NightlyStart.dir/build.make CMakeFiles/NightlyStart.dir/build
-.PHONY : NightlyStart/fast
-
-#=============================================================================
-# Target rules for targets named NightlyUpdate
-
-# Build rule for target.
-NightlyUpdate: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 NightlyUpdate
-.PHONY : NightlyUpdate
-
-# fast build rule for target.
-NightlyUpdate/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/NightlyUpdate.dir/build.make CMakeFiles/NightlyUpdate.dir/build
-.PHONY : NightlyUpdate/fast
-
-#=============================================================================
-# Target rules for targets named NightlyConfigure
-
-# Build rule for target.
-NightlyConfigure: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 NightlyConfigure
-.PHONY : NightlyConfigure
-
-# fast build rule for target.
-NightlyConfigure/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/NightlyConfigure.dir/build.make CMakeFiles/NightlyConfigure.dir/build
-.PHONY : NightlyConfigure/fast
-
-#=============================================================================
-# Target rules for targets named NightlyBuild
-
-# Build rule for target.
-NightlyBuild: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 NightlyBuild
-.PHONY : NightlyBuild
-
-# fast build rule for target.
-NightlyBuild/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/NightlyBuild.dir/build.make CMakeFiles/NightlyBuild.dir/build
-.PHONY : NightlyBuild/fast
-
-#=============================================================================
-# Target rules for targets named NightlyTest
-
-# Build rule for target.
-NightlyTest: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 NightlyTest
-.PHONY : NightlyTest
-
-# fast build rule for target.
-NightlyTest/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/NightlyTest.dir/build.make CMakeFiles/NightlyTest.dir/build
-.PHONY : NightlyTest/fast
-
-#=============================================================================
-# Target rules for targets named NightlyCoverage
-
-# Build rule for target.
-NightlyCoverage: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 NightlyCoverage
-.PHONY : NightlyCoverage
-
-# fast build rule for target.
-NightlyCoverage/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/NightlyCoverage.dir/build.make CMakeFiles/NightlyCoverage.dir/build
-.PHONY : NightlyCoverage/fast
-
-#=============================================================================
-# Target rules for targets named NightlyMemCheck
-
-# Build rule for target.
-NightlyMemCheck: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 NightlyMemCheck
-.PHONY : NightlyMemCheck
-
-# fast build rule for target.
-NightlyMemCheck/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/NightlyMemCheck.dir/build.make CMakeFiles/NightlyMemCheck.dir/build
-.PHONY : NightlyMemCheck/fast
-
-#=============================================================================
-# Target rules for targets named NightlySubmit
-
-# Build rule for target.
-NightlySubmit: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 NightlySubmit
-.PHONY : NightlySubmit
-
-# fast build rule for target.
-NightlySubmit/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/NightlySubmit.dir/build.make CMakeFiles/NightlySubmit.dir/build
-.PHONY : NightlySubmit/fast
-
-#=============================================================================
-# Target rules for targets named ExperimentalStart
-
-# Build rule for target.
-ExperimentalStart: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ExperimentalStart
-.PHONY : ExperimentalStart
-
-# fast build rule for target.
-ExperimentalStart/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ExperimentalStart.dir/build.make CMakeFiles/ExperimentalStart.dir/build
-.PHONY : ExperimentalStart/fast
-
-#=============================================================================
-# Target rules for targets named ExperimentalUpdate
-
-# Build rule for target.
-ExperimentalUpdate: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ExperimentalUpdate
-.PHONY : ExperimentalUpdate
-
-# fast build rule for target.
-ExperimentalUpdate/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ExperimentalUpdate.dir/build.make CMakeFiles/ExperimentalUpdate.dir/build
-.PHONY : ExperimentalUpdate/fast
-
-#=============================================================================
-# Target rules for targets named ExperimentalConfigure
-
-# Build rule for target.
-ExperimentalConfigure: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ExperimentalConfigure
-.PHONY : ExperimentalConfigure
-
-# fast build rule for target.
-ExperimentalConfigure/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ExperimentalConfigure.dir/build.make CMakeFiles/ExperimentalConfigure.dir/build
-.PHONY : ExperimentalConfigure/fast
-
-#=============================================================================
-# Target rules for targets named ExperimentalBuild
-
-# Build rule for target.
-ExperimentalBuild: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ExperimentalBuild
-.PHONY : ExperimentalBuild
-
-# fast build rule for target.
-ExperimentalBuild/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ExperimentalBuild.dir/build.make CMakeFiles/ExperimentalBuild.dir/build
-.PHONY : ExperimentalBuild/fast
-
-#=============================================================================
-# Target rules for targets named ExperimentalTest
-
-# Build rule for target.
-ExperimentalTest: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ExperimentalTest
-.PHONY : ExperimentalTest
-
-# fast build rule for target.
-ExperimentalTest/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ExperimentalTest.dir/build.make CMakeFiles/ExperimentalTest.dir/build
-.PHONY : ExperimentalTest/fast
-
-#=============================================================================
-# Target rules for targets named ExperimentalCoverage
-
-# Build rule for target.
-ExperimentalCoverage: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ExperimentalCoverage
-.PHONY : ExperimentalCoverage
-
-# fast build rule for target.
-ExperimentalCoverage/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ExperimentalCoverage.dir/build.make CMakeFiles/ExperimentalCoverage.dir/build
-.PHONY : ExperimentalCoverage/fast
-
-#=============================================================================
-# Target rules for targets named ExperimentalMemCheck
-
-# Build rule for target.
-ExperimentalMemCheck: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ExperimentalMemCheck
-.PHONY : ExperimentalMemCheck
-
-# fast build rule for target.
-ExperimentalMemCheck/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ExperimentalMemCheck.dir/build.make CMakeFiles/ExperimentalMemCheck.dir/build
-.PHONY : ExperimentalMemCheck/fast
-
-#=============================================================================
-# Target rules for targets named ExperimentalSubmit
-
-# Build rule for target.
-ExperimentalSubmit: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ExperimentalSubmit
-.PHONY : ExperimentalSubmit
-
-# fast build rule for target.
-ExperimentalSubmit/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ExperimentalSubmit.dir/build.make CMakeFiles/ExperimentalSubmit.dir/build
-.PHONY : ExperimentalSubmit/fast
-
-#=============================================================================
-# Target rules for targets named ContinuousStart
-
-# Build rule for target.
-ContinuousStart: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ContinuousStart
-.PHONY : ContinuousStart
-
-# fast build rule for target.
-ContinuousStart/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ContinuousStart.dir/build.make CMakeFiles/ContinuousStart.dir/build
-.PHONY : ContinuousStart/fast
-
-#=============================================================================
-# Target rules for targets named ContinuousUpdate
-
-# Build rule for target.
-ContinuousUpdate: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ContinuousUpdate
-.PHONY : ContinuousUpdate
-
-# fast build rule for target.
-ContinuousUpdate/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ContinuousUpdate.dir/build.make CMakeFiles/ContinuousUpdate.dir/build
-.PHONY : ContinuousUpdate/fast
-
-#=============================================================================
-# Target rules for targets named ContinuousConfigure
-
-# Build rule for target.
-ContinuousConfigure: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ContinuousConfigure
-.PHONY : ContinuousConfigure
-
-# fast build rule for target.
-ContinuousConfigure/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ContinuousConfigure.dir/build.make CMakeFiles/ContinuousConfigure.dir/build
-.PHONY : ContinuousConfigure/fast
-
-#=============================================================================
-# Target rules for targets named ContinuousBuild
-
-# Build rule for target.
-ContinuousBuild: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ContinuousBuild
-.PHONY : ContinuousBuild
-
-# fast build rule for target.
-ContinuousBuild/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ContinuousBuild.dir/build.make CMakeFiles/ContinuousBuild.dir/build
-.PHONY : ContinuousBuild/fast
-
-#=============================================================================
-# Target rules for targets named ContinuousTest
-
-# Build rule for target.
-ContinuousTest: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ContinuousTest
-.PHONY : ContinuousTest
-
-# fast build rule for target.
-ContinuousTest/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ContinuousTest.dir/build.make CMakeFiles/ContinuousTest.dir/build
-.PHONY : ContinuousTest/fast
-
-#=============================================================================
-# Target rules for targets named ContinuousCoverage
-
-# Build rule for target.
-ContinuousCoverage: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ContinuousCoverage
-.PHONY : ContinuousCoverage
-
-# fast build rule for target.
-ContinuousCoverage/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ContinuousCoverage.dir/build.make CMakeFiles/ContinuousCoverage.dir/build
-.PHONY : ContinuousCoverage/fast
-
-#=============================================================================
-# Target rules for targets named ContinuousMemCheck
-
-# Build rule for target.
-ContinuousMemCheck: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ContinuousMemCheck
-.PHONY : ContinuousMemCheck
-
-# fast build rule for target.
-ContinuousMemCheck/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ContinuousMemCheck.dir/build.make CMakeFiles/ContinuousMemCheck.dir/build
-.PHONY : ContinuousMemCheck/fast
-
-#=============================================================================
-# Target rules for targets named ContinuousSubmit
-
-# Build rule for target.
-ContinuousSubmit: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ContinuousSubmit
-.PHONY : ContinuousSubmit
-
-# fast build rule for target.
-ContinuousSubmit/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ContinuousSubmit.dir/build.make CMakeFiles/ContinuousSubmit.dir/build
-.PHONY : ContinuousSubmit/fast
+alphazero_py/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/build
+.PHONY : alphazero_py/fast
 
 #=============================================================================
 # Target rules for targets named alphazero
@@ -549,173 +188,65 @@ alphazero/fast:
 .PHONY : alphazero/fast
 
 #=============================================================================
-# Target rules for targets named core_tests
+# Target rules for targets named omoknuni_cli
 
 # Build rule for target.
-core_tests: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 core_tests
-.PHONY : core_tests
+omoknuni_cli: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omoknuni_cli
+.PHONY : omoknuni_cli
 
 # fast build rule for target.
-core_tests/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/build
-.PHONY : core_tests/fast
+omoknuni_cli/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/build
+.PHONY : omoknuni_cli/fast
 
-#=============================================================================
-# Target rules for targets named chess_tests
+src/cli/cli_manager.o: src/cli/cli_manager.cpp.o
+.PHONY : src/cli/cli_manager.o
 
-# Build rule for target.
-chess_tests: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 chess_tests
-.PHONY : chess_tests
+# target to build an object file
+src/cli/cli_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o
+.PHONY : src/cli/cli_manager.cpp.o
 
-# fast build rule for target.
-chess_tests/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/chess_tests.dir/build.make CMakeFiles/chess_tests.dir/build
-.PHONY : chess_tests/fast
+src/cli/cli_manager.i: src/cli/cli_manager.cpp.i
+.PHONY : src/cli/cli_manager.i
 
-#=============================================================================
-# Target rules for targets named go_tests
+# target to preprocess a source file
+src/cli/cli_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.i
+.PHONY : src/cli/cli_manager.cpp.i
 
-# Build rule for target.
-go_tests: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 go_tests
-.PHONY : go_tests
+src/cli/cli_manager.s: src/cli/cli_manager.cpp.s
+.PHONY : src/cli/cli_manager.s
 
-# fast build rule for target.
-go_tests/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/go_tests.dir/build.make CMakeFiles/go_tests.dir/build
-.PHONY : go_tests/fast
+# target to generate assembly for a file
+src/cli/cli_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.s
+.PHONY : src/cli/cli_manager.cpp.s
 
-#=============================================================================
-# Target rules for targets named gomoku_tests
+src/cli/omoknuni_cli.o: src/cli/omoknuni_cli.cpp.o
+.PHONY : src/cli/omoknuni_cli.o
 
-# Build rule for target.
-gomoku_tests: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gomoku_tests
-.PHONY : gomoku_tests
+# target to build an object file
+src/cli/omoknuni_cli.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
+.PHONY : src/cli/omoknuni_cli.cpp.o
 
-# fast build rule for target.
-gomoku_tests/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/gomoku_tests.dir/build.make CMakeFiles/gomoku_tests.dir/build
-.PHONY : gomoku_tests/fast
+src/cli/omoknuni_cli.i: src/cli/omoknuni_cli.cpp.i
+.PHONY : src/cli/omoknuni_cli.i
 
-#=============================================================================
-# Target rules for targets named neural_network_test
+# target to preprocess a source file
+src/cli/omoknuni_cli.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.i
+.PHONY : src/cli/omoknuni_cli.cpp.i
 
-# Build rule for target.
-neural_network_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 neural_network_test
-.PHONY : neural_network_test
+src/cli/omoknuni_cli.s: src/cli/omoknuni_cli.cpp.s
+.PHONY : src/cli/omoknuni_cli.s
 
-# fast build rule for target.
-neural_network_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/build
-.PHONY : neural_network_test/fast
-
-#=============================================================================
-# Target rules for targets named mcts_with_nn_test
-
-# Build rule for target.
-mcts_with_nn_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mcts_with_nn_test
-.PHONY : mcts_with_nn_test
-
-# fast build rule for target.
-mcts_with_nn_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/build
-.PHONY : mcts_with_nn_test/fast
-
-#=============================================================================
-# Target rules for targets named self_play_manager_test
-
-# Build rule for target.
-self_play_manager_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 self_play_manager_test
-.PHONY : self_play_manager_test
-
-# fast build rule for target.
-self_play_manager_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/build
-.PHONY : self_play_manager_test/fast
-
-#=============================================================================
-# Target rules for targets named training_data_manager_test
-
-# Build rule for target.
-training_data_manager_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 training_data_manager_test
-.PHONY : training_data_manager_test
-
-# fast build rule for target.
-training_data_manager_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/build
-.PHONY : training_data_manager_test/fast
-
-#=============================================================================
-# Target rules for targets named model_evaluator_test
-
-# Build rule for target.
-model_evaluator_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 model_evaluator_test
-.PHONY : model_evaluator_test
-
-# fast build rule for target.
-model_evaluator_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/build
-.PHONY : model_evaluator_test/fast
-
-#=============================================================================
-# Target rules for targets named transposition_table_test
-
-# Build rule for target.
-transposition_table_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 transposition_table_test
-.PHONY : transposition_table_test
-
-# fast build rule for target.
-transposition_table_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/build
-.PHONY : transposition_table_test/fast
-
-#=============================================================================
-# Target rules for targets named transposition_integration_test
-
-# Build rule for target.
-transposition_integration_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 transposition_integration_test
-.PHONY : transposition_integration_test
-
-# fast build rule for target.
-transposition_integration_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/build
-.PHONY : transposition_integration_test/fast
-
-#=============================================================================
-# Target rules for targets named mcts_tests
-
-# Build rule for target.
-mcts_tests: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mcts_tests
-.PHONY : mcts_tests
-
-# fast build rule for target.
-mcts_tests/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/build
-.PHONY : mcts_tests/fast
-
-#=============================================================================
-# Target rules for targets named all_tests
-
-# Build rule for target.
-all_tests: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all_tests
-.PHONY : all_tests
-
-# fast build rule for target.
-all_tests/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/build
-.PHONY : all_tests/fast
+# target to generate assembly for a file
+src/cli/omoknuni_cli.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.s
+.PHONY : src/cli/omoknuni_cli.cpp.s
 
 src/core/game_export.o: src/core/game_export.cpp.o
 .PHONY : src/core/game_export.o
@@ -1083,6 +614,7 @@ src/nn/ddw_randwire_resnet.o: src/nn/ddw_randwire_resnet.cpp.o
 # target to build an object file
 src/nn/ddw_randwire_resnet.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/nn/ddw_randwire_resnet.cpp.o
 .PHONY : src/nn/ddw_randwire_resnet.cpp.o
 
 src/nn/ddw_randwire_resnet.i: src/nn/ddw_randwire_resnet.cpp.i
@@ -1091,6 +623,7 @@ src/nn/ddw_randwire_resnet.i: src/nn/ddw_randwire_resnet.cpp.i
 # target to preprocess a source file
 src/nn/ddw_randwire_resnet.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/nn/ddw_randwire_resnet.cpp.i
 .PHONY : src/nn/ddw_randwire_resnet.cpp.i
 
 src/nn/ddw_randwire_resnet.s: src/nn/ddw_randwire_resnet.cpp.s
@@ -1099,6 +632,7 @@ src/nn/ddw_randwire_resnet.s: src/nn/ddw_randwire_resnet.cpp.s
 # target to generate assembly for a file
 src/nn/ddw_randwire_resnet.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/nn/ddw_randwire_resnet.cpp.s
 .PHONY : src/nn/ddw_randwire_resnet.cpp.s
 
 src/nn/neural_network_factory.o: src/nn/neural_network_factory.cpp.o
@@ -1107,6 +641,7 @@ src/nn/neural_network_factory.o: src/nn/neural_network_factory.cpp.o
 # target to build an object file
 src/nn/neural_network_factory.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/nn/neural_network_factory.cpp.o
 .PHONY : src/nn/neural_network_factory.cpp.o
 
 src/nn/neural_network_factory.i: src/nn/neural_network_factory.cpp.i
@@ -1115,6 +650,7 @@ src/nn/neural_network_factory.i: src/nn/neural_network_factory.cpp.i
 # target to preprocess a source file
 src/nn/neural_network_factory.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/nn/neural_network_factory.cpp.i
 .PHONY : src/nn/neural_network_factory.cpp.i
 
 src/nn/neural_network_factory.s: src/nn/neural_network_factory.cpp.s
@@ -1123,6 +659,7 @@ src/nn/neural_network_factory.s: src/nn/neural_network_factory.cpp.s
 # target to generate assembly for a file
 src/nn/neural_network_factory.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/nn/neural_network_factory.cpp.s
 .PHONY : src/nn/neural_network_factory.cpp.s
 
 src/nn/resnet_model.o: src/nn/resnet_model.cpp.o
@@ -1131,6 +668,7 @@ src/nn/resnet_model.o: src/nn/resnet_model.cpp.o
 # target to build an object file
 src/nn/resnet_model.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/nn/resnet_model.cpp.o
 .PHONY : src/nn/resnet_model.cpp.o
 
 src/nn/resnet_model.i: src/nn/resnet_model.cpp.i
@@ -1139,6 +677,7 @@ src/nn/resnet_model.i: src/nn/resnet_model.cpp.i
 # target to preprocess a source file
 src/nn/resnet_model.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/nn/resnet_model.cpp.i
 .PHONY : src/nn/resnet_model.cpp.i
 
 src/nn/resnet_model.s: src/nn/resnet_model.cpp.s
@@ -1147,7 +686,32 @@ src/nn/resnet_model.s: src/nn/resnet_model.cpp.s
 # target to generate assembly for a file
 src/nn/resnet_model.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/nn/resnet_model.cpp.s
 .PHONY : src/nn/resnet_model.cpp.s
+
+src/python/bindings.o: src/python/bindings.cpp.o
+.PHONY : src/python/bindings.o
+
+# target to build an object file
+src/python/bindings.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o
+.PHONY : src/python/bindings.cpp.o
+
+src/python/bindings.i: src/python/bindings.cpp.i
+.PHONY : src/python/bindings.i
+
+# target to preprocess a source file
+src/python/bindings.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.i
+.PHONY : src/python/bindings.cpp.i
+
+src/python/bindings.s: src/python/bindings.cpp.s
+.PHONY : src/python/bindings.s
+
+# target to generate assembly for a file
+src/python/bindings.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.s
+.PHONY : src/python/bindings.cpp.s
 
 src/selfplay/self_play_manager.o: src/selfplay/self_play_manager.cpp.o
 .PHONY : src/selfplay/self_play_manager.o
@@ -1221,6 +785,30 @@ src/utils/attack_defense_module.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.s
 .PHONY : src/utils/attack_defense_module.cpp.s
 
+src/utils/debug_monitor.o: src/utils/debug_monitor.cpp.o
+.PHONY : src/utils/debug_monitor.o
+
+# target to build an object file
+src/utils/debug_monitor.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o
+.PHONY : src/utils/debug_monitor.cpp.o
+
+src/utils/debug_monitor.i: src/utils/debug_monitor.cpp.i
+.PHONY : src/utils/debug_monitor.i
+
+# target to preprocess a source file
+src/utils/debug_monitor.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.i
+.PHONY : src/utils/debug_monitor.cpp.i
+
+src/utils/debug_monitor.s: src/utils/debug_monitor.cpp.s
+.PHONY : src/utils/debug_monitor.s
+
+# target to generate assembly for a file
+src/utils/debug_monitor.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.s
+.PHONY : src/utils/debug_monitor.cpp.s
+
 src/utils/hash_specializations.o: src/utils/hash_specializations.cpp.o
 .PHONY : src/utils/hash_specializations.o
 
@@ -1244,6 +832,30 @@ src/utils/hash_specializations.s: src/utils/hash_specializations.cpp.s
 src/utils/hash_specializations.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.s
 .PHONY : src/utils/hash_specializations.cpp.s
+
+src/utils/memory_debug.o: src/utils/memory_debug.cpp.o
+.PHONY : src/utils/memory_debug.o
+
+# target to build an object file
+src/utils/memory_debug.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/memory_debug.cpp.o
+.PHONY : src/utils/memory_debug.cpp.o
+
+src/utils/memory_debug.i: src/utils/memory_debug.cpp.i
+.PHONY : src/utils/memory_debug.i
+
+# target to preprocess a source file
+src/utils/memory_debug.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/memory_debug.cpp.i
+.PHONY : src/utils/memory_debug.cpp.i
+
+src/utils/memory_debug.s: src/utils/memory_debug.cpp.s
+.PHONY : src/utils/memory_debug.s
+
+# target to generate assembly for a file
+src/utils/memory_debug.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/memory_debug.cpp.s
+.PHONY : src/utils/memory_debug.cpp.s
 
 src/utils/zobrist_hash.o: src/utils/zobrist_hash.cpp.o
 .PHONY : src/utils/zobrist_hash.o
@@ -1269,438 +881,6 @@ src/utils/zobrist_hash.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.s
 .PHONY : src/utils/zobrist_hash.cpp.s
 
-tests/all_tests_main.o: tests/all_tests_main.cpp.o
-.PHONY : tests/all_tests_main.o
-
-# target to build an object file
-tests/all_tests_main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/all_tests_main.cpp.o
-.PHONY : tests/all_tests_main.cpp.o
-
-tests/all_tests_main.i: tests/all_tests_main.cpp.i
-.PHONY : tests/all_tests_main.i
-
-# target to preprocess a source file
-tests/all_tests_main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/all_tests_main.cpp.i
-.PHONY : tests/all_tests_main.cpp.i
-
-tests/all_tests_main.s: tests/all_tests_main.cpp.s
-.PHONY : tests/all_tests_main.s
-
-# target to generate assembly for a file
-tests/all_tests_main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/all_tests_main.cpp.s
-.PHONY : tests/all_tests_main.cpp.s
-
-tests/core/game_export_test.o: tests/core/game_export_test.cpp.o
-.PHONY : tests/core/game_export_test.o
-
-# target to build an object file
-tests/core/game_export_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core/game_export_test.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/core/game_export_test.cpp.o
-.PHONY : tests/core/game_export_test.cpp.o
-
-tests/core/game_export_test.i: tests/core/game_export_test.cpp.i
-.PHONY : tests/core/game_export_test.i
-
-# target to preprocess a source file
-tests/core/game_export_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core/game_export_test.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/core/game_export_test.cpp.i
-.PHONY : tests/core/game_export_test.cpp.i
-
-tests/core/game_export_test.s: tests/core/game_export_test.cpp.s
-.PHONY : tests/core/game_export_test.s
-
-# target to generate assembly for a file
-tests/core/game_export_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core/game_export_test.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/core/game_export_test.cpp.s
-.PHONY : tests/core/game_export_test.cpp.s
-
-tests/core/igamestate_test.o: tests/core/igamestate_test.cpp.o
-.PHONY : tests/core/igamestate_test.o
-
-# target to build an object file
-tests/core/igamestate_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core/igamestate_test.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/core/igamestate_test.cpp.o
-.PHONY : tests/core/igamestate_test.cpp.o
-
-tests/core/igamestate_test.i: tests/core/igamestate_test.cpp.i
-.PHONY : tests/core/igamestate_test.i
-
-# target to preprocess a source file
-tests/core/igamestate_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core/igamestate_test.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/core/igamestate_test.cpp.i
-.PHONY : tests/core/igamestate_test.cpp.i
-
-tests/core/igamestate_test.s: tests/core/igamestate_test.cpp.s
-.PHONY : tests/core/igamestate_test.s
-
-# target to generate assembly for a file
-tests/core/igamestate_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core/igamestate_test.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/core/igamestate_test.cpp.s
-.PHONY : tests/core/igamestate_test.cpp.s
-
-tests/core_tests_main.o: tests/core_tests_main.cpp.o
-.PHONY : tests/core_tests_main.o
-
-# target to build an object file
-tests/core_tests_main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core_tests_main.cpp.o
-.PHONY : tests/core_tests_main.cpp.o
-
-tests/core_tests_main.i: tests/core_tests_main.cpp.i
-.PHONY : tests/core_tests_main.i
-
-# target to preprocess a source file
-tests/core_tests_main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core_tests_main.cpp.i
-.PHONY : tests/core_tests_main.cpp.i
-
-tests/core_tests_main.s: tests/core_tests_main.cpp.s
-.PHONY : tests/core_tests_main.s
-
-# target to generate assembly for a file
-tests/core_tests_main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core_tests_main.cpp.s
-.PHONY : tests/core_tests_main.cpp.s
-
-tests/evaluation/model_evaluator_test.o: tests/evaluation/model_evaluator_test.cpp.o
-.PHONY : tests/evaluation/model_evaluator_test.o
-
-# target to build an object file
-tests/evaluation/model_evaluator_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/tests/evaluation/model_evaluator_test.cpp.o
-.PHONY : tests/evaluation/model_evaluator_test.cpp.o
-
-tests/evaluation/model_evaluator_test.i: tests/evaluation/model_evaluator_test.cpp.i
-.PHONY : tests/evaluation/model_evaluator_test.i
-
-# target to preprocess a source file
-tests/evaluation/model_evaluator_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/tests/evaluation/model_evaluator_test.cpp.i
-.PHONY : tests/evaluation/model_evaluator_test.cpp.i
-
-tests/evaluation/model_evaluator_test.s: tests/evaluation/model_evaluator_test.cpp.s
-.PHONY : tests/evaluation/model_evaluator_test.s
-
-# target to generate assembly for a file
-tests/evaluation/model_evaluator_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/tests/evaluation/model_evaluator_test.cpp.s
-.PHONY : tests/evaluation/model_evaluator_test.cpp.s
-
-tests/games/chess/chess_test.o: tests/games/chess/chess_test.cpp.o
-.PHONY : tests/games/chess/chess_test.o
-
-# target to build an object file
-tests/games/chess/chess_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/chess_tests.dir/build.make CMakeFiles/chess_tests.dir/tests/games/chess/chess_test.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/chess/chess_test.cpp.o
-.PHONY : tests/games/chess/chess_test.cpp.o
-
-tests/games/chess/chess_test.i: tests/games/chess/chess_test.cpp.i
-.PHONY : tests/games/chess/chess_test.i
-
-# target to preprocess a source file
-tests/games/chess/chess_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/chess_tests.dir/build.make CMakeFiles/chess_tests.dir/tests/games/chess/chess_test.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/chess/chess_test.cpp.i
-.PHONY : tests/games/chess/chess_test.cpp.i
-
-tests/games/chess/chess_test.s: tests/games/chess/chess_test.cpp.s
-.PHONY : tests/games/chess/chess_test.s
-
-# target to generate assembly for a file
-tests/games/chess/chess_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/chess_tests.dir/build.make CMakeFiles/chess_tests.dir/tests/games/chess/chess_test.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/chess/chess_test.cpp.s
-.PHONY : tests/games/chess/chess_test.cpp.s
-
-tests/games/go/go_test.o: tests/games/go/go_test.cpp.o
-.PHONY : tests/games/go/go_test.o
-
-# target to build an object file
-tests/games/go/go_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/go_tests.dir/build.make CMakeFiles/go_tests.dir/tests/games/go/go_test.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/go/go_test.cpp.o
-.PHONY : tests/games/go/go_test.cpp.o
-
-tests/games/go/go_test.i: tests/games/go/go_test.cpp.i
-.PHONY : tests/games/go/go_test.i
-
-# target to preprocess a source file
-tests/games/go/go_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/go_tests.dir/build.make CMakeFiles/go_tests.dir/tests/games/go/go_test.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/go/go_test.cpp.i
-.PHONY : tests/games/go/go_test.cpp.i
-
-tests/games/go/go_test.s: tests/games/go/go_test.cpp.s
-.PHONY : tests/games/go/go_test.s
-
-# target to generate assembly for a file
-tests/games/go/go_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/go_tests.dir/build.make CMakeFiles/go_tests.dir/tests/games/go/go_test.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/go/go_test.cpp.s
-.PHONY : tests/games/go/go_test.cpp.s
-
-tests/games/gomoku/gomoku_test.o: tests/games/gomoku/gomoku_test.cpp.o
-.PHONY : tests/games/gomoku/gomoku_test.o
-
-# target to build an object file
-tests/games/gomoku/gomoku_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/gomoku_tests.dir/build.make CMakeFiles/gomoku_tests.dir/tests/games/gomoku/gomoku_test.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/gomoku/gomoku_test.cpp.o
-.PHONY : tests/games/gomoku/gomoku_test.cpp.o
-
-tests/games/gomoku/gomoku_test.i: tests/games/gomoku/gomoku_test.cpp.i
-.PHONY : tests/games/gomoku/gomoku_test.i
-
-# target to preprocess a source file
-tests/games/gomoku/gomoku_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/gomoku_tests.dir/build.make CMakeFiles/gomoku_tests.dir/tests/games/gomoku/gomoku_test.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/gomoku/gomoku_test.cpp.i
-.PHONY : tests/games/gomoku/gomoku_test.cpp.i
-
-tests/games/gomoku/gomoku_test.s: tests/games/gomoku/gomoku_test.cpp.s
-.PHONY : tests/games/gomoku/gomoku_test.s
-
-# target to generate assembly for a file
-tests/games/gomoku/gomoku_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/gomoku_tests.dir/build.make CMakeFiles/gomoku_tests.dir/tests/games/gomoku/gomoku_test.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/gomoku/gomoku_test.cpp.s
-.PHONY : tests/games/gomoku/gomoku_test.cpp.s
-
-tests/integration/mcts_with_nn_test.o: tests/integration/mcts_with_nn_test.cpp.o
-.PHONY : tests/integration/mcts_with_nn_test.o
-
-# target to build an object file
-tests/integration/mcts_with_nn_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/tests/integration/mcts_with_nn_test.cpp.o
-.PHONY : tests/integration/mcts_with_nn_test.cpp.o
-
-tests/integration/mcts_with_nn_test.i: tests/integration/mcts_with_nn_test.cpp.i
-.PHONY : tests/integration/mcts_with_nn_test.i
-
-# target to preprocess a source file
-tests/integration/mcts_with_nn_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/tests/integration/mcts_with_nn_test.cpp.i
-.PHONY : tests/integration/mcts_with_nn_test.cpp.i
-
-tests/integration/mcts_with_nn_test.s: tests/integration/mcts_with_nn_test.cpp.s
-.PHONY : tests/integration/mcts_with_nn_test.s
-
-# target to generate assembly for a file
-tests/integration/mcts_with_nn_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/tests/integration/mcts_with_nn_test.cpp.s
-.PHONY : tests/integration/mcts_with_nn_test.cpp.s
-
-tests/mcts/mcts_engine_test.o: tests/mcts/mcts_engine_test.cpp.o
-.PHONY : tests/mcts/mcts_engine_test.o
-
-# target to build an object file
-tests/mcts/mcts_engine_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.o
-.PHONY : tests/mcts/mcts_engine_test.cpp.o
-
-tests/mcts/mcts_engine_test.i: tests/mcts/mcts_engine_test.cpp.i
-.PHONY : tests/mcts/mcts_engine_test.i
-
-# target to preprocess a source file
-tests/mcts/mcts_engine_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.i
-.PHONY : tests/mcts/mcts_engine_test.cpp.i
-
-tests/mcts/mcts_engine_test.s: tests/mcts/mcts_engine_test.cpp.s
-.PHONY : tests/mcts/mcts_engine_test.s
-
-# target to generate assembly for a file
-tests/mcts/mcts_engine_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.s
-.PHONY : tests/mcts/mcts_engine_test.cpp.s
-
-tests/mcts/mcts_evaluator_test.o: tests/mcts/mcts_evaluator_test.cpp.o
-.PHONY : tests/mcts/mcts_evaluator_test.o
-
-# target to build an object file
-tests/mcts/mcts_evaluator_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o
-.PHONY : tests/mcts/mcts_evaluator_test.cpp.o
-
-tests/mcts/mcts_evaluator_test.i: tests/mcts/mcts_evaluator_test.cpp.i
-.PHONY : tests/mcts/mcts_evaluator_test.i
-
-# target to preprocess a source file
-tests/mcts/mcts_evaluator_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.i
-.PHONY : tests/mcts/mcts_evaluator_test.cpp.i
-
-tests/mcts/mcts_evaluator_test.s: tests/mcts/mcts_evaluator_test.cpp.s
-.PHONY : tests/mcts/mcts_evaluator_test.s
-
-# target to generate assembly for a file
-tests/mcts/mcts_evaluator_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.s
-.PHONY : tests/mcts/mcts_evaluator_test.cpp.s
-
-tests/mcts/mcts_node_test.o: tests/mcts/mcts_node_test.cpp.o
-.PHONY : tests/mcts/mcts_node_test.o
-
-# target to build an object file
-tests/mcts/mcts_node_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o
-.PHONY : tests/mcts/mcts_node_test.cpp.o
-
-tests/mcts/mcts_node_test.i: tests/mcts/mcts_node_test.cpp.i
-.PHONY : tests/mcts/mcts_node_test.i
-
-# target to preprocess a source file
-tests/mcts/mcts_node_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.i
-.PHONY : tests/mcts/mcts_node_test.cpp.i
-
-tests/mcts/mcts_node_test.s: tests/mcts/mcts_node_test.cpp.s
-.PHONY : tests/mcts/mcts_node_test.s
-
-# target to generate assembly for a file
-tests/mcts/mcts_node_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.s
-.PHONY : tests/mcts/mcts_node_test.cpp.s
-
-tests/mcts/transposition_integration_test.o: tests/mcts/transposition_integration_test.cpp.o
-.PHONY : tests/mcts/transposition_integration_test.o
-
-# target to build an object file
-tests/mcts/transposition_integration_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.o
-.PHONY : tests/mcts/transposition_integration_test.cpp.o
-
-tests/mcts/transposition_integration_test.i: tests/mcts/transposition_integration_test.cpp.i
-.PHONY : tests/mcts/transposition_integration_test.i
-
-# target to preprocess a source file
-tests/mcts/transposition_integration_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.i
-.PHONY : tests/mcts/transposition_integration_test.cpp.i
-
-tests/mcts/transposition_integration_test.s: tests/mcts/transposition_integration_test.cpp.s
-.PHONY : tests/mcts/transposition_integration_test.s
-
-# target to generate assembly for a file
-tests/mcts/transposition_integration_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.s
-.PHONY : tests/mcts/transposition_integration_test.cpp.s
-
-tests/mcts/transposition_table_test.o: tests/mcts/transposition_table_test.cpp.o
-.PHONY : tests/mcts/transposition_table_test.o
-
-# target to build an object file
-tests/mcts/transposition_table_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/tests/mcts/transposition_table_test.cpp.o
-.PHONY : tests/mcts/transposition_table_test.cpp.o
-
-tests/mcts/transposition_table_test.i: tests/mcts/transposition_table_test.cpp.i
-.PHONY : tests/mcts/transposition_table_test.i
-
-# target to preprocess a source file
-tests/mcts/transposition_table_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/tests/mcts/transposition_table_test.cpp.i
-.PHONY : tests/mcts/transposition_table_test.cpp.i
-
-tests/mcts/transposition_table_test.s: tests/mcts/transposition_table_test.cpp.s
-.PHONY : tests/mcts/transposition_table_test.s
-
-# target to generate assembly for a file
-tests/mcts/transposition_table_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/tests/mcts/transposition_table_test.cpp.s
-.PHONY : tests/mcts/transposition_table_test.cpp.s
-
-tests/nn/neural_network_test.o: tests/nn/neural_network_test.cpp.o
-.PHONY : tests/nn/neural_network_test.o
-
-# target to build an object file
-tests/nn/neural_network_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/tests/nn/neural_network_test.cpp.o
-.PHONY : tests/nn/neural_network_test.cpp.o
-
-tests/nn/neural_network_test.i: tests/nn/neural_network_test.cpp.i
-.PHONY : tests/nn/neural_network_test.i
-
-# target to preprocess a source file
-tests/nn/neural_network_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/tests/nn/neural_network_test.cpp.i
-.PHONY : tests/nn/neural_network_test.cpp.i
-
-tests/nn/neural_network_test.s: tests/nn/neural_network_test.cpp.s
-.PHONY : tests/nn/neural_network_test.s
-
-# target to generate assembly for a file
-tests/nn/neural_network_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/tests/nn/neural_network_test.cpp.s
-.PHONY : tests/nn/neural_network_test.cpp.s
-
-tests/selfplay/self_play_manager_test.o: tests/selfplay/self_play_manager_test.cpp.o
-.PHONY : tests/selfplay/self_play_manager_test.o
-
-# target to build an object file
-tests/selfplay/self_play_manager_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/tests/selfplay/self_play_manager_test.cpp.o
-.PHONY : tests/selfplay/self_play_manager_test.cpp.o
-
-tests/selfplay/self_play_manager_test.i: tests/selfplay/self_play_manager_test.cpp.i
-.PHONY : tests/selfplay/self_play_manager_test.i
-
-# target to preprocess a source file
-tests/selfplay/self_play_manager_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/tests/selfplay/self_play_manager_test.cpp.i
-.PHONY : tests/selfplay/self_play_manager_test.cpp.i
-
-tests/selfplay/self_play_manager_test.s: tests/selfplay/self_play_manager_test.cpp.s
-.PHONY : tests/selfplay/self_play_manager_test.s
-
-# target to generate assembly for a file
-tests/selfplay/self_play_manager_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/tests/selfplay/self_play_manager_test.cpp.s
-.PHONY : tests/selfplay/self_play_manager_test.cpp.s
-
-tests/training/training_data_manager_test.o: tests/training/training_data_manager_test.cpp.o
-.PHONY : tests/training/training_data_manager_test.o
-
-# target to build an object file
-tests/training/training_data_manager_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.o
-.PHONY : tests/training/training_data_manager_test.cpp.o
-
-tests/training/training_data_manager_test.i: tests/training/training_data_manager_test.cpp.i
-.PHONY : tests/training/training_data_manager_test.i
-
-# target to preprocess a source file
-tests/training/training_data_manager_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.i
-.PHONY : tests/training/training_data_manager_test.cpp.i
-
-tests/training/training_data_manager_test.s: tests/training/training_data_manager_test.cpp.s
-.PHONY : tests/training/training_data_manager_test.s
-
-# target to generate assembly for a file
-tests/training/training_data_manager_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.s
-.PHONY : tests/training/training_data_manager_test.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -1713,49 +893,15 @@ help:
 	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
-	@echo "... test"
-	@echo "... Continuous"
-	@echo "... ContinuousBuild"
-	@echo "... ContinuousConfigure"
-	@echo "... ContinuousCoverage"
-	@echo "... ContinuousMemCheck"
-	@echo "... ContinuousStart"
-	@echo "... ContinuousSubmit"
-	@echo "... ContinuousTest"
-	@echo "... ContinuousUpdate"
-	@echo "... Experimental"
-	@echo "... ExperimentalBuild"
-	@echo "... ExperimentalConfigure"
-	@echo "... ExperimentalCoverage"
-	@echo "... ExperimentalMemCheck"
-	@echo "... ExperimentalStart"
-	@echo "... ExperimentalSubmit"
-	@echo "... ExperimentalTest"
-	@echo "... ExperimentalUpdate"
-	@echo "... Nightly"
-	@echo "... NightlyBuild"
-	@echo "... NightlyConfigure"
-	@echo "... NightlyCoverage"
-	@echo "... NightlyMemCheck"
-	@echo "... NightlyMemoryCheck"
-	@echo "... NightlyStart"
-	@echo "... NightlySubmit"
-	@echo "... NightlyTest"
-	@echo "... NightlyUpdate"
-	@echo "... all_tests"
 	@echo "... alphazero"
-	@echo "... chess_tests"
-	@echo "... core_tests"
-	@echo "... go_tests"
-	@echo "... gomoku_tests"
-	@echo "... mcts_tests"
-	@echo "... mcts_with_nn_test"
-	@echo "... model_evaluator_test"
-	@echo "... neural_network_test"
-	@echo "... self_play_manager_test"
-	@echo "... training_data_manager_test"
-	@echo "... transposition_integration_test"
-	@echo "... transposition_table_test"
+	@echo "... alphazero_py"
+	@echo "... omoknuni_cli"
+	@echo "... src/cli/cli_manager.o"
+	@echo "... src/cli/cli_manager.i"
+	@echo "... src/cli/cli_manager.s"
+	@echo "... src/cli/omoknuni_cli.o"
+	@echo "... src/cli/omoknuni_cli.i"
+	@echo "... src/cli/omoknuni_cli.s"
 	@echo "... src/core/game_export.o"
 	@echo "... src/core/game_export.i"
 	@echo "... src/core/game_export.s"
@@ -1810,6 +956,9 @@ help:
 	@echo "... src/nn/resnet_model.o"
 	@echo "... src/nn/resnet_model.i"
 	@echo "... src/nn/resnet_model.s"
+	@echo "... src/python/bindings.o"
+	@echo "... src/python/bindings.i"
+	@echo "... src/python/bindings.s"
 	@echo "... src/selfplay/self_play_manager.o"
 	@echo "... src/selfplay/self_play_manager.i"
 	@echo "... src/selfplay/self_play_manager.s"
@@ -1819,63 +968,18 @@ help:
 	@echo "... src/utils/attack_defense_module.o"
 	@echo "... src/utils/attack_defense_module.i"
 	@echo "... src/utils/attack_defense_module.s"
+	@echo "... src/utils/debug_monitor.o"
+	@echo "... src/utils/debug_monitor.i"
+	@echo "... src/utils/debug_monitor.s"
 	@echo "... src/utils/hash_specializations.o"
 	@echo "... src/utils/hash_specializations.i"
 	@echo "... src/utils/hash_specializations.s"
+	@echo "... src/utils/memory_debug.o"
+	@echo "... src/utils/memory_debug.i"
+	@echo "... src/utils/memory_debug.s"
 	@echo "... src/utils/zobrist_hash.o"
 	@echo "... src/utils/zobrist_hash.i"
 	@echo "... src/utils/zobrist_hash.s"
-	@echo "... tests/all_tests_main.o"
-	@echo "... tests/all_tests_main.i"
-	@echo "... tests/all_tests_main.s"
-	@echo "... tests/core/game_export_test.o"
-	@echo "... tests/core/game_export_test.i"
-	@echo "... tests/core/game_export_test.s"
-	@echo "... tests/core/igamestate_test.o"
-	@echo "... tests/core/igamestate_test.i"
-	@echo "... tests/core/igamestate_test.s"
-	@echo "... tests/core_tests_main.o"
-	@echo "... tests/core_tests_main.i"
-	@echo "... tests/core_tests_main.s"
-	@echo "... tests/evaluation/model_evaluator_test.o"
-	@echo "... tests/evaluation/model_evaluator_test.i"
-	@echo "... tests/evaluation/model_evaluator_test.s"
-	@echo "... tests/games/chess/chess_test.o"
-	@echo "... tests/games/chess/chess_test.i"
-	@echo "... tests/games/chess/chess_test.s"
-	@echo "... tests/games/go/go_test.o"
-	@echo "... tests/games/go/go_test.i"
-	@echo "... tests/games/go/go_test.s"
-	@echo "... tests/games/gomoku/gomoku_test.o"
-	@echo "... tests/games/gomoku/gomoku_test.i"
-	@echo "... tests/games/gomoku/gomoku_test.s"
-	@echo "... tests/integration/mcts_with_nn_test.o"
-	@echo "... tests/integration/mcts_with_nn_test.i"
-	@echo "... tests/integration/mcts_with_nn_test.s"
-	@echo "... tests/mcts/mcts_engine_test.o"
-	@echo "... tests/mcts/mcts_engine_test.i"
-	@echo "... tests/mcts/mcts_engine_test.s"
-	@echo "... tests/mcts/mcts_evaluator_test.o"
-	@echo "... tests/mcts/mcts_evaluator_test.i"
-	@echo "... tests/mcts/mcts_evaluator_test.s"
-	@echo "... tests/mcts/mcts_node_test.o"
-	@echo "... tests/mcts/mcts_node_test.i"
-	@echo "... tests/mcts/mcts_node_test.s"
-	@echo "... tests/mcts/transposition_integration_test.o"
-	@echo "... tests/mcts/transposition_integration_test.i"
-	@echo "... tests/mcts/transposition_integration_test.s"
-	@echo "... tests/mcts/transposition_table_test.o"
-	@echo "... tests/mcts/transposition_table_test.i"
-	@echo "... tests/mcts/transposition_table_test.s"
-	@echo "... tests/nn/neural_network_test.o"
-	@echo "... tests/nn/neural_network_test.i"
-	@echo "... tests/nn/neural_network_test.s"
-	@echo "... tests/selfplay/self_play_manager_test.o"
-	@echo "... tests/selfplay/self_play_manager_test.i"
-	@echo "... tests/selfplay/self_play_manager_test.s"
-	@echo "... tests/training/training_data_manager_test.o"
-	@echo "... tests/training/training_data_manager_test.i"
-	@echo "... tests/training/training_data_manager_test.s"
 .PHONY : help
 
 

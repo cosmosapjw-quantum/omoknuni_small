@@ -7,6 +7,7 @@
 #include <chrono>
 
 namespace alphazero {
+namespace games {
 namespace chess {
 
 int Chess960::generateRandomPosition(unsigned seed) {
@@ -550,4 +551,5 @@ bool Chess960::isStandardChessPosition(int positionNumber) {
 }
 
 } // namespace chess
+} // namespace games
 } // namespace alphazero

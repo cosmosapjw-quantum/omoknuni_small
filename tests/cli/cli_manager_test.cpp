@@ -67,7 +67,10 @@ TEST_F(CLIManagerTest, HelpCommand) {
     EXPECT_EQ(result, 0);
 }
 
+// Only include the main function when not building as part of the test suite
+#if !defined(CUSTOM_MAIN_USED) && !defined(BUILDING_TEST_SUITE)
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+#endif

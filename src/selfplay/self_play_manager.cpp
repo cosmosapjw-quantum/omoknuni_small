@@ -4,7 +4,7 @@
 #include <thread>
 #include <fstream>
 #include <filesystem>
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -12,18 +12,24 @@
 #include "games/go/go_state.h"
 #include "games/gomoku/gomoku_state.h"
 #include "core/game_export.h"
+#include "utils/debug_monitor.h"
+#include "utils/memory_debug.h"
 
 namespace alphazero {
 namespace selfplay {
 
 using json = nlohmann::json;
 
-SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net, 
+SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
                                const SelfPlaySettings& settings)
     : neural_net_(neural_net),
       settings_(settings),
       active_games_(0) {
-    
+
+    // Start memory monitoring for debugging
+    debug::startMemoryMonitoring();
+    debug::takeMemorySnapshot("SelfPlayManager_Constructor_Start");
+
     // Initialize random number generator
     if (settings_.random_seed < 0) {
         std::random_device rd;
@@ -31,69 +37,112 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     } else {
         rng_.seed(static_cast<unsigned int>(settings_.random_seed));
     }
-    
+
     // Create MCTS engines for each worker thread
     engines_.reserve(settings_.num_parallel_games);
     for (int i = 0; i < settings_.num_parallel_games; ++i) {
-        engines_.emplace_back(std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings));
+        debug::takeMemorySnapshot("Before_Creating_MCTSEngine_" + std::to_string(i));
+        try {
+            engines_.emplace_back(std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings));
+            debug::takeMemorySnapshot("After_Creating_MCTSEngine_" + std::to_string(i));
+        } catch (const std::exception& e) {
+            std::cerr << "Error creating MCTS engine " << i << ": " << e.what() << std::endl;
+            debug::takeMemorySnapshot("Error_Creating_MCTSEngine_" + std::to_string(i));
+            throw;
+        }
     }
+
+    debug::takeMemorySnapshot("SelfPlayManager_Constructor_End");
 }
 
-std::vector<GameData> SelfPlayManager::generateGames(core::GameType game_type, 
-                                                    int num_games, 
+std::vector<GameData> SelfPlayManager::generateGames(core::GameType game_type,
+                                                    int num_games,
                                                     int board_size) {
+    debug::takeMemorySnapshot("GenerateGames_Start");
+
     std::vector<GameData> games;
     games.reserve(num_games);
-    
+
     // Generate games in batches
     int remaining_games = num_games;
-    
+    int batch_number = 0;
+
     while (remaining_games > 0) {
+        debug::takeMemorySnapshot("GenerateGames_Batch_" + std::to_string(batch_number) + "_Start");
+
         int batch_size = std::min(remaining_games, settings_.num_parallel_games);
         std::vector<std::thread> threads;
         std::vector<GameData> batch_results(batch_size);
-        
+
         // Create timestamp for game IDs
         auto now = std::chrono::system_clock::now();
         auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(
             now.time_since_epoch()).count();
-        
+
         // Launch worker threads
         for (int i = 0; i < batch_size; ++i) {
             std::string game_id = std::to_string(timestamp) + "_" + std::to_string(i);
-            threads.emplace_back(&SelfPlayManager::gameWorker, this, 
+            threads.emplace_back(&SelfPlayManager::gameWorker, this,
                                 game_type, board_size, game_id, &batch_results[i]);
             active_games_++;
         }
-        
+
         // Wait for all threads to complete
         for (auto& thread : threads) {
             thread.join();
         }
-        
+
+        // Print memory status after each batch
+        DEBUG_PRINT_MEMORY_USAGE();
+
         // Add results to games vector
         games.insert(games.end(), batch_results.begin(), batch_results.end());
-        
+
         // Update remaining games
         remaining_games -= batch_size;
+        batch_number++;
+
+        debug::takeMemorySnapshot("GenerateGames_Batch_" + std::to_string(batch_number) + "_End");
     }
-    
+
+    debug::takeMemorySnapshot("GenerateGames_End");
     return games;
 }
 
-void SelfPlayManager::gameWorker(core::GameType game_type, int board_size, 
+void SelfPlayManager::gameWorker(core::GameType game_type, int board_size,
                                const std::string& game_id, GameData* result) {
+    std::string worker_id = "Worker_" + game_id;
+    debug::takeMemorySnapshot(worker_id + "_Start");
+
     try {
         *result = generateGame(game_type, board_size, game_id);
+        debug::takeMemorySnapshot(worker_id + "_Success");
+    } catch (const std::bad_alloc& e) {
+        std::cerr << "Memory allocation error in game worker " << game_id
+                 << ": " << e.what() << std::endl;
+        debug::takeMemorySnapshot(worker_id + "_BadAlloc");
+        // Create an empty result
+        result->game_id = game_id + "_ERROR";
+        result->game_type = game_type;
+        result->board_size = board_size;
     } catch (const std::exception& e) {
-        std::cerr << "Error in game worker: " << e.what() << std::endl;
+        std::cerr << "Error in game worker " << game_id << ": " << e.what() << std::endl;
+        debug::takeMemorySnapshot(worker_id + "_Exception");
+        // Create an empty result
+        result->game_id = game_id + "_ERROR";
+        result->game_type = game_type;
+        result->board_size = board_size;
     }
-    
+
     active_games_--;
+    debug::takeMemorySnapshot(worker_id + "_End");
 }
 
-GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size, 
+GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
                                       const std::string& game_id) {
+    std::string game_prefix = "Game_" + game_id;
+    debug::takeMemorySnapshot(game_prefix + "_Start");
+
     // Select a thread-specific MCTS engine
     int thread_id = 0;
     {
@@ -101,20 +150,32 @@ GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
         thread_id = hasher(std::this_thread::get_id()) % engines_.size();
     }
     mcts::MCTSEngine& engine = *engines_[thread_id];
-    
+
     // Select a random starting position
     std::uniform_int_distribution<int> pos_dist(0, settings_.num_start_positions - 1);
     int position_id = pos_dist(rng_);
-    
+
+    debug::takeMemorySnapshot(game_prefix + "_BeforeCreateGame");
+
     // Create game
     auto game = createGame(game_type, board_size, position_id);
-    
+    if (!game) {
+        throw std::runtime_error("Failed to create game state");
+    }
+
+    debug::takeMemorySnapshot(game_prefix + "_AfterCreateGame");
+
     // Prepare game data
     GameData data;
     data.game_type = game_type;
     data.board_size = board_size;
     data.winner = 0;  // Default to draw
     data.game_id = game_id;
+
+    // Record detailed debug info
+    std::cout << "Game " << game_id << ": Created game of type "
+             << static_cast<int>(game_type) << " with board size "
+             << board_size << " (thread " << thread_id << ")" << std::endl;
     
     // Calculate max moves if not specified
     int max_moves = settings_.max_moves;
@@ -127,7 +188,11 @@ GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
     auto start_time = std::chrono::steady_clock::now();
     
     // Play until terminal state or max moves
+    int move_count = 0;
     while (!game->isTerminal() && static_cast<int>(data.moves.size()) < max_moves) {
+        std::string move_prefix = game_prefix + "_Move" + std::to_string(move_count);
+        debug::takeMemorySnapshot(move_prefix + "_Start");
+
         // Set temperature based on move number
         auto current_settings = engine.getSettings();
         if (static_cast<int>(data.moves.size()) < settings_.temperature_threshold) {
@@ -135,30 +200,61 @@ GameData SelfPlayManager::generateGame(core::GameType game_type, int board_size,
         } else {
             current_settings.temperature = settings_.low_temperature;  // Exploitation
         }
-        current_settings.add_dirichlet_noise = settings_.add_dirichlet_noise && 
+        current_settings.add_dirichlet_noise = settings_.add_dirichlet_noise &&
                                               data.moves.empty();  // Only on first move
         engine.updateSettings(current_settings);
-        
-        // Run search
-        auto result = engine.search(*game);
-        
-        // Store move and policy
-        data.moves.push_back(result.action);
-        data.policies.push_back(result.probabilities);
-        
-        // Make move
-        game->makeMove(result.action);
-        
-        // Check if terminal
-        if (game->isTerminal()) {
-            auto game_result = game->getGameResult();
-            if (game_result == core::GameResult::WIN_PLAYER1) {
-                data.winner = 1;
-            } else if (game_result == core::GameResult::WIN_PLAYER2) {
-                data.winner = 2;
+
+        debug::takeMemorySnapshot(move_prefix + "_BeforeSearch");
+
+        try {
+            // Run search
+            auto result = engine.search(*game);
+
+            debug::takeMemorySnapshot(move_prefix + "_AfterSearch");
+
+            // Store move and policy
+            data.moves.push_back(result.action);
+            data.policies.push_back(result.probabilities);
+
+            // Make move
+            game->makeMove(result.action);
+
+            // Check if terminal
+            if (game->isTerminal()) {
+                auto game_result = game->getGameResult();
+                if (game_result == core::GameResult::WIN_PLAYER1) {
+                    data.winner = 1;
+                } else if (game_result == core::GameResult::WIN_PLAYER2) {
+                    data.winner = 2;
+                }
+                debug::takeMemorySnapshot(move_prefix + "_GameTerminal");
+                break;
             }
+        } catch (const std::bad_alloc& e) {
+            std::cerr << "Memory allocation error during search in game " << game_id
+                     << " at move " << move_count << ": " << e.what() << std::endl;
+            debug::takeMemorySnapshot(move_prefix + "_BadAlloc");
+            // Exit the loop and return partial game data
+            break;
+        } catch (const std::exception& e) {
+            std::cerr << "Error during search in game " << game_id
+                     << " at move " << move_count << ": " << e.what() << std::endl;
+            debug::takeMemorySnapshot(move_prefix + "_Exception");
+            // Exit the loop and return partial game data
             break;
         }
+
+        move_count++;
+
+        if (move_count % 10 == 0) {
+            // Print progress every 10 moves
+            std::cout << "Game " << game_id << ": Completed " << move_count
+                     << " moves, memory usage: "
+                     << (debug::MemoryTracker::instance().getCurrentUsage() / (1024 * 1024))
+                     << " MB" << std::endl;
+        }
+
+        debug::takeMemorySnapshot(move_prefix + "_End");
     }
     
     // End time
@@ -177,12 +273,12 @@ std::unique_ptr<core::IGameState> SelfPlayManager::createGame(core::GameType gam
     
     switch (game_type) {
         case core::GameType::CHESS: {
-            game = std::make_unique<::alphazero::chess::ChessState>();
+            game = std::make_unique<::alphazero::games::chess::ChessState>();
             // TODO: Implement Fischer Random starting positions if needed
             break;
         }
         case core::GameType::GO: {
-            game = std::make_unique<::alphazero::go::GoState>(board_size > 0 ? board_size : 19);
+            game = std::make_unique<::alphazero::games::go::GoState>(board_size > 0 ? board_size : 19);
             break;
         }
         case core::GameType::GOMOKU: {

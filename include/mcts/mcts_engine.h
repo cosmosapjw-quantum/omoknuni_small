@@ -229,6 +229,15 @@ private:
     
     // Whether to use the transposition table
     bool use_transposition_table_;
+
+    // Whether the evaluator thread has been started
+    bool evaluator_started_;
+
+    // Safely start the evaluator if it hasn't been started yet
+    bool ensureEvaluatorStarted();
+
+    // Safely stop the evaluator if it was started
+    void safelyStopEvaluator();
 };
 
 } // namespace mcts

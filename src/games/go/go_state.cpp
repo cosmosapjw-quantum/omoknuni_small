@@ -7,6 +7,7 @@
 #include <cmath>
 
 namespace alphazero {
+namespace games {
 namespace go {
 
 // Constructor
@@ -944,4 +945,5 @@ void GoState::updateHash() const {
 }
 
 } // namespace go
+} // namespace games
 } // namespace alphazero

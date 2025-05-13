@@ -10,6 +10,7 @@
 #include "games/chess/chess_types.h"
 
 namespace alphazero {
+namespace games {
 namespace chess {
 
 // Forward declarations
@@ -177,6 +178,7 @@ private:
 };
 
 } // namespace chess
+} // namespace games
 } // namespace alphazero
 
 #endif // CHESS_RULES_H

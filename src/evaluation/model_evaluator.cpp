@@ -237,12 +237,12 @@ std::unique_ptr<core::IGameState> ModelEvaluator::createGame(core::GameType game
     
     switch (game_type) {
         case core::GameType::CHESS: {
-            game = std::make_unique<::alphazero::chess::ChessState>();
+            game = std::make_unique<::alphazero::games::chess::ChessState>();
             // TODO: Implement Fischer Random starting positions if needed
             break;
         }
         case core::GameType::GO: {
-            game = std::make_unique<::alphazero::go::GoState>(board_size > 0 ? board_size : 19);
+            game = std::make_unique<::alphazero::games::go::GoState>(board_size > 0 ? board_size : 19);
             break;
         }
         case core::GameType::GOMOKU: {

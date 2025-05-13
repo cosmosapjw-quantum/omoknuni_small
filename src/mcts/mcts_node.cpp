@@ -5,9 +5,19 @@
 #include <limits>
 #include <algorithm>
 #include <iostream>
+#include "utils/debug_monitor.h"
+#include "utils/memory_debug.h"
+
+// Use shortened namespace for debug functions
+namespace ad = alphazero::debug;
 
 namespace alphazero {
 namespace mcts {
+
+// Static counter for tracking node creation
+static std::atomic<int> g_total_nodes_created{0};
+static std::atomic<int> g_current_node_count{0};
+static std::atomic<size_t> g_total_memory_used{0};
 
 MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state, MCTSNode* parent)
     : state_(std::move(state)),
@@ -22,12 +32,54 @@ MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state, MCTSNode* parent)
     if (!state_) {
         throw std::invalid_argument("Cannot create MCTSNode with null state");
     }
+
+    // Increment global node counters
+    int node_id = g_total_nodes_created.fetch_add(1);
+    g_current_node_count.fetch_add(1);
+
+    // Estimate memory usage of this node (rough approximation)
+    size_t memory_estimate = sizeof(MCTSNode) +
+                           (state_ ? state_->estimateMemoryUsage() : 0);
+    g_total_memory_used.fetch_add(memory_estimate);
+
+    // Track metrics for monitoring
+    debug::SystemMonitor::instance().recordResourceUsage("MCTSNodesCreated",
+                                                      g_total_nodes_created.load());
+    debug::SystemMonitor::instance().recordResourceUsage("CurrentNodeCount",
+                                                      g_current_node_count.load());
+    debug::SystemMonitor::instance().recordResourceUsage("NodeMemoryMB",
+                                                      g_total_memory_used.load() / (1024.0 * 1024.0));
+
+    // Log node creation for debugging when total count is a multiple of 1000
+    if (node_id % 1000 == 0) {
+        std::cout << "MCTS node creation: id=" << node_id
+                 << ", total=" << g_total_nodes_created.load()
+                 << ", current=" << g_current_node_count.load()
+                 << ", memory=" << (g_total_memory_used.load() / (1024 * 1024)) << "MB"
+                 << std::endl;
+    }
 }
 
 MCTSNode::~MCTSNode() {
+    // Take a debug snapshot before deletion
+    ad::takeMemorySnapshot("MCTSNode_BeforeDelete");
+
+    // Log the total number of children being deleted
+    if (children_.size() > 1000) {
+        std::cout << "MCTS large subtree deletion: " << children_.size()
+                 << " direct children" << std::endl;
+    }
+
+    // Delete children
     for (auto child : children_) {
         delete child;
     }
+
+    // Update global counters
+    g_current_node_count.fetch_sub(1);
+
+    // Take another snapshot after deletion
+    ad::takeMemorySnapshot("MCTSNode_AfterDelete");
 }
 
 MCTSNode* MCTSNode::selectChild(float exploration_factor) {
@@ -67,35 +119,96 @@ MCTSNode* MCTSNode::selectChild(float exploration_factor) {
 }
 
 void MCTSNode::expand() {
+    // Take a snapshot before expansion
+    ad::takeMemorySnapshot("MCTSNode_BeforeExpand");
+
+    // Start timing the expansion
+    debug::ScopedTimer timer("MCTSNode::expand");
+
     std::lock_guard<std::mutex> lock(expansion_mutex_);
-    
+
     if (!children_.empty()) {
+        std::cout << "MCTS node already expanded, children: " << children_.size() << std::endl;
         return; // Already expanded
     }
-    
+
     if (isTerminal()) {
+        std::cout << "MCTS terminal node expansion attempt, skipping" << std::endl;
         return; // Terminal states cannot be expanded
     }
-    
+
     // Get legal moves
     std::vector<int> legal_moves = state_->getLegalMoves();
-    
+
+    std::cout << "MCTS expanding node with " << legal_moves.size() << " legal moves" << std::endl;
+
+    // Check for memory issues when expanding large nodes
+    if (legal_moves.size() > 500) {
+        std::cout << "WARNING: Expanding large MCTS node with " << legal_moves.size()
+                 << " children. Memory usage may be high." << std::endl;
+
+        // Take an extra snapshot for large nodes
+        ad::takeMemorySnapshot("MCTSNode_LargeExpansionStart");
+    }
+
+    // Reserve space for children to avoid reallocations
+    children_.reserve(legal_moves.size());
+    actions_.reserve(legal_moves.size());
+
     // Shuffle legal moves to break move order bias
     static thread_local std::mt19937 rng(std::random_device{}());
     std::shuffle(legal_moves.begin(), legal_moves.end(), rng);
-    
+
+    // Track memory allocation during child creation
+    size_t initial_memory = debug::MemoryTracker::instance().getCurrentUsage();
+
     // Create a child for each legal move
     for (int move : legal_moves) {
-        auto new_state = state_->clone();
-        new_state->makeMove(move);
-        
-        auto child = new MCTSNode(std::move(new_state), this);
-        child->setAction(move);
-        
-        children_.push_back(child);
-        actions_.push_back(move);
+        try {
+            auto new_state = state_->clone();
+            new_state->makeMove(move);
+
+            auto child = new MCTSNode(std::move(new_state), this);
+            child->setAction(move);
+
+            children_.push_back(child);
+            actions_.push_back(move);
+
+            // Print progress for large expansions
+            if (legal_moves.size() > 500 && children_.size() % 100 == 0) {
+                std::cout << "MCTS expansion progress: " << children_.size() << "/"
+                         << legal_moves.size() << " nodes created" << std::endl;
+            }
+        } catch (const std::bad_alloc& e) {
+            std::cerr << "ERROR: Memory allocation failed during MCTS node expansion: "
+                     << e.what() << std::endl;
+
+            // Take snapshot on allocation failure
+            ad::takeMemorySnapshot("MCTSNode_ExpansionMemoryFailure");
+
+            // Log memory situation
+            size_t current_memory = debug::MemoryTracker::instance().getCurrentUsage();
+            std::cerr << "Current memory usage: " << (current_memory / (1024 * 1024))
+                     << "MB, delta since expansion start: "
+                     << ((current_memory - initial_memory) / (1024 * 1024)) << "MB"
+                     << std::endl;
+
+            throw; // Rethrow to handle at higher level
+        } catch (const std::exception& e) {
+            std::cerr << "ERROR: Exception during MCTS node expansion: " << e.what() << std::endl;
+            throw;
+        }
     }
-    
+
+    // Calculate memory used during expansion
+    size_t final_memory = debug::MemoryTracker::instance().getCurrentUsage();
+    size_t memory_delta = final_memory - initial_memory;
+
+    // Log expansion statistics
+    std::cout << "MCTS node expansion complete: " << children_.size()
+             << " children created, memory used: " << (memory_delta / (1024 * 1024))
+             << "MB" << std::endl;
+
     // Set prior probabilities based on neural network output
     if (!prior_probabilities_.empty()) {
         // Check if the priors vector matches the full action space
@@ -120,6 +233,9 @@ void MCTSNode::expand() {
             child->setPriorProbability(uniform_prior);
         }
     }
+
+    // Take a snapshot after expansion
+    ad::takeMemorySnapshot("MCTSNode_AfterExpand");
 }
 
 bool MCTSNode::isFullyExpanded() const {

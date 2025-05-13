@@ -11,6 +11,7 @@
 #include "core/export_macros.h"
 
 namespace alphazero {
+namespace games {
 namespace chess {
 
 /**
@@ -121,6 +122,7 @@ private:
 };
 
 } // namespace chess
+} // namespace games
 } // namespace alphazero
 
 #endif // CHESS960_H

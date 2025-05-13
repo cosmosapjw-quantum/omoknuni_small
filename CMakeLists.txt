@@ -1,3 +1,7 @@
+# Force use of system gcc compiler (must be before project declaration)
+set(CMAKE_C_COMPILER "/usr/bin/gcc")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+
 # cmake_minimum_required(VERSION 3.20)          # 3.14 → 3.20 for generator-expr fixes
 cmake_minimum_required(VERSION 3.20)
 # Only set CMP0146 policy if CMake version supports it
@@ -7,9 +11,8 @@ endif()
 
 # Set CUDA architectures early to influence compiler detection for CUDA 12.8+
 # This helps avoid nvcc trying to compile for deprecated default architectures like sm_52 during its ID check.
-# Using one of the target architectures (e.g., 86 for Ada Lovelace or Hopper H100 if appropriate, or a common one like 75 for Turing)
-# set(CMAKE_CUDA_ARCHITECTURES "86" CACHE STRING "CUDA architectures for compiler detection and build")
-# message(STATUS "Early setting CMAKE_CUDA_ARCHITECTURES to: ${CMAKE_CUDA_ARCHITECTURES} to aid CUDA compiler ID.")
+set(CMAKE_CUDA_ARCHITECTURES "70;75;80;86" CACHE STRING "CUDA architectures for compiler detection and build")
+message(STATUS "Early setting CMAKE_CUDA_ARCHITECTURES to: ${CMAKE_CUDA_ARCHITECTURES} to aid CUDA compiler ID.")
 
 # ─────────────────────────────── vcpkg integration ─────────────────────────
 # Windows vcpkg path
@@ -72,6 +75,10 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Use the old C++11 ABI to maintain compatibility with libstdc++
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
+add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -93,7 +100,7 @@ endif()
 
 # ───────────────────────────────────── Options ─────────────────────────────────
 option(BUILD_PYTHON_BINDINGS  "Build Python bindings (DISABLED due to pybind11 issues)"  ON)
-option(BUILD_TESTS            "Build tests"            ON)
+option(BUILD_TESTS            "Build tests"            OFF)
 option(WITH_TORCH             "Build with PyTorch"     ON)
 option(BUILD_SHARED_LIBS      "Build shared libs"      ON)
 option(BUILD_EXAMPLES         "Build examples"         OFF)
@@ -134,26 +141,126 @@ if(BUILD_TESTS)
     # vcpkg usually builds GTest as static by default.
     # This definition helps the test code understand GTest's linkage.
     set(GTEST_LINKED_AS_SHARED_LIBRARY FALSE)
+    
+    # Set additional linker flags to fix ABI compatibility issues
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
 endif()
 
 # ───────────────────────────────────── Torch / CUDA ────────────────────────────
 if(WITH_TORCH)
-    # --- cuDNN hints (platform-specific) ----------------------------
-    # User needs to ensure CUDNN_ROOT points to a cuDNN version compatible with the detected CUDA_VERSION
-    if(WIN32)
-        set(CUDNN_ROOT "C:/Program Files/NVIDIA/CUDNN/v9.7" CACHE PATH "cuDNN root directory (MUST match CUDA version used by Torch)")
-    elseif(UNIX AND NOT APPLE)
-        set(CUDNN_ROOT "/usr/local/cuda/cudnn" CACHE PATH "cuDNN root directory (MUST match CUDA version used by Torch)")
-    endif()
-    message(STATUS "Providing CUDNN_ROOT hint to PyTorch: ${CUDNN_ROOT}")
-    # PyTorch's find_package(CUDNN) should use CUDNN_ROOT to find include/library.
-    # We remove previously forced CUDNN_INCLUDE_DIR, CUDNN_LIBRARY, CUDNN_FOUND, USE_CUDNN
-    # and related ENV VARS to let PyTorch's detection logic work more naturally.
-
-    find_package(CUDA QUIET) # Find CUDA first to get CUDA_VERSION_STRING
+    # --- Find CUDA first to detect available GPUs ---
+    # Look for CUDA in standard paths before attempting PyTorch's detection
+    find_package(CUDA QUIET)
     if(CUDA_FOUND)
-        message(STATUS "CUDA toolkit ${CUDA_VERSION_STRING} found.")
+        message(STATUS "CUDA toolkit ${CUDA_VERSION_STRING} found at ${CUDA_TOOLKIT_ROOT_DIR}")
         add_compile_definitions(TORCH_USE_CUDA=1)
+
+        # Attempt to find CUDA include and library paths if not already set
+        if(NOT CUDA_INCLUDE_DIRS AND EXISTS "${CUDA_TOOLKIT_ROOT_DIR}/include")
+            set(CUDA_INCLUDE_DIRS "${CUDA_TOOLKIT_ROOT_DIR}/include")
+            message(STATUS "Setting CUDA_INCLUDE_DIRS to ${CUDA_INCLUDE_DIRS}")
+        endif()
+        
+        if(NOT CUDA_CUDART_LIBRARY)
+            find_library(CUDA_CUDART_LIBRARY cudart
+                PATHS ${CUDA_TOOLKIT_ROOT_DIR}/lib64
+                      /usr/local/cuda/lib64
+                      /usr/lib/x86_64-linux-gnu
+                NO_DEFAULT_PATH)
+            if(CUDA_CUDART_LIBRARY)
+                message(STATUS "Found CUDA cudart library: ${CUDA_CUDART_LIBRARY}")
+            endif()
+        endif()
+
+        # --- cuDNN hints (platform-specific) ----------------------------
+        # User needs to ensure CUDNN_ROOT points to a cuDNN version compatible with the detected CUDA_VERSION
+        if(WIN32)
+            set(CUDNN_ROOT "C:/Program Files/NVIDIA/CUDNN/v9.7" CACHE PATH "cuDNN root directory (MUST match CUDA version used by Torch)")
+        elseif(UNIX AND NOT APPLE)
+            # Try standard Linux cuDNN locations
+            if(EXISTS "/usr/local/cuda/cudnn")
+                set(CUDNN_ROOT "/usr/local/cuda/cudnn" CACHE PATH "cuDNN root directory (MUST match CUDA version used by Torch)")
+            elseif(EXISTS "/usr/local/cudnn")
+                set(CUDNN_ROOT "/usr/local/cudnn" CACHE PATH "cuDNN root directory (MUST match CUDA version used by Torch)")
+            elseif(EXISTS "/usr/include/cudnn.h")
+                set(CUDNN_ROOT "/usr" CACHE PATH "cuDNN root directory (system installation)")
+            endif()
+            
+            # First try to find cuDNN directly in libtorch directory (if Torch was already found)
+            if(WITH_TORCH AND Torch_LIB_DIR)
+                find_library(CUDNN_LIBRARY
+                    NAMES cudnn.9 cudnn libcudnn
+                    PATHS "${Torch_LIB_DIR}"
+                    DOC "Path to cuDNN library in libtorch"
+                    NO_DEFAULT_PATH
+                )
+
+                if(CUDNN_LIBRARY)
+                    message(STATUS "Found cuDNN library in libtorch directory: ${CUDNN_LIBRARY}")
+                endif()
+            endif()
+
+            # If not found in libtorch, check for apt-installed cuDNN (commonly in /usr/lib/x86_64-linux-gnu/)
+            if(NOT CUDNN_LIBRARY)
+                find_library(CUDNN_LIBRARY
+                    NAMES cudnn libcudnn
+                    PATHS /usr/lib/x86_64-linux-gnu
+                          /usr/lib
+                          /usr/lib64
+                    DOC "Path to cuDNN library installed by apt"
+                    NO_DEFAULT_PATH
+                )
+            endif()
+            
+            if(CUDNN_LIBRARY)
+                message(STATUS "Found cuDNN library (apt-installed): ${CUDNN_LIBRARY}")
+                # If not already set, set CUDNN_ROOT to the system root for apt packages
+                if(NOT CUDNN_ROOT)
+                    set(CUDNN_ROOT "/usr" CACHE PATH "cuDNN root directory (apt installation)" FORCE)
+                endif()
+                # Export as environment variable for PyTorch to find
+                set(ENV{CUDNN_LIBRARY} "${CUDNN_LIBRARY}")
+            endif()
+
+            # Check for cudnn.h - first in libtorch include directory
+            if(WITH_TORCH)
+                find_path(CUDNN_INCLUDE_DIR
+                    NAMES cudnn.h
+                    PATHS /opt/libtorch/include
+                          "${Torch_DIR}/../../include"
+                    DOC "Path to cuDNN include directory in libtorch"
+                    NO_DEFAULT_PATH
+                )
+
+                if(CUDNN_INCLUDE_DIR)
+                    message(STATUS "Found cuDNN include directory in libtorch: ${CUDNN_INCLUDE_DIR}")
+                endif()
+            endif()
+
+            # If not found in libtorch, check system paths
+            if(NOT CUDNN_INCLUDE_DIR)
+                find_path(CUDNN_INCLUDE_DIR
+                    NAMES cudnn.h
+                    PATHS /usr/include
+                          /usr/local/include
+                          /usr/local/cuda/include
+                    DOC "Path to cuDNN include directory"
+                    NO_DEFAULT_PATH
+                )
+            endif()
+            
+            if(CUDNN_INCLUDE_DIR)
+                message(STATUS "Found cuDNN include directory: ${CUDNN_INCLUDE_DIR}")
+                # Export as environment variable for PyTorch to find
+                set(ENV{CUDNN_INCLUDE_DIR} "${CUDNN_INCLUDE_DIR}")
+            endif()
+        endif()
+        
+        if(CUDNN_ROOT)
+            message(STATUS "Providing CUDNN_ROOT hint to PyTorch: ${CUDNN_ROOT}")
+            # Add CUDNN_ROOT to the environment for PyTorch's find_package to use
+            set(ENV{CUDNN_ROOT} "${CUDNN_ROOT}")
+        endif()
 
         # Attempt to give Torch the exact CUDA version string to bypass its detection
         if(DEFINED CUDA_VERSION_STRING)
@@ -162,8 +269,7 @@ if(WITH_TORCH)
         endif()
 
         # Explicitly set CUDA architectures to avoid auto-detection failures
-        set(CMAKE_CUDA_ARCHITECTURES "70;75;80;86")
-        message(STATUS "Explicitly setting CUDA architectures to: ${CMAKE_CUDA_ARCHITECTURES}")
+        message(STATUS "Using CUDA architectures: ${CMAKE_CUDA_ARCHITECTURES}")
 
         # Alternative NVCC flags approach if needed
         set(TORCH_NVCC_FLAGS "-gencode=arch=compute_70,code=sm_70 -gencode=arch=compute_75,code=sm_75 -gencode=arch=compute_80,code=sm_80 -gencode=arch=compute_86,code=sm_86")
@@ -173,23 +279,57 @@ if(WITH_TORCH)
         set(TORCH_CUDA_ARCH_LIST "7.0;7.5;8.0;8.6" CACHE STRING "CUDA architectures for PyTorch" FORCE)
         message(STATUS "Setting TORCH_CUDA_ARCH_LIST to: ${TORCH_CUDA_ARCH_LIST}")
 
+        # Create nvToolsExt target if missing (needed by some PyTorch versions)
         if(NOT TARGET CUDA::nvToolsExt)
+            # Try to find it in different locations
             if(WIN32)
-                set(NVPERF_HOST_LIB "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/extras/CUPTI/lib64/nvperf_host.lib")
-                set(NVPERF_HOST_INCLUDE "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/extras/CUPTI/include")
+                set(NVTOOLSEXT_PATHS
+                    "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8/extras/CUPTI/lib64/nvperf_host.lib"
+                    "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4/extras/CUPTI/lib64/nvperf_host.lib"
+                    "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.0/extras/CUPTI/lib64/nvperf_host.lib"
+                    "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.8/extras/CUPTI/lib64/nvperf_host.lib"
+                )
             elseif(UNIX AND NOT APPLE)
-                set(NVPERF_HOST_LIB "/usr/local/cuda/extras/CUPTI/lib64/libnvperf_host.so")
-                set(NVPERF_HOST_INCLUDE "/usr/local/cuda/extras/CUPTI/include")
+                set(NVTOOLSEXT_PATHS
+                    "/usr/local/cuda/extras/CUPTI/lib64/libnvperf_host.so"
+                    "/usr/local/cuda/lib64/libnvToolsExt.so"
+                    "/usr/lib/x86_64-linux-gnu/libnvToolsExt.so"
+                    "/usr/lib/x86_64-linux-gnu/libnvToolsExt.so.1"
+                )
             endif()
+            
+            # Try each potential path
+            set(NVPERF_HOST_LIB "")
+            foreach(PATH ${NVTOOLSEXT_PATHS})
+                if(EXISTS "${PATH}")
+                    set(NVPERF_HOST_LIB "${PATH}")
+                    break()
+                endif()
+            endforeach()
 
-            if(EXISTS "${NVPERF_HOST_LIB}")
-                message(STATUS "Using nvperf_host as replacement for nvToolsExt: ${NVPERF_HOST_LIB}")
+            # Set include path if library was found
+            if(NVPERF_HOST_LIB)
+                message(STATUS "Using nvToolsExt replacement: ${NVPERF_HOST_LIB}")
+                
+                # Extract directory for include path
+                get_filename_component(LIB_DIR "${NVPERF_HOST_LIB}" DIRECTORY)
+                get_filename_component(CUPTI_DIR "${LIB_DIR}" DIRECTORY)
+                
+                # Try to find the include directory
+                if(EXISTS "${CUPTI_DIR}/include")
+                    set(NVPERF_HOST_INCLUDE "${CUPTI_DIR}/include")
+                elseif(EXISTS "${CUDA_TOOLKIT_ROOT_DIR}/extras/CUPTI/include")
+                    set(NVPERF_HOST_INCLUDE "${CUDA_TOOLKIT_ROOT_DIR}/extras/CUPTI/include")
+                elseif(EXISTS "/usr/local/cuda/include")
+                    set(NVPERF_HOST_INCLUDE "/usr/local/cuda/include")
+                endif()
+                
                 add_library(CUDA::nvToolsExt UNKNOWN IMPORTED)
                 set_target_properties(CUDA::nvToolsExt PROPERTIES
                     IMPORTED_LOCATION "${NVPERF_HOST_LIB}"
                     INTERFACE_INCLUDE_DIRECTORIES "${NVPERF_HOST_INCLUDE}")
             else()
-                message(WARNING "nvperf_host not found, creating interface-only target")
+                message(WARNING "nvToolsExt or equivalent not found, creating interface-only target")
                 add_library(CUDA::nvToolsExt INTERFACE IMPORTED)
             endif()
         endif()
@@ -201,24 +341,98 @@ if(WITH_TORCH)
     if(WIN32)
         set(DEFAULT_TORCH_DIR "C:/libtorch/share/cmake/Torch")
     elseif(UNIX AND NOT APPLE)
-        set(DEFAULT_TORCH_DIR "/usr/local/lib/python3/dist-packages/torch/share/cmake/Torch")
-        # Check if exists in common locations for Linux
-        if(NOT EXISTS "${DEFAULT_TORCH_DIR}")
-            # Try to find in other common locations
-            foreach(PYTHON_VERSION 3.6 3.7 3.8 3.9 3.10 3.11 3.12)
-                set(CANDIDATE_PATH "/usr/local/lib/python${PYTHON_VERSION}/dist-packages/torch/share/cmake/Torch")
-                if(EXISTS "${CANDIDATE_PATH}")
-                    set(DEFAULT_TORCH_DIR "${CANDIDATE_PATH}")
-                    break()
-                endif()
-            endforeach()
+        # Try multiple common Linux locations for PyTorch
+        set(TORCH_SEARCH_PATHS
+            "/opt/libtorch/share/cmake/Torch"
+            "/usr/local/lib/python3/dist-packages/torch/share/cmake/Torch"
+        )
+        
+        # Add paths for specific Python versions
+        foreach(PYTHON_VERSION 3.6 3.7 3.8 3.9 3.10 3.11 3.12)
+            list(APPEND TORCH_SEARCH_PATHS 
+                "/usr/local/lib/python${PYTHON_VERSION}/dist-packages/torch/share/cmake/Torch"
+                "/usr/lib/python${PYTHON_VERSION}/dist-packages/torch/share/cmake/Torch"
+            )
+        endforeach()
+        
+        # Find the first existing path
+        set(DEFAULT_TORCH_DIR "")
+        foreach(PATH ${TORCH_SEARCH_PATHS})
+            if(EXISTS "${PATH}")
+                set(DEFAULT_TORCH_DIR "${PATH}")
+                break()
+            endif()
+        endforeach()
+        
+        # If not found, default to a common location
+        if(DEFAULT_TORCH_DIR STREQUAL "")
+            set(DEFAULT_TORCH_DIR "/usr/local/lib/python3/dist-packages/torch/share/cmake/Torch")
         endif()
     endif()
 
-    set(Torch_DIR "${DEFAULT_TORCH_DIR}" CACHE PATH "Torch_DIR")
+    # Set explicit path to PyTorch
+    set(Torch_DIR "/opt/libtorch-2.7.0-cu128/share/cmake/Torch" CACHE PATH "Directory containing TorchConfig.cmake" FORCE)
+    message(STATUS "Looking for PyTorch in: ${Torch_DIR}")
+
+    # Set option for CUDA fallback mode
+    option(ENABLE_CUDA_FALLBACK "Enable fallback mode for CUDA functions" ON)
+    option(DISABLE_CUDNN "Disable cuDNN usage completely" OFF)
+
+    # Conditional CUDNN configuration
+    if(DISABLE_CUDNN)
+        set(USE_CUDNN 0 CACHE BOOL "Disable cuDNN usage in fallback mode" FORCE)
+        set(CAFFE2_USE_CUDNN 0 CACHE BOOL "Disable cuDNN usage for Caffe2 in fallback mode" FORCE)
+        add_definitions(-DUSE_CUDNN=0)
+        message(STATUS "Building with cuDNN disabled")
+    else()
+        # Explicitly force cuDNN usage
+        set(USE_CUDNN 1 CACHE BOOL "Enable cuDNN usage" FORCE)
+        set(CAFFE2_USE_CUDNN 1 CACHE BOOL "Enable cuDNN usage for Caffe2" FORCE)
+        add_definitions(-DUSE_CUDNN=1)
+        message(STATUS "Building with cuDNN explicitly enabled")
+    endif()
+
+    # Add CUDA fallback mode definition
+    if(ENABLE_CUDA_FALLBACK)
+        add_definitions(-DENABLE_CUDA_FALLBACK=1)
+        message(STATUS "Building with CUDA fallback mode enabled (CPU-only execution if CUDA fails)")
+    else()
+        add_definitions(-DENABLE_CUDA_FALLBACK=0)
+        message(STATUS "Building with strict CUDA requirements (will fail if CUDA not available)")
+    endif()
+
+    # Explicitly set cuDNN paths before finding PyTorch
+    set(CUDNN_LIBRARY_PATH "/opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9" CACHE PATH "Path to cuDNN library")
+    set(CUDNN_INCLUDE_PATH "/usr/include/x86_64-linux-gnu" CACHE PATH "Path to cuDNN headers")
+    set(CUDNN_ROOT "/opt/libtorch-2.7.0-cu128" CACHE PATH "Path to cuDNN root")
+
+    # Ensure these variables are set for Torch's internal cuDNN lookup
+    set(CUDNN_LIBRARY ${CUDNN_LIBRARY_PATH})
+    set(CUDNN_INCLUDE_DIR ${CUDNN_INCLUDE_PATH})
+    set(CUDNN_INCLUDE_PATH ${CUDNN_INCLUDE_PATH})
+    set(CUDNN_LIBRARIES ${CUDNN_LIBRARY_PATH})
+    set(CUDNN_LIBRARY_PATH ${CUDNN_LIBRARY_PATH})
+    set(CUDNN_FOUND TRUE CACHE BOOL "cuDNN found status")
+
+    # Set environment variables for Torch
+    set(ENV{CUDNN_ROOT} "/opt/libtorch-2.7.0-cu128")
+    set(ENV{CUDNN_LIBRARY} "/opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9")
+    set(ENV{CUDNN_INCLUDE_DIR} "/usr/include/x86_64-linux-gnu")
+
+    # Add system include directory for cuDNN headers
+    include_directories(SYSTEM "/usr/include/x86_64-linux-gnu")
+
+    # Force CMake to find cuDNN
+    message(STATUS "Explicitly configured cuDNN:")
+    message(STATUS "  CUDNN_LIBRARY: ${CUDNN_LIBRARY}")
+    message(STATUS "  CUDNN_INCLUDE_DIR: ${CUDNN_INCLUDE_DIR}")
+    message(STATUS "  CUDNN_ROOT: ${CUDNN_ROOT}")
+
     find_package(Torch REQUIRED)
+    message(STATUS "Found PyTorch: ${Torch_DIR}")
 
     file(REAL_PATH "${Torch_DIR}/../../../lib" Torch_LIB_DIR)
+    message(STATUS "PyTorch library directory: ${Torch_LIB_DIR}")
 endif()
 
 # ────────────────────────────────── Python / OpenMP ────────────────────────────
@@ -227,9 +441,13 @@ if(BUILD_PYTHON_BINDINGS)
     message(STATUS "NOTE: Python bindings are currently troublesome due to pybind11 compatibility issues.")
     message(STATUS "      If they fail to build, consider disabling BUILD_PYTHON_BINDINGS option.")
     
-    find_package(Python COMPONENTS Interpreter QUIET)
+    find_package(Python COMPONENTS Interpreter Development QUIET)
     if(Python_FOUND)
-        message(STATUS "Found Python interpreter: ${Python_EXECUTABLE}")
+        message(STATUS "Found Python interpreter: ${Python_EXECUTABLE} (${Python_VERSION})")
+        message(STATUS "Found Python libraries: ${Python_LIBRARIES}")
+        message(STATUS "Found Python include dirs: ${Python_INCLUDE_DIRS}")
+        
+        # First try to get pybind11 paths from Python
         execute_process(
             COMMAND "${Python_EXECUTABLE}" -c "import pybind11; print(pybind11.get_cmake_dir())"
             OUTPUT_VARIABLE pybind11_cmake_dir_from_python
@@ -237,14 +455,30 @@ if(BUILD_PYTHON_BINDINGS)
             RESULT_VARIABLE pybind11_get_cmake_dir_result
             ERROR_QUIET
         )
+        
         if(pybind11_get_cmake_dir_result EQUAL 0 AND EXISTS "${pybind11_cmake_dir_from_python}")
             message(STATUS "Found pybind11 CMake directory via Python: ${pybind11_cmake_dir_from_python}")
             list(APPEND CMAKE_PREFIX_PATH "${pybind11_cmake_dir_from_python}")
-            # The pybind11_DIR hint is usually not needed if CMAKE_PREFIX_PATH is set correctly,
-            # but can be an alternative if find_package still struggles.
-            # set(pybind11_DIR "${pybind11_cmake_dir_from_python}" CACHE PATH "pybind11 CMake directory from Python" FORCE)
+            set(pybind11_DIR "${pybind11_cmake_dir_from_python}" CACHE PATH "pybind11 CMake directory from Python" FORCE)
         else()
-            message(STATUS "Could not get pybind11 CMake directory from Python interpreter. Will rely on standard search paths.")
+            # Try to find pybind11 in common locations
+            foreach(PYTHON_VERSION 3.6 3.7 3.8 3.9 3.10 3.11 3.12)
+                set(CANDIDATE_PATH "/usr/local/lib/python${PYTHON_VERSION}/dist-packages/pybind11/share/cmake/pybind11")
+                if(EXISTS "${CANDIDATE_PATH}")
+                    message(STATUS "Found potential pybind11 path: ${CANDIDATE_PATH}")
+                    list(APPEND CMAKE_PREFIX_PATH "${CANDIDATE_PATH}")
+                    set(pybind11_DIR "${CANDIDATE_PATH}" CACHE PATH "pybind11 CMake directory" FORCE)
+                    break()
+                endif()
+                
+                set(CANDIDATE_PATH "/usr/lib/python${PYTHON_VERSION}/dist-packages/pybind11/share/cmake/pybind11")
+                if(EXISTS "${CANDIDATE_PATH}")
+                    message(STATUS "Found potential pybind11 path: ${CANDIDATE_PATH}")
+                    list(APPEND CMAKE_PREFIX_PATH "${CANDIDATE_PATH}")
+                    set(pybind11_DIR "${CANDIDATE_PATH}" CACHE PATH "pybind11 CMake directory" FORCE)
+                    break()
+                endif()
+            endforeach()
         endif()
     else()
         message(WARNING "Python interpreter not found, cannot automatically locate pip-installed pybind11's CMake files.")
@@ -253,113 +487,199 @@ if(BUILD_PYTHON_BINDINGS)
     find_package(pybind11 QUIET)
     if(pybind11_FOUND)
         message(STATUS "Building Python bindings with pybind11 ${pybind11_VERSION}")
-
+        set(PYBIND11_FOUND TRUE)
+        
         # If essential pybind11 commands are not available after find_package, try to include pybind11.cmake manually.
-        # We check for both python_add_library (original check) and pybind11_add_module (modern command).
-        if(NOT COMMAND python_add_library AND NOT COMMAND pybind11_add_module)
-            set(PYBIND11_CMAKE_FILE_TO_INCLUDE "") # Reset variable
-
-            # Attempt 1: Use path from pybind11.get_cmake_dir()
-            if(pybind11_cmake_dir_from_python)
-                set(CANDIDATE_PATH_FROM_PYTHON "${pybind11_cmake_dir_from_python}/pybind11.cmake")
-                file(TO_CMAKE_PATH "${CANDIDATE_PATH_FROM_PYTHON}" NORMALIZED_PATH_PYTHON)
-                if(EXISTS "${NORMALIZED_PATH_PYTHON}")
-                    set(PYBIND11_CMAKE_FILE_TO_INCLUDE "${NORMALIZED_PATH_PYTHON}")
+        if(NOT COMMAND pybind11_add_module)
+            # Try to find pybind11.cmake
+            if(pybind11_DIR)
+                set(POTENTIAL_CMAKE_FILE "${pybind11_DIR}/pybind11Config.cmake")
+                if(EXISTS "${POTENTIAL_CMAKE_FILE}")
+                    include("${POTENTIAL_CMAKE_FILE}")
+                    message(STATUS "Included ${POTENTIAL_CMAKE_FILE}")
+                endif()
+                
+                set(POTENTIAL_CMAKE_FILE "${pybind11_DIR}/pybind11.cmake")
+                if(EXISTS "${POTENTIAL_CMAKE_FILE}")
+                    include("${POTENTIAL_CMAKE_FILE}")
+                    message(STATUS "Included ${POTENTIAL_CMAKE_FILE}")
+                endif()
+                
+                # Look in parent directories
+                get_filename_component(PYBIND11_PARENT_DIR "${pybind11_DIR}" DIRECTORY)
+                set(POTENTIAL_CMAKE_FILE "${PYBIND11_PARENT_DIR}/pybind11.cmake")
+                if(EXISTS "${POTENTIAL_CMAKE_FILE}")
+                    include("${POTENTIAL_CMAKE_FILE}")
+                    message(STATUS "Included ${POTENTIAL_CMAKE_FILE}")
                 endif()
             endif()
-
-            # Attempt 2: Fallback to pybind11_DIR (if different from python derived path and Attempt 1 failed)
-            if(PYBIND11_CMAKE_FILE_TO_INCLUDE STREQUAL "" AND pybind11_DIR)
-                if(NOT pybind11_cmake_dir_from_python OR NOT ("${pybind11_DIR}" STREQUAL "${pybind11_cmake_dir_from_python}"))
-                    set(CANDIDATE_PATH_FROM_DIR "${pybind11_DIR}/pybind11.cmake")
-                    file(TO_CMAKE_PATH "${CANDIDATE_PATH_FROM_DIR}" NORMALIZED_PATH_DIR)
-                    if(EXISTS "${NORMALIZED_PATH_DIR}")
-                        set(PYBIND11_CMAKE_FILE_TO_INCLUDE "${NORMALIZED_PATH_DIR}")
+            
+            # Define a simple pybind11_add_module if it's still not available
+            if(NOT COMMAND pybind11_add_module)
+                message(STATUS "Defining custom pybind11_add_module")
+                function(pybind11_add_module target_name)
+                    add_library(${target_name} MODULE ${ARGN})
+                    target_include_directories(${target_name} PRIVATE ${Python_INCLUDE_DIRS})
+                    target_link_libraries(${target_name} PRIVATE ${Python_LIBRARIES})
+                    
+                    # Handle suffix based on platform
+                    if(WIN32)
+                        set_target_properties(${target_name} PROPERTIES PREFIX "" SUFFIX ".pyd")
+                    else()
+                        set_target_properties(${target_name} PROPERTIES PREFIX "" SUFFIX ".so")
                     endif()
-                endif()
+                    
+                    # No need for lib prefix on most platforms
+                    set_target_properties(${target_name} PROPERTIES PREFIX "")
+                endfunction()
             endif()
-
-            if(NOT PYBIND11_CMAKE_FILE_TO_INCLUDE STREQUAL "")
-                message(STATUS "Manually including ${PYBIND11_CMAKE_FILE_TO_INCLUDE} to define pybind11 commands.")
-                include("${PYBIND11_CMAKE_FILE_TO_INCLUDE}")
-                # Check again if commands are available after include
-                if(NOT COMMAND python_add_library AND NOT COMMAND pybind11_add_module)
-                    message(WARNING "Pybind11 commands (python_add_library/pybind11_add_module) still not available after including ${PYBIND11_CMAKE_FILE_TO_INCLUDE}.")
-                    set(BUILD_PYTHON_BINDINGS OFF) # Disable bindings if include didn't make commands available
-                else()
-                    message(STATUS "Pybind11 commands now available after manual include.")
-                endif()
-            else()
-                message(WARNING "Required pybind11 commands not found, and could not locate pybind11.cmake to include it (tried paths derived from python executable and pybind11_DIR).")
-                set(BUILD_PYTHON_BINDINGS OFF) # Disable bindings if .cmake file not found/included
-            endif()
-        else()
-            message(STATUS "Pybind11 commands (python_add_library or pybind11_add_module) already available after find_package.")
         endif()
     else()
-        message(WARNING "pybind11 not found - Python bindings will be disabled. Searched CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+        message(WARNING "pybind11 not found - Python bindings will be disabled.")
         set(BUILD_PYTHON_BINDINGS OFF)
     endif()
 endif()
 
-if(PYBIND11_FOUND AND BUILD_PYTHON_BINDINGS)
-  # This section may fail if pybind11_add_module doesn't work correctly
-  # It's in a separate if check to ensure the rest of the build continues even if this part fails
-  message(STATUS "Attempting to build Python module...")
-  
-  # Try a direct approach to help define missing command
-  # This might not work, but worth trying
-  if(NOT COMMAND python_add_library)
-    message(STATUS "Trying manual pybind11 commands workaround...")
-    # Some older versions of pybind11 used this approach:
-    macro(pybind11_add_module target_name)
-      add_library(${target_name} MODULE ${ARGN})
-      target_include_directories(${target_name} PRIVATE ${PYTHON_INCLUDE_DIRS})
-      target_link_libraries(${target_name} PRIVATE ${PYTHON_LIBRARIES})
-      set_target_properties(${target_name} PROPERTIES 
-          PREFIX ""
-          SUFFIX "${PYTHON_MODULE_EXTENSION}")
-    endmacro()
-  endif()
-  
-  # Only try to create Python module if we believe we can
-  if(COMMAND pybind11_add_module)
+if(PYBIND11_FOUND AND BUILD_PYTHON_BINDINGS AND COMMAND pybind11_add_module)
+    message(STATUS "Building Python module...")
     pybind11_add_module(alphazero_py src/python/bindings.cpp)
     target_link_libraries(alphazero_py PRIVATE alphazero)
-  else()
-    message(WARNING "Skipping Python module creation - missing required commands")
-  endif()
+    
+    if(Python_FOUND)
+        # Set the Python module installation path
+        execute_process(
+            COMMAND "${Python_EXECUTABLE}" -c "import site; print(site.getsitepackages()[0])"
+            OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        
+        if(PYTHON_SITE_PACKAGES)
+            message(STATUS "Python site-packages directory: ${PYTHON_SITE_PACKAGES}")
+            install(TARGETS alphazero_py DESTINATION "${PYTHON_SITE_PACKAGES}")
+        endif()
+    endif()
+else()
+    message(STATUS "Skipping Python module creation")
 endif()
 
-find_package(nlohmann_json CONFIG REQUIRED)
-message(STATUS "Found nlohmann_json: ${nlohmann_json_VERSION}")
-
-# Add json include directory explicitly on Linux
-if(UNIX AND NOT APPLE)
-    find_path(NLOHMANN_JSON_INCLUDE_DIR nlohmann/json.hpp PATHS /usr/include /usr/local/include /home/cosmos/anaconda3/include)
+find_package(nlohmann_json CONFIG QUIET)
+if(nlohmann_json_FOUND)
+    message(STATUS "Found nlohmann_json: ${nlohmann_json_VERSION}")
+else()
+    # Try to find nlohmann_json directly from common system paths
+    find_path(NLOHMANN_JSON_INCLUDE_DIR nlohmann/json.hpp
+        PATHS
+            /usr/include
+            /usr/local/include
+            /usr/local/include/nlohmann
+            /home/${USER}/anaconda3/include
+            ${CMAKE_PREFIX_PATH}
+        NO_DEFAULT_PATH
+    )
+    
     if(NLOHMANN_JSON_INCLUDE_DIR)
         message(STATUS "Found nlohmann_json include dir: ${NLOHMANN_JSON_INCLUDE_DIR}")
         include_directories(BEFORE SYSTEM ${NLOHMANN_JSON_INCLUDE_DIR})
 
-        # Copy the entire nlohmann directory if it exists
-        execute_process(
-            COMMAND bash -c "mkdir -p \"${CMAKE_BINARY_DIR}/include\" && cp -r \"${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann\" \"${CMAKE_BINARY_DIR}/include/\""
-            RESULT_VARIABLE copy_result
-        )
-
-        if(copy_result EQUAL 0)
-            message(STATUS "Copied nlohmann directory to build directory")
+        # Add system include directory directly to be safe
+        include_directories(BEFORE SYSTEM "/usr/include")
+        
+        # Create the target manually if find_package failed
+        if(NOT TARGET nlohmann_json::nlohmann_json)
+            add_library(nlohmann_json::nlohmann_json INTERFACE IMPORTED)
+            set_target_properties(nlohmann_json::nlohmann_json PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${NLOHMANN_JSON_INCLUDE_DIR}")
+        endif()
+        
+        # Check if this is a single-file version or multi-file version
+        if(EXISTS "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp" AND NOT EXISTS "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/adl_serializer.hpp")
+            # Single-file version detected, extract individual files from json.hpp
+            message(STATUS "Single-file json.hpp detected. Extracting component headers...")
+            
+            set(JSON_HEADERS_DIR "${CMAKE_BINARY_DIR}/include/nlohmann")
+            file(MAKE_DIRECTORY "${JSON_HEADERS_DIR}")
+            
+            # Copy the original json.hpp
+            file(COPY "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp" DESTINATION "${JSON_HEADERS_DIR}")
+            
+            # Create the missing component headers
+            foreach(HEADER_NAME adl_serializer detail json_fwd)
+                file(WRITE "${JSON_HEADERS_DIR}/${HEADER_NAME}.hpp"
+                     "#pragma once\n#include \"json.hpp\"\n")
+            endforeach()
+            
+            # Add the generated directory to include paths
             include_directories(BEFORE "${CMAKE_BINARY_DIR}/include")
+            message(STATUS "Created component headers in ${JSON_HEADERS_DIR}")
         else()
-            message(WARNING "Failed to copy nlohmann directory. Build may fail.")
+            # Copy the entire nlohmann directory to the build directory if needed
+            # Use CMake's file operations instead of bash commands for better cross-platform support
+            if(UNIX AND NOT APPLE)
+                file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/include")
+                if(EXISTS "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann")
+                    file(COPY "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann" DESTINATION "${CMAKE_BINARY_DIR}/include/")
+                    message(STATUS "Copied nlohmann directory to build directory")
+                    include_directories(BEFORE "${CMAKE_BINARY_DIR}/include")
+                else()
+                    message(WARNING "nlohmann directory not found at ${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann. Build may fail.")
+                endif()
+            endif()
         endif()
     else()
         message(FATAL_ERROR "Could not find nlohmann/json.hpp header file. Please install nlohmann_json library.")
     endif()
 endif()
 
-find_package(yaml-cpp CONFIG REQUIRED)
-message(STATUS "Found yaml-cpp: ${yaml-cpp_VERSION}")
+# FALLBACK: Use our custom single-header JSON implementation if the above fails
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/build/include/nlohmann/json.hpp")
+    message(STATUS "Using fallback single-header JSON implementation from build/include")
+    include_directories(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/build/include")
+endif()
+
+find_package(yaml-cpp CONFIG QUIET)
+if(yaml-cpp_FOUND)
+    message(STATUS "Found yaml-cpp: ${yaml-cpp_VERSION}")
+else()
+    # Try to find yaml-cpp directly from common system paths
+    find_path(YAML_CPP_INCLUDE_DIR yaml-cpp/yaml.h
+        PATHS
+            /usr/include
+            /usr/local/include
+            ${CMAKE_PREFIX_PATH}
+    )
+
+    find_library(YAML_CPP_LIBRARY
+        NAMES yaml-cpp
+        PATHS
+            /usr/lib
+            /usr/lib/x86_64-linux-gnu
+            /usr/local/lib
+            ${CMAKE_PREFIX_PATH}
+    )
+
+    if(YAML_CPP_INCLUDE_DIR AND YAML_CPP_LIBRARY)
+        message(STATUS "Found yaml-cpp include dir: ${YAML_CPP_INCLUDE_DIR}")
+        message(STATUS "Found yaml-cpp library: ${YAML_CPP_LIBRARY}")
+
+        # Create the target manually if find_package failed
+        if(NOT TARGET yaml-cpp::yaml-cpp)
+            add_library(yaml-cpp::yaml-cpp UNKNOWN IMPORTED)
+            set_target_properties(yaml-cpp::yaml-cpp PROPERTIES
+                IMPORTED_LOCATION "${YAML_CPP_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${YAML_CPP_INCLUDE_DIR}")
+        endif()
+
+        # Also create an unqualified target for compatibility
+        if(NOT TARGET yaml-cpp)
+            add_library(yaml-cpp UNKNOWN IMPORTED)
+            set_target_properties(yaml-cpp PROPERTIES
+                IMPORTED_LOCATION "${YAML_CPP_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${YAML_CPP_INCLUDE_DIR}")
+        endif()
+    else()
+        message(FATAL_ERROR "Could not find yaml-cpp library or headers. Please install yaml-cpp.")
+    endif()
+endif()
 
 find_package(OpenMP QUIET)
 if(OpenMP_CXX_FOUND)
@@ -372,7 +692,7 @@ set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp)
 set(CHESS_SOURCES     src/games/chess/chess_state.cpp src/games/chess/chess_rules.cpp src/games/chess/chess960.cpp)
 set(GO_SOURCES        src/games/go/go_state.cpp   src/games/go/go_rules.cpp)
 set(GOMOKU_SOURCES    src/games/gomoku/gomoku_state.cpp src/games/gomoku/gomoku_rules.cpp)
-set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp)
+set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/memory_debug.cpp src/utils/debug_monitor.cpp)
 
 # Conditionally define NN_SOURCES based on WITH_TORCH
 set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
@@ -400,6 +720,7 @@ set(TRAINING_SOURCES
 set(EVALUATION_SOURCES
     src/evaluation/model_evaluator.cpp
 )
+set(CLI_SOURCES src/cli/cli_manager.cpp)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/mcts/mcts.cpp")
     list(APPEND MCTS_SOURCES src/mcts/mcts.cpp)
@@ -412,17 +733,18 @@ endif()
 
 set(ALL_SOURCES
     ${CORE_SOURCES} ${CHESS_SOURCES} ${GO_SOURCES} ${GOMOKU_SOURCES}
-    ${UTIL_SOURCES} ${NN_SOURCES} ${MCTS_SOURCES}
+    ${UTIL_SOURCES} ${NN_SOURCES} ${MCTS_SOURCES} ${CLI_SOURCES}
     ${SELFPLAY_SOURCES} ${TRAINING_SOURCES} ${EVALUATION_SOURCES}
 )
 
 # ───────────────────────────── alphazero library target ───────────────────────
 add_library(alphazero ${ALL_SOURCES})
 
-target_include_directories(alphazero 
-    PUBLIC 
+target_include_directories(alphazero
+    PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
+        /usr/include  # Add system include dir explicitly
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
@@ -440,11 +762,58 @@ endif()
 
 # Link required libraries
 target_link_libraries(alphazero PUBLIC Threads::Threads)
-target_link_libraries(alphazero PUBLIC nlohmann_json::nlohmann_json)
-target_link_libraries(alphazero PUBLIC yaml-cpp::yaml-cpp)
+
+# Link JSON library (handle different target names)
+if(TARGET nlohmann_json::nlohmann_json)
+    target_link_libraries(alphazero PUBLIC nlohmann_json::nlohmann_json)
+else()
+    # Fallback in case the target has a different name
+    target_include_directories(alphazero PUBLIC ${NLOHMANN_JSON_INCLUDE_DIR})
+endif()
+
+# Link YAML-CPP library (handle different target names)
+if(TARGET yaml-cpp::yaml-cpp)
+    target_link_libraries(alphazero PUBLIC yaml-cpp::yaml-cpp)
+elseif(TARGET yaml-cpp)
+    target_link_libraries(alphazero PUBLIC yaml-cpp)
+else()
+    # Fallback in case the target has a different name
+    target_include_directories(alphazero PUBLIC ${YAML_CPP_INCLUDE_DIR})
+    if(YAML_CPP_LIBRARY)
+        target_link_libraries(alphazero PUBLIC ${YAML_CPP_LIBRARY})
+    endif()
+endif()
 
 if(WITH_TORCH)
     target_link_libraries(alphazero PUBLIC "${TORCH_LIBRARIES}")
+    # Add CUDA libraries explicitly if needed
+    if(CUDA_FOUND AND CUDA_CUDART_LIBRARY)
+        target_link_libraries(alphazero PUBLIC ${CUDA_CUDART_LIBRARY})
+    endif()
+    
+    # Link cuDNN library - check all possible paths
+    set(CUDNN_LIB_CANDIDATES
+        "${CUDNN_LIBRARY_PATH}"
+        "${CUDNN_LIBRARY}"
+        "${Torch_LIB_DIR}/libcudnn.so.9"
+        "/opt/libtorch/lib/libcudnn.so.9"
+        "/opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9"
+        "${CUDNN_LIBRARIES}"
+    )
+
+    set(CUDNN_LIB_FOUND FALSE)
+    foreach(lib ${CUDNN_LIB_CANDIDATES})
+        if(NOT CUDNN_LIB_FOUND AND EXISTS "${lib}")
+            message(STATUS "Linking cuDNN library: ${lib}")
+            target_link_libraries(alphazero PUBLIC ${lib})
+            set(CUDNN_LIB_FOUND TRUE)
+            break()
+        endif()
+    endforeach()
+
+    if(NOT CUDNN_LIB_FOUND)
+        message(WARNING "No cuDNN library found in any of the candidate paths, but will continue building")
+    endif()
 endif()
 
 if(OpenMP_CXX_FOUND)
@@ -538,10 +907,89 @@ if(WITH_TORCH)
             file(APPEND "${CMAKE_BINARY_DIR}/run_tests.sh" "export LD_LIBRARY_PATH=\"${Torch_LIB_DIR}:$LD_LIBRARY_PATH\"\n")
             file(APPEND "${CMAKE_BINARY_DIR}/run_tests.sh" "cd \"${CMAKE_BINARY_DIR}\"\n")
             file(APPEND "${CMAKE_BINARY_DIR}/run_tests.sh" "ctest \"$@\"\n")
-            execute_process(COMMAND chmod +x "${CMAKE_BINARY_DIR}/run_tests.sh")
+            # Use CMake command to set permissions to avoid shell command issues
+            file(CHMOD "${CMAKE_BINARY_DIR}/run_tests.sh"
+                 PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                            GROUP_READ GROUP_EXECUTE
+                            WORLD_READ WORLD_EXECUTE)
             message(STATUS "Created test runner script: ${CMAKE_BINARY_DIR}/run_tests.sh")
         endif()
     endif()
+endif()
+
+# ───────────────────────────── CLI executable ────────────────────────────────
+# Main CLI executable conditionally built based on WITH_TORCH availability
+if(WITH_TORCH)
+    # Always build the CLI with TORCH
+        add_executable(omoknuni_cli src/cli/omoknuni_cli.cpp)
+
+        # Manually include the NN source files to ensure proper linking
+        target_sources(omoknuni_cli PRIVATE
+            src/nn/neural_network_factory.cpp
+            src/nn/resnet_model.cpp
+            src/nn/ddw_randwire_resnet.cpp
+        )
+
+        # Link against alphazero, yaml-cpp, and Torch
+        target_link_libraries(omoknuni_cli PRIVATE
+            alphazero
+            "${TORCH_LIBRARIES}"
+            dl  # For dlopen, dlclose, dlerror
+        )
+
+        # Handle yaml-cpp linking - different distributions may have different target names
+        if(TARGET yaml-cpp::yaml-cpp)
+            target_link_libraries(omoknuni_cli PRIVATE yaml-cpp::yaml-cpp)
+        elseif(TARGET yaml-cpp)
+            target_link_libraries(omoknuni_cli PRIVATE yaml-cpp)
+        elseif(YAML_CPP_LIBRARY)
+            target_link_libraries(omoknuni_cli PRIVATE ${YAML_CPP_LIBRARY})
+        else()
+            message(WARNING "yaml-cpp target not found. Trying with -lyaml-cpp")
+            target_link_libraries(omoknuni_cli PRIVATE -lyaml-cpp)
+        endif()
+
+        # Add compiler and linker flags to properly enable CUDA
+        target_compile_definitions(omoknuni_cli PRIVATE
+          PYTORCH_NO_CUDA_INIT_OVERRIDE=0
+          USE_TORCH=1
+          C10_CUDA_DRIVER_INIT=1
+          USE_CUDNN=1
+          CAFFE2_USE_CUDNN=1
+          TORCH_USE_CUDA=1
+          CUDA_VERSION=12080
+          CUDNN_MAJOR=9
+        )
+
+        # Set RPATH for the CLI executable
+        if(UNIX AND NOT APPLE)
+            # Add the $ORIGIN based RPATH so the executable can find libraries in the same directory
+            set_target_properties(omoknuni_cli PROPERTIES
+                INSTALL_RPATH "${CMAKE_BINARY_DIR}/lib/Release:${CMAKE_CURRENT_SOURCE_DIR}/build/lib/Release"
+                BUILD_WITH_INSTALL_RPATH TRUE
+                SKIP_BUILD_RPATH FALSE
+                BUILD_RPATH "${CMAKE_BINARY_DIR}/lib/Release:${CMAKE_CURRENT_SOURCE_DIR}/build/lib/Release"
+            )
+        endif()
+
+        # Add debug output - prints a message when run
+        target_compile_definitions(omoknuni_cli PRIVATE DEBUG_CLI=1)
+
+        # Make sure WITH_TORCH is defined
+        target_compile_definitions(omoknuni_cli PRIVATE WITH_TORCH)
+
+        # Add include directories
+        target_include_directories(omoknuni_cli PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+        )
+
+        # Install the CLI executable
+        install(TARGETS omoknuni_cli DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+        message(STATUS "Building omoknuni_cli with PyTorch support")
+else()
+    message(STATUS "Skipping omoknuni_cli (requires WITH_TORCH=ON)")
 endif()
 
 # ───────────────────────────── Example executables ────────────────────────────
@@ -549,7 +997,7 @@ if(BUILD_EXAMPLES)
     if(WITH_TORCH) # Examples might depend on Torch
       add_executable(alphazero_training examples/alphazero_training.cpp)
       target_link_libraries(alphazero_training PRIVATE alphazero nlohmann_json::nlohmann_json)
-      
+
       add_executable(self_play_libtorch examples/self_play_libtorch.cpp)
       target_link_libraries(self_play_libtorch PRIVATE alphazero nlohmann_json::nlohmann_json)
     endif()
@@ -570,6 +1018,7 @@ if(BUILD_TESTS)
     set(GOMOKU_TEST_SOURCES tests/games/gomoku/gomoku_test.cpp)
     set(MCTS_TEST_SOURCES   tests/mcts/mcts_node_test.cpp  tests/mcts/mcts_evaluator_test.cpp
                             tests/mcts/mcts_engine_test.cpp)
+    set(CLI_TEST_SOURCES tests/cli/cli_manager_test.cpp)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/mcts/mcts_test.cpp")
         list(APPEND MCTS_TEST_SOURCES tests/mcts/mcts_test.cpp)
     endif()
@@ -633,8 +1082,27 @@ if(BUILD_TESTS)
 
         # Set RPATH for Linux builds to find libalphazero.so
         if(UNIX AND NOT APPLE)
+            # Generate RPATH based on configuration
+            set(TARGET_RPATH "${CMAKE_BINARY_DIR}/lib")
+
+            # Add configuration-specific path if available
+            if(CMAKE_CONFIGURATION_TYPES)
+                set(TARGET_RPATH "${TARGET_RPATH}/$<CONFIG>")
+            elseif(CMAKE_BUILD_TYPE)
+                set(TARGET_RPATH "${TARGET_RPATH}/${CMAKE_BUILD_TYPE}")
+            endif()
+
+            # Add standard install lib path and Torch lib path if available
+            list(APPEND TARGET_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+            if(WITH_TORCH AND Torch_LIB_DIR)
+                list(APPEND TARGET_RPATH "${Torch_LIB_DIR}")
+            endif()
+
+            # Convert the list to a semicolon-separated string (CMake separator for RPATH)
+            string(REPLACE ";" ":" RPATH_STRING "${TARGET_RPATH}")
+
             set_target_properties(${name} PROPERTIES
-                INSTALL_RPATH "${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE};${CMAKE_INSTALL_PREFIX}/lib;${Torch_LIB_DIR}"
+                INSTALL_RPATH "${RPATH_STRING}"
                 BUILD_WITH_INSTALL_RPATH TRUE
                 INSTALL_RPATH_USE_LINK_PATH TRUE
             )
@@ -646,7 +1114,19 @@ if(BUILD_TESTS)
         if(WIN32 AND GTEST_IS_SHARED)
             # For Windows shared library builds, set the PATH environment variable
             # to include the vcpkg directory with the GTest DLLs and the test executable's directory
-            file(TO_NATIVE_PATH "$ENV{USERPROFILE}/vcpkg/installed/x64-windows/bin" VCPKG_BIN_NATIVE_PATH)
+
+            # Set up vcpkg bin paths with fallbacks
+            set(VCPKG_BIN_PATH "")
+            if(EXISTS "$ENV{USERPROFILE}/vcpkg/installed/x64-windows/bin")
+                file(TO_NATIVE_PATH "$ENV{USERPROFILE}/vcpkg/installed/x64-windows/bin" VCPKG_BIN_NATIVE_PATH)
+            elseif(DEFINED ENV{VCPKG_ROOT} AND EXISTS "$ENV{VCPKG_ROOT}/installed/x64-windows/bin")
+                file(TO_NATIVE_PATH "$ENV{VCPKG_ROOT}/installed/x64-windows/bin" VCPKG_BIN_NATIVE_PATH)
+            else()
+                # Set a default that might not exist
+                file(TO_NATIVE_PATH "$ENV{USERPROFILE}/vcpkg/installed/x64-windows/bin" VCPKG_BIN_NATIVE_PATH)
+                message(WARNING "VCPKG bin directory not found. PATH environment may be incomplete.")
+            endif()
+
             file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/bin" PROJECT_BIN_DIR_NATIVE_PART)
             # $<CONFIG> will be evaluated by CTest at test time.
             set(CTEST_CONFIG_SPECIFIC_BIN_PATH "${PROJECT_BIN_DIR_NATIVE_PART}/$<CONFIG>")
@@ -656,9 +1136,41 @@ if(BUILD_TESTS)
         elseif(UNIX AND NOT APPLE)
             # For Linux, set LD_LIBRARY_PATH for shared libraries
             if(GTEST_IS_SHARED OR WITH_TORCH)
-                set(VCPKG_LIB_PATH "$ENV{HOME}/vcpkg/installed/x64-linux/lib")
-                set(PROJECT_LIB_PATH "${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE}")
-                set(TEST_LD_LIBRARY_PATH "${PROJECT_LIB_PATH}:${VCPKG_LIB_PATH}:${Torch_LIB_DIR}:$ENV{LD_LIBRARY_PATH}")
+                # Default paths
+                set(PROJECT_LIB_PATH "${CMAKE_BINARY_DIR}/lib")
+
+                # Add configuration-specific path if using multi-config generator
+                if(CMAKE_CONFIGURATION_TYPES)
+                    set(PROJECT_LIB_PATH "${PROJECT_LIB_PATH}/$<CONFIG>")
+                elseif(CMAKE_BUILD_TYPE)
+                    set(PROJECT_LIB_PATH "${PROJECT_LIB_PATH}/${CMAKE_BUILD_TYPE}")
+                endif()
+
+                # Handle VCPKG paths
+                set(VCPKG_LIB_PATHS "")
+                if(EXISTS "$ENV{HOME}/vcpkg/installed/x64-linux/lib")
+                    list(APPEND VCPKG_LIB_PATHS "$ENV{HOME}/vcpkg/installed/x64-linux/lib")
+                endif()
+                if(DEFINED ENV{VCPKG_ROOT} AND EXISTS "$ENV{VCPKG_ROOT}/installed/x64-linux/lib")
+                    list(APPEND VCPKG_LIB_PATHS "$ENV{VCPKG_ROOT}/installed/x64-linux/lib")
+                endif()
+
+                # Combine all paths
+                set(TEST_LD_LIBRARY_PATH "${PROJECT_LIB_PATH}")
+                foreach(vcpkg_path ${VCPKG_LIB_PATHS})
+                    set(TEST_LD_LIBRARY_PATH "${TEST_LD_LIBRARY_PATH}:${vcpkg_path}")
+                endforeach()
+
+                # Add Torch library path if with Torch
+                if(WITH_TORCH AND Torch_LIB_DIR)
+                    set(TEST_LD_LIBRARY_PATH "${TEST_LD_LIBRARY_PATH}:${Torch_LIB_DIR}")
+                endif()
+
+                # Add current LD_LIBRARY_PATH if exists
+                if(DEFINED ENV{LD_LIBRARY_PATH})
+                    set(TEST_LD_LIBRARY_PATH "${TEST_LD_LIBRARY_PATH}:$ENV{LD_LIBRARY_PATH}")
+                endif()
+
                 set_tests_properties(${name} PROPERTIES
                     ENVIRONMENT "LD_LIBRARY_PATH=${TEST_LD_LIBRARY_PATH}")
             endif()
@@ -682,7 +1194,7 @@ if(BUILD_TESTS)
     make_test(all_tests     tests/all_tests_main.cpp
                              ${CORE_TEST_SOURCES} ${CHESS_TEST_SOURCES}
                              ${GO_TEST_SOURCES} ${GOMOKU_TEST_SOURCES}
-                             ${MCTS_TEST_SOURCES})
+                             ${MCTS_TEST_SOURCES} ${CLI_TEST_SOURCES})
     
     # Increase stack size for all_tests on MSVC to prevent stack overflow
     if(MSVC AND TARGET all_tests)

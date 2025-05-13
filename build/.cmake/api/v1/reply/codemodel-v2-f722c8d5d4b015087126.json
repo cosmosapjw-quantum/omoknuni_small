@@ -1,0 +1,79 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-1b2f0f0f9010c66b76d4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "AlphaZero",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "alphazero::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-alphazero-Debug-bc14c2553699bc6a0ca0.json",
+					"name" : "alphazero",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "alphazero_py::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-alphazero_py-Debug-951dccf5eb5e3f0da487.json",
+					"name" : "alphazero_py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "omoknuni_cli::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-omoknuni_cli-Debug-5824d3ce6e66f32e2fdd.json",
+					"name" : "omoknuni_cli",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/cosmos/omoknuni_small/build",
+		"source" : "/home/cosmos/omoknuni_small"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

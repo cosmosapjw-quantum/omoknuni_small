@@ -3,6 +3,7 @@
 #include <queue>
 
 namespace alphazero {
+namespace games {
 namespace go {
 
 GoRules::GoRules(int board_size, bool chinese_rules, bool enforce_superko)
@@ -388,4 +389,5 @@ std::pair<float, float> GoRules::calculateScores(
 }
 
 } // namespace go
+} // namespace games
 } // namespace alphazero

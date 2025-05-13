@@ -218,16 +218,31 @@ public:
 
     /**
      * @brief Validate the game state for consistency
-     * 
+     *
      * Checks if the current state is valid according to game rules.
-     * 
+     *
      * @return true if valid, false otherwise
      */
     virtual bool validate() const = 0;
 
     /**
+     * @brief Estimate memory usage of this game state
+     *
+     * Provides a rough estimate of the memory used by this game state
+     * in bytes. Used for memory tracking and debugging.
+     *
+     * @return Estimated memory usage in bytes
+     */
+    virtual size_t estimateMemoryUsage() const {
+        // Default implementation - derived classes should override
+        // for more accurate accounting
+        return sizeof(*this) +
+               getMoveHistory().capacity() * sizeof(int);
+    }
+
+    /**
      * @brief Get the game type
-     * 
+     *
      * @return Game type
      */
     GameType getGameType() const;

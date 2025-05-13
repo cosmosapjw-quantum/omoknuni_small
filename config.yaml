@@ -6,28 +6,28 @@ board_size: 15
 
 # Neural network settings
 network:
-  num_res_blocks: 10
-  num_filters: 128
+  num_res_blocks: 5
+  num_filters: 64
 
 # Model paths
 model_path: models/best_model.pt
 
 # MCTS settings
 mcts:
-  num_simulations: 800
-  num_threads: 4
-  batch_size: 8
+  num_simulations: 200
+  num_threads: 8
+  batch_size: 16
   exploration_constant: 1.5
   virtual_loss: 3
   add_dirichlet_noise: true
   dirichlet_alpha: 0.3
   dirichlet_epsilon: 0.25
   temperature: 1.0
-  batch_timeout_ms: 5
+  batch_timeout_ms: 50
 
 # Self-play settings
 self_play:
-  num_games: 50
+  num_games: 5
   num_parallel_games: 4
   max_moves: 0  # 0 means calculate based on board size
   temperature_threshold: 30

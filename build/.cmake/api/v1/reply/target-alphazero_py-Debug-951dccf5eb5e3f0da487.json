@@ -1,0 +1,415 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "lib/Debug/alphazero_py.cpython-310-x86_64-linux-gnu.so"
+		}
+	],
+	"backtrace" : 4,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"__Python_add_library",
+			"python_add_library",
+			"pybind11_add_module",
+			"install",
+			"target_link_libraries",
+			"add_compile_options",
+			"add_definitions",
+			"add_compile_definitions"
+		],
+		"files" : 
+		[
+			"/usr/share/cmake-3.22/Modules/FindPython/Support.cmake",
+			"/usr/share/cmake-3.22/Modules/FindPython.cmake",
+			"/usr/lib/cmake/pybind11/pybind11NewTools.cmake",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 3
+			},
+			{
+				"command" : 3,
+				"file" : 3,
+				"line" : 545,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 205,
+				"parent" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 580,
+				"parent" : 2
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 3330,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 558,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 546,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 94,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 3,
+				"line" : 96,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 397,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 3,
+				"line" : 156,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 3,
+				"line" : 391,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 3,
+				"line" : 686,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 3,
+				"line" : 80,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 3335,
+				"parent" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 214,
+				"parent" : 1
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-D_GLIBCXX_USE_CXX11_ABI=0 -Wno-deprecated-declarations -D_GLIBCXX_USE_CXX11_ABI=0 -fopenmp -g -fPIC -fvisibility=hidden"
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "-Wextra"
+				},
+				{
+					"backtrace" : 8,
+					"fragment" : "-mavx2"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-D_GLIBCXX_USE_CXX11_ABI=1"
+				},
+				{
+					"backtrace" : 6,
+					"fragment" : "-fopenmp"
+				},
+				{
+					"fragment" : "-std=gnu++17"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 9,
+					"define" : "ENABLE_CUDA_FALLBACK=1"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "JSON_DIAGNOSTICS=0"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "JSON_USE_IMPLICIT_CONVERSIONS=1"
+				},
+				{
+					"backtrace" : 10,
+					"define" : "TORCH_USE_CUDA=1"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "USE_C10D_GLOO"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "USE_C10D_NCCL"
+				},
+				{
+					"backtrace" : 11,
+					"define" : "USE_CUDNN=1"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "USE_DISTRIBUTED"
+				},
+				{
+					"backtrace" : 12,
+					"define" : "USE_OPENMP"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "USE_RPC"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "USE_TENSORPIPE"
+				},
+				{
+					"backtrace" : 13,
+					"define" : "_GLIBCXX_USE_CXX11_ABI=0"
+				},
+				{
+					"define" : "alphazero_py_EXPORTS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 6,
+					"path" : "/home/cosmos/omoknuni_small/include"
+				},
+				{
+					"backtrace" : 14,
+					"isSystem" : true,
+					"path" : "/home/cosmos/anaconda3/include/python3.10"
+				},
+				{
+					"backtrace" : 6,
+					"isSystem" : true,
+					"path" : "/opt/libtorch-2.7.0-cu128/include"
+				},
+				{
+					"backtrace" : 6,
+					"isSystem" : true,
+					"path" : "/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include"
+				},
+				{
+					"backtrace" : 6,
+					"isSystem" : true,
+					"path" : "/usr/local/cuda-12.8/include"
+				},
+				{
+					"backtrace" : 6,
+					"isSystem" : true,
+					"path" : "/usr/local/cuda/include"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					15,
+					15,
+					15,
+					6
+				],
+				"standard" : "17"
+			},
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 6,
+			"id" : "alphazero::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "alphazero_py::@6890427a1f51a3e7e1df",
+	"install" : 
+	{
+		"destinations" : 
+		[
+			{
+				"backtrace" : 5,
+				"path" : "/home/cosmos/anaconda3/lib/python3.10/site-packages"
+			}
+		],
+		"prefix" : 
+		{
+			"path" : "/usr/local"
+		}
+	},
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/cosmos/anaconda3/lib -Wl,-rpath-link,/home/cosmos/anaconda3/lib -L/home/cosmos/anaconda3/lib",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 6,
+				"fragment" : "-L/lib/intel64",
+				"role" : "libraryPath"
+			},
+			{
+				"backtrace" : 6,
+				"fragment" : "-L/lib/intel64_win",
+				"role" : "libraryPath"
+			},
+			{
+				"backtrace" : 6,
+				"fragment" : "-L/lib/win-x64",
+				"role" : "libraryPath"
+			},
+			{
+				"fragment" : "-Wl,-rpath,/lib/intel64:/lib/intel64_win:/lib/win-x64:/home/cosmos/omoknuni_small/build/lib/Debug:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda-12.8/lib64:/usr/local/cuda/lib64:",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 6,
+				"fragment" : "lib/Debug/libalphazero.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.7.0",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/opt/libtorch-2.7.0-cu128/lib/libtorch.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-Wl,--no-as-needed,\"/opt/libtorch-2.7.0-cu128/lib/libtorch_cpu.so\" -Wl,--as-needed",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-Wl,--no-as-needed,\"/opt/libtorch-2.7.0-cu128/lib/libtorch_cuda.so\" -Wl,--as-needed",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/opt/libtorch-2.7.0-cu128/lib/libc10.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/local/cuda-12.8/lib64/libcudart.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-Wl,--no-as-needed,\"/opt/libtorch-2.7.0-cu128/lib/libtorch.so\" -Wl,--as-needed",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/opt/libtorch-2.7.0-cu128/lib/libc10.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/opt/libtorch-2.7.0-cu128/lib/libkineto.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/local/cuda-12.8/lib64/libnvrtc.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/local/cuda/lib64/libnvToolsExt.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/local/cuda-12.8/lib64/libcudart.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libpthread.a",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "alphazero_py",
+	"nameOnDisk" : "alphazero_py.cpython-310-x86_64-linux-gnu.so",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 4,
+			"compileGroupIndex" : 0,
+			"path" : "src/python/bindings.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "MODULE_LIBRARY"
+}
