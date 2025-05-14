@@ -75,9 +75,13 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Explicitly use the new C++11 ABI
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=1")
+add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=1)
+
 # Use the old C++11 ABI to maintain compatibility with libstdc++
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
-add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
+# add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release)
@@ -143,7 +147,7 @@ if(BUILD_TESTS)
     set(GTEST_LINKED_AS_SHARED_LIBRARY FALSE)
     
     # Set additional linker flags to fix ABI compatibility issues
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
+    # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++") // Commented out as omoknuni_cli links stdc++ specifically
 endif()
 
 # ───────────────────────────────────── Torch / CUDA ────────────────────────────
@@ -740,6 +744,11 @@ set(ALL_SOURCES
 # ───────────────────────────── alphazero library target ───────────────────────
 add_library(alphazero ${ALL_SOURCES})
 
+set_target_properties(alphazero PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+)
+
 target_include_directories(alphazero
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -785,6 +794,8 @@ else()
 endif()
 
 if(WITH_TORCH)
+    # Define WITH_TORCH compile definition for the library
+    target_compile_definitions(alphazero PUBLIC -DWITH_TORCH)
     target_link_libraries(alphazero PUBLIC "${TORCH_LIBRARIES}")
     # Add CUDA libraries explicitly if needed
     if(CUDA_FOUND AND CUDA_CUDART_LIBRARY)
@@ -923,19 +934,32 @@ if(WITH_TORCH)
     # Always build the CLI with TORCH
         add_executable(omoknuni_cli src/cli/omoknuni_cli.cpp)
 
-        # Manually include the NN source files to ensure proper linking
-        target_sources(omoknuni_cli PRIVATE
-            src/nn/neural_network_factory.cpp
-            src/nn/resnet_model.cpp
-            src/nn/ddw_randwire_resnet.cpp
-        )
-
         # Link against alphazero, yaml-cpp, and Torch
         target_link_libraries(omoknuni_cli PRIVATE
             alphazero
             "${TORCH_LIBRARIES}"
             dl  # For dlopen, dlclose, dlerror
+            stdc++  # Explicitly link standard C++ library
         )
+
+        # Prioritize system GCC library path to avoid Anaconda's libstdc++
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND UNIX AND NOT APPLE)
+            # Assuming g++ version is 11.x based on linker logs
+            # A more robust way would be to parse CMAKE_CXX_COMPILER_VERSION
+            set(SYSTEM_GCC_MAJOR_VERSION 11) # Adjust if your /usr/bin/g++ is different
+            set(SYSTEM_GCC_LIB_DIR "/usr/lib/gcc/x86_64-linux-gnu/${SYSTEM_GCC_MAJOR_VERSION}")
+            if(EXISTS "${SYSTEM_GCC_LIB_DIR}")
+                target_link_directories(omoknuni_cli BEFORE PRIVATE "${SYSTEM_GCC_LIB_DIR}")
+                message(STATUS "Prepending system GCC lib path for omoknuni_cli: ${SYSTEM_GCC_LIB_DIR}")
+            else()
+                message(WARNING "System GCC lib path NOT found: ${SYSTEM_GCC_LIB_DIR}. Linker might still pick up incorrect libstdc++.")
+            endif()
+            # Also prepend the general system library path
+            if(EXISTS "/usr/lib/x86_64-linux-gnu")
+                 target_link_directories(omoknuni_cli BEFORE PRIVATE "/usr/lib/x86_64-linux-gnu")
+                 message(STATUS "Prepending system library path for omoknuni_cli: /usr/lib/x86_64-linux-gnu")
+            endif()
+        endif()
 
         # Handle yaml-cpp linking - different distributions may have different target names
         if(TARGET yaml-cpp::yaml-cpp)
@@ -963,12 +987,17 @@ if(WITH_TORCH)
 
         # Set RPATH for the CLI executable
         if(UNIX AND NOT APPLE)
-            # Add the $ORIGIN based RPATH so the executable can find libraries in the same directory
+            # Get the LibTorch lib directory
+            file(REAL_PATH "${Torch_DIR}/../../../lib" Local_Torch_LIB_DIR)
+
+            # Add the $ORIGIN based RPATH so the executable can find libraries
+            # CMAKE_BUILD_TYPE will be e.g. "Release", "Debug"
+            set(CLI_RPATH "$ORIGIN/../lib/${CMAKE_BUILD_TYPE}:${Local_Torch_LIB_DIR}")
+
             set_target_properties(omoknuni_cli PROPERTIES
-                INSTALL_RPATH "${CMAKE_BINARY_DIR}/lib/Release:${CMAKE_CURRENT_SOURCE_DIR}/build/lib/Release"
-                BUILD_WITH_INSTALL_RPATH TRUE
                 SKIP_BUILD_RPATH FALSE
-                BUILD_RPATH "${CMAKE_BINARY_DIR}/lib/Release:${CMAKE_CURRENT_SOURCE_DIR}/build/lib/Release"
+                BUILD_WITH_INSTALL_RPATH TRUE # Uses INSTALL_RPATH as RPATH for build tree
+                INSTALL_RPATH "${CLI_RPATH}" # RPATH for installation and build tree due to BUILD_WITH_INSTALL_RPATH
             )
         endif()
 

@@ -73,7 +73,8 @@ MCTSNode* MCTSNode::selectChild(float exploration_factor) {
 }
 
 void MCTSNode::expand() {
-    // Diagnostic prints for Expansion test debugging
+    // Removed excessive diagnostic prints to avoid console noise
+    // Just keep most critical ones for debugging
     std::cerr << "[MCTSNode::expand] Called for node: " << this << std::endl;
     if (!state_) {
         std::cerr << "[MCTSNode::expand] state_ is NULL at the beginning! Cannot expand." << std::endl;
@@ -84,21 +85,20 @@ void MCTSNode::expand() {
     std::lock_guard<std::mutex> lock(expansion_mutex_);
 
     if (!children_.empty()) {
-        std::cerr << "[MCTSNode::expand] Already expanded (children not empty). Size: " << children_.size() << std::endl;
+        std::cerr << "[MCTSNode::expand] Already expanded (children not empty). Size: 0x" 
+                  << std::hex << children_.size() << std::dec << std::endl;
         return; 
     }
 
-    if (isTerminal()) { // This calls the node's own isTerminal method
-        std::cerr << "[MCTSNode::expand] Node is terminal (this->isTerminal() is true). Cannot expand." << std::endl;
+    if (isTerminal()) {
         return; 
     }
 
     std::vector<int> legal_moves = state_->getLegalMoves();
-    std::cerr << "[MCTSNode::expand] Number of legal moves from state_: " << legal_moves.size() << std::endl;
-
+    
+    // Only log if empty - which is unusual
     if (legal_moves.empty()) {
-        std::cerr << "[MCTSNode::expand] No legal moves found in state. Expansion will result in 0 children." << std::endl;
-        // Note: The loop below won't run, so children_ will remain empty.
+        std::cerr << "[MCTSNode::expand] Warning: No legal moves found in state." << std::endl;
     }
 
     children_.reserve(legal_moves.size());

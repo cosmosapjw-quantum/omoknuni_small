@@ -26,7 +26,7 @@ protected:
 // Test game generation
 TEST_F(SelfPlayManagerTest, GenerateGames) {
     // Generate a small batch of games
-    auto games = manager->generateGames(9, games::GameType::GOMOKU, 2);
+    auto games = manager->generateGames(core::GameType::GOMOKU, 2, 9);
     
     // Check results
     EXPECT_EQ(games.size(), 2);
@@ -37,10 +37,16 @@ TEST_F(SelfPlayManagerTest, GenerateGames) {
     }
 }
 
-// Test parallel game generation
+// Test parallel game generation using normal generateGames
+// (with settings.num_parallel_games controlling parallelism)
 TEST_F(SelfPlayManagerTest, GenerateGamesParallel) {
-    // Generate a small batch of games in parallel
-    auto games = manager->generateGamesParallel(9, games::GameType::GOMOKU, 2, 2);
+    // Set parallel games in settings
+    selfplay::SelfPlaySettings settings = manager->getSettings();
+    settings.num_parallel_games = 2;  // Use 2 parallel threads
+    manager->updateSettings(settings);
+    
+    // Generate a small batch of games
+    auto games = manager->generateGames(core::GameType::GOMOKU, 2, 9);
     
     // Check results
     EXPECT_EQ(games.size(), 2);

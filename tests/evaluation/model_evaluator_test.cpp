@@ -5,6 +5,7 @@
 #include "nn/neural_network_factory.h"
 #include "mcts/mcts_engine.h"
 #include "games/gomoku/gomoku_state.h"
+#include "core/igamestate.h"
 #include <memory>
 
 using namespace alphazero;
@@ -20,7 +21,7 @@ protected:
         evaluator = std::make_unique<evaluation::ModelEvaluator>(
             std::static_pointer_cast<nn::NeuralNetwork>(model1),
             std::static_pointer_cast<nn::NeuralNetwork>(model2),
-            evaluation::ModelEvaluatorConfig{});
+            evaluation::EvaluationSettings{});
     }
     
     std::shared_ptr<nn::ResNetModel> model1;
@@ -31,7 +32,8 @@ protected:
 // Test match function
 TEST_F(ModelEvaluatorTest, MatchTest) {
     // Create a match
-    auto result = evaluator->runMatch("test_match", 9, games::GameType::GOMOKU);
+    auto result = evaluator->playMatch(core::GameType::GOMOKU, 9, 0, true);
+    result.match_id = "test_match";
     
     // Basic checks
     EXPECT_EQ(result.match_id, "test_match");
@@ -42,7 +44,12 @@ TEST_F(ModelEvaluatorTest, MatchTest) {
 // Test tournament function
 TEST_F(ModelEvaluatorTest, TournamentTest) {
     // Run a small tournament
-    auto result = evaluator->runTournament(9, games::GameType::GOMOKU, 2);
+    // Update settings to run only 2 games
+    evaluation::EvaluationSettings settings = evaluator->getSettings();
+    settings.num_games = 2;
+    evaluator->updateSettings(settings);
+    
+    auto result = evaluator->runTournament(core::GameType::GOMOKU, 9);
     
     // Basic checks
     EXPECT_EQ(result.matches.size(), 2);
@@ -52,10 +59,16 @@ TEST_F(ModelEvaluatorTest, TournamentTest) {
     EXPECT_EQ(result.wins_first + result.wins_second + result.draws, 2);
 }
 
-// Test tournament parallel function
+// Test tournament with parallel games function
 TEST_F(ModelEvaluatorTest, TournamentParallelTest) {
-    // Run a small parallel tournament
-    auto result = evaluator->runTournamentParallel(9, games::GameType::GOMOKU, 2, 2);
+    // Update settings to run 2 games with 2 parallel games
+    evaluation::EvaluationSettings settings = evaluator->getSettings();
+    settings.num_games = 2;
+    settings.num_parallel_games = 2;
+    evaluator->updateSettings(settings);
+    
+    // Run a tournament with parallel games
+    auto result = evaluator->runTournament(core::GameType::GOMOKU, 9);
     
     // Basic checks
     EXPECT_EQ(result.matches.size(), 2);

@@ -81,6 +81,11 @@ private:
     // Condvar for early wakeup
     std::mutex cv_mutex_;
     std::condition_variable cv_;
+    
+    // Diagnostic counters
+    std::atomic<size_t> timeouts_{0};
+    std::atomic<size_t> full_batches_{0};
+    std::atomic<size_t> partial_batches_{0};
 };
 
 } // namespace mcts

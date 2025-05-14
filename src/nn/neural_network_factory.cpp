@@ -4,6 +4,7 @@
 namespace alphazero {
 namespace nn {
 
+// Define method implementations based on WITH_TORCH flag
 #ifdef WITH_TORCH
 // Check if CUDA is available and working
 bool NeuralNetworkFactory::isCudaAvailable() {
@@ -55,7 +56,6 @@ std::shared_ptr<ResNetModel> NeuralNetworkFactory::createResNet(
     // Move to appropriate device
     torch::Device device = getDevice(!use_gpu);
     model->to(device);
-
 
     return model;
 }
