@@ -73,88 +73,137 @@ MCTSNode* MCTSNode::selectChild(float exploration_factor) {
 }
 
 void MCTSNode::expand() {
-    // Removed excessive diagnostic prints to avoid console noise
-    // Just keep most critical ones for debugging
-    std::cerr << "[MCTSNode::expand] Called for node: " << this << std::endl;
+    // First check if we have a valid state to prevent segfaults
     if (!state_) {
-        std::cerr << "[MCTSNode::expand] state_ is NULL at the beginning! Cannot expand." << std::endl;
+        std::cerr << "[MCTSNode::expand] state_ is NULL! Cannot expand." << std::endl;
         return;
     }
-    std::cerr << "[MCTSNode::expand] state_ is valid. state_->isTerminal() = " << state_->isTerminal() << std::endl;
-
+    
+    // Use a lock to prevent concurrent expansion
     std::lock_guard<std::mutex> lock(expansion_mutex_);
-
+    
+    // Check again after acquiring the lock to avoid race conditions
     if (!children_.empty()) {
-        std::cerr << "[MCTSNode::expand] Already expanded (children not empty). Size: 0x" 
-                  << std::hex << children_.size() << std::dec << std::endl;
-        return; 
+        return; // Already expanded
     }
-
-    if (isTerminal()) {
-        return; 
+    
+    if (state_->isTerminal()) {
+        return; // Terminal nodes don't expand
     }
-
+    
+    // Get legal moves and prepare for child creation
     std::vector<int> legal_moves = state_->getLegalMoves();
     
-    // Only log if empty - which is unusual
     if (legal_moves.empty()) {
         std::cerr << "[MCTSNode::expand] Warning: No legal moves found in state." << std::endl;
+        return; // Early return if no legal moves
     }
-
-    children_.reserve(legal_moves.size());
-    actions_.reserve(legal_moves.size());
-
-    // Shuffle legal moves to break move order bias
-    static thread_local std::mt19937 rng(std::random_device{}());
-    std::shuffle(legal_moves.begin(), legal_moves.end(), rng);
-
-    // Create a child for each legal move
+    
+    // Reserve space for efficiency
+    try {
+        children_.reserve(legal_moves.size());
+        actions_.reserve(legal_moves.size());
+    } 
+    catch (const std::exception& e) {
+        std::cerr << "[MCTSNode::expand] Memory allocation error: " << e.what() << std::endl;
+        return; // Failed to allocate memory, don't proceed
+    }
+    
+    // Use a local RNG instance for thread safety
+    std::mt19937 local_rng;
+    {
+        std::random_device rd;
+        local_rng.seed(rd());
+    }
+    
+    std::shuffle(legal_moves.begin(), legal_moves.end(), local_rng);
+    
+    // Create children with proper exception handling
+    bool had_expansion_error = false;
     for (int move : legal_moves) {
         try {
+            // Clone the state and make the move
             auto new_state = state_->clone();
+            if (!new_state) {
+                std::cerr << "[MCTSNode::expand] State clone returned nullptr!" << std::endl;
+                had_expansion_error = true;
+                continue;
+            }
+            
             new_state->makeMove(move);
-
-            auto child = new MCTSNode(std::move(new_state), this);
+            
+            // Create the child node
+            MCTSNode* child = new MCTSNode(std::move(new_state), this);
             child->setAction(move);
-
+            
             children_.push_back(child);
             actions_.push_back(move);
-        } catch (const std::bad_alloc& e) {
-            throw; // Rethrow to handle at higher level
-        } catch (const std::exception& e) {
-            throw;
+        } 
+        catch (const std::bad_alloc& e) {
+            std::cerr << "[MCTSNode::expand] Memory allocation failed: " << e.what() << std::endl;
+            had_expansion_error = true;
+            break; // Stop expanding on memory allocation failure
+        } 
+        catch (const std::exception& e) {
+            std::cerr << "[MCTSNode::expand] Exception during child creation: " << e.what() << std::endl;
+            had_expansion_error = true;
+            continue; // Try other moves
         }
     }
-
-    // Log expansion statistics
-    std::cout << "MCTS node expansion complete: " << children_.size()
-             << " children created" << std::endl;
-
-    // Set prior probabilities based on neural network output
+    
+    // Clean up on partial failure
+    if (had_expansion_error && !children_.empty()) {
+        for (auto* child : children_) {
+            delete child;
+        }
+        children_.clear();
+        actions_.clear();
+        return;
+    }
+    
+    // Skip prior probability assignment if expansion failed
+    if (children_.empty()) {
+        return;
+    }
+    
+    // Apply prior probabilities in a safe manner
     if (!prior_probabilities_.empty()) {
-        // Check if the priors vector matches the full action space
-        if (prior_probabilities_.size() == state_->getActionSpaceSize()) {
-            // Use action-specific priors
-            for (size_t i = 0; i < children_.size(); ++i) {
-                int action = actions_[i];
-                if (action >= 0 && action < static_cast<int>(prior_probabilities_.size())) {
-                    children_[i]->setPriorProbability(prior_probabilities_[action]);
+        try {
+            // Check if the priors vector matches the full action space
+            if (prior_probabilities_.size() == state_->getActionSpaceSize()) {
+                // Use action-specific priors
+                for (size_t i = 0; i < children_.size(); ++i) {
+                    int action = actions_[i];
+                    if (action >= 0 && action < static_cast<int>(prior_probabilities_.size())) {
+                        children_[i]->setPriorProbability(prior_probabilities_[action]);
+                    }
+                }
+            } 
+            else if (prior_probabilities_.size() == children_.size()) {
+                // Direct index matching if sizes are equal
+                for (size_t i = 0; i < children_.size(); ++i) {
+                    children_[i]->setPriorProbability(prior_probabilities_[i]);
                 }
             }
-        } else if (prior_probabilities_.size() == children_.size()) {
-            // Direct index matching if sizes are equal
-            for (size_t i = 0; i < children_.size(); ++i) {
-                children_[i]->setPriorProbability(prior_probabilities_[i]);
-            }
         }
-    } else if (!children_.empty()) {
-        // Set uniform prior probabilities if not provided
-        float uniform_prior = 1.0f / static_cast<float>(children_.size());
-        for (auto child : children_) {
-            child->setPriorProbability(uniform_prior);
+        catch (const std::exception& e) {
+            std::cerr << "[MCTSNode::expand] Error applying prior probabilities: " << e.what() << std::endl;
+            // Continue with default priors on error
         }
     }
-
+    
+    // Set uniform prior probabilities if not provided or on error
+    if (children_.size() > 0) {
+        float uniform_prior = 1.0f / static_cast<float>(children_.size());
+        for (auto child : children_) {
+            if (child->getPriorProbability() <= 0.0f) {
+                child->setPriorProbability(uniform_prior);
+            }
+        }
+    }
+    
+    // Log completion with reduced output
+    std::cout << "MCTS node expansion complete: " << children_.size() << " children created" << std::endl;
 }
 
 bool MCTSNode::isFullyExpanded() const {
