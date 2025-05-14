@@ -49,8 +49,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o"
   "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o.d"
-  "lib/Release/libalphazero.pdb"
-  "lib/Release/libalphazero.so"
+  "lib/Debug/libalphazero.pdb"
+  "lib/Debug/libalphazero.so"
 )
 
 # Per-language clean rules from dependency scanning.

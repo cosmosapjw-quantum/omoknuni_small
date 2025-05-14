@@ -1,8 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.o"
   "CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.o.d"
-  "bin/Release/training_data_manager_test"
-  "bin/Release/training_data_manager_test.pdb"
+  "bin/Debug/training_data_manager_test"
+  "bin/Debug/training_data_manager_test.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

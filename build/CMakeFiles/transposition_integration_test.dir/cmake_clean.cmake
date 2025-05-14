@@ -1,8 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.o"
   "CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.o.d"
-  "bin/Release/transposition_integration_test"
-  "bin/Release/transposition_integration_test.pdb"
+  "bin/Debug/transposition_integration_test"
+  "bin/Debug/transposition_integration_test.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

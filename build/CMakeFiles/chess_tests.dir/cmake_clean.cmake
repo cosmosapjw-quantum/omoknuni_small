@@ -1,8 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/chess_tests.dir/tests/games/chess/chess_test.cpp.o"
   "CMakeFiles/chess_tests.dir/tests/games/chess/chess_test.cpp.o.d"
-  "bin/Release/chess_tests"
-  "bin/Release/chess_tests.pdb"
+  "bin/Debug/chess_tests"
+  "bin/Debug/chess_tests.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

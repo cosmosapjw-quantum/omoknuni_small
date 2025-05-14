@@ -6,5 +6,5 @@ CXX_DEFINES = -DC10_CUDA_DRIVER_INIT=1 -DCAFFE2_USE_CUDNN=1 -DCUDA_VERSION=12080
 
 CXX_INCLUDES = -I/home/cosmos/omoknuni_small/include -I/home/cosmos/omoknuni_small/src -isystem /opt/libtorch-2.7.0-cu128/include -isystem /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include -isystem /usr/local/cuda-12.8/include -isystem /usr/local/cuda/include
 
-CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -Wall -Wextra -mavx2 -O3 -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -std=gnu++17
+CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -g -Wall -Wextra -mavx2 -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -std=gnu++17
 

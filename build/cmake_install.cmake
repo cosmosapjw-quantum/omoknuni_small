@@ -12,7 +12,7 @@ if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
     string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
            CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
   else()
-    set(CMAKE_INSTALL_CONFIG_NAME "Release")
+    set(CMAKE_INSTALL_CONFIG_NAME "Debug")
   endif()
   message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 endif()
@@ -57,12 +57,12 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/usr/local/lib/python3.10/dist-packages" TYPE MODULE FILES "/home/cosmos/omoknuni_small/build/lib/Release/alphazero_py.cpython-310-x86_64-linux-gnu.so")
+  file(INSTALL DESTINATION "/usr/local/lib/python3.10/dist-packages" TYPE MODULE FILES "/home/cosmos/omoknuni_small/build/lib/Debug/alphazero_py.cpython-310-x86_64-linux-gnu.so")
   if(EXISTS "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_py.cpython-310-x86_64-linux-gnu.so" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_py.cpython-310-x86_64-linux-gnu.so")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_py.cpython-310-x86_64-linux-gnu.so"
-         OLD_RPATH "/lib/intel64:/lib/intel64_win:/lib/win-x64:/home/cosmos/omoknuni_small/build/lib/Release:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda-12.8/lib64:/usr/local/cuda/lib64:"
+         OLD_RPATH "/lib/intel64:/lib/intel64_win:/lib/win-x64:/home/cosmos/omoknuni_small/build/lib/Debug:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda-12.8/lib64:/usr/local/cuda/lib64:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_py.cpython-310-x86_64-linux-gnu.so")
@@ -71,7 +71,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/home/cosmos/omoknuni_small/build/bin/Release/omoknuni_cli")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "/home/cosmos/omoknuni_small/build/bin/Debug/omoknuni_cli")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/omoknuni_cli" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/omoknuni_cli")
     if(CMAKE_INSTALL_DO_STRIP)
@@ -87,7 +87,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libalphazero.so"
          RPATH "")
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/home/cosmos/omoknuni_small/build/lib/Release/libalphazero.so")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/home/cosmos/omoknuni_small/build/lib/Debug/libalphazero.so")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libalphazero.so" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libalphazero.so")
     file(RPATH_CHANGE

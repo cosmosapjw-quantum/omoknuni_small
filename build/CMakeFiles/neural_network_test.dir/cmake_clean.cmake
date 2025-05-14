@@ -1,8 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/neural_network_test.dir/tests/nn/neural_network_test.cpp.o"
   "CMakeFiles/neural_network_test.dir/tests/nn/neural_network_test.cpp.o.d"
-  "bin/Release/neural_network_test"
-  "bin/Release/neural_network_test.pdb"
+  "bin/Debug/neural_network_test"
+  "bin/Debug/neural_network_test.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

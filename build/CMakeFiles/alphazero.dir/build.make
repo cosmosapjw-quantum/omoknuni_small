@@ -450,52 +450,52 @@ alphazero_OBJECTS = \
 # External object files for target alphazero
 alphazero_EXTERNAL_OBJECTS =
 
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/core/game_export.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/games/chess/chess_state.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/games/chess/chess_rules.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/games/chess/chess960.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/games/go/go_state.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/games/go/go_rules.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_state.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_rules.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.o
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/build.make
-lib/Release/libalphazero.so: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.7.0
-lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libtorch.so
-lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10.so
-lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libkineto.a
-lib/Release/libalphazero.so: /usr/local/cuda-12.8/lib64/libnvrtc.so
-lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
-lib/Release/libalphazero.so: /usr/local/cuda-12.8/lib64/libcudart.so
-lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
-lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
-lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10.so
-lib/Release/libalphazero.so: /usr/local/cuda-12.8/lib64/libcudart.so
-lib/Release/libalphazero.so: /usr/local/cuda/lib64/libnvToolsExt.so
-lib/Release/libalphazero.so: /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so
-lib/Release/libalphazero.so: /usr/lib/x86_64-linux-gnu/libpthread.a
-lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Linking CXX shared library lib/Release/libalphazero.so"
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/core/game_export.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/games/chess/chess_state.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/games/chess/chess_rules.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/games/chess/chess960.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/games/go/go_state.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/games/go/go_rules.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_state.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_rules.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.o
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/build.make
+lib/Debug/libalphazero.so: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.7.0
+lib/Debug/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libtorch.so
+lib/Debug/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10.so
+lib/Debug/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libkineto.a
+lib/Debug/libalphazero.so: /usr/local/cuda-12.8/lib64/libnvrtc.so
+lib/Debug/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
+lib/Debug/libalphazero.so: /usr/local/cuda-12.8/lib64/libcudart.so
+lib/Debug/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
+lib/Debug/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
+lib/Debug/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10.so
+lib/Debug/libalphazero.so: /usr/local/cuda-12.8/lib64/libcudart.so
+lib/Debug/libalphazero.so: /usr/local/cuda/lib64/libnvToolsExt.so
+lib/Debug/libalphazero.so: /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so
+lib/Debug/libalphazero.so: /usr/lib/x86_64-linux-gnu/libpthread.a
+lib/Debug/libalphazero.so: CMakeFiles/alphazero.dir/link.txt
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Linking CXX shared library lib/Debug/libalphazero.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/alphazero.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
-CMakeFiles/alphazero.dir/build: lib/Release/libalphazero.so
+CMakeFiles/alphazero.dir/build: lib/Debug/libalphazero.so
 .PHONY : CMakeFiles/alphazero.dir/build
 
 CMakeFiles/alphazero.dir/clean:

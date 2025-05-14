@@ -6,5 +6,5 @@ CXX_DEFINES = -DBUILDING_TEST_SUITE -DCUSTOM_MAIN_USED -DENABLE_CUDA_FALLBACK=1 
 
 CXX_INCLUDES = -I/home/cosmos/omoknuni_small/include -isystem /opt/libtorch-2.7.0-cu128/include -isystem /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include -isystem /usr/local/cuda-12.8/include -isystem /usr/local/cuda/include
 
-CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -Wall -Wextra -mavx2 -O3 -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -DGTEST_HAS_PTHREAD=1 -std=gnu++17
+CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -g -Wall -Wextra -mavx2 -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -DGTEST_HAS_PTHREAD=1 -std=gnu++17
 

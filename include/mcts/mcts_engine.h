@@ -238,6 +238,13 @@ private:
 
     // Safely stop the evaluator if it was started
     void safelyStopEvaluator();
+
+    // Helper methods for thread management
+    void createWorkerThreads();
+    void processPendingSimulations();
+    void distributeSimulations();
+    void waitForSimulationsToComplete(std::chrono::steady_clock::time_point start_time);
+    void countTreeStatistics();    
 };
 
 } // namespace mcts

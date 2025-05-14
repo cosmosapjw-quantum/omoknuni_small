@@ -19,7 +19,7 @@ class MCTSNode;
  */
 struct ALPHAZERO_API TranspositionEntry {
     // The MCTS node for this position
-    MCTSNode* node;
+    std::atomic<MCTSNode*> node;
     
     // The hash key of the position
     uint64_t hash;
@@ -30,8 +30,8 @@ struct ALPHAZERO_API TranspositionEntry {
     // The number of visits at the time of storage
     int visits;
     
-    // A lock for thread-safe access
-    std::mutex lock;
+    // A lock for thread-safe access with timeout capability
+    std::timed_mutex lock;
     
     // Constructor
     TranspositionEntry(MCTSNode* n, uint64_t h, int d, int v);
@@ -51,6 +51,11 @@ public:
      * @param size_mb Size of the table in megabytes
      */
     explicit TranspositionTable(size_t size_mb = 128);
+    
+    /**
+     * @brief Destructor - safely cleans up resources
+     */
+    ~TranspositionTable();
     
     /**
      * @brief Get a node from the table
@@ -101,27 +106,30 @@ public:
     void resetStats();
     
 private:
-    // Table storage
+    // Table storage - unique_ptrs to entries
     std::vector<std::unique_ptr<TranspositionEntry>> entries_;
     
-    // Hash to entry index
+    // Hash to entry index mapping
     std::unordered_map<uint64_t, size_t> index_map_;
     
-    // Size of the table
+    // Size of the table (capacity in number of entries)
     size_t capacity_;
     
-    // Hit statistics
+    // Hit statistics - atomic counters for thread safety
     std::atomic<size_t> hits_;
     std::atomic<size_t> misses_;
     
-    // Locks for thread-safety
-    std::vector<std::unique_ptr<std::mutex>> table_locks_;
+    // Locks for thread-safety - one per shard
+    std::vector<std::unique_ptr<std::timed_mutex>> table_locks_;
     
-    // Number of locks (shards)
+    // Number of locks (shards) - higher number reduces contention
     static constexpr size_t NUM_LOCKS = 1024;
     
+    // Flag to track if the table is being destroyed
+    std::atomic<bool> is_shutdown_{false};
+    
     // Get lock for a hash
-    std::mutex& getLock(uint64_t hash) {
+    std::timed_mutex& getLock(uint64_t hash) {
         return *table_locks_[hash % NUM_LOCKS];
     }
 };

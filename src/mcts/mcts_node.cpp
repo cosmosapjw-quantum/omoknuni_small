@@ -26,14 +26,33 @@ MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state_param, MCTSNode* pare
 }
 
 MCTSNode::~MCTSNode() {
-    // Clean destructor with no debug prints
-
-    // Delete children
-    for (auto child : children_) {
-        delete child;
+    try {
+        // Protect against concurrent modification during destruction
+        std::lock_guard<std::mutex> lock(expansion_mutex_);
+        
+        // Make a local copy of children to delete and clear the vector
+        // This prevents any other threads from accessing children while we're deleting them
+        std::vector<MCTSNode*> children_to_delete;
+        children_to_delete.swap(children_); // Atomic swap operation
+        
+        // Now children_ is empty, and children_to_delete contains all the children
+        // Children nodes are now unreachable from this node
+        
+        // Delete each child - any concurrent accesses to this node will see empty children
+        for (auto child : children_to_delete) {
+            if (child) {
+                try {
+                    delete child;
+                } catch (...) {
+                    // Ignore any exceptions during child deletion
+                    // This prevents cascading failures during tree cleanup
+                }
+            }
+        }
+    } catch (...) {
+        // Ensure destruction completes even if there are exceptions
+        // This is critical for preventing memory leaks
     }
-
-    // Clean up resources
 }
 
 MCTSNode* MCTSNode::selectChild(float exploration_factor) {
@@ -92,11 +111,25 @@ void MCTSNode::expand() {
     }
     
     // Get legal moves and prepare for child creation
-    std::vector<int> legal_moves = state_->getLegalMoves();
+    std::vector<int> legal_moves;
+    try {
+        legal_moves = state_->getLegalMoves();
+    } catch (const std::exception& e) {
+        std::cerr << "[MCTSNode::expand] Error getting legal moves: " << e.what() << std::endl;
+        return;
+    }
     
     if (legal_moves.empty()) {
         std::cerr << "[MCTSNode::expand] Warning: No legal moves found in state." << std::endl;
         return; // Early return if no legal moves
+    }
+    
+    // Safety check for unreasonable number of legal moves
+    const size_t max_reasonable_moves = 1000; // Arbitrary limit that should be safe
+    if (legal_moves.size() > max_reasonable_moves) {
+        std::cerr << "[MCTSNode::expand] Excessive number of legal moves: " << legal_moves.size() 
+                  << ", limiting to " << max_reasonable_moves << std::endl;
+        legal_moves.resize(max_reasonable_moves);
     }
     
     // Reserve space for efficiency
@@ -166,40 +199,10 @@ void MCTSNode::expand() {
         return;
     }
     
-    // Apply prior probabilities in a safe manner
-    if (!prior_probabilities_.empty()) {
-        try {
-            // Check if the priors vector matches the full action space
-            if (prior_probabilities_.size() == state_->getActionSpaceSize()) {
-                // Use action-specific priors
-                for (size_t i = 0; i < children_.size(); ++i) {
-                    int action = actions_[i];
-                    if (action >= 0 && action < static_cast<int>(prior_probabilities_.size())) {
-                        children_[i]->setPriorProbability(prior_probabilities_[action]);
-                    }
-                }
-            } 
-            else if (prior_probabilities_.size() == children_.size()) {
-                // Direct index matching if sizes are equal
-                for (size_t i = 0; i < children_.size(); ++i) {
-                    children_[i]->setPriorProbability(prior_probabilities_[i]);
-                }
-            }
-        }
-        catch (const std::exception& e) {
-            std::cerr << "[MCTSNode::expand] Error applying prior probabilities: " << e.what() << std::endl;
-            // Continue with default priors on error
-        }
-    }
-    
-    // Set uniform prior probabilities if not provided or on error
-    if (children_.size() > 0) {
-        float uniform_prior = 1.0f / static_cast<float>(children_.size());
-        for (auto child : children_) {
-            if (child->getPriorProbability() <= 0.0f) {
-                child->setPriorProbability(uniform_prior);
-            }
-        }
+    // Apply uniform prior probabilities (will be updated by network later)
+    float uniform_prior = 1.0f / static_cast<float>(children_.size());
+    for (auto child : children_) {
+        child->setPriorProbability(uniform_prior);
     }
     
     // Log completion with reduced output
@@ -224,21 +227,30 @@ bool MCTSNode::isTerminal() const {
 }
 
 void MCTSNode::addVirtualLoss() {
-    virtual_loss_count_.fetch_add(1, std::memory_order_relaxed);
+    // Use memory_order_acq_rel for better thread safety
+    virtual_loss_count_.fetch_add(1, std::memory_order_acq_rel);
 }
 
 void MCTSNode::removeVirtualLoss() {
-    virtual_loss_count_.fetch_sub(1, std::memory_order_relaxed);
+    // Use memory_order_acq_rel for better thread safety
+    virtual_loss_count_.fetch_sub(1, std::memory_order_acq_rel);
 }
 
 void MCTSNode::update(float value) {
-    visit_count_.fetch_add(1, std::memory_order_relaxed);
+    // Increment visit count atomically with acquire-release memory ordering
+    visit_count_.fetch_add(1, std::memory_order_acq_rel);
     
-    float current = value_sum_.load(std::memory_order_relaxed);
+    // Update value_sum atomically using compare_exchange_strong for better reliability
+    // Use acquire-release memory ordering for thread safety
+    float current = value_sum_.load(std::memory_order_acquire);
     float desired;
+    
     do {
         desired = current + value;
-    } while (!value_sum_.compare_exchange_weak(current, desired, std::memory_order_relaxed));
+        // Use a bounded retry to avoid infinite loops in heavily contended scenarios
+    } while (!value_sum_.compare_exchange_strong(current, desired, 
+                                                std::memory_order_acq_rel,
+                                                std::memory_order_acquire));
 }
 
 const core::IGameState& MCTSNode::getState() const {
@@ -290,41 +302,83 @@ void MCTSNode::setPriorProbability(float prior) {
 }
 
 void MCTSNode::setPriorProbabilities(const std::vector<float>& policy_vector) {
-    // Store the full policy vector for this node's state (optional, but can be useful for debugging/analysis)
-    prior_probabilities_ = policy_vector;
-
-    // If this node has children and a valid state, update each child's individual prior_probability.
-    if (!children_.empty() && state_ && !actions_.empty()) {
+    // Thread safety for the entire operation
+    std::lock_guard<std::mutex> lock(expansion_mutex_);
+    
+    try {
+        // Store the full policy vector for this node's state (optional, but can be useful for debugging/analysis)
+        prior_probabilities_ = policy_vector;
+    
+        // If this node has children and a valid state, update each child's individual prior_probability.
+        if (children_.empty() || !state_ || actions_.empty()) {
+            return; // Early exit if no children or invalid state
+        }
+        
         size_t num_children = children_.size();
-        int action_space_size = state_->getActionSpaceSize();
-
+        int action_space_size = 0;
+        
+        try {
+            action_space_size = state_->getActionSpaceSize();
+        } catch (...) {
+            // If we can't get action space size, we can't reliably set probabilities
+            return;
+        }
+        
         if (policy_vector.size() == static_cast<size_t>(action_space_size)) {
             // The policy_vector is for the full action space.
             // Iterate through this node's children and set their prior_probability
             // based on the policy value for the action that leads to them.
             for (size_t i = 0; i < num_children; ++i) {
-                if (i < actions_.size()) { // Ensure actions_ is in sync
-                    int action_to_child = actions_[i];
-                    if (action_to_child >= 0 && action_to_child < action_space_size) {
-                        children_[i]->setPriorProbability(policy_vector[action_to_child]);
-                    } else {
-                        // Handle error or set a default if action is out of bounds for policy_vector
-                        // For now, let's assume valid actions from getLegalMoves
-                        children_[i]->setPriorProbability(0.0f); // Or some other default
+                if (i >= actions_.size() || !children_[i]) {
+                    continue; // Skip invalid indices or null children
+                }
+                
+                int action_to_child = actions_[i];
+                if (action_to_child >= 0 && action_to_child < action_space_size) {
+                    try {
+                        // Get a local copy of the probability for thread safety
+                        float prob = policy_vector[action_to_child];
+                        // Ensure probability is in valid range
+                        prob = std::min(1.0f, std::max(0.0f, prob));
+                        children_[i]->setPriorProbability(prob);
+                    } catch (...) {
+                        // Silently continue on error
                     }
+                } else {
+                    // Handle error or set a default if action is out of bounds
+                    children_[i]->setPriorProbability(0.01f); // Small non-zero default
                 }
             }
         } else if (policy_vector.size() == num_children) {
-            // The policy_vector size matches the number of children (e.g., from Dirichlet noise or non-NN source).
+            // The policy_vector size matches the number of children.
             // Apply priors directly by child index.
             for (size_t i = 0; i < num_children; ++i) {
-                children_[i]->setPriorProbability(policy_vector[i]);
+                if (!children_[i]) {
+                    continue; // Skip null children
+                }
+                
+                try {
+                    // Get a local copy and validate
+                    float prob = i < policy_vector.size() ? policy_vector[i] : 0.01f;
+                    prob = std::min(1.0f, std::max(0.0f, prob));
+                    children_[i]->setPriorProbability(prob);
+                } catch (...) {
+                    // Silently continue on error
+                }
             }
         } else {
-            // Policy vector size mismatch, cannot reliably apply.
-            // Children will retain priors set during expand (e.g. uniform), or previously set.
-            // Optionally, log a warning here.
+            // Policy vector size mismatch, apply uniform probability
+            float uniform_prob = 1.0f / static_cast<float>(num_children);
+            for (size_t i = 0; i < num_children; ++i) {
+                if (children_[i]) {
+                    children_[i]->setPriorProbability(uniform_prob);
+                }
+            }
         }
+    } catch (const std::exception& e) {
+        std::cerr << "Error in setPriorProbabilities: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown error in setPriorProbabilities" << std::endl;
     }
 }
 

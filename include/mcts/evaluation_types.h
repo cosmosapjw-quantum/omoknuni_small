@@ -24,6 +24,16 @@ struct ALPHAZERO_API EvaluationRequest {
     std::promise<NetworkOutput> promise;
     
     EvaluationRequest(MCTSNode* n, std::unique_ptr<core::IGameState> s);
+    
+    // Add proper move constructor
+    EvaluationRequest(EvaluationRequest&& other) noexcept;
+    
+    // Add proper move assignment operator
+    EvaluationRequest& operator=(EvaluationRequest&& other) noexcept;
+    
+    // Delete copy constructor and assignment
+    EvaluationRequest(const EvaluationRequest&) = delete;
+    EvaluationRequest& operator=(const EvaluationRequest&) = delete;
 };
 
 } // namespace mcts
