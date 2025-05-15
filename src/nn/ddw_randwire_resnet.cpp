@@ -524,5 +524,66 @@ void DDWRandWireResNet::export_to_torchscript(const std::string& path, std::vect
     }
 }
 
+// Implementations for NeuralNetwork interface
+std::vector<mcts::NetworkOutput> DDWRandWireResNet::inference(
+    const std::vector<std::unique_ptr<core::IGameState>>& states) {
+    // TODO: Implement actual batch inference logic for DDWRandWireResNet
+    // This will involve:
+    // 1. Preparing input tensors from game states (similar to ResNetModel::prepareInputTensor)
+    // 2. Running the forward pass of the DDWRandWireResNet model
+    // 3. Converting output tensors to std::vector<mcts::NetworkOutput>
+    
+    if (states.empty()) {
+        return {};
+    }
+    
+    // Placeholder: throw error or return dummy data
+    throw std::runtime_error("DDWRandWireResNet::inference() not yet implemented.");
+    // Example of returning dummy data (replace with actual implementation):
+    /*
+    std::vector<mcts::NetworkOutput> outputs;
+    for (size_t i = 0; i < states.size(); ++i) {
+        mcts::NetworkOutput out;
+        out.policy.assign(getPolicySize(), 1.0f / getPolicySize()); // Uniform policy
+        out.value = 0.0f; // Zero value
+        outputs.push_back(out);
+    }
+    return outputs;
+    */
+}
+
+std::vector<int64_t> DDWRandWireResNet::getInputShape() const {
+    // TODO: Return the actual input shape your DDWRandWireResNet expects.
+    // Example: {input_channels_, board_height, board_width}
+    // For now, returning a placeholder. You'll need to store board dimensions
+    // or have a way to determine them if they are dynamic.
+    // Assuming a fixed board size for now, e.g., 8x8, like in policy_fc_ layer calculation
+    // This needs to be consistent with how you'd prepare input tensors in inference().
+    if (input_channels_ == 0) { // Should be set in constructor
+        throw std::logic_error("DDWRandWireResNet input_channels_ is not set.");
+    }
+     // Placeholder - assuming policy head uses 8x8 feature maps before FC layer.
+     // This is a guess and needs to be confirmed from your model architecture.
+     // A more robust way is to store board_height and board_width if they are fixed,
+     // or define a convention if they can vary. For AlphaZero, they are usually fixed per game.
+    return {input_channels_, 8, 8}; 
+}
+
+int64_t DDWRandWireResNet::getPolicySize() const {
+    // TODO: Return the actual policy size.
+    // This should match the output_size parameter passed to the constructor and used by policy_fc_.
+    // Assuming policy_fc_ is torch::nn::Linear(32 * 8 * 8, output_size);
+    // The 'output_size' here is the policy size.
+    // You'll need to store this output_size in the class if it's not already.
+    
+    // Let's assume there's a member variable output_size_ that stores this.
+    // For now, as a placeholder, let's try to deduce from policy_fc_ if possible, or throw.
+    if (!policy_fc_) {
+        throw std::logic_error("DDWRandWireResNet policy_fc_ is null, cannot determine policy size.");
+    }
+    // This gets the out_features of the Linear layer
+    return policy_fc_->options.out_features(); 
+}
+
 } // namespace nn
 } // namespace alphazero

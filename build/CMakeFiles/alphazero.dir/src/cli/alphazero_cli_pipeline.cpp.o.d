@@ -207,9 +207,15 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /usr/include/c++/11/optional \
  /home/cosmos/omoknuni_small/include/core/export_macros.h \
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
- /home/cosmos/omoknuni_small/include/cli/cli_manager.h \
- /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
- /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
+ /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
+ /usr/include/c++/11/future /usr/include/c++/11/mutex \
+ /usr/include/c++/11/bits/std_mutex.h \
+ /usr/include/c++/11/bits/unique_lock.h \
+ /usr/include/c++/11/condition_variable /usr/include/c++/11/atomic \
+ /usr/include/c++/11/bits/atomic_futex.h \
+ /usr/include/c++/11/bits/std_thread.h \
+ /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h \
  /usr/include/c++/11/random /usr/include/c++/11/cmath /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
@@ -244,8 +250,40 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /usr/include/c++/11/bits/random.tcc /usr/include/c++/11/numeric \
  /usr/include/c++/11/bits/stl_numeric.h \
  /usr/include/c++/11/pstl/glue_numeric_defs.h \
- /usr/include/c++/11/algorithm \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
+ /usr/include/c++/11/thread /usr/include/c++/11/bits/this_thread_sleep.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
+ /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
+ /usr/include/c++/11/cassert /usr/include/assert.h \
+ /usr/include/c++/11/cstddef /usr/include/c++/11/algorithm \
  /usr/include/c++/11/pstl/glue_algorithm_defs.h \
+ /usr/include/c++/11/climits \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
+ /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+ /usr/include/linux/limits.h \
+ /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+ /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap.h \
+ /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /usr/include/c++/11/iterator /usr/include/c++/11/bits/stream_iterator.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_fwd_decl.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_utils.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_bits.h \
+ /usr/include/byteswap.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_config.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
+ /usr/include/c++/11/shared_mutex \
+ /home/cosmos/omoknuni_small/include/cli/cli_manager.h \
+ /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
+ /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
  /usr/include/c++/11/unordered_set \
  /usr/include/c++/11/bits/unordered_set.h \
  /home/cosmos/omoknuni_small/include/games/chess/chess_state.h \
@@ -256,14 +294,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /home/cosmos/omoknuni_small/include/games/go/go_state.h \
  /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
- /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
- /usr/include/c++/11/future /usr/include/c++/11/mutex \
- /usr/include/c++/11/bits/std_mutex.h \
- /usr/include/c++/11/bits/unique_lock.h \
- /usr/include/c++/11/condition_variable /usr/include/c++/11/atomic \
- /usr/include/c++/11/bits/atomic_futex.h \
- /usr/include/c++/11/bits/std_thread.h \
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
@@ -281,10 +311,8 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/TensorBody.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/Device.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/DeviceType.h \
- /usr/include/c++/11/cstddef \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Exception.h \
  /opt/libtorch-2.7.0-cu128/include/c10/macros/Macros.h \
- /usr/include/c++/11/cassert /usr/include/assert.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Backtrace.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Lazy.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/StringUtil.h \
@@ -299,19 +327,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/util/TypeTraits.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/llvmMathExtras.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/bit_cast.h \
- /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
- /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
- /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
- /usr/include/c++/11/climits \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
- /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
- /usr/include/x86_64-linux-gnu/bits/local_lim.h \
- /usr/include/linux/limits.h \
- /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
- /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
- /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
- /usr/include/c++/11/iterator /usr/include/c++/11/bits/stream_iterator.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/MemoryFormat.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/ArrayRef.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Deprecated.h \
@@ -372,7 +387,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/core/StorageImpl.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/COW.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/COWDeleter.h \
- /usr/include/c++/11/shared_mutex \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PyObjectSlot.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/HermeticPyObjectTLS.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PyInterpreter.h \
@@ -915,7 +929,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/record_function.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/LeftRight.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Synchronized.h \
- /usr/include/c++/11/thread /usr/include/c++/11/bits/this_thread_sleep.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/grad_mode.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/GradMode.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/function_schema_parser.h \
@@ -4979,18 +4992,4 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
- /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
- /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
- /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_fwd_decl.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_utils.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_bits.h \
- /usr/include/byteswap.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_config.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
  /home/cosmos/omoknuni_small/include/evaluation/model_evaluator.h

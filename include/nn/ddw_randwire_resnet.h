@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <memory>
 #include <tuple>
+#include "nn/neural_network.h"
 
 namespace alphazero {
 namespace nn {
@@ -260,7 +261,7 @@ private:
 /**
  * @brief Dynamic Dense-Wired Random-Wire ResNet for AlphaZero
  */
-class DDWRandWireResNet : public torch::nn::Module {
+class DDWRandWireResNet : public nn::NeuralNetwork, public torch::nn::Module {
 public:
     /**
      * @brief Constructor
@@ -286,14 +287,14 @@ public:
      * 
      * @param path File path
      */
-    void save(const std::string& path);
+    void save(const std::string& path) override;
     
     /**
      * @brief Load the model from a file
      * 
      * @param path File path
      */
-    void load(const std::string& path);
+    void load(const std::string& path) override;
     
     /**
      * @brief Export the model to TorchScript format
@@ -303,6 +304,14 @@ public:
      */
     void export_to_torchscript(const std::string& path, 
                               std::vector<int64_t> input_shape = {1, 0, 0, 0});
+
+    // Implement NeuralNetwork interface
+    std::vector<mcts::NetworkOutput> inference(
+        const std::vector<std::unique_ptr<core::IGameState>>& states) override;
+    
+    std::vector<int64_t> getInputShape() const override;
+    
+    int64_t getPolicySize() const override;
 
 private:
     int64_t input_channels_;

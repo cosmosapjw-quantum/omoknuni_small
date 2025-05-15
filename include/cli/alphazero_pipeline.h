@@ -146,6 +146,14 @@ ALPHAZERO_API AlphaZeroPipelineConfig parseConfigFile(const std::string& config_
  */
 ALPHAZERO_API int runAlphaZeroPipelineFromConfig(const std::string& config_path);
 
+/**
+ * @brief CLI command handler for AlphaZero pipeline
+ * 
+ * @param args Command line arguments
+ * @return 0 on success, non-zero on error
+ */
+ALPHAZERO_API int runPipelineCommand(const std::vector<std::string>& args);
+
 } // namespace cli
 } // namespace alphazero
 

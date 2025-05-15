@@ -70,6 +70,34 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   endif()
 endif()
 
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  if(EXISTS "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so")
+    file(RPATH_CHECK
+         FILE "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so"
+         RPATH "")
+  endif()
+  list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
+   "/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so")
+  if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
+    message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
+  endif()
+  if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
+    message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
+  endif()
+  file(INSTALL DESTINATION "/usr/local/lib/python3.10/dist-packages" TYPE MODULE FILES "/home/cosmos/omoknuni_small/build/lib/Release/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so")
+  if(EXISTS "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so")
+    file(RPATH_CHANGE
+         FILE "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so"
+         OLD_RPATH "/lib/intel64:/lib/intel64_win:/lib/win-x64:/home/cosmos/omoknuni_small/build/lib/Release:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda-12.8/lib64:/usr/local/cuda/lib64:"
+         NEW_RPATH "")
+    if(CMAKE_INSTALL_DO_STRIP)
+      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so")
+    endif()
+  endif()
+endif()
+
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
   include("/home/cosmos/omoknuni_small/build/_deps/phmap-build/cmake_install.cmake")

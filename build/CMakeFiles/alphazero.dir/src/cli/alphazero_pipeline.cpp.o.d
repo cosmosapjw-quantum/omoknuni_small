@@ -1,6 +1,8 @@
 CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /home/cosmos/omoknuni_small/src/cli/alphazero_pipeline.cpp \
- /usr/include/stdc-predef.h /usr/include/c++/11/iostream \
+ /usr/include/stdc-predef.h \
+ /home/cosmos/omoknuni_small/include/cli/alphazero_pipeline.h \
+ /usr/include/c++/11/string \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -11,11 +13,27 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h \
- /usr/include/c++/11/pstl/pstl_config.h /usr/include/c++/11/ostream \
- /usr/include/c++/11/ios /usr/include/c++/11/iosfwd \
+ /usr/include/c++/11/pstl/pstl_config.h \
  /usr/include/c++/11/bits/stringfwd.h \
- /usr/include/c++/11/bits/memoryfwd.h /usr/include/c++/11/bits/postypes.h \
- /usr/include/c++/11/cwchar /usr/include/wchar.h \
+ /usr/include/c++/11/bits/memoryfwd.h \
+ /usr/include/c++/11/bits/char_traits.h \
+ /usr/include/c++/11/bits/stl_algobase.h \
+ /usr/include/c++/11/bits/functexcept.h \
+ /usr/include/c++/11/bits/exception_defines.h \
+ /usr/include/c++/11/bits/cpp_type_traits.h \
+ /usr/include/c++/11/ext/type_traits.h \
+ /usr/include/c++/11/ext/numeric_traits.h \
+ /usr/include/c++/11/bits/stl_pair.h /usr/include/c++/11/bits/move.h \
+ /usr/include/c++/11/type_traits \
+ /usr/include/c++/11/bits/stl_iterator_base_types.h \
+ /usr/include/c++/11/bits/stl_iterator_base_funcs.h \
+ /usr/include/c++/11/bits/concept_check.h \
+ /usr/include/c++/11/debug/assertions.h \
+ /usr/include/c++/11/bits/stl_iterator.h \
+ /usr/include/c++/11/bits/ptr_traits.h /usr/include/c++/11/debug/debug.h \
+ /usr/include/c++/11/bits/predefined_ops.h \
+ /usr/include/c++/11/bits/postypes.h /usr/include/c++/11/cwchar \
+ /usr/include/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/x86_64-linux-gnu/bits/floatn.h \
  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
@@ -29,42 +47,32 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
- /usr/include/x86_64-linux-gnu/bits/wchar2.h \
- /usr/include/c++/11/exception /usr/include/c++/11/bits/exception.h \
- /usr/include/c++/11/bits/exception_ptr.h \
- /usr/include/c++/11/bits/exception_defines.h \
- /usr/include/c++/11/bits/cxxabi_init_exception.h \
- /usr/include/c++/11/typeinfo /usr/include/c++/11/bits/hash_bytes.h \
- /usr/include/c++/11/new /usr/include/c++/11/bits/move.h \
- /usr/include/c++/11/type_traits \
- /usr/include/c++/11/bits/nested_exception.h \
- /usr/include/c++/11/bits/char_traits.h \
- /usr/include/c++/11/bits/stl_algobase.h \
- /usr/include/c++/11/bits/functexcept.h \
- /usr/include/c++/11/bits/cpp_type_traits.h \
- /usr/include/c++/11/ext/type_traits.h \
- /usr/include/c++/11/ext/numeric_traits.h \
- /usr/include/c++/11/bits/stl_pair.h \
- /usr/include/c++/11/bits/stl_iterator_base_types.h \
- /usr/include/c++/11/bits/stl_iterator_base_funcs.h \
- /usr/include/c++/11/bits/concept_check.h \
- /usr/include/c++/11/debug/assertions.h \
- /usr/include/c++/11/bits/stl_iterator.h \
- /usr/include/c++/11/bits/ptr_traits.h /usr/include/c++/11/debug/debug.h \
- /usr/include/c++/11/bits/predefined_ops.h /usr/include/c++/11/cstdint \
+ /usr/include/x86_64-linux-gnu/bits/wchar2.h /usr/include/c++/11/cstdint \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/types.h \
  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
  /usr/include/x86_64-linux-gnu/bits/time64.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+ /usr/include/c++/11/bits/allocator.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/c++allocator.h \
+ /usr/include/c++/11/ext/new_allocator.h /usr/include/c++/11/new \
+ /usr/include/c++/11/bits/exception.h \
  /usr/include/c++/11/bits/localefwd.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++locale.h \
  /usr/include/c++/11/clocale /usr/include/locale.h \
- /usr/include/x86_64-linux-gnu/bits/locale.h /usr/include/c++/11/cctype \
- /usr/include/ctype.h /usr/include/x86_64-linux-gnu/bits/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/locale.h /usr/include/c++/11/iosfwd \
+ /usr/include/c++/11/cctype /usr/include/ctype.h \
+ /usr/include/x86_64-linux-gnu/bits/endian.h \
  /usr/include/x86_64-linux-gnu/bits/endianness.h \
- /usr/include/c++/11/bits/ios_base.h /usr/include/c++/11/ext/atomicity.h \
+ /usr/include/c++/11/bits/ostream_insert.h \
+ /usr/include/c++/11/bits/cxxabi_forced.h \
+ /usr/include/c++/11/bits/stl_function.h \
+ /usr/include/c++/11/backward/binders.h \
+ /usr/include/c++/11/bits/range_access.h \
+ /usr/include/c++/11/initializer_list \
+ /usr/include/c++/11/bits/basic_string.h \
+ /usr/include/c++/11/ext/atomicity.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/gthr.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/gthr-default.h \
  /usr/include/pthread.h /usr/include/sched.h \
@@ -93,21 +101,11 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/atomic_word.h \
  /usr/include/x86_64-linux-gnu/sys/single_threaded.h \
- /usr/include/c++/11/bits/locale_classes.h /usr/include/c++/11/string \
- /usr/include/c++/11/bits/allocator.h \
- /usr/include/x86_64-linux-gnu/c++/11/bits/c++allocator.h \
- /usr/include/c++/11/ext/new_allocator.h \
- /usr/include/c++/11/bits/ostream_insert.h \
- /usr/include/c++/11/bits/cxxabi_forced.h \
- /usr/include/c++/11/bits/stl_function.h \
- /usr/include/c++/11/backward/binders.h \
- /usr/include/c++/11/bits/range_access.h \
- /usr/include/c++/11/initializer_list \
- /usr/include/c++/11/bits/basic_string.h \
  /usr/include/c++/11/ext/alloc_traits.h \
  /usr/include/c++/11/bits/alloc_traits.h \
  /usr/include/c++/11/bits/stl_construct.h /usr/include/c++/11/string_view \
  /usr/include/c++/11/bits/functional_hash.h \
+ /usr/include/c++/11/bits/hash_bytes.h \
  /usr/include/c++/11/bits/string_view.tcc \
  /usr/include/c++/11/ext/string_conversions.h /usr/include/c++/11/cstdlib \
  /usr/include/stdlib.h /usr/include/x86_64-linux-gnu/bits/waitflags.h \
@@ -135,12 +133,55 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
  /usr/include/c++/11/bits/charconv.h \
- /usr/include/c++/11/bits/basic_string.tcc \
+ /usr/include/c++/11/bits/basic_string.tcc /usr/include/c++/11/vector \
+ /usr/include/c++/11/bits/stl_uninitialized.h \
+ /usr/include/c++/11/bits/stl_vector.h \
+ /usr/include/c++/11/bits/stl_bvector.h \
+ /usr/include/c++/11/bits/vector.tcc /usr/include/c++/11/memory \
+ /usr/include/c++/11/bits/stl_tempbuf.h \
+ /usr/include/c++/11/bits/stl_raw_storage_iter.h \
+ /usr/include/c++/11/bits/align.h /usr/include/c++/11/bit \
+ /usr/include/c++/11/bits/uses_allocator.h \
+ /usr/include/c++/11/bits/unique_ptr.h /usr/include/c++/11/utility \
+ /usr/include/c++/11/bits/stl_relops.h /usr/include/c++/11/tuple \
+ /usr/include/c++/11/array /usr/include/c++/11/bits/invoke.h \
+ /usr/include/c++/11/bits/shared_ptr.h \
+ /usr/include/c++/11/bits/shared_ptr_base.h /usr/include/c++/11/typeinfo \
+ /usr/include/c++/11/bits/allocated_ptr.h \
+ /usr/include/c++/11/bits/refwrap.h \
+ /usr/include/c++/11/ext/aligned_buffer.h \
+ /usr/include/c++/11/ext/concurrence.h /usr/include/c++/11/exception \
+ /usr/include/c++/11/bits/exception_ptr.h \
+ /usr/include/c++/11/bits/cxxabi_init_exception.h \
+ /usr/include/c++/11/bits/nested_exception.h \
+ /usr/include/c++/11/bits/shared_ptr_atomic.h \
+ /usr/include/c++/11/bits/atomic_base.h \
+ /usr/include/c++/11/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/11/backward/auto_ptr.h \
+ /usr/include/c++/11/pstl/glue_memory_defs.h \
+ /usr/include/c++/11/pstl/execution_defs.h \
+ /home/cosmos/omoknuni_small/include/core/game_export.h \
+ /usr/include/c++/11/functional /usr/include/c++/11/bits/std_function.h \
+ /usr/include/c++/11/unordered_map /usr/include/c++/11/bits/hashtable.h \
+ /usr/include/c++/11/bits/hashtable_policy.h \
+ /usr/include/c++/11/bits/enable_special_members.h \
+ /usr/include/c++/11/bits/node_handle.h \
+ /usr/include/c++/11/bits/unordered_map.h \
+ /usr/include/c++/11/bits/erase_if.h /usr/include/c++/11/bits/stl_algo.h \
+ /usr/include/c++/11/bits/algorithmfwd.h \
+ /usr/include/c++/11/bits/stl_heap.h \
+ /usr/include/c++/11/bits/uniform_int_dist.h \
+ /home/cosmos/omoknuni_small/include/core/igamestate.h \
+ /usr/include/c++/11/optional /usr/include/c++/11/stdexcept \
+ /home/cosmos/omoknuni_small/include/core/export_macros.h \
+ /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
+ /usr/include/c++/11/sstream /usr/include/c++/11/istream \
+ /usr/include/c++/11/ios /usr/include/c++/11/bits/ios_base.h \
+ /usr/include/c++/11/bits/locale_classes.h \
  /usr/include/c++/11/bits/locale_classes.tcc \
  /usr/include/c++/11/system_error \
  /usr/include/x86_64-linux-gnu/c++/11/bits/error_constants.h \
- /usr/include/c++/11/stdexcept /usr/include/c++/11/streambuf \
- /usr/include/c++/11/bits/streambuf.tcc \
+ /usr/include/c++/11/streambuf /usr/include/c++/11/bits/streambuf.tcc \
  /usr/include/c++/11/bits/basic_ios.h \
  /usr/include/c++/11/bits/locale_facets.h /usr/include/c++/11/cwctype \
  /usr/include/wctype.h /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h \
@@ -148,42 +189,23 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /usr/include/c++/11/bits/streambuf_iterator.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/ctype_inline.h \
  /usr/include/c++/11/bits/locale_facets.tcc \
- /usr/include/c++/11/bits/basic_ios.tcc \
- /usr/include/c++/11/bits/ostream.tcc /usr/include/c++/11/istream \
- /usr/include/c++/11/bits/istream.tcc /usr/include/c++/11/filesystem \
- /usr/include/c++/11/bits/fs_fwd.h /usr/include/c++/11/chrono \
- /usr/include/c++/11/ratio /usr/include/c++/11/limits \
- /usr/include/c++/11/ctime /usr/include/c++/11/bits/parse_numbers.h \
- /usr/include/c++/11/bits/fs_path.h /usr/include/c++/11/utility \
- /usr/include/c++/11/bits/stl_relops.h /usr/include/c++/11/locale \
- /usr/include/c++/11/bits/locale_facets_nonio.h \
- /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h \
- /usr/include/x86_64-linux-gnu/c++/11/bits/messages_members.h \
- /usr/include/libintl.h /usr/include/c++/11/bits/codecvt.h \
- /usr/include/c++/11/bits/locale_facets_nonio.tcc \
- /usr/include/c++/11/bits/locale_conv.h \
- /usr/include/c++/11/bits/unique_ptr.h /usr/include/c++/11/tuple \
- /usr/include/c++/11/array /usr/include/c++/11/bits/uses_allocator.h \
- /usr/include/c++/11/bits/invoke.h /usr/include/c++/11/iomanip \
- /usr/include/c++/11/bits/quoted_string.h /usr/include/c++/11/sstream \
- /usr/include/c++/11/bits/sstream.tcc /usr/include/c++/11/codecvt \
- /usr/include/c++/11/ext/concurrence.h \
- /usr/include/c++/11/bits/shared_ptr.h \
- /usr/include/c++/11/bits/shared_ptr_base.h \
- /usr/include/c++/11/bits/allocated_ptr.h \
- /usr/include/c++/11/bits/refwrap.h \
- /usr/include/c++/11/ext/aligned_buffer.h \
- /usr/include/c++/11/bits/fs_dir.h /usr/include/c++/11/bits/fs_ops.h \
- /usr/include/c++/11/fstream \
- /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
- /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
- /usr/include/c++/11/bits/fstream.tcc /usr/include/c++/11/map \
- /usr/include/c++/11/bits/stl_tree.h \
- /usr/include/c++/11/bits/node_handle.h \
- /usr/include/c++/11/bits/stl_map.h \
- /usr/include/c++/11/bits/stl_multimap.h \
- /usr/include/c++/11/bits/erase_if.h /usr/include/c++/11/random \
- /usr/include/c++/11/cmath /usr/include/math.h \
+ /usr/include/c++/11/bits/basic_ios.tcc /usr/include/c++/11/ostream \
+ /usr/include/c++/11/bits/ostream.tcc \
+ /usr/include/c++/11/bits/istream.tcc \
+ /usr/include/c++/11/bits/sstream.tcc \
+ /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
+ /usr/include/c++/11/future /usr/include/c++/11/mutex \
+ /usr/include/c++/11/chrono /usr/include/c++/11/ratio \
+ /usr/include/c++/11/limits /usr/include/c++/11/ctime \
+ /usr/include/c++/11/bits/parse_numbers.h \
+ /usr/include/c++/11/bits/std_mutex.h \
+ /usr/include/c++/11/bits/unique_lock.h \
+ /usr/include/c++/11/condition_variable /usr/include/c++/11/atomic \
+ /usr/include/c++/11/bits/atomic_futex.h \
+ /usr/include/c++/11/bits/std_thread.h \
+ /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h \
+ /usr/include/c++/11/random /usr/include/c++/11/cmath /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
@@ -205,12 +227,7 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /usr/include/c++/11/tr1/poly_hermite.tcc \
  /usr/include/c++/11/tr1/poly_laguerre.tcc \
  /usr/include/c++/11/tr1/riemann_zeta.tcc \
- /usr/include/c++/11/bits/random.h /usr/include/c++/11/vector \
- /usr/include/c++/11/bits/stl_uninitialized.h \
- /usr/include/c++/11/bits/stl_vector.h \
- /usr/include/c++/11/bits/stl_bvector.h \
- /usr/include/c++/11/bits/vector.tcc \
- /usr/include/c++/11/bits/uniform_int_dist.h \
+ /usr/include/c++/11/bits/random.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/opt_random.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/pmmintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/emmintrin.h \
@@ -220,26 +237,41 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /usr/include/c++/11/stdlib.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/mwaitintrin.h \
  /usr/include/c++/11/bits/random.tcc /usr/include/c++/11/numeric \
- /usr/include/c++/11/bits/stl_numeric.h /usr/include/c++/11/bit \
+ /usr/include/c++/11/bits/stl_numeric.h \
  /usr/include/c++/11/pstl/glue_numeric_defs.h \
- /usr/include/c++/11/pstl/execution_defs.h /usr/include/c++/11/algorithm \
- /usr/include/c++/11/bits/stl_algo.h \
- /usr/include/c++/11/bits/algorithmfwd.h \
- /usr/include/c++/11/bits/stl_heap.h \
- /usr/include/c++/11/bits/stl_tempbuf.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
+ /usr/include/c++/11/thread /usr/include/c++/11/bits/this_thread_sleep.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
+ /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
+ /usr/include/c++/11/cassert /usr/include/assert.h \
+ /usr/include/c++/11/cstddef /usr/include/c++/11/algorithm \
  /usr/include/c++/11/pstl/glue_algorithm_defs.h \
- /usr/include/c++/11/functional /usr/include/c++/11/bits/std_function.h \
- /usr/include/c++/11/unordered_map /usr/include/c++/11/bits/hashtable.h \
- /usr/include/c++/11/bits/hashtable_policy.h \
- /usr/include/c++/11/bits/enable_special_members.h \
- /usr/include/c++/11/bits/unordered_map.h /usr/include/c++/11/thread \
- /usr/include/c++/11/bits/std_thread.h \
- /usr/include/c++/11/bits/this_thread_sleep.h /usr/include/c++/11/atomic \
- /usr/include/c++/11/bits/atomic_base.h \
- /usr/include/c++/11/bits/atomic_lockfree_defines.h \
- /usr/include/c++/11/mutex /usr/include/c++/11/bits/std_mutex.h \
- /usr/include/c++/11/bits/unique_lock.h \
- /usr/include/c++/11/condition_variable \
+ /usr/include/c++/11/climits \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
+ /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+ /usr/include/linux/limits.h \
+ /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+ /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap.h \
+ /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /usr/include/c++/11/iterator /usr/include/c++/11/bits/stream_iterator.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_fwd_decl.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_utils.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_bits.h \
+ /usr/include/byteswap.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_config.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
+ /usr/include/c++/11/shared_mutex \
+ /home/cosmos/omoknuni_small/include/training/training_data_manager.h \
+ /home/cosmos/omoknuni_small/include/training/dataset.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h \
@@ -256,21 +288,13 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/TensorBody.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/Device.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/DeviceType.h \
- /usr/include/c++/11/cstddef \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Exception.h \
  /opt/libtorch-2.7.0-cu128/include/c10/macros/Macros.h \
- /usr/include/c++/11/cassert /usr/include/assert.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Backtrace.h \
- /usr/include/c++/11/memory \
- /usr/include/c++/11/bits/stl_raw_storage_iter.h \
- /usr/include/c++/11/bits/align.h \
- /usr/include/c++/11/bits/shared_ptr_atomic.h \
- /usr/include/c++/11/backward/auto_ptr.h \
- /usr/include/c++/11/pstl/glue_memory_defs.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Lazy.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/StringUtil.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/string_utils.h \
- /usr/include/c++/11/optional /usr/include/c++/11/variant \
+ /usr/include/c++/11/variant \
  /opt/libtorch-2.7.0-cu128/include/c10/core/Layout.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/Backend.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/DispatchKey.h \
@@ -280,19 +304,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/util/TypeTraits.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/llvmMathExtras.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/bit_cast.h \
- /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
- /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
- /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
- /usr/include/c++/11/climits \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
- /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
- /usr/include/x86_64-linux-gnu/bits/local_lim.h \
- /usr/include/linux/limits.h \
- /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
- /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
- /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
- /usr/include/c++/11/iterator /usr/include/c++/11/bits/stream_iterator.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/MemoryFormat.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/ArrayRef.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Deprecated.h \
@@ -307,6 +318,7 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/util/BFloat16-inl.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fn.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/floating_point_utils.h \
+ /usr/include/c++/11/iostream \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fn-inl.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fnuz.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fnuz-inl.h \
@@ -353,7 +365,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/core/StorageImpl.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/COW.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/COWDeleter.h \
- /usr/include/c++/11/shared_mutex \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PyObjectSlot.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/HermeticPyObjectTLS.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PyInterpreter.h \
@@ -816,6 +827,14 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/ops/zero_ops.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/edge.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/hash.h \
+ /usr/include/c++/11/iomanip /usr/include/c++/11/locale \
+ /usr/include/c++/11/bits/locale_facets_nonio.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/messages_members.h \
+ /usr/include/libintl.h /usr/include/c++/11/bits/codecvt.h \
+ /usr/include/c++/11/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/11/bits/locale_conv.h \
+ /usr/include/c++/11/bits/quoted_string.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/forward_grad.h \
  /usr/include/c++/11/unordered_set \
  /usr/include/c++/11/bits/unordered_set.h \
@@ -856,7 +875,10 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/util/FunctionRef.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Logging.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/logging_is_not_google_glog.h \
- /usr/include/c++/11/set /usr/include/c++/11/bits/stl_set.h \
+ /usr/include/c++/11/map /usr/include/c++/11/bits/stl_tree.h \
+ /usr/include/c++/11/bits/stl_map.h \
+ /usr/include/c++/11/bits/stl_multimap.h /usr/include/c++/11/set \
+ /usr/include/c++/11/bits/stl_set.h \
  /usr/include/c++/11/bits/stl_multiset.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/WrapDimUtilsMulti.h \
  /usr/include/c++/11/bitset \
@@ -4961,87 +4983,49 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
- /home/cosmos/omoknuni_small/include/utils/device_utils.h \
- /usr/local/cuda-12.8/include/cuda_runtime.h \
- /usr/local/cuda-12.8/include/crt/host_config.h \
- /usr/local/cuda-12.8/include/builtin_types.h \
- /usr/local/cuda-12.8/include/device_types.h \
- /usr/local/cuda-12.8/include/crt/host_defines.h \
- /usr/local/cuda-12.8/include/driver_types.h \
- /usr/local/cuda-12.8/include/vector_types.h \
- /usr/local/cuda-12.8/include/surface_types.h \
- /usr/local/cuda-12.8/include/texture_types.h \
- /usr/local/cuda-12.8/include/library_types.h \
- /usr/local/cuda-12.8/include/channel_descriptor.h \
- /usr/local/cuda-12.8/include/cuda_runtime_api.h \
- /usr/local/cuda-12.8/include/cuda_device_runtime_api.h \
- /usr/local/cuda-12.8/include/driver_functions.h \
- /usr/local/cuda-12.8/include/vector_functions.h \
- /usr/local/cuda-12.8/include/vector_functions.hpp \
- /opt/libtorch-2.7.0-cu128/include/ATen/cuda/CUDAContext.h \
- /opt/libtorch-2.7.0-cu128/include/ATen/cuda/CUDAContextLight.h \
- /usr/local/cuda-12.8/include/cuda_runtime_api.h \
- /usr/local/cuda-12.8/include/cusparse.h \
- /usr/local/cuda-12.8/include/cuComplex.h /usr/include/c++/11/math.h \
- /usr/local/cuda-12.8/include/library_types.h \
- /usr/local/cuda-12.8/include/cuda_fp16.h \
- /usr/local/cuda-12.8/include/nv/target \
- /usr/local/cuda-12.8/include/nv/detail/__target_macros \
- /usr/local/cuda-12.8/include/nv/detail/__preprocessor \
- /usr/local/cuda-12.8/include/cuda_fp16.hpp \
- /usr/local/cuda-12.8/include/cublas_v2.h \
- /usr/local/cuda-12.8/include/cublas_api.h \
- /usr/local/cuda-12.8/include/cuComplex.h \
- /usr/local/cuda-12.8/include/cuda_bf16.h \
- /usr/local/cuda-12.8/include/cuda_fp16.h \
- /usr/local/cuda-12.8/include/cuda_bf16.hpp \
- /usr/local/cuda-12.8/include/cublasLt.h \
- /usr/local/cuda-12.8/include/cublas_api.h \
- /usr/local/cuda-12.8/include/cusolverDn.h \
- /usr/local/cuda-12.8/include/cublas_v2.h \
- /usr/local/cuda-12.8/include/cusolver_common.h /usr/include/inttypes.h \
- /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAFunctions.h \
- /opt/libtorch-2.7.0-cu128/include/c10/core/impl/GPUTrace.h \
- /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAException.h \
- /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDADeviceAssertionHost.h \
- /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAMacros.h \
- /opt/libtorch-2.7.0-cu128/include/c10/cuda/impl/cuda_cmake_macros.h \
- /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAMiscFunctions.h \
- /usr/local/cuda-12.8/include/cuda.h \
- /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAStream.h \
- /opt/libtorch-2.7.0-cu128/include/ATen/cuda/Exceptions.h \
- /usr/local/cuda-12.8/include/cusolver_common.h \
- /home/cosmos/omoknuni_small/include/utils/cuda_utils.h \
- /home/cosmos/omoknuni_small/include/training/dataset.h \
  /home/cosmos/omoknuni_small/include/training/data_loader.h \
- /usr/include/c++/11/future /usr/include/c++/11/bits/atomic_futex.h \
- /home/cosmos/omoknuni_small/include/cli/alphazero_pipeline.h \
- /home/cosmos/omoknuni_small/include/core/game_export.h \
- /home/cosmos/omoknuni_small/include/core/igamestate.h \
- /home/cosmos/omoknuni_small/include/core/export_macros.h \
- /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
- /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
- /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
- /home/cosmos/omoknuni_small/include/games/chess/chess_state.h \
- /home/cosmos/omoknuni_small/include/games/chess/chess_types.h \
- /home/cosmos/omoknuni_small/include/games/go/go_state.h \
- /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
- /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
- /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
- /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_fwd_decl.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_utils.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_bits.h \
- /usr/include/byteswap.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_config.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
- /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
- /home/cosmos/omoknuni_small/include/nn/neural_network.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
- /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h \
- /home/cosmos/omoknuni_small/include/evaluation/model_evaluator.h
+ /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
+ /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
+ /usr/include/c++/11/fstream \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
+ /usr/include/c++/11/bits/fstream.tcc /usr/include/c++/11/filesystem \
+ /usr/include/c++/11/bits/fs_fwd.h /usr/include/c++/11/bits/fs_path.h \
+ /usr/include/c++/11/codecvt /usr/include/c++/11/bits/fs_dir.h \
+ /usr/include/c++/11/bits/fs_ops.h /usr/include/yaml-cpp/yaml.h \
+ /usr/include/yaml-cpp/parser.h /usr/include/yaml-cpp/dll.h \
+ /usr/include/yaml-cpp/emitter.h /usr/include/yaml-cpp/binary.h \
+ /usr/include/yaml-cpp/emitterdef.h /usr/include/yaml-cpp/emittermanip.h \
+ /usr/include/yaml-cpp/null.h /usr/include/yaml-cpp/ostream_wrapper.h \
+ /usr/include/yaml-cpp/emitterstyle.h /usr/include/yaml-cpp/stlemitter.h \
+ /usr/include/yaml-cpp/exceptions.h /usr/include/yaml-cpp/mark.h \
+ /usr/include/yaml-cpp/noexcept.h /usr/include/yaml-cpp/traits.h \
+ /usr/include/yaml-cpp/node/node.h \
+ /usr/include/yaml-cpp/node/detail/iterator_fwd.h \
+ /usr/include/yaml-cpp/node/ptr.h /usr/include/yaml-cpp/node/type.h \
+ /usr/include/yaml-cpp/node/impl.h \
+ /usr/include/yaml-cpp/node/detail/memory.h \
+ /usr/include/yaml-cpp/node/detail/node.h \
+ /usr/include/yaml-cpp/node/detail/node_ref.h \
+ /usr/include/yaml-cpp/node/detail/node_data.h \
+ /usr/include/yaml-cpp/node/detail/node_iterator.h \
+ /usr/include/yaml-cpp/node/iterator.h \
+ /usr/include/yaml-cpp/node/detail/iterator.h \
+ /usr/include/yaml-cpp/node/convert.h \
+ /usr/include/yaml-cpp/node/detail/impl.h \
+ /usr/include/yaml-cpp/node/parse.h /usr/include/yaml-cpp/node/emit.h \
+ /home/cosmos/omoknuni_small/include/nlohmann/json.hpp \
+ /usr/include/c++/11/forward_list /usr/include/c++/11/bits/forward_list.h \
+ /usr/include/c++/11/bits/forward_list.tcc /usr/include/c++/11/valarray \
+ /usr/include/c++/11/bits/valarray_array.h \
+ /usr/include/c++/11/bits/valarray_array.tcc \
+ /usr/include/c++/11/bits/valarray_before.h \
+ /usr/include/c++/11/bits/slice_array.h \
+ /usr/include/c++/11/bits/valarray_after.h \
+ /usr/include/c++/11/bits/gslice.h \
+ /usr/include/c++/11/bits/gslice_array.h \
+ /usr/include/c++/11/bits/mask_array.h \
+ /usr/include/c++/11/bits/indirect_array.h /usr/include/c++/11/version \
+ /usr/include/c++/11/any

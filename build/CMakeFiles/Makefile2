@@ -64,6 +64,7 @@ CMAKE_BINARY_DIR = /home/cosmos/omoknuni_small/build
 
 # The main recursive "all" target.
 all: CMakeFiles/alphazero_py.dir/all
+all: CMakeFiles/alphazero_pipeline.dir/all
 all: CMakeFiles/alphazero.dir/all
 all: CMakeFiles/omoknuni_cli.dir/all
 all: CMakeFiles/core_tests.dir/all
@@ -117,6 +118,7 @@ clean: CMakeFiles/ContinuousCoverage.dir/clean
 clean: CMakeFiles/ContinuousMemCheck.dir/clean
 clean: CMakeFiles/ContinuousSubmit.dir/clean
 clean: CMakeFiles/alphazero_py.dir/clean
+clean: CMakeFiles/alphazero_pipeline.dir/clean
 clean: CMakeFiles/alphazero.dir/clean
 clean: CMakeFiles/omoknuni_cli.dir/clean
 clean: CMakeFiles/core_tests.dir/clean
@@ -886,7 +888,7 @@ CMakeFiles/ContinuousSubmit.dir/clean:
 CMakeFiles/alphazero_py.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=42,43 "Built target alphazero_py"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=44,45 "Built target alphazero_py"
 .PHONY : CMakeFiles/alphazero_py.dir/all
 
 # Build rule for subdir invocation for target.
@@ -904,6 +906,32 @@ alphazero_py: CMakeFiles/alphazero_py.dir/rule
 CMakeFiles/alphazero_py.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/clean
 .PHONY : CMakeFiles/alphazero_py.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/alphazero_pipeline.dir
+
+# All Build rule for target.
+CMakeFiles/alphazero_pipeline.dir/all: CMakeFiles/alphazero.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=42,43 "Built target alphazero_pipeline"
+.PHONY : CMakeFiles/alphazero_pipeline.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/alphazero_pipeline.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 32
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/alphazero_pipeline.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 0
+.PHONY : CMakeFiles/alphazero_pipeline.dir/rule
+
+# Convenience name for target.
+alphazero_pipeline: CMakeFiles/alphazero_pipeline.dir/rule
+.PHONY : alphazero_pipeline
+
+# clean rule for target.
+CMakeFiles/alphazero_pipeline.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/clean
+.PHONY : CMakeFiles/alphazero_pipeline.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/alphazero.dir
@@ -938,7 +966,7 @@ CMakeFiles/alphazero.dir/clean:
 CMakeFiles/omoknuni_cli.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=64,65 "Built target omoknuni_cli"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=66,67 "Built target omoknuni_cli"
 .PHONY : CMakeFiles/omoknuni_cli.dir/all
 
 # Build rule for subdir invocation for target.
@@ -964,7 +992,7 @@ CMakeFiles/omoknuni_cli.dir/clean:
 CMakeFiles/core_tests.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=46,47,48,49 "Built target core_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=48,49,50,51 "Built target core_tests"
 .PHONY : CMakeFiles/core_tests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -990,7 +1018,7 @@ CMakeFiles/core_tests.dir/clean:
 CMakeFiles/chess_tests.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/chess_tests.dir/build.make CMakeFiles/chess_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/chess_tests.dir/build.make CMakeFiles/chess_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=44,45 "Built target chess_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=46,47 "Built target chess_tests"
 .PHONY : CMakeFiles/chess_tests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1016,7 +1044,7 @@ CMakeFiles/chess_tests.dir/clean:
 CMakeFiles/go_tests.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/go_tests.dir/build.make CMakeFiles/go_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/go_tests.dir/build.make CMakeFiles/go_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=50,51 "Built target go_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=52,53 "Built target go_tests"
 .PHONY : CMakeFiles/go_tests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1042,7 +1070,7 @@ CMakeFiles/go_tests.dir/clean:
 CMakeFiles/gomoku_tests.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gomoku_tests.dir/build.make CMakeFiles/gomoku_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gomoku_tests.dir/build.make CMakeFiles/gomoku_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=52,53 "Built target gomoku_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=54,55 "Built target gomoku_tests"
 .PHONY : CMakeFiles/gomoku_tests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1068,7 +1096,7 @@ CMakeFiles/gomoku_tests.dir/clean:
 CMakeFiles/neural_network_test.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=62,63 "Built target neural_network_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=64,65 "Built target neural_network_test"
 .PHONY : CMakeFiles/neural_network_test.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1094,7 +1122,7 @@ CMakeFiles/neural_network_test.dir/clean:
 CMakeFiles/mcts_with_nn_test.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=58,59 "Built target mcts_with_nn_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=60,61 "Built target mcts_with_nn_test"
 .PHONY : CMakeFiles/mcts_with_nn_test.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1120,7 +1148,7 @@ CMakeFiles/mcts_with_nn_test.dir/clean:
 CMakeFiles/self_play_manager_test.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=68,69 "Built target self_play_manager_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=70,71 "Built target self_play_manager_test"
 .PHONY : CMakeFiles/self_play_manager_test.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1146,7 +1174,7 @@ CMakeFiles/self_play_manager_test.dir/clean:
 CMakeFiles/training_data_manager_test.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=70,71 "Built target training_data_manager_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=72,73 "Built target training_data_manager_test"
 .PHONY : CMakeFiles/training_data_manager_test.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1172,7 +1200,7 @@ CMakeFiles/training_data_manager_test.dir/clean:
 CMakeFiles/model_evaluator_test.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=60,61 "Built target model_evaluator_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=62,63 "Built target model_evaluator_test"
 .PHONY : CMakeFiles/model_evaluator_test.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1198,7 +1226,7 @@ CMakeFiles/model_evaluator_test.dir/clean:
 CMakeFiles/transposition_table_test.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=74,75 "Built target transposition_table_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=76,77 "Built target transposition_table_test"
 .PHONY : CMakeFiles/transposition_table_test.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1224,7 +1252,7 @@ CMakeFiles/transposition_table_test.dir/clean:
 CMakeFiles/transposition_integration_test.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=72,73 "Built target transposition_integration_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=74,75 "Built target transposition_integration_test"
 .PHONY : CMakeFiles/transposition_integration_test.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1250,7 +1278,7 @@ CMakeFiles/transposition_integration_test.dir/clean:
 CMakeFiles/self_play_games_test.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=66,67 "Built target self_play_games_test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=68,69 "Built target self_play_games_test"
 .PHONY : CMakeFiles/self_play_games_test.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1276,7 +1304,7 @@ CMakeFiles/self_play_games_test.dir/clean:
 CMakeFiles/mcts_tests.dir/all: CMakeFiles/alphazero.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=54,55,56,57 "Built target mcts_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=56,57,58,59 "Built target mcts_tests"
 .PHONY : CMakeFiles/mcts_tests.dir/all
 
 # Build rule for subdir invocation for target.

@@ -549,6 +549,19 @@ alphazero_py/fast:
 .PHONY : alphazero_py/fast
 
 #=============================================================================
+# Target rules for targets named alphazero_pipeline
+
+# Build rule for target.
+alphazero_pipeline: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 alphazero_pipeline
+.PHONY : alphazero_pipeline
+
+# fast build rule for target.
+alphazero_pipeline/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/build
+.PHONY : alphazero_pipeline/fast
+
+#=============================================================================
 # Target rules for targets named alphazero
 
 # Build rule for target.
@@ -1283,6 +1296,30 @@ src/nn/resnet_model.s: src/nn/resnet_model.cpp.s
 src/nn/resnet_model.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.s
 .PHONY : src/nn/resnet_model.cpp.s
+
+src/python/alphazero_bindings.o: src/python/alphazero_bindings.cpp.o
+.PHONY : src/python/alphazero_bindings.o
+
+# target to build an object file
+src/python/alphazero_bindings.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/src/python/alphazero_bindings.cpp.o
+.PHONY : src/python/alphazero_bindings.cpp.o
+
+src/python/alphazero_bindings.i: src/python/alphazero_bindings.cpp.i
+.PHONY : src/python/alphazero_bindings.i
+
+# target to preprocess a source file
+src/python/alphazero_bindings.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/src/python/alphazero_bindings.cpp.i
+.PHONY : src/python/alphazero_bindings.cpp.i
+
+src/python/alphazero_bindings.s: src/python/alphazero_bindings.cpp.s
+.PHONY : src/python/alphazero_bindings.s
+
+# target to generate assembly for a file
+src/python/alphazero_bindings.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/src/python/alphazero_bindings.cpp.s
+.PHONY : src/python/alphazero_bindings.cpp.s
 
 src/python/bindings.o: src/python/bindings.cpp.o
 .PHONY : src/python/bindings.o
@@ -2023,6 +2060,7 @@ help:
 	@echo "... NightlyUpdate"
 	@echo "... all_tests"
 	@echo "... alphazero"
+	@echo "... alphazero_pipeline"
 	@echo "... alphazero_py"
 	@echo "... chess_tests"
 	@echo "... core_tests"
@@ -2104,6 +2142,9 @@ help:
 	@echo "... src/nn/resnet_model.o"
 	@echo "... src/nn/resnet_model.i"
 	@echo "... src/nn/resnet_model.s"
+	@echo "... src/python/alphazero_bindings.o"
+	@echo "... src/python/alphazero_bindings.i"
+	@echo "... src/python/alphazero_bindings.s"
 	@echo "... src/python/bindings.o"
 	@echo "... src/python/bindings.i"
 	@echo "... src/python/bindings.s"

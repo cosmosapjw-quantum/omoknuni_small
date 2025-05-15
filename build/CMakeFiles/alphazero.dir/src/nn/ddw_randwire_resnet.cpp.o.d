@@ -4958,7 +4958,14 @@ CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/mm_malloc.h \
  /usr/include/c++/11/stdlib.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/mwaitintrin.h \
- /usr/include/c++/11/bits/random.tcc /usr/include/c++/11/fstream \
+ /usr/include/c++/11/bits/random.tcc \
+ /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/core/igamestate.h \
+ /home/cosmos/omoknuni_small/include/core/export_macros.h \
+ /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
+ /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
+ /usr/include/c++/11/future /usr/include/c++/11/bits/atomic_futex.h \
+ /usr/include/c++/11/fstream \
  /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
  /usr/include/c++/11/bits/fstream.tcc

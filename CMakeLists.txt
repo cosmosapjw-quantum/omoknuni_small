@@ -554,6 +554,11 @@ if(PYBIND11_FOUND AND BUILD_PYTHON_BINDINGS AND COMMAND pybind11_add_module)
     pybind11_add_module(alphazero_py src/python/bindings.cpp)
     target_link_libraries(alphazero_py PRIVATE alphazero)
     
+    # Add AlphaZero pipeline bindings
+    message(STATUS "Building AlphaZero pipeline Python module...")
+    pybind11_add_module(alphazero_pipeline src/python/alphazero_bindings.cpp)
+    target_link_libraries(alphazero_pipeline PRIVATE alphazero)
+    
     if(Python_FOUND)
         # Set the Python module installation path
         execute_process(
@@ -565,6 +570,7 @@ if(PYBIND11_FOUND AND BUILD_PYTHON_BINDINGS AND COMMAND pybind11_add_module)
         if(PYTHON_SITE_PACKAGES)
             message(STATUS "Python site-packages directory: ${PYTHON_SITE_PACKAGES}")
             install(TARGETS alphazero_py DESTINATION "${PYTHON_SITE_PACKAGES}")
+            install(TARGETS alphazero_pipeline DESTINATION "${PYTHON_SITE_PACKAGES}")
         endif()
     endif()
 else()

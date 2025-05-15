@@ -1,60 +1,57 @@
-# config.yaml
+# AlphaZero Pipeline Configuration
 
 # Game settings
-game: gomoku
+game_type: gomoku
 board_size: 15
+input_channels: 20
+policy_size: 0
 
-# Neural network settings
-network:
-  num_res_blocks: 19
-  num_filters: 256
-
-# Model paths
+# Directory settings
 model_dir: models
 data_dir: data
 log_dir: logs
 
-# Training settings
-train:
-  iterations: 10
-  epochs: 20
-  batch_size: 1024
-  learning_rate: 0.001
-  weight_decay: 0.0001
-
-# MCTS settings
-mcts:
-  num_simulations: 800
-  num_threads: 20  # Using most of your 24 threads but leaving some for system
-  batch_size: 128  # Good batch size for RTX 3060 Ti
-  exploration_constant: 1.5
-  virtual_loss: 3
-  add_dirichlet_noise: true
-  dirichlet_alpha: 0.3
-  dirichlet_epsilon: 0.25
-  temperature: 1.0
-  batch_timeout_ms: 50  # Lower timeout for faster batching
+# Neural network settings
+network_type: resnet
+use_gpu: true
+num_iterations: 10
+num_res_blocks: 19
+num_filters: 256
 
 # Self-play settings
-self_play:
-  num_games: 500
-  num_parallel_games: 16  # High parallelism for your CPU
-  max_moves: 0  # 0 means calculate based on board size
-  temperature_threshold: 30
-  high_temperature: 1.0
-  low_temperature: 0.0
-  output_dir: data/selfplay
-  output_format: json
+self_play_num_games: 100
+self_play_num_parallel_games: 4
+self_play_max_moves: 0
+self_play_temperature_threshold: 30
+self_play_high_temperature: 1.0
+self_play_low_temperature: 0.1
 
-# Evaluation settings
-evaluation:
-  num_games: 100
-  num_parallel_games: 16
-  max_moves: 0
-  elo_threshold: 15.0
+# MCTS settings
+mcts_num_simulations: 100
+mcts_num_threads: 4
+mcts_batch_size: 8
+mcts_batch_timeout_ms: 20
+mcts_exploration_constant: 1.5
+mcts_temperature: 1.0
+mcts_add_dirichlet_noise: true
+mcts_dirichlet_alpha: 0.3
+mcts_dirichlet_epsilon: 0.25
 
-# Arena settings
-arena:
-  enabled: true
-  num_games: 60
-  num_threads: 20
+# Training settings
+train_epochs: 10
+train_batch_size: 256
+train_num_workers: 4
+train_learning_rate: 0.001
+train_weight_decay: 0.0001
+train_lr_step_size: 5
+train_lr_gamma: 0.1
+
+# Arena/evaluation settings
+enable_evaluation: true
+arena_num_games: 20
+arena_num_parallel_games: 4
+arena_num_threads: 4
+arena_num_simulations: 100
+arena_temperature: 0.1
+arena_win_rate_threshold: 0.55
+EOF < /dev/null

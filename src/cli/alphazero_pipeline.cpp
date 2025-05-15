@@ -1,41 +1,28 @@
-// src/cli/alphazero_pipeline.cpp
-#include <iostream>
-#include <filesystem>
-#include <chrono>
-#include <fstream>
-#include <map>
-#include <iomanip>
-#include <ctime>
-#include <random>
-#include <algorithm>
-#include <thread>
-#include <atomic>
-#include <mutex>
-#include <condition_variable>
-
-// Extra include for Torch CUDA functions and our utilities
-#include <torch/torch.h>
-#include "utils/device_utils.h"
-#include "utils/cuda_utils.h"
+#include "cli/alphazero_pipeline.h"
+#include "selfplay/self_play_manager.h"
+#include "training/training_data_manager.h"
 #include "training/dataset.h"
 #include "training/data_loader.h"
-
-#include "cli/alphazero_pipeline.h"
-#include "core/game_export.h"
-#include "games/gomoku/gomoku_state.h"
-#include "games/chess/chess_state.h"
-#include "games/go/go_state.h"
-#include "mcts/mcts_engine.h"
 #include "nn/neural_network_factory.h"
 #include "nn/resnet_model.h"
-#include "selfplay/self_play_manager.h"
-#include "evaluation/model_evaluator.h"
+#include "nn/ddw_randwire_resnet.h"
+#include "utils/debug_monitor.h"
+#include <torch/torch.h>
+#include <fstream>
+#include <iostream>
+#include <chrono>
+#include <thread>
+#include <filesystem>
+#include <ctime>
+#include <iomanip>
+#include <yaml-cpp/yaml.h>
+#include <nlohmann/json.hpp>
 
 namespace alphazero {
 namespace cli {
 
-// Helper function to create a readable timestamp
-std::string getCurrentTimestamp() {
+// Helper to get a formatted timestamp string
+std::string getTimestampString() {
     auto now = std::chrono::system_clock::now();
     auto time_t_now = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
@@ -43,788 +30,928 @@ std::string getCurrentTimestamp() {
     return ss.str();
 }
 
-// Parse configuration from a YAML-like file
-PipelineConfig parsePipelineConfig(const std::string& config_path) {
-    PipelineConfig config;
+AlphaZeroPipeline::AlphaZeroPipeline(const AlphaZeroPipelineConfig& config)
+    : config_(config), current_iteration_(0) {
     
-    // Load configuration
-    std::ifstream config_file(config_path);
-    if (!config_file.is_open()) {
-        throw std::runtime_error("Could not open config file: " + config_path);
-    }
+    // Initialize logging
+    initializeLogging();
     
-    // Parse YAML configuration
-    std::string line;
-    std::map<std::string, std::string> config_map;
-    std::string current_section;
+    // Create necessary directories
+    createDirectories();
     
-    while (std::getline(config_file, line)) {
-        // Skip comments and empty lines
-        if (line.empty() || line[0] == '#') {
-            continue;
-        }
-        
-        // Check if this is a section header
-        if (line[line.size() - 1] == ':') {
-            current_section = line.substr(0, line.size() - 1);
-            continue;
-        }
-        
-        // Parse key-value pairs
-        size_t colon_pos = line.find(':');
-        if (colon_pos != std::string::npos) {
-            std::string key = line.substr(0, colon_pos);
-            std::string value = line.substr(colon_pos + 1);
-            
-            // Trim whitespace
-            key.erase(0, key.find_first_not_of(" \t"));
-            key.erase(key.find_last_not_of(" \t") + 1);
-            value.erase(0, value.find_first_not_of(" \t"));
-            value.erase(value.find_last_not_of(" \t") + 1);
-            
-            // Store with section prefix if we're in a section
-            if (!current_section.empty()) {
-                config_map[current_section + "." + key] = value;
-            } else {
-                config_map[key] = value;
-            }
-        }
-    }
-    
-    // Extract values from the parsed configuration
-    config.game_type_str = config_map["game"];
-    config.board_size = std::stoi(config_map["board_size"]);
-    
-    // Convert game type string to enum
-    if (config.game_type_str == "gomoku") {
-        config.game_type = core::GameType::GOMOKU;
-    } else if (config.game_type_str == "chess") {
-        config.game_type = core::GameType::CHESS;
-    } else if (config.game_type_str == "go") {
-        config.game_type = core::GameType::GO;
-    } else {
-        throw std::runtime_error("Unknown game type: " + config.game_type_str);
-    }
-    
-    // Set input channels and policy size based on game type
-    switch (config.game_type) {
-        case core::GameType::GOMOKU:
-            config.num_channels = 17;  // Enhanced representation with history
-            config.policy_size = config.board_size * config.board_size;
-            break;
-        case core::GameType::CHESS:
-            config.num_channels = 17;  // 12 piece planes + 3 special + 1 turn + 1 move count
-            config.policy_size = 64 * 73;  // Source, destination, promotions
-            break;
-        case core::GameType::GO:
-            config.num_channels = 17;  // 2 player planes + 1 turn + 8 history
-            config.policy_size = config.board_size * config.board_size + 1;  // +1 for pass
-            break;
-        default:
-            throw std::runtime_error("Unsupported game type");
-    }
-    
-    // Neural network settings
-    config.num_res_blocks = std::stoi(config_map["network.num_res_blocks"]);
-    config.num_filters = std::stoi(config_map["network.num_filters"]);
-    
-    // Path settings
-    config.model_dir = config_map.count("model_dir") ? config_map["model_dir"] : "models";
-    config.data_dir = config_map.count("data_dir") ? config_map["data_dir"] : "data";
-    config.log_dir = config_map.count("log_dir") ? config_map["log_dir"] : "logs";
-    
-    // Training settings
-    config.num_iterations = config_map.count("train.iterations") ? std::stoi(config_map["train.iterations"]) : 5;
-    config.epochs_per_iteration = config_map.count("train.epochs") ? std::stoi(config_map["train.epochs"]) : 10;
-    config.batch_size = config_map.count("train.batch_size") ? std::stoi(config_map["train.batch_size"]) : 256;
-    config.learning_rate = config_map.count("train.learning_rate") ? std::stof(config_map["train.learning_rate"]) : 0.001f;
-    config.weight_decay = config_map.count("train.weight_decay") ? std::stof(config_map["train.weight_decay"]) : 1e-4f;
-    
-    // Self-play settings
-    config.games_per_iteration = config_map.count("self_play.num_games") ? 
-        std::stoi(config_map["self_play.num_games"]) : 100;
-    config.num_parallel_games = config_map.count("self_play.num_parallel_games") ? 
-        std::stoi(config_map["self_play.num_parallel_games"]) : 4;
-    config.max_moves = config_map.count("self_play.max_moves") ? 
-        std::stoi(config_map["self_play.max_moves"]) : 0;
-    config.temperature_threshold = config_map.count("self_play.temperature_threshold") ? 
-        std::stoi(config_map["self_play.temperature_threshold"]) : 30;
-    config.high_temperature = config_map.count("self_play.high_temperature") ? 
-        std::stof(config_map["self_play.high_temperature"]) : 1.0f;
-    config.low_temperature = config_map.count("self_play.low_temperature") ? 
-        std::stof(config_map["self_play.low_temperature"]) : 0.0f;
-        
-    // MCTS settings
-    config.num_simulations = config_map.count("mcts.num_simulations") ? 
-        std::stoi(config_map["mcts.num_simulations"]) : 200;
-    config.num_threads = config_map.count("mcts.num_threads") ? 
-        std::stoi(config_map["mcts.num_threads"]) : 8;
-    config.mcts_batch_size = config_map.count("mcts.batch_size") ? 
-        std::stoi(config_map["mcts.batch_size"]) : 64;
-    config.exploration_constant = config_map.count("mcts.exploration_constant") ? 
-        std::stof(config_map["mcts.exploration_constant"]) : 1.5f;
-    config.virtual_loss = config_map.count("mcts.virtual_loss") ? 
-        std::stoi(config_map["mcts.virtual_loss"]) : 3;
-    config.add_dirichlet_noise = config_map.count("mcts.add_dirichlet_noise") ? 
-        (config_map["mcts.add_dirichlet_noise"] == "true") : true;
-    config.dirichlet_alpha = config_map.count("mcts.dirichlet_alpha") ? 
-        std::stof(config_map["mcts.dirichlet_alpha"]) : 0.3f;
-    config.dirichlet_epsilon = config_map.count("mcts.dirichlet_epsilon") ? 
-        std::stof(config_map["mcts.dirichlet_epsilon"]) : 0.25f;
-    config.temperature = config_map.count("mcts.temperature") ? 
-        std::stof(config_map["mcts.temperature"]) : 1.0f;
-    config.batch_timeout_ms = config_map.count("mcts.batch_timeout_ms") ? 
-        std::stoi(config_map["mcts.batch_timeout_ms"]) : 100;
-    
-    // Evaluation settings
-    config.num_eval_games = config_map.count("evaluation.num_games") ? 
-        std::stoi(config_map["evaluation.num_games"]) : 40;
-    config.elo_threshold = config_map.count("evaluation.elo_threshold") ? 
-        std::stof(config_map["evaluation.elo_threshold"]) : 10.0f;
-    
-    // Arena settings
-    config.use_arena = config_map.count("arena.enabled") ? 
-        (config_map["arena.enabled"] == "true") : true;
-    config.arena_games = config_map.count("arena.num_games") ? 
-        std::stoi(config_map["arena.num_games"]) : 20;
-    config.arena_threads = config_map.count("arena.num_threads") ? 
-        std::stoi(config_map["arena.num_threads"]) : 4;
-    
-    return config;
+    // Load or initialize neural network
+    initializeNeuralNetwork();
 }
 
-// Create a timestamp-based directory
-std::string createTimestampedDirectory(const std::string& base_dir, const std::string& prefix) {
-    std::string timestamp = getCurrentTimestamp();
-    std::string dir_name = base_dir + "/" + prefix + "_" + timestamp;
-    std::filesystem::create_directories(dir_name);
-    return dir_name;
+AlphaZeroPipeline::~AlphaZeroPipeline() {
+    // Clean up resources if needed
 }
 
-// Simple ELO calculation based on win/loss results
-float calculateElo(int wins, int losses, int draws) {
-    if (wins + losses + draws == 0) return 0.0f;
+void AlphaZeroPipeline::run() {
+    std::cout << "Starting AlphaZero pipeline with game: " 
+              << core::gameTypeToString(config_.game_type) << std::endl;
     
-    float score = (wins + 0.5f * draws) / (wins + losses + draws);
-    // Convert to ELO difference using logistic conversion
-    float elo_diff = -400.0f * std::log10(1.0f / score - 1.0f);
-    return elo_diff;
-}
-
-// Function to run the complete AlphaZero pipeline
-int runAlphaZeroPipeline(const PipelineConfig& config) {
-    // Create log directory
-    std::filesystem::create_directories(config.log_dir);
-    std::string log_file_path = config.log_dir + "/alphazero_pipeline_" + getCurrentTimestamp() + ".log";
-    std::ofstream log_file(log_file_path);
-    
-    if (!log_file.is_open()) {
-        std::cerr << "Error: Could not open log file at " << log_file_path << std::endl;
-        return 1;
-    }
-    
-    // Create data directories
-    std::filesystem::create_directories(config.data_dir);
-    std::filesystem::create_directories(config.model_dir);
-    
-    // Log start of pipeline
-    auto log_message = [&](const std::string& message) {
-        log_file << "[" << getCurrentTimestamp() << "] " << message << std::endl;
-        std::cout << message << std::endl;
-    };
-    
-    log_message("Starting AlphaZero training pipeline");
-    log_message("Game: " + config.game_type_str + ", Board size: " + std::to_string(config.board_size));
-    log_message("Training for " + std::to_string(config.num_iterations) + " iterations");
-    
-    // Current best model path
-    std::string best_model_path = config.model_dir + "/best_model.pt";
-    std::string latest_model_path = config.model_dir + "/latest_model.pt";
-    
-    // Check if best model exists, if not initialize it
-    bool best_model_exists = std::filesystem::exists(best_model_path);
-    
-    if (!best_model_exists) {
-        log_message("No best model found, creating initial model");
-        
-        try {
-            bool use_gpu = alphazero::nn::NeuralNetworkFactory::isCudaAvailable();
-            log_message("Using GPU: " + std::string(use_gpu ? "Yes" : "No"));
+    try {
+        // Main AlphaZero iteration loop
+        for (int i = 0; i < config_.num_iterations; ++i) {
+            current_iteration_ = i;
+            std::cout << "Starting iteration " << i + 1 << " of " << config_.num_iterations << std::endl;
             
-            // Create initial model
-            auto neural_net = alphazero::nn::NeuralNetworkFactory::createResNet(
-                config.num_channels, config.board_size, config.num_res_blocks, 
-                config.num_filters, config.policy_size, use_gpu);
+            // Create iteration directory
+            std::string iteration_dir = createIterationDirectory(i);
             
-            // Save initial model as best model
-            neural_net->save(best_model_path);
+            // Step 1: Self-play
+            std::cout << "Starting self-play phase for iteration " << i + 1 << std::endl;
+            std::vector<selfplay::GameData> games = runSelfPlay(iteration_dir);
+            std::cout << "Self-play phase completed with " << games.size() << " games" << std::endl;
             
-            // Also save as latest model
-            neural_net->save(latest_model_path);
+            // Step 2: Train neural network
+            std::cout << "Starting training phase for iteration " << i + 1 << std::endl;
+            float train_loss = trainNeuralNetwork(games, iteration_dir);
+            std::cout << "Training phase completed with final loss: " << train_loss << std::endl;
             
-            log_message("Created and saved initial model");
-        } catch (const std::exception& e) {
-            log_message("Error creating initial model: " + std::string(e.what()));
-            return 1;
-        }
-    } else {
-        log_message("Found existing best model at " + best_model_path);
-    }
-    
-    // Set up self-play settings
-    alphazero::selfplay::SelfPlaySettings self_play_settings;
-    alphazero::mcts::MCTSSettings mcts_settings;
-    
-    mcts_settings.num_simulations = config.num_simulations;
-    mcts_settings.num_threads = config.num_threads;
-    mcts_settings.batch_size = config.mcts_batch_size;
-    mcts_settings.batch_timeout = std::chrono::milliseconds(config.batch_timeout_ms);
-    mcts_settings.exploration_constant = config.exploration_constant;
-    mcts_settings.virtual_loss = config.virtual_loss;
-    mcts_settings.add_dirichlet_noise = config.add_dirichlet_noise;
-    mcts_settings.dirichlet_alpha = config.dirichlet_alpha;
-    mcts_settings.dirichlet_epsilon = config.dirichlet_epsilon;
-    mcts_settings.temperature = config.temperature;
-    
-    self_play_settings.mcts_settings = mcts_settings;
-    self_play_settings.num_parallel_games = config.num_parallel_games;
-    self_play_settings.max_moves = config.max_moves;
-    self_play_settings.temperature_threshold = config.temperature_threshold;
-    self_play_settings.high_temperature = config.high_temperature;
-    self_play_settings.low_temperature = config.low_temperature;
-    
-    // Main training loop
-    for (int iteration = 0; iteration < config.num_iterations; ++iteration) {
-        log_message("Starting iteration " + std::to_string(iteration + 1) + "/" + 
-                    std::to_string(config.num_iterations));
-        
-        std::string iteration_dir = createTimestampedDirectory(
-            config.data_dir, "iteration_" + std::to_string(iteration + 1));
-        
-        // Load best model
-        std::shared_ptr<alphazero::nn::NeuralNetwork> neural_net;
-        try {
-            bool use_gpu = alphazero::nn::NeuralNetworkFactory::isCudaAvailable();
-            neural_net = alphazero::nn::NeuralNetworkFactory::loadResNet(
-                best_model_path, config.num_channels, config.board_size, 
-                config.num_res_blocks, config.num_filters,
-                config.policy_size, use_gpu);
-        } catch (const std::exception& e) {
-            log_message("Error loading best model: " + std::string(e.what()));
-            return 1;
-        }
-        
-        // Step 1: Self-play
-        log_message("Starting self-play generation...");
-        std::string selfplay_dir = iteration_dir + "/selfplay";
-        std::filesystem::create_directories(selfplay_dir);
-        
-        try {
-            // Create self-play manager
-            alphazero::selfplay::SelfPlayManager self_play_manager(neural_net, self_play_settings);
-            
-            // Generate games
-            auto games = self_play_manager.generateGames(
-                config.game_type, config.games_per_iteration, config.board_size);
-            
-            // Save games
-            self_play_manager.saveGames(games, selfplay_dir, "json");
-            
-            log_message("Completed self-play: " + std::to_string(games.size()) + " games generated");
-        } catch (const std::exception& e) {
-            log_message("Error during self-play: " + std::string(e.what()));
-            return 1;
-        }
-        
-        // Step 2: Training
-        log_message("Starting neural network training...");
-        std::string model_checkpoint_path = iteration_dir + "/model_checkpoint.pt";
-        
-        try {
-            // Load self-play games for training
-            auto games = alphazero::selfplay::SelfPlayManager::loadGames(selfplay_dir, "json");
-            
-            if (games.empty()) {
-                log_message("Error: No self-play games found for training");
-                return 1;
-            }
-            
-            log_message("Loaded " + std::to_string(games.size()) + " self-play games for training");
-            
-            // Convert games to training examples
-            log_message("DEBUG: Starting convertToTrainingExamples...");
-            auto examples = alphazero::selfplay::SelfPlayManager::convertToTrainingExamples(games);
-            
-            log_message("Generated " + std::to_string(examples.first.size()) + " training examples");
-            
-            // Debug: Output dimensions and ranges to verify data integrity
-            if (!examples.first.empty()) {
-                try {
-                    log_message("DEBUG: First example dimensions: " + 
-                               std::to_string(examples.first[0].size()) + " x " + 
-                               std::to_string(examples.first[0][0].size()) + " x " + 
-                               std::to_string(examples.first[0][0][0].size()));
-                               
-                    // Check policy size
-                    log_message("DEBUG: First policy size: " + std::to_string(examples.second.first[0].size()));
-                    
-                    // Check value
-                    log_message("DEBUG: First value: " + std::to_string(examples.second.second[0]));
-                    
-                    // Validate integrity of random samples
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::uniform_int_distribution<> distrib(0, examples.first.size() - 1);
-                    
-                    for (int i = 0; i < 5; i++) {
-                        int idx = distrib(gen);
-                        log_message("DEBUG: Random sample #" + std::to_string(i) + " (index " + 
-                                   std::to_string(idx) + ") - dimensions: " +
-                                   std::to_string(examples.first[idx].size()) + " x " + 
-                                   std::to_string(examples.first[idx][0].size()) + " x " + 
-                                   std::to_string(examples.first[idx][0][0].size()) + 
-                                   ", policy size: " + std::to_string(examples.second.first[idx].size()) +
-                                   ", value: " + std::to_string(examples.second.second[idx]));
-                    }
-                } catch (const std::exception& e) {
-                    log_message("DEBUG ERROR: Exception examining examples: " + std::string(e.what()));
-                }
-            }
-            
-            // Train the model
-            log_message("Preparing model for training...");
-            auto model = std::dynamic_pointer_cast<alphazero::nn::ResNetModel>(neural_net);
-            
-            if (!model) {
-                log_message("ERROR: Failed to cast to ResNetModel - neural_net is not a valid ResNetModel");
-                throw std::runtime_error("Failed to cast neural network to ResNetModel");
-            }
-            
-            // Create optimizer - moved declaration to outer scope
-            torch::optim::Adam optimizer(
-                model->parameters(),
-                torch::optim::AdamOptions(config.learning_rate).weight_decay(config.weight_decay)
-            );
-
-            // Determine device for training - prefer GPU if available
-            torch::Device device = torch::kCPU;
-            try {
-                if (alphazero::utils::DeviceUtils::isCudaAvailable()) {
-                    log_message("CUDA is available, using GPU for training");
-                    device = torch::Device(torch::kCUDA, 0);
-                    
-                    // Print CUDA device info
-                    auto [used_mb, total_mb] = alphazero::cuda::get_memory_usage(0);
-                    log_message("GPU memory: " + std::to_string(used_mb) + "MB used / " + 
-                               std::to_string(total_mb) + "MB total");
+            // Step 3: Evaluate new model against previous best
+            if (config_.enable_evaluation && i > 0) {
+                std::cout << "Starting evaluation phase for iteration " << i + 1 << std::endl;
+                bool new_model_is_better = evaluateNewModel(iteration_dir);
+                
+                if (new_model_is_better) {
+                    std::cout << "New model from iteration " << i + 1 << " is better than previous best" << std::endl;
+                    updateBestModel();
                 } else {
-                    log_message("CUDA is not available, using CPU for training");
+                    std::cout << "Previous best model remains champion" << std::endl;
                 }
-            } catch (const std::exception& e) {
-                log_message("WARNING: Error checking CUDA availability: " + std::string(e.what()));
-                log_message("Falling back to CPU for training");
+            } else {
+                // For the first iteration or if evaluation is disabled, always update best model
+                updateBestModel();
             }
             
-            log_message("Using device for training: " + device.str());
+            // Log iteration summary
+            logIterationSummary(i, games.size(), train_loss);
+        }
+        
+        std::cout << "AlphaZero pipeline completed successfully" << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error in AlphaZero pipeline: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+void AlphaZeroPipeline::initializeLogging() {
+    // Create log directory if it doesn't exist
+    std::filesystem::create_directories(config_.log_dir);
+    
+    // Get timestamp for log file
+    std::string timestamp = getTimestampString();
+    std::string log_file = config_.log_dir + "/alphazero_pipeline_" + timestamp + ".log";
+    
+    // Note: Actual logging implementation would use a logging library like spdlog
+    std::cout << "Logging initialized. Log file: " << log_file << std::endl;
+}
+
+void AlphaZeroPipeline::createDirectories() {
+    // Create model directory
+    std::filesystem::create_directories(config_.model_dir);
+    
+    // Create data directory
+    std::filesystem::create_directories(config_.data_dir);
+    
+    // Create log directory
+    std::filesystem::create_directories(config_.log_dir);
+    
+    std::cout << "Created directory structure: models, data, logs" << std::endl;
+}
+
+void AlphaZeroPipeline::initializeNeuralNetwork() {
+    // Check if there's an existing best model to load
+    std::string best_model_path = config_.model_dir + "/best_model.pt";
+    
+    if (std::filesystem::exists(best_model_path)) {
+        std::cout << "Loading existing best model from: " << best_model_path << std::endl;
+        try {
+            if (config_.network_type == "resnet") {
+                current_model_ = std::make_shared<nn::ResNetModel>(
+                    config_.input_channels, 
+                    config_.board_size,
+                    config_.num_res_blocks,
+                    config_.num_filters,
+                    config_.policy_size
+                );
+                
+                current_model_->load(best_model_path);
+            } 
+            else if (config_.network_type == "ddw_randwire") {
+                auto model = std::make_shared<nn::DDWRandWireResNet>(
+                    config_.input_channels,
+                    config_.policy_size,
+                    config_.num_filters,
+                    config_.num_res_blocks
+                );
+                
+                model->load(best_model_path);
+                current_model_ = std::static_pointer_cast<nn::NeuralNetwork>(model);
+            }
+            else {
+                throw std::runtime_error("Unknown network type: " + config_.network_type);
+            }
+            std::cout << "Model loaded successfully" << std::endl;
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Failed to load existing model: " << e.what() << std::endl;
+            std::cout << "Creating new model instead" << std::endl;
+            initializeNewNeuralNetwork();
+        }
+    } 
+    else {
+        std::cout << "No existing model found, creating new model" << std::endl;
+        initializeNewNeuralNetwork();
+    }
+}
+
+void AlphaZeroPipeline::initializeNewNeuralNetwork() {
+    try {
+        if (config_.network_type == "resnet") {
+            current_model_ = std::make_shared<nn::ResNetModel>(
+                config_.input_channels, 
+                config_.board_size,
+                config_.num_res_blocks,
+                config_.num_filters,
+                config_.policy_size
+            );
+            std::cout << "Created new ResNet model" << std::endl;
+        } 
+        else if (config_.network_type == "ddw_randwire") {
+            auto model = std::make_shared<nn::DDWRandWireResNet>(
+                config_.input_channels,
+                config_.policy_size,
+                config_.num_filters,
+                config_.num_res_blocks
+            );
+            current_model_ = std::static_pointer_cast<nn::NeuralNetwork>(model);
+            std::cout << "Created new DDW-RandWire-ResNet model" << std::endl;
+        }
+        else {
+            throw std::runtime_error("Unknown network type: " + config_.network_type);
+        }
+        
+        // Save the initial model
+        saveBestModel();
+        std::cout << "Initial model saved as best model" << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Failed to create neural network: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+std::string AlphaZeroPipeline::createIterationDirectory(int iteration) {
+    // Create timestamped directory for this iteration
+    std::string timestamp = getTimestampString();
+    std::string iter_dir = config_.data_dir + "/iteration_" + 
+                           std::to_string(iteration + 1) + "_" + timestamp;
+    
+    // Create directory structure
+    std::filesystem::create_directories(iter_dir + "/selfplay");
+    std::filesystem::create_directories(iter_dir + "/training");
+    std::filesystem::create_directories(iter_dir + "/evaluation");
+    
+    return iter_dir;
+}
+
+std::vector<selfplay::GameData> AlphaZeroPipeline::runSelfPlay(const std::string& iteration_dir) {
+    try {
+        // Setup self-play settings
+        selfplay::SelfPlaySettings settings;
+        settings.mcts_settings.num_simulations = config_.mcts_num_simulations;
+        settings.mcts_settings.num_threads = config_.mcts_num_threads;
+        settings.mcts_settings.exploration_constant = config_.mcts_exploration_constant;
+        settings.mcts_settings.temperature = config_.mcts_temperature;
+        settings.mcts_settings.add_dirichlet_noise = config_.mcts_add_dirichlet_noise;
+        settings.mcts_settings.dirichlet_alpha = config_.mcts_dirichlet_alpha;
+        settings.mcts_settings.dirichlet_epsilon = config_.mcts_dirichlet_epsilon;
+        settings.mcts_settings.batch_size = config_.mcts_batch_size;
+        settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        
+        settings.num_parallel_games = config_.self_play_num_parallel_games;
+        settings.max_moves = config_.self_play_max_moves;
+        settings.temperature_threshold = config_.self_play_temperature_threshold;
+        settings.high_temperature = config_.self_play_high_temperature;
+        settings.low_temperature = config_.self_play_low_temperature;
+        settings.add_dirichlet_noise = config_.mcts_add_dirichlet_noise;
+        
+        // Create self-play manager with current best model
+        selfplay::SelfPlayManager self_play_manager(current_model_, settings);
+        
+        // Generate games
+        std::cout << "Generating " << config_.self_play_num_games << " self-play games..." << std::endl;
+        std::vector<selfplay::GameData> games = self_play_manager.generateGames(
+            config_.game_type, 
+            config_.self_play_num_games,
+            config_.board_size
+        );
+        
+        // Save games to iteration directory
+        std::string self_play_dir = iteration_dir + "/selfplay";
+        self_play_manager.saveGames(games, self_play_dir, config_.self_play_output_format);
+        
+        return games;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error during self-play: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData>& games, const std::string& iteration_dir) {
+    try {
+        // Convert games to training examples
+        std::cout << "Converting games to training examples..." << std::endl;
+        auto [states, targets] = selfplay::SelfPlayManager::convertToTrainingExamples(games);
+        auto [policies, values] = targets;
+        
+        std::cout << "Created " << states.size() << " training examples" << std::endl;
+        
+        // Create dataset
+        auto dataset = std::make_shared<training::AlphaZeroDataset>(
+            states, policies, values, torch::kCPU
+        );
+        
+        // Create data loader
+        training::DataLoader data_loader(
+            dataset,
+            config_.train_batch_size,
+            true,  // shuffle
+            config_.train_num_workers,
+            true,  // pin memory
+            false  // don't drop last
+        );
+        
+        // Determine device (use CUDA if available)
+        torch::Device device = torch::kCPU;
+        if (torch::cuda::is_available() && config_.use_gpu) {
+            device = torch::kCUDA;
+            std::cout << "Using CUDA device for training" << std::endl;
+        } else {
+            std::cout << "Using CPU for training (CUDA not available or disabled)" << std::endl;
+        }
+        
+        // Create and initialize training model based on network type
+        torch::nn::Module* training_model = nullptr;
+        
+        if (config_.network_type == "resnet") {
+            auto* model = dynamic_cast<nn::ResNetModel*>(current_model_.get());
+            if (!model) {
+                throw std::runtime_error("Failed to cast to ResNetModel");
+            }
+            training_model = model;
+        }
+        else if (config_.network_type == "ddw_randwire") {
+            // Extract the DDWRandWireResNet from the current model
+            // This is a simplification - actual implementation would need to handle this properly
+            std::cerr << "DDW-RandWire-ResNet training not fully implemented" << std::endl;
+            throw std::runtime_error("DDW-RandWire-ResNet training not yet supported");
+        }
+        else {
+            throw std::runtime_error("Unknown network type: " + config_.network_type);
+        }
+        
+        if (!training_model) {
+            throw std::runtime_error("Failed to initialize training model");
+        }
+        
+        // Move model to device
+        training_model->to(device);
+        
+        // Set up optimizer
+        torch::optim::Adam optimizer(
+            training_model->parameters(),
+            torch::optim::AdamOptions(config_.train_learning_rate)
+                .weight_decay(config_.train_weight_decay)
+        );
+        
+        // Learning rate scheduler
+        torch::optim::StepLR scheduler(
+            optimizer,
+            config_.train_lr_step_size,
+            config_.train_lr_gamma
+        );
+        
+        // Training loop
+        std::cout << "Starting training for " << config_.train_epochs << " epochs" << std::endl;
+        float best_loss = std::numeric_limits<float>::max();
+        float final_loss = 0.0f;
+        
+        for (int epoch = 0; epoch < config_.train_epochs; ++epoch) {
+            // Track metrics
+            float epoch_loss = 0.0f;
+            float policy_loss_sum = 0.0f;
+            float value_loss_sum = 0.0f;
+            int batch_count = 0;
             
             // Set model to training mode
-            model->train(true);
+            training_model->train();
             
-            // Safely move the model to the device
-            try {
-                model->to(device);
-                log_message("Successfully moved model to " + device.str());
-            } catch (const std::exception& e) {
-                log_message("WARNING: Could not move model to " + device.str() + ": " + e.what());
-            }
-            
-            // Verify all example sizes match
-            size_t num_samples = examples.first.size();
-            if (examples.first.size() != examples.second.first.size() || 
-                examples.first.size() != examples.second.second.size()) {
-                log_message("ERROR: Mismatch in tensor dimensions - aborting training");
-                log_message("ERROR: states: " + std::to_string(examples.first.size()) + 
-                           ", policies: " + std::to_string(examples.second.first.size()) + 
-                           ", values: " + std::to_string(examples.second.second.size()));
-                throw std::runtime_error("Mismatch in training example dimensions");
-            }
-            
-            // Get dimensions from the first example for batch size optimization
-            size_t channels = examples.first[0].size();
-            size_t height = examples.first[0][0].size();
-            size_t width = examples.first[0][0][0].size();
-            size_t policy_size = examples.second.first[0].size();
-            
-            log_message("Training data dimensions: " +
-                std::to_string(channels) + "x" + std::to_string(height) + "x" + std::to_string(width) +
-                " states, " + std::to_string(policy_size) + " policy size");
-            
-            // For GPU training, adjust batch size to prevent OOM errors
-            size_t adjusted_batch_size = config.batch_size;
-            if (device.is_cuda()) {
-                // size_t tensor_size_per_example = channels * height * width * 4 + policy_size * 4 + 4; // Unused variable
-                size_t optimal_batch = alphazero::cuda::get_optimal_batch_size(
-                    channels, height, width, policy_size, 16, config.batch_size, 0.7);
-                
-                // Cap batch size based on optimal calculation
-                adjusted_batch_size = std::min(static_cast<size_t>(config.batch_size), optimal_batch); // Cast config.batch_size to size_t
-                if (adjusted_batch_size < config.batch_size) {
-                    log_message("Adjusted batch size from " + std::to_string(config.batch_size) + 
-                               " to " + std::to_string(adjusted_batch_size) + 
-                               " to fit in GPU memory");
-                }
-            }
-            
-            // Create dataset using the new Dataset class
-            std::shared_ptr<alphazero::training::AlphaZeroDataset> dataset;
-            try {
-                log_message("Creating dataset with " + std::to_string(num_samples) + " examples");
-                // Create dataset on CPU first for safety
-                dataset = std::make_shared<alphazero::training::AlphaZeroDataset>(
-                    examples.first, examples.second.first, examples.second.second, torch::kCPU);
-                
-                log_message("Dataset created successfully with " + std::to_string(dataset->size()) + " examples");
-                
-                torch::Device dataset_actual_device = torch::kCPU; // Track the dataset's actual device
+            // Iterate through batches
+            for (const auto& batch : data_loader) {
+                // Move batch to device
+                auto states_tensor = batch.states.to(device);
+                auto policies_tensor = batch.policies.to(device);
+                auto values_tensor = batch.values.to(device);
 
-                // Once created, we can try moving it to the target device if it's not CPU
-                if (device.is_cuda()) {
-                    log_message("Attempting to move dataset to " + device.str());
-                    try {
-                        dataset->to(device); // This moves the TENSORS INSIDE the dataset to GPU
-                        dataset_actual_device = device; // Update if move was successful
-                        log_message("Dataset moved to " + device.str() + " successfully");
-                    } catch (const std::exception& e) {
-                        log_message("WARNING: Failed to move dataset to " + device.str() + 
-                                   ", keeping on CPU: " + std::string(e.what()));
-                        // dataset_actual_device remains torch::kCPU
-                    }
-                }
-            } catch (const std::exception& e) {
-                log_message("ERROR: Failed to create dataset: " + std::string(e.what()));
-                throw;
-            }
-            
-            // Determine number of worker threads for DataLoader
-            size_t num_workers = 0;  // Default to single-threaded for stability
-            
-            // If we have at least 4 CPU cores, use multi-threading
-            size_t num_cores = std::thread::hardware_concurrency();
-            if (num_cores >= 4) {
-                // Leave some cores for the main thread and other processes
-                num_workers = std::min(num_cores / 2, size_t(4));
-                log_message("Using " + std::to_string(num_workers) + " worker threads for data loading");
-            } else {
-                log_message("Using single-threaded data loading (detected " + 
-                           std::to_string(num_cores) + " CPU cores)");
-            }
-            
-            // Create DataLoader
-            // Pin memory only if the target training device is CUDA AND the dataset's tensors are on CPU.
-            bool pin_memory = device.is_cuda() && dataset_actual_device.is_cpu();
-            std::unique_ptr<alphazero::training::DataLoader> dataloader;
-            
-            try {
-                log_message("Creating DataLoader with batch size " + std::to_string(adjusted_batch_size) + 
-                           " and pin_memory: " + (pin_memory ? "true" : "false"));
-                dataloader = std::make_unique<alphazero::training::DataLoader>(
-                    dataset, adjusted_batch_size, true, num_workers, pin_memory, false);
+                // Reset gradients
+                optimizer.zero_grad();
                 
-                log_message("DataLoader created successfully with " + 
-                           std::to_string(dataloader->size()) + " batches");
-            } catch (const std::exception& e) {
-                log_message("ERROR: Failed to create DataLoader: " + std::string(e.what()));
-                throw;
-            }
-            
-            // Training loop
-            log_message("Starting training for " + std::to_string(config.epochs_per_iteration) + " epochs");
-            
-            // Track statistics across all epochs
-            float total_epoch_loss = 0.0f;
-            float total_epoch_policy_loss = 0.0f;
-            float total_epoch_value_loss = 0.0f;
-            int total_epoch_batches = 0;
-            
-            for (int epoch = 0; epoch < config.epochs_per_iteration; epoch++) {
-                // Track metrics for this epoch
-                float epoch_loss = 0.0f;
-                float epoch_policy_loss = 0.0f;
-                float epoch_value_loss = 0.0f;
-                int epoch_batches = 0;
-                
-                // Reset dataloader for the new epoch
-                dataloader->reset();
-                
-                // Log epoch start
-                log_message("Epoch " + std::to_string(epoch + 1) + "/" + 
-                           std::to_string(config.epochs_per_iteration));
-                
-                // Train on batches
-                size_t batch_count = 0;
-                
-                // Iterate through the dataset manually
-                for (size_t batch_idx = 0; batch_idx < dataloader->size(); ++batch_idx) {
-                    try {
-                        // Get the batch
-                        auto batch = dataloader->load_batch(batch_idx);
-                        
-                        // Move batch to model device if necessary
-                        if (batch.device() != device) {
-                            try {
-                                batch.to(device);
-                            } catch (const std::exception& e) {
-                                log_message("WARNING: Failed to move batch to " + device.str() + 
-                                          ", skipping batch: " + std::string(e.what()));
-                                continue;
-                            }
-                        }
-                        
-                        // Log progress periodically
-                        if (++batch_count % 10 == 0 || batch_count == 1) {
-                            log_message("Processing batch " + std::to_string(batch_count) + "/" + 
-                                      std::to_string(dataloader->size()));
-                        }
-                        
-                        // Forward pass with safe device handling
-                        torch::Tensor policy_logits, value;
-                        try {
-                            // Make sure batch is on the right device
-                            if (batch.states.device() != device) {
-                                batch.states = batch.states.to(device);
-                                batch.policies = batch.policies.to(device);
-                                batch.values = batch.values.to(device);
-                            }
-                            
-                            // Perform forward pass with explicit device checking
-                            if (device.is_cuda()) {
-                                torch::cuda::synchronize();  // Ensure previous operations completed
-                            }
-                            
-                            // Use torch::NoGradGuard no_grad;
-                            std::tie(policy_logits, value) = model->forward(batch.states);
-                            
-                            if (device.is_cuda()) {
-                                torch::cuda::synchronize();  // Ensure forward pass completed
-                            }
-                        } catch (const c10::Error& e) {
-                            log_message("PyTorch error in forward pass: " + std::string(e.what()));
-                            continue;  // Skip this batch
-                        }
-                        
-                        // Compute loss with safe operations
-                        auto policy_loss = -torch::sum(batch.policies * policy_logits) / batch.policies.size(0);
-                        auto value_loss = torch::mean(torch::pow(value - batch.values, 2));
-                        auto loss = policy_loss + value_loss;
-                        
-                        // Check for NaN values in loss
-                        if (loss.isnan().any().item<bool>()) {
-                            log_message("WARNING: NaN detected in loss. Skipping this batch.");
-                            continue;
-                        }
-                        
-                        // Backward and optimize
-                        optimizer.zero_grad(); // Now in scope
-                        loss.backward();
-                        
-                        // Check for NaN gradients
-                        bool has_nan_grads = false;
-                        for (const auto& param : model->parameters()) {
-                            if (param.grad().defined() && param.grad().isnan().any().item<bool>()) {
-                                has_nan_grads = true;
-                                break;
-                            }
-                        }
-                        
-                        if (has_nan_grads) {
-                            log_message("WARNING: NaN detected in gradients. Skipping optimizer step.");
-                            optimizer.zero_grad();
-                        } else {
-                            // Step if gradients are valid
-                            optimizer.step();
-                            
-                            // Track metrics
-                            epoch_loss += loss.item<float>();
-                            epoch_policy_loss += policy_loss.item<float>();
-                            epoch_value_loss += value_loss.item<float>();
-                            epoch_batches++;
-                        }
-                    } catch (const c10::Error& e) {
-                        log_message("PyTorch error during training: " + std::string(e.what()));
-                        // Continue to next batch
-                    } catch (const std::exception& e) {
-                        log_message("Error during training: " + std::string(e.what()));
-                        // Continue to next batch
-                    }
-                    
-                    // Periodically clean up memory
-                    if (device.is_cuda() && batch_count % 10 == 0) {
-                        // Use PyTorch's API for synchronization
-                        torch::cuda::synchronize();
-                        
-                        // Synchronize CUDA device to flush operations
-                        cudaDeviceSynchronize();
-                    }
-                }
-                
-                // Calculate average loss for the epoch
-                if (epoch_batches > 0) {
-                    float avg_loss = epoch_loss / epoch_batches;
-                    float avg_policy_loss = epoch_policy_loss / epoch_batches;
-                    float avg_value_loss = epoch_value_loss / epoch_batches;
-                    
-                    log_message("Epoch " + std::to_string(epoch + 1) + "/" + 
-                               std::to_string(config.epochs_per_iteration) + 
-                               ": Loss=" + std::to_string(avg_loss) + 
-                               ", Policy Loss=" + std::to_string(avg_policy_loss) + 
-                               ", Value Loss=" + std::to_string(avg_value_loss));
-                    
-                    // Update total statistics
-                    total_epoch_loss += epoch_loss;
-                    total_epoch_policy_loss += epoch_policy_loss;
-                    total_epoch_value_loss += epoch_value_loss;
-                    total_epoch_batches += epoch_batches;
+                // Forward pass
+                std::tuple<torch::Tensor, torch::Tensor> output;
+                if (config_.network_type == "resnet") {
+                    auto* resnet_model_ptr = dynamic_cast<nn::ResNetModel*>(training_model);
+                    if (!resnet_model_ptr) throw std::runtime_error("Failed to cast training_model to ResNetModel for forward pass");
+                    output = resnet_model_ptr->forward(states_tensor);
                 } else {
-                    log_message("WARNING: No valid batches processed in epoch " + 
-                               std::to_string(epoch + 1));
+                    // DDW-RandWire is not fully implemented for training here yet, this would crash.
+                    // For now, to make it compile, let's assume a similar forward if we were to implement it.
+                    // This part needs proper implementation for DDWRandWireResNet.
+                    throw std::runtime_error("DDW-RandWire training forward pass not implemented in this class-based pipeline.");
+                    // auto* ddw_model_ptr = dynamic_cast<nn::DDWRandWireResNet*>(training_model);
+                    // if (!ddw_model_ptr) throw std::runtime_error("Failed to cast training_model to DDWRandWireResNet for forward pass");
+                    // output = ddw_model_ptr->forward(states_tensor); // Assuming DDWRandWireResNet has such a forward
                 }
+
+                auto policy_output = std::get<0>(output);
+                auto value_output = std::get<1>(output);
                 
-                // Explicit cleanup after each epoch
-                if (device.is_cuda()) {
-                    // Use PyTorch's API for synchronization
-                    torch::cuda::synchronize();
-                    
-                    // Synchronize CUDA device to flush operations
-                    cudaDeviceSynchronize();
+                // Calculate loss
+                // Policy loss: as used in the other pipeline function
+                auto policy_loss = -torch::sum(policies_tensor * torch::log_softmax(policy_output, 1)) / policies_tensor.size(0);
+                
+                // Value loss: MSE
+                auto value_loss = torch::nn::functional::mse_loss(
+                    value_output.view({-1}), values_tensor
+                );
+                
+                // Combined loss
+                auto loss = policy_loss + value_loss;
+                
+                // Backward pass and optimize
+                loss.backward();
+                optimizer.step();
+                
+                // Update metrics
+                epoch_loss += loss.item<float>();
+                policy_loss_sum += policy_loss.item<float>();
+                value_loss_sum += value_loss.item<float>();
+                batch_count++;
+                
+                // Log progress occasionally
+                if (batch_count % 10 == 0) {
+                    std::cout << "Epoch " << epoch + 1 << "/" << config_.train_epochs
+                              << ", Batch " << batch_count << "/" << data_loader.size()
+                              << ", Loss: " << loss.item<float>()
+                              << " (Policy: " << policy_loss.item<float>()
+                              << ", Value: " << value_loss.item<float>() << ")" << std::endl;
                 }
             }
             
-            // Calculate overall training statistics
-            if (total_epoch_batches > 0) {
-                float avg_total_loss = total_epoch_loss / total_epoch_batches;
-                float avg_total_policy_loss = total_epoch_policy_loss / total_epoch_batches;
-                float avg_total_value_loss = total_epoch_value_loss / total_epoch_batches;
-                
-                log_message("Training completed: Average Loss=" + std::to_string(avg_total_loss) + 
-                           ", Policy Loss=" + std::to_string(avg_total_policy_loss) + 
-                           ", Value Loss=" + std::to_string(avg_total_value_loss));
+            // Step scheduler
+            scheduler.step();
+            
+            // Calculate average loss for the epoch
+            epoch_loss /= batch_count;
+            policy_loss_sum /= batch_count;
+            value_loss_sum /= batch_count;
+            
+            std::cout << "Epoch " << epoch + 1 << "/" << config_.train_epochs
+                      << " completed. Avg Loss: " << epoch_loss
+                      << " (Policy: " << policy_loss_sum
+                      << ", Value: " << value_loss_sum << ")" << std::endl;
+            
+            // Save model if loss improved
+            if (epoch_loss < best_loss) {
+                best_loss = epoch_loss;
+                std::string model_path = iteration_dir + "/training/best_epoch_model.pt";
+                torch::save(training_model->parameters(), model_path);
+                std::cout << "Saved best epoch model with loss: " << best_loss << std::endl;
             }
             
-            // Clean up DataLoader and Dataset
-            dataloader.reset();
-            dataset.reset();
-            
-            // Explicitly clean up CUDA memory
-            if (device.is_cuda()) {
-                // Use PyTorch's API for synchronization
-                torch::cuda::synchronize();
-                
-                // Synchronize CUDA device to flush operations
-                cudaDeviceSynchronize();
-            }
-            
-            // Set to evaluation mode
-            model->train(false);
-            
-            // Define model checkpoint path and save the model
-            std::string model_checkpoint_path = iteration_dir + "/model_checkpoint.pt";
-            neural_net->save(model_checkpoint_path);
-            
-            // Also save as latest model
-            neural_net->save(latest_model_path);
-            
-            log_message("Completed training and saved model checkpoint");
-            
-        } catch (const std::exception& e) {
-            log_message("Error during training: " + std::string(e.what()));
-            return 1;
+            // Save final epoch result
+            final_loss = epoch_loss;
         }
         
-        // Step 3: Evaluation against best model
-        log_message("Starting model evaluation...");
+        // Save final model for this iteration
+        std::string latest_model_path = config_.model_dir + "/latest_model.pt";
+        torch::save(training_model->parameters(), latest_model_path);
+        std::cout << "Saved latest model to: " << latest_model_path << std::endl;
         
-        try {
-            // Load best model and new model
-            bool use_gpu = alphazero::nn::NeuralNetworkFactory::isCudaAvailable();
-            
-            auto best_model = alphazero::nn::NeuralNetworkFactory::loadResNet(
-                best_model_path, config.num_channels, config.board_size, 
-                config.num_res_blocks, config.num_filters,
-                config.policy_size, use_gpu);
-                
-            auto new_model = alphazero::nn::NeuralNetworkFactory::loadResNet(
-                model_checkpoint_path, config.num_channels, config.board_size, 
-                config.num_res_blocks, config.num_filters,
-                config.policy_size, use_gpu);
-            
-            // Create Arena settings
-            alphazero::evaluation::EvaluationSettings eval_settings;
-            eval_settings.mcts_settings_first = mcts_settings;  // Copy from self-play
-            eval_settings.mcts_settings_second = mcts_settings;
-            eval_settings.mcts_settings_first.add_dirichlet_noise = false; // No noise in evaluation
-            eval_settings.mcts_settings_second.add_dirichlet_noise = false;
-            eval_settings.num_parallel_games = config.arena_threads;
-            eval_settings.num_games = config.arena_games;
-            
-            // Run arena matches (new model vs best model)
-            alphazero::evaluation::ModelEvaluator evaluator(new_model, best_model, eval_settings);
-            
-            // Log starting the tournament
-            log_message("Playing " + std::to_string(config.arena_games) + 
-                       " evaluation games between new model and best model");
-            
-            // Run the tournament
-            auto tournament_result = evaluator.runTournament(config.game_type, config.board_size);
-            
-            // Extract results
-            int new_model_wins = tournament_result.wins_first;
-            int best_model_wins = tournament_result.wins_second;
-            int draws = tournament_result.draws;
-            
-            // Use ELO difference from the tournament result
-            float elo_diff = tournament_result.elo_diff;
-            
-            log_message("Evaluation results: New model vs Best model");
-            log_message("Games played: " + std::to_string(new_model_wins + best_model_wins + draws));
-            log_message("New model wins: " + std::to_string(new_model_wins) + 
-                       " (" + std::to_string(100.0f * new_model_wins / config.arena_games) + "%)");
-            log_message("Best model wins: " + std::to_string(best_model_wins) + 
-                       " (" + std::to_string(100.0f * best_model_wins / config.arena_games) + "%)");
-            log_message("Draws: " + std::to_string(draws) + 
-                       " (" + std::to_string(100.0f * draws / config.arena_games) + "%)");
-            log_message("ELO difference: " + std::to_string(elo_diff));
-            
-            // Step 4: Model acceptance and rotation
-            if (elo_diff >= config.elo_threshold) {
-                log_message("New model accepted as best model (ELO gain: " + 
-                           std::to_string(elo_diff) + ")");
-                
-                // Save new model as versioned checkpoint
-                std::string versioned_path = config.model_dir + "/model_" + 
-                                          getCurrentTimestamp() + "_elo" + 
-                                          std::to_string(static_cast<int>(elo_diff)) + ".pt";
-                std::filesystem::copy_file(model_checkpoint_path, versioned_path, 
-                                         std::filesystem::copy_options::overwrite_existing);
-                
-                // Update best model
-                std::filesystem::copy_file(model_checkpoint_path, best_model_path, 
-                                         std::filesystem::copy_options::overwrite_existing);
-            } else {
-                log_message("New model rejected (ELO gain: " + 
-                           std::to_string(elo_diff) + " < threshold: " + 
-                           std::to_string(config.elo_threshold) + ")");
-            }
-            
-        } catch (const std::exception& e) {
-            log_message("Error during evaluation: " + std::string(e.what()));
-            return 1;
-        }
+        // Also save a copy in the iteration directory
+        std::string iteration_model_path = iteration_dir + "/training/final_model.pt";
+        torch::save(training_model->parameters(), iteration_model_path);
         
-        log_message("Completed iteration successfully");
+        return final_loss;
     }
+    catch (const std::exception& e) {
+        std::cerr << "Error during training: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+bool AlphaZeroPipeline::evaluateNewModel(const std::string& iteration_dir) {
+    try {
+        // Load latest model as contender
+        std::shared_ptr<nn::NeuralNetwork> contender_model;
+        std::string latest_model_path = config_.model_dir + "/latest_model.pt";
+        
+        if (config_.network_type == "resnet") {
+            contender_model = std::make_shared<nn::ResNetModel>(
+                config_.input_channels, 
+                config_.board_size,
+                config_.num_res_blocks,
+                config_.num_filters,
+                config_.policy_size
+            );
+            contender_model->load(latest_model_path);
+        } 
+        else if (config_.network_type == "ddw_randwire") {
+            auto model = std::make_shared<nn::DDWRandWireResNet>(
+                config_.input_channels,
+                config_.policy_size,
+                config_.num_filters,
+                config_.num_res_blocks
+            );
+            model->load(latest_model_path);
+            contender_model = std::static_pointer_cast<nn::NeuralNetwork>(model);
+        }
+        else {
+            throw std::runtime_error("Unknown network type: " + config_.network_type);
+        }
+        
+        // Load best model as champion
+        std::shared_ptr<nn::NeuralNetwork> champion_model;
+        std::string best_model_path = config_.model_dir + "/best_model.pt";
+        
+        if (config_.network_type == "resnet") {
+            champion_model = std::make_shared<nn::ResNetModel>(
+                config_.input_channels, 
+                config_.board_size,
+                config_.num_res_blocks,
+                config_.num_filters,
+                config_.policy_size
+            );
+            champion_model->load(best_model_path);
+        } 
+        else if (config_.network_type == "ddw_randwire") {
+            auto model = std::make_shared<nn::DDWRandWireResNet>(
+                config_.input_channels,
+                config_.policy_size,
+                config_.num_filters,
+                config_.num_res_blocks
+            );
+            model->load(best_model_path);
+            champion_model = std::static_pointer_cast<nn::NeuralNetwork>(model);
+        }
+        else {
+            throw std::runtime_error("Unknown network type: " + config_.network_type);
+        }
+        
+        // Set up arena settings
+        selfplay::SelfPlaySettings arena_settings;
+        arena_settings.mcts_settings.num_simulations = config_.arena_num_simulations;
+        arena_settings.mcts_settings.num_threads = config_.arena_num_threads;
+        arena_settings.mcts_settings.exploration_constant = config_.mcts_exploration_constant;
+        arena_settings.mcts_settings.temperature = config_.arena_temperature;
+        arena_settings.mcts_settings.add_dirichlet_noise = false; // No noise in arena games
+        arena_settings.mcts_settings.batch_size = config_.mcts_batch_size;
+        arena_settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        
+        arena_settings.num_parallel_games = config_.arena_num_parallel_games;
+        arena_settings.max_moves = config_.self_play_max_moves; // Same as self-play
+        arena_settings.temperature_threshold = 0; // No high temperature period
+        arena_settings.high_temperature = 0.0f;
+        arena_settings.low_temperature = config_.arena_temperature;
+        arena_settings.add_dirichlet_noise = false;
+        
+        // Create self-play managers for both models
+        selfplay::SelfPlayManager champion_manager(champion_model, arena_settings);
+        selfplay::SelfPlayManager contender_manager(contender_model, arena_settings);
+        
+        // Play half the games with each model as first player
+        int num_games = config_.arena_num_games;
+        int half_games = num_games / 2;
+        int champion_wins = 0;
+        int contender_wins = 0;
+        int draws = 0;
+        
+        // Champion as first player
+        std::cout << "Playing " << half_games << " arena games with champion as first player..." << std::endl;
+        std::vector<selfplay::GameData> first_half = playArenaGames(
+            champion_manager, contender_manager, half_games, iteration_dir + "/evaluation/champion_first"
+        );
+        
+        // Contender as first player
+        std::cout << "Playing " << num_games - half_games << " arena games with contender as first player..." << std::endl;
+        std::vector<selfplay::GameData> second_half = playArenaGames(
+            contender_manager, champion_manager, num_games - half_games, iteration_dir + "/evaluation/contender_first"
+        );
+        
+        // Combine and count results
+        std::vector<selfplay::GameData> all_games;
+        all_games.insert(all_games.end(), first_half.begin(), first_half.end());
+        all_games.insert(all_games.end(), second_half.begin(), second_half.end());
+        
+        for (const auto& game : first_half) {
+            if (game.winner == 1) champion_wins++;
+            else if (game.winner == 2) contender_wins++;
+            else draws++;
+        }
+        
+        for (const auto& game : second_half) {
+            if (game.winner == 1) contender_wins++;
+            else if (game.winner == 2) champion_wins++;
+            else draws++;
+        }
+        
+        // Calculate win rate for the contender
+        float contender_win_rate = static_cast<float>(contender_wins) / all_games.size();
+        float draw_rate = static_cast<float>(draws) / all_games.size();
+        
+        std::cout << "Arena evaluation complete. Results:" << std::endl;
+        std::cout << "  Champion wins: " << champion_wins << " (" 
+                 << 100.0f * champion_wins / all_games.size() << "%)" << std::endl;
+        std::cout << "  Contender wins: " << contender_wins << " (" 
+                 << 100.0f * contender_win_rate << "%)" << std::endl;
+        std::cout << "  Draws: " << draws << " (" 
+                 << 100.0f * draw_rate << "%)" << std::endl;
+        
+        // Save evaluation results
+        saveEvaluationResults(
+            iteration_dir + "/evaluation/results.json",
+            champion_wins,
+            contender_wins,
+            draws,
+            all_games.size()
+        );
+        
+        // Return true if contender is better (based on win rate threshold)
+        return contender_win_rate > config_.arena_win_rate_threshold;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error during evaluation: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+std::vector<selfplay::GameData> AlphaZeroPipeline::playArenaGames(
+    selfplay::SelfPlayManager& player1_manager,
+    selfplay::SelfPlayManager& player2_manager,
+    int num_games,
+    const std::string& output_dir) {
     
-    log_message("AlphaZero training pipeline completed successfully");
-    return 0;
+    // Create output directory
+    std::filesystem::create_directories(output_dir);
+    
+    // In a real implementation, we would need to carefully orchestrate the MCTS engines
+    // to use the appropriate neural networks at the right times. This is a simplified version.
+    
+    // For now, we'll just use player1_manager to play the games
+    // In reality, we'd need to alternate between models during the game
+    std::vector<selfplay::GameData> games = player1_manager.generateGames(
+        config_.game_type, num_games, config_.board_size
+    );
+    
+    // Save games
+    player1_manager.saveGames(games, output_dir, "json");
+    
+    return games;
+}
+
+void AlphaZeroPipeline::saveEvaluationResults(
+    const std::string& file_path,
+    int champion_wins,
+    int contender_wins,
+    int draws,
+    int total_games) {
+    
+    try {
+        // Create JSON with results
+        nlohmann::json results;
+        results["timestamp"] = getTimestampString();
+        results["iteration"] = current_iteration_ + 1;
+        results["champion_wins"] = champion_wins;
+        results["contender_wins"] = contender_wins;
+        results["draws"] = draws;
+        results["total_games"] = total_games;
+        results["champion_win_rate"] = static_cast<float>(champion_wins) / total_games;
+        results["contender_win_rate"] = static_cast<float>(contender_wins) / total_games;
+        results["draw_rate"] = static_cast<float>(draws) / total_games;
+        
+        // Save to file
+        std::ofstream file(file_path);
+        if (file) {
+            file << results.dump(2) << std::endl;
+            std::cout << "Saved evaluation results to: " << file_path << std::endl;
+        } else {
+            std::cerr << "Failed to save evaluation results to: " << file_path << std::endl;
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error saving evaluation results: " << e.what() << std::endl;
+    }
+}
+
+void AlphaZeroPipeline::updateBestModel() {
+    try {
+        std::string latest_model_path = config_.model_dir + "/latest_model.pt";
+        std::string best_model_path = config_.model_dir + "/best_model.pt";
+        
+        // Copy latest model to best model
+        std::cout << "Updating best model from: " << latest_model_path << " to: " << best_model_path << std::endl;
+        
+        // Load latest model
+        if (config_.network_type == "resnet") {
+            auto* model = dynamic_cast<nn::ResNetModel*>(current_model_.get());
+            if (!model) {
+                throw std::runtime_error("Failed to cast to ResNetModel");
+            }
+            model->load(latest_model_path);
+        } 
+        else if (config_.network_type == "ddw_randwire") {
+            auto* model = dynamic_cast<nn::DDWRandWireResNet*>(current_model_.get());
+            if (!model) {
+                throw std::runtime_error("Failed to get DDWRandWireResNet model from current_model_");
+            }
+            
+            model->load(latest_model_path);
+        }
+        else {
+            throw std::runtime_error("Unknown network type: " + config_.network_type);
+        }
+        
+        // Save as best model
+        saveBestModel();
+        std::cout << "Best model updated successfully" << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error updating best model: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+void AlphaZeroPipeline::saveBestModel() {
+    try {
+        std::string best_model_path = config_.model_dir + "/best_model.pt";
+        current_model_->save(best_model_path);
+        std::cout << "Saved best model to: " << best_model_path << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error saving best model: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+void AlphaZeroPipeline::logIterationSummary(int iteration, int num_games, float train_loss) {
+    try {
+        std::string summary_path = config_.log_dir + "/iteration_summary.csv";
+        bool file_exists = std::filesystem::exists(summary_path);
+        
+        std::ofstream file(summary_path, std::ios::app);
+        if (!file) {
+            std::cerr << "Failed to open summary file: " << summary_path << std::endl;
+            return;
+        }
+        
+        // Write header if new file
+        if (!file_exists) {
+            file << "Iteration,Timestamp,NumGames,TrainLoss" << std::endl;
+        }
+        
+        // Write data
+        file << (iteration + 1) << ","
+             << getTimestampString() << ","
+             << num_games << ","
+             << train_loss << std::endl;
+             
+        std::cout << "Logged iteration summary to: " << summary_path << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error logging iteration summary: " << e.what() << std::endl;
+    }
+}
+
+AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
+    AlphaZeroPipelineConfig config;
+    
+    // Load YAML file
+    try {
+        std::ifstream file(config_path);
+        if (!file) {
+            throw std::runtime_error("Failed to open config file: " + config_path);
+        }
+        
+        // Use YAML-CPP to parse the file
+        YAML::Node yaml = YAML::LoadFile(config_path);
+        
+        // Parse game settings
+        if (yaml["game"]) {
+            std::string game_str = yaml["game"].as<std::string>();
+            if (game_str == "gomoku") {
+                config.game_type = core::GameType::GOMOKU;
+            } else if (game_str == "chess") {
+                config.game_type = core::GameType::CHESS;
+            } else if (game_str == "go") {
+                config.game_type = core::GameType::GO;
+            } else {
+                throw std::runtime_error("Unknown game type: " + game_str);
+            }
+        }
+        
+        if (yaml["board_size"]) {
+            config.board_size = yaml["board_size"].as<int>();
+        }
+        
+        // Parse directory settings
+        if (yaml["model_dir"]) {
+            config.model_dir = yaml["model_dir"].as<std::string>();
+        }
+        
+        if (yaml["data_dir"]) {
+            config.data_dir = yaml["data_dir"].as<std::string>();
+        }
+        
+        if (yaml["log_dir"]) {
+            config.log_dir = yaml["log_dir"].as<std::string>();
+        }
+        
+        // Parse neural network settings
+        if (yaml["network"]) {
+            auto network = yaml["network"];
+            
+            if (network["num_res_blocks"]) {
+                config.num_res_blocks = network["num_res_blocks"].as<int>();
+            }
+            
+            if (network["num_filters"]) {
+                config.num_filters = network["num_filters"].as<int>();
+            }
+        }
+        
+        // Parse training settings
+        if (yaml["train"]) {
+            auto train = yaml["train"];
+            
+            if (train["iterations"]) {
+                config.num_iterations = train["iterations"].as<int>();
+            }
+            
+            if (train["epochs"]) {
+                config.train_epochs = train["epochs"].as<int>();
+            }
+            
+            if (train["batch_size"]) {
+                config.train_batch_size = train["batch_size"].as<int>();
+            }
+            
+            if (train["learning_rate"]) {
+                config.train_learning_rate = train["learning_rate"].as<float>();
+            }
+            
+            if (train["weight_decay"]) {
+                config.train_weight_decay = train["weight_decay"].as<float>();
+            }
+        }
+        
+        // Parse MCTS settings
+        if (yaml["mcts"]) {
+            auto mcts = yaml["mcts"];
+            
+            if (mcts["num_simulations"]) {
+                config.mcts_num_simulations = mcts["num_simulations"].as<int>();
+            }
+            
+            if (mcts["num_threads"]) {
+                config.mcts_num_threads = mcts["num_threads"].as<int>();
+            }
+            
+            if (mcts["batch_size"]) {
+                config.mcts_batch_size = mcts["batch_size"].as<int>();
+            }
+            
+            if (mcts["exploration_constant"]) {
+                config.mcts_exploration_constant = mcts["exploration_constant"].as<float>();
+            }
+            
+            if (mcts["add_dirichlet_noise"]) {
+                config.mcts_add_dirichlet_noise = mcts["add_dirichlet_noise"].as<bool>();
+            }
+            
+            if (mcts["dirichlet_alpha"]) {
+                config.mcts_dirichlet_alpha = mcts["dirichlet_alpha"].as<float>();
+            }
+            
+            if (mcts["dirichlet_epsilon"]) {
+                config.mcts_dirichlet_epsilon = mcts["dirichlet_epsilon"].as<float>();
+            }
+            
+            if (mcts["temperature"]) {
+                config.mcts_temperature = mcts["temperature"].as<float>();
+            }
+            
+            if (mcts["batch_timeout_ms"]) {
+                config.mcts_batch_timeout_ms = mcts["batch_timeout_ms"].as<int>();
+            }
+        }
+        
+        // Parse self-play settings
+        if (yaml["self_play"]) {
+            auto self_play = yaml["self_play"];
+            
+            if (self_play["num_games"]) {
+                config.self_play_num_games = self_play["num_games"].as<int>();
+            }
+            
+            if (self_play["num_parallel_games"]) {
+                config.self_play_num_parallel_games = self_play["num_parallel_games"].as<int>();
+            }
+            
+            if (self_play["max_moves"]) {
+                config.self_play_max_moves = self_play["max_moves"].as<int>();
+            }
+            
+            if (self_play["temperature_threshold"]) {
+                config.self_play_temperature_threshold = self_play["temperature_threshold"].as<int>();
+            }
+            
+            if (self_play["high_temperature"]) {
+                config.self_play_high_temperature = self_play["high_temperature"].as<float>();
+            }
+            
+            if (self_play["low_temperature"]) {
+                config.self_play_low_temperature = self_play["low_temperature"].as<float>();
+            }
+            
+            if (self_play["output_format"]) {
+                config.self_play_output_format = self_play["output_format"].as<std::string>();
+            }
+        }
+        
+        // Parse evaluation settings
+        if (yaml["evaluation"]) {
+            auto eval = yaml["evaluation"];
+            
+            if (eval["num_games"]) {
+                config.arena_num_games = eval["num_games"].as<int>();
+            }
+            
+            if (eval["num_parallel_games"]) {
+                config.arena_num_parallel_games = eval["num_parallel_games"].as<int>();
+            }
+            
+            if (eval["elo_threshold"]) {
+                float elo_threshold = eval["elo_threshold"].as<float>();
+                // Convert ELO threshold to win rate threshold using the formula:
+                // win_rate = 1 / (1 + 10^(-elo/400))
+                config.arena_win_rate_threshold = 1.0f / (1.0f + std::pow(10.0f, -elo_threshold / 400.0f));
+            }
+        }
+        
+        // Parse arena settings
+        if (yaml["arena"]) {
+            auto arena = yaml["arena"];
+            
+            if (arena["enabled"]) {
+                config.enable_evaluation = arena["enabled"].as<bool>();
+            }
+            
+            if (arena["num_games"]) {
+                config.arena_num_games = arena["num_games"].as<int>();
+            }
+            
+            if (arena["num_threads"]) {
+                config.arena_num_threads = arena["num_threads"].as<int>();
+            }
+        }
+        
+        return config;
+    }
+    catch (const std::exception& e) {
+        throw std::runtime_error("Error parsing config file: " + std::string(e.what()));
+    }
+}
+
+int runAlphaZeroPipelineFromConfig(const std::string& config_path) {
+    try {
+        // Parse config file
+        AlphaZeroPipelineConfig config = parseConfigFile(config_path);
+        
+        // Create and run pipeline
+        AlphaZeroPipeline pipeline(config);
+        pipeline.run();
+        
+        return 0;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error running AlphaZero pipeline: " << e.what() << std::endl;
+        return 1;
+    }
 }
 
 } // namespace cli

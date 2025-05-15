@@ -19,31 +19,22 @@ namespace cli {
 
 // CLI command handler for the complete AlphaZero pipeline
 int runPipelineCommand(const std::vector<std::string>& args) {
-    std::cout << "Executing AlphaZero training pipeline..." << std::endl;
-    
-    // Parse arguments for configuration
-    std::string config_path;
-    for (size_t i = 0; i < args.size(); i++) {
-        if (args[i] == "--config" && i + 1 < args.size()) {
-            config_path = args[i + 1];
-            break;
-        }
-    }
-    
-    if (config_path.empty()) {
-        std::cerr << "Error: Config file path not specified. Use --config <path>" << std::endl;
+    if (args.empty()) {
+        std::cerr << "Error: No configuration file specified." << std::endl;
+        std::cerr << "Usage: omoknuni-cli pipeline <config_file.yaml>" << std::endl;
         return 1;
     }
+
+    // Get config file path
+    const std::string& config_path = args[0];
     
+    // Run the pipeline with the config file
+    std::cout << "Starting AlphaZero pipeline with config: " << config_path << std::endl;
     try {
-        // Parse the pipeline configuration
-        PipelineConfig config = parsePipelineConfig(config_path);
-        
-        // Run the AlphaZero pipeline
-        return runAlphaZeroPipeline(config);
+        return runAlphaZeroPipelineFromConfig(config_path);
     }
     catch (const std::exception& e) {
-        std::cerr << "Error during AlphaZero pipeline: " << e.what() << std::endl;
+        std::cerr << "Error running pipeline: " << e.what() << std::endl;
         return 1;
     }
 }
