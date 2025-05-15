@@ -19,8 +19,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o.d"
   "CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o"
   "CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o.d"
-  "bin/Debug/all_tests"
-  "bin/Debug/all_tests.pdb"
+  "bin/Release/all_tests"
+  "bin/Release/all_tests.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

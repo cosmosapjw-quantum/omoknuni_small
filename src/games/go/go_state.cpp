@@ -419,70 +419,117 @@ std::vector<std::vector<std::vector<float>>> GoState::getTensorRepresentation() 
 }
 
 std::vector<std::vector<std::vector<float>>> GoState::getEnhancedTensorRepresentation() const {
-    // Start with the basic representation
-    std::vector<std::vector<std::vector<float>>> tensor = getTensorRepresentation();
-    
-    // Add additional planes for enhanced features
-    
-    // 4: Liberties of black groups (normalized)
-    // 5: Liberties of white groups (normalized)
-    std::vector<std::vector<float>> blackLiberties(board_size_, std::vector<float>(board_size_, 0.0f));
-    std::vector<std::vector<float>> whiteLiberties(board_size_, std::vector<float>(board_size_, 0.0f));
-    
-    // Get groups from cache (will be calculated if needed)
-    auto blackGroups = rules_->findGroups(1);
-    auto whiteGroups = rules_->findGroups(2);
-    
-    for (const auto& group : blackGroups) {
-        float libertyCount = static_cast<float>(group.liberties.size());
-        float normalizedLiberties = std::min(1.0f, libertyCount / 10.0f);  // Normalize to [0,1]
+    try {
+        // Start with the basic representation
+        std::vector<std::vector<std::vector<float>>> tensor = getTensorRepresentation();
         
-        for (int pos : group.stones) {
-            int y = pos / board_size_;
-            int x = pos % board_size_;
-            blackLiberties[y][x] = normalizedLiberties;
-        }
-    }
-    
-    for (const auto& group : whiteGroups) {
-        float libertyCount = static_cast<float>(group.liberties.size());
-        float normalizedLiberties = std::min(1.0f, libertyCount / 10.0f);  // Normalize to [0,1]
+        // Add additional planes for enhanced features
         
-        for (int pos : group.stones) {
-            int y = pos / board_size_;
-            int x = pos % board_size_;
-            whiteLiberties[y][x] = normalizedLiberties;
+        // 4: Liberties of black groups (normalized)
+        // 5: Liberties of white groups (normalized)
+        std::vector<std::vector<float>> blackLiberties(board_size_, std::vector<float>(board_size_, 0.0f));
+        std::vector<std::vector<float>> whiteLiberties(board_size_, std::vector<float>(board_size_, 0.0f));
+        
+        try {
+            // Get groups from cache (will be calculated if needed)
+            auto blackGroups = rules_->findGroups(1);
+            auto whiteGroups = rules_->findGroups(2);
+            
+            // Process black groups with bounds checking
+            for (const auto& group : blackGroups) {
+                float libertyCount = static_cast<float>(group.liberties.size());
+                float normalizedLiberties = std::min(1.0f, libertyCount / 10.0f);  // Normalize to [0,1]
+                
+                for (int pos : group.stones) {
+                    int y = pos / board_size_;
+                    int x = pos % board_size_;
+                    if (y >= 0 && y < board_size_ && x >= 0 && x < board_size_) {
+                        blackLiberties[y][x] = normalizedLiberties;
+                    }
+                }
+            }
+            
+            // Process white groups with bounds checking
+            for (const auto& group : whiteGroups) {
+                float libertyCount = static_cast<float>(group.liberties.size());
+                float normalizedLiberties = std::min(1.0f, libertyCount / 10.0f);  // Normalize to [0,1]
+                
+                for (int pos : group.stones) {
+                    int y = pos / board_size_;
+                    int x = pos % board_size_;
+                    if (y >= 0 && y < board_size_ && x >= 0 && x < board_size_) {
+                        whiteLiberties[y][x] = normalizedLiberties;
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Exception while processing liberties: " << e.what() << std::endl;
+            // Continue with default liberty planes
         }
-    }
-    
-    tensor.push_back(blackLiberties);
-    tensor.push_back(whiteLiberties);
-    
-    // 6: Ko point
-    std::vector<std::vector<float>> koPlane(board_size_, std::vector<float>(board_size_, 0.0f));
-    if (ko_point_ >= 0) {
-        int y = ko_point_ / board_size_;
-        int x = ko_point_ % board_size_;
-        koPlane[y][x] = 1.0f;
-    }
-    tensor.push_back(koPlane);
-    
-    // 7-8: Distance transforms from borders
-    std::vector<std::vector<float>> distanceX(board_size_, std::vector<float>(board_size_, 0.0f));
-    std::vector<std::vector<float>> distanceY(board_size_, std::vector<float>(board_size_, 0.0f));
-    
-    for (int y = 0; y < board_size_; ++y) {
-        for (int x = 0; x < board_size_; ++x) {
-            // Normalize distances to [0,1]
-            distanceX[y][x] = static_cast<float>(std::min(x, board_size_ - 1 - x)) / (board_size_ / 2);
-            distanceY[y][x] = static_cast<float>(std::min(y, board_size_ - 1 - y)) / (board_size_ / 2);
+        
+        tensor.push_back(blackLiberties);
+        tensor.push_back(whiteLiberties);
+        
+        // 6: Ko point with bounds checking
+        std::vector<std::vector<float>> koPlane(board_size_, std::vector<float>(board_size_, 0.0f));
+        if (ko_point_ >= 0 && ko_point_ < board_size_ * board_size_) {
+            int y = ko_point_ / board_size_;
+            int x = ko_point_ % board_size_;
+            if (y >= 0 && y < board_size_ && x >= 0 && x < board_size_) {
+                koPlane[y][x] = 1.0f;
+            }
         }
+        tensor.push_back(koPlane);
+        
+        // 7-8: Distance transforms from borders
+        std::vector<std::vector<float>> distanceX(board_size_, std::vector<float>(board_size_, 0.0f));
+        std::vector<std::vector<float>> distanceY(board_size_, std::vector<float>(board_size_, 0.0f));
+        
+        for (int y = 0; y < board_size_; ++y) {
+            for (int x = 0; x < board_size_; ++x) {
+                // Normalize distances to [0,1] with bounds checking and division by zero prevention
+                float half_board_size = std::max(1.0f, static_cast<float>(board_size_) / 2.0f);
+                distanceX[y][x] = static_cast<float>(std::min(x, board_size_ - 1 - x)) / half_board_size;
+                distanceY[y][x] = static_cast<float>(std::min(y, board_size_ - 1 - y)) / half_board_size;
+                
+                // Clamp values to [0,1] range to avoid any potential issues
+                distanceX[y][x] = std::min(1.0f, std::max(0.0f, distanceX[y][x]));
+                distanceY[y][x] = std::min(1.0f, std::max(0.0f, distanceY[y][x]));
+            }
+        }
+        
+        tensor.push_back(distanceX);
+        tensor.push_back(distanceY);
+        
+        return tensor;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in GoState::getEnhancedTensorRepresentation: " << e.what() << std::endl;
+        
+        // Return a default tensor with the correct dimensions
+        // Go enhanced tensor typically has 8 planes (3 basic planes + 5 additional feature planes)
+        const int num_planes = 8;
+        
+        return std::vector<std::vector<std::vector<float>>>(
+            num_planes,
+            std::vector<std::vector<float>>(
+                board_size_,
+                std::vector<float>(board_size_, 0.0f)
+            )
+        );
+    } catch (...) {
+        std::cerr << "Unknown exception in GoState::getEnhancedTensorRepresentation" << std::endl;
+        
+        // Return a default tensor with the correct dimensions
+        const int num_planes = 8;
+        
+        return std::vector<std::vector<std::vector<float>>>(
+            num_planes,
+            std::vector<std::vector<float>>(
+                board_size_,
+                std::vector<float>(board_size_, 0.0f)
+            )
+        );
     }
-    
-    tensor.push_back(distanceX);
-    tensor.push_back(distanceY);
-    
-    return tensor;
 }
 
 uint64_t GoState::getHash() const {

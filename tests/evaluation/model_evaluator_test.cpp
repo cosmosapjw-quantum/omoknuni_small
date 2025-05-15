@@ -12,10 +12,17 @@ using namespace alphazero;
 
 class ModelEvaluatorTest : public ::testing::Test {
 protected:
+    std::shared_ptr<nn::ResNetModel> model1;
+    std::shared_ptr<nn::ResNetModel> model2;
+    int64_t input_channels = 17;
+    int64_t board_size = 9;
+    int64_t policy_size = board_size * board_size;
+
     void SetUp() override {
-        // Create small models for testing
-        model1 = nn::NeuralNetworkFactory::createResNet(17, 9, 2, 32);
-        model2 = nn::NeuralNetworkFactory::createResNet(17, 9, 2, 32);
+        // Create two small ResNet models for testing
+        // Parameters: input_channels, board_size, num_res_blocks, num_filters, policy_size
+        model1 = nn::NeuralNetworkFactory::createResNet(input_channels, board_size, 2, 32, policy_size);
+        model2 = nn::NeuralNetworkFactory::createResNet(input_channels, board_size, 2, 32, policy_size);
         
         // Initialize evaluator
         evaluator = std::make_unique<evaluation::ModelEvaluator>(
@@ -24,8 +31,6 @@ protected:
             evaluation::EvaluationSettings{});
     }
     
-    std::shared_ptr<nn::ResNetModel> model1;
-    std::shared_ptr<nn::ResNetModel> model2;
     std::unique_ptr<evaluation::ModelEvaluator> evaluator;
 };
 

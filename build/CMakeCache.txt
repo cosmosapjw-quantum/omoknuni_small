@@ -52,7 +52,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=Debug
+CMAKE_BUILD_TYPE:STRING=
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -613,8 +613,31 @@ DISABLE_CUDNN:BOOL=OFF
 //Enable fallback mode for CUDA functions
 ENABLE_CUDA_FALLBACK:BOOL=ON
 
+//Directory under which to collect all populated content
+FETCHCONTENT_BASE_DIR:PATH=/home/cosmos/omoknuni_small/build/_deps
+
+//Disables all attempts to download or update content and assumes
+// source dirs already exist
+FETCHCONTENT_FULLY_DISCONNECTED:BOOL=OFF
+
+//Enables QUIET option for all content population
+FETCHCONTENT_QUIET:BOOL=ON
+
+//When not empty, overrides where to find pre-populated content
+// for phmap
+FETCHCONTENT_SOURCE_DIR_PHMAP:PATH=
+
+//Enables UPDATE_DISCONNECTED behavior for all content population
+FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
+
+//Enables UPDATE_DISCONNECTED behavior just for population of phmap
+FETCHCONTENT_UPDATES_DISCONNECTED_PHMAP:BOOL=OFF
+
 //Path to a program.
 GITCOMMAND:FILEPATH=/usr/bin/git
+
+//Git command line client
+GIT_EXECUTABLE:FILEPATH=/usr/bin/git
 
 //The directory containing a CMake configuration file for GTest.
 GTest_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/GTest
@@ -645,6 +668,18 @@ OpenMP_gomp_LIBRARY:FILEPATH=/usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so
 
 //Path to the pthread library for OpenMP
 OpenMP_pthread_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpthread.a
+
+//Whether or not to build the examples
+PHMAP_BUILD_EXAMPLES:BOOL=OFF
+
+//Whether or not to build the tests
+PHMAP_BUILD_TESTS:BOOL=OFF
+
+//Path to a file.
+PHMAP_INCLUDE_DIR:PATH=PHMAP_INCLUDE_DIR-NOTFOUND
+
+//Enable installation
+PHMAP_INSTALL:BOOL=OFF
 
 //Name of the computer/site where compile is being run
 SITE:STRING=cosmosapjw
@@ -678,6 +713,18 @@ nlohmann_json_DIR:PATH=/usr/lib/cmake/nlohmann_json
 
 //Path to a file.
 nvtx3_dir:PATH=nvtx3_dir-NOTFOUND
+
+//Value Computed by CMake
+phmap_BINARY_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/phmap-build
+
+//The directory containing a CMake configuration file for phmap.
+phmap_DIR:PATH=phmap_DIR-NOTFOUND
+
+//Value Computed by CMake
+phmap_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+phmap_SOURCE_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/phmap-src
 
 //The directory containing a CMake configuration file for pybind11.
 pybind11_DIR:PATH=/usr/lib/cmake/pybind11
@@ -822,7 +869,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=1
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=2
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -1082,6 +1129,8 @@ FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 FIND_PACKAGE_MESSAGE_DETAILS_Torch:INTERNAL=[/opt/libtorch-2.7.0-cu128/lib/libtorch.so][/opt/libtorch-2.7.0-cu128/include;/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include][v()]
 //ADVANCED property for variable: GITCOMMAND
 GITCOMMAND-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: GIT_EXECUTABLE
+GIT_EXECUTABLE-ADVANCED:INTERNAL=1
 //Test HAS_FLTO
 HAS_FLTO:INTERNAL=1
 //ADVANCED property for variable: MAKECOMMAND

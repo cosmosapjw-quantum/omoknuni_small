@@ -4,14 +4,15 @@
 namespace alphazero {
 namespace mcts {
 
-EvaluationRequest::EvaluationRequest(MCTSNode* n, std::unique_ptr<core::IGameState> s)
-    : node(n), state(std::move(s)) {
+EvaluationRequest::EvaluationRequest(MCTSNode* n, std::unique_ptr<core::IGameState> s, int action_size)
+    : node(n), state(std::move(s)), action_space_size(action_size) {
 }
 
 EvaluationRequest::EvaluationRequest(EvaluationRequest&& other) noexcept
     : node(other.node),
       state(std::move(other.state)),
-      promise(std::move(other.promise)) {
+      promise(std::move(other.promise)),
+      action_space_size(other.action_space_size) {
     
     // We don't nullify other.node because:
     // 1. It doesn't represent ownership, just a reference
@@ -23,6 +24,7 @@ EvaluationRequest& EvaluationRequest::operator=(EvaluationRequest&& other) noexc
         node = other.node;
         state = std::move(other.state);
         promise = std::move(other.promise);
+        action_space_size = other.action_space_size;
         
         // We don't nullify other.node because:
         // 1. It doesn't represent ownership, just a reference

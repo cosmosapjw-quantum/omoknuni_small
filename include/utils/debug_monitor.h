@@ -322,7 +322,7 @@ private:
                      << cpu_usage << "," << gpu_usage << "," << memory_usage << std::endl;
             
             // Print current stats
-            printStats();
+            // printStats();
             
             // Wait for next interval
             std::unique_lock<std::mutex> lock(mutex_);

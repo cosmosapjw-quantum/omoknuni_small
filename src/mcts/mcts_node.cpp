@@ -23,6 +23,27 @@ MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state_param, MCTSNode* pare
     if (!state_) {
         throw std::invalid_argument("Cannot create MCTSNode with null state");
     }
+    
+    // Additional validation to ensure the state is consistent
+    try {
+        if (!state_->validate()) {
+            throw std::runtime_error("State validation failed during node creation");
+        }
+        
+        // Test access to key methods to ensure the state is functional
+        state_->getGameResult();
+        state_->getCurrentPlayer();
+        state_->getLegalMoves();
+        state_->getHash();
+    } catch (const std::exception& e) {
+        // Clean up and propagate the error with more context
+        state_.reset();
+        throw std::invalid_argument(std::string("State validation failed: ") + e.what());
+    } catch (...) {
+        // Clean up and report generic error
+        state_.reset();
+        throw std::invalid_argument("Unknown error during state validation");
+    }
 }
 
 MCTSNode::~MCTSNode() {
@@ -94,7 +115,7 @@ MCTSNode* MCTSNode::selectChild(float exploration_factor) {
 void MCTSNode::expand() {
     // First check if we have a valid state to prevent segfaults
     if (!state_) {
-        std::cerr << "[MCTSNode::expand] state_ is NULL! Cannot expand." << std::endl;
+        // MCTSNode::expand - state_ is NULL! Cannot expand.
         return;
     }
     
@@ -115,20 +136,19 @@ void MCTSNode::expand() {
     try {
         legal_moves = state_->getLegalMoves();
     } catch (const std::exception& e) {
-        std::cerr << "[MCTSNode::expand] Error getting legal moves: " << e.what() << std::endl;
+        // MCTSNode::expand - Error getting legal moves
         return;
     }
     
     if (legal_moves.empty()) {
-        std::cerr << "[MCTSNode::expand] Warning: No legal moves found in state." << std::endl;
+        // MCTSNode::expand - Warning: No legal moves found in state
         return; // Early return if no legal moves
     }
     
     // Safety check for unreasonable number of legal moves
     const size_t max_reasonable_moves = 1000; // Arbitrary limit that should be safe
     if (legal_moves.size() > max_reasonable_moves) {
-        std::cerr << "[MCTSNode::expand] Excessive number of legal moves: " << legal_moves.size() 
-                  << ", limiting to " << max_reasonable_moves << std::endl;
+        // MCTSNode::expand - Excessive number of legal moves, limiting to maximum
         legal_moves.resize(max_reasonable_moves);
     }
     
@@ -138,7 +158,7 @@ void MCTSNode::expand() {
         actions_.reserve(legal_moves.size());
     } 
     catch (const std::exception& e) {
-        std::cerr << "[MCTSNode::expand] Memory allocation error: " << e.what() << std::endl;
+        // MCTSNode::expand - Memory allocation error
         return; // Failed to allocate memory, don't proceed
     }
     
@@ -158,7 +178,7 @@ void MCTSNode::expand() {
             // Clone the state and make the move
             auto new_state = state_->clone();
             if (!new_state) {
-                std::cerr << "[MCTSNode::expand] State clone returned nullptr!" << std::endl;
+                // MCTSNode::expand - State clone returned nullptr
                 had_expansion_error = true;
                 continue;
             }
@@ -173,12 +193,12 @@ void MCTSNode::expand() {
             actions_.push_back(move);
         } 
         catch (const std::bad_alloc& e) {
-            std::cerr << "[MCTSNode::expand] Memory allocation failed: " << e.what() << std::endl;
+            // MCTSNode::expand - Memory allocation failed
             had_expansion_error = true;
             break; // Stop expanding on memory allocation failure
         } 
         catch (const std::exception& e) {
-            std::cerr << "[MCTSNode::expand] Exception during child creation: " << e.what() << std::endl;
+            // MCTSNode::expand - Exception during child creation
             had_expansion_error = true;
             continue; // Try other moves
         }
@@ -206,7 +226,7 @@ void MCTSNode::expand() {
     }
     
     // Log completion with reduced output
-    std::cout << "MCTS node expansion complete: " << children_.size() << " children created" << std::endl;
+    // MCTS node expansion complete
 }
 
 bool MCTSNode::isFullyExpanded() const {
@@ -376,9 +396,9 @@ void MCTSNode::setPriorProbabilities(const std::vector<float>& policy_vector) {
             }
         }
     } catch (const std::exception& e) {
-        std::cerr << "Error in setPriorProbabilities: " << e.what() << std::endl;
+        // Commented out: Error in setPriorProbabilities with error message
     } catch (...) {
-        std::cerr << "Unknown error in setPriorProbabilities" << std::endl;
+        // Commented out: Unknown error in setPriorProbabilities
     }
 }
 

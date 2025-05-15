@@ -14,9 +14,17 @@ using namespace alphazero;
 
 class TrainingDataManagerTest : public ::testing::Test {
 protected:
+    std::shared_ptr<nn::ResNetModel> model;
+    std::unique_ptr<games::gomoku::GomokuState> game_state;
+    int64_t input_channels = 17;
+    int64_t board_size = 9;
+    int64_t policy_size = board_size * board_size;
+
     void SetUp() override {
-        // Create a small model for testing
-        model = nn::NeuralNetworkFactory::createResNet(17, 9, 2, 32);
+        // Create a small ResNet model for testing
+        // Parameters: input_channels, board_size, num_res_blocks, num_filters, policy_size
+        model = nn::NeuralNetworkFactory::createResNet(input_channels, board_size, 2, 32, policy_size);
+        game_state = std::make_unique<games::gomoku::GomokuState>(board_size);
         
         // Create the manager
         training::TrainingDataSettings settings;
@@ -48,7 +56,6 @@ protected:
         std::filesystem::remove_all(test_output_dir);
     }
     
-    std::shared_ptr<nn::ResNetModel> model;
     std::unique_ptr<training::TrainingDataManager> manager;
     std::string test_output_dir;
     selfplay::GameData game1;

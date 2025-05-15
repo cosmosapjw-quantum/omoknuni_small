@@ -12,9 +12,18 @@ using namespace alphazero;
 
 class MCTSWithNNTest : public ::testing::Test {
 protected:
+    std::shared_ptr<nn::ResNetModel> model;
+    mcts::MCTSSettings settings;
+    std::unique_ptr<mcts::MCTSEngine> engine;
+    std::unique_ptr<games::gomoku::GomokuState> game;
+    int64_t input_channels = 17;
+    int64_t board_size = 9;
+    int64_t policy_size = board_size * board_size;
+
     void SetUp() override {
-        // Create a small model for fast testing
-        model = nn::NeuralNetworkFactory::createResNet(17, 9, 2, 32);
+        // Create a small ResNet model for testing
+        // Parameters: input_channels, board_size, num_res_blocks, num_filters, policy_size
+        model = nn::NeuralNetworkFactory::createResNet(input_channels, board_size, 2, 32, policy_size);
         
         // Create MCTS settings for fast testing
         settings.num_simulations = 20;
@@ -29,11 +38,6 @@ protected:
         // Create Gomoku game
         game = std::make_unique<games::gomoku::GomokuState>(9);
     }
-    
-    std::shared_ptr<nn::ResNetModel> model;
-    mcts::MCTSSettings settings;
-    std::unique_ptr<mcts::MCTSEngine> engine;
-    std::unique_ptr<games::gomoku::GomokuState> game;
 };
 
 // Test search with neural network

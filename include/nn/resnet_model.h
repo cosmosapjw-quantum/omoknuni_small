@@ -38,6 +38,11 @@ public:
      * @param num_res_blocks Number of residual blocks
      * @param num_filters Number of filters in convolutional layers
      * @param policy_size Size of policy output (action space size)
+     * 
+     * @note IMPORTANT: The board_size parameter locks the model to a specific board size.
+     * During inference, game states MUST have the same board size as specified here,
+     * otherwise matrix dimension mismatches will occur. This is because the policy head
+     * fully-connected layer dimensions depend on the board size.
      */
     ResNetModel(int64_t input_channels, int64_t board_size, 
                 int64_t num_res_blocks = 10, int64_t num_filters = 128,

@@ -718,6 +718,19 @@ transposition_integration_test/fast:
 .PHONY : transposition_integration_test/fast
 
 #=============================================================================
+# Target rules for targets named self_play_games_test
+
+# Build rule for target.
+self_play_games_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 self_play_games_test
+.PHONY : self_play_games_test
+
+# fast build rule for target.
+self_play_games_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/build
+.PHONY : self_play_games_test/fast
+
+#=============================================================================
 # Target rules for targets named mcts_tests
 
 # Build rule for target.
@@ -742,6 +755,54 @@ all_tests: cmake_check_build_system
 all_tests/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/build
 .PHONY : all_tests/fast
+
+src/cli/alphazero_cli_pipeline.o: src/cli/alphazero_cli_pipeline.cpp.o
+.PHONY : src/cli/alphazero_cli_pipeline.o
+
+# target to build an object file
+src/cli/alphazero_cli_pipeline.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o
+.PHONY : src/cli/alphazero_cli_pipeline.cpp.o
+
+src/cli/alphazero_cli_pipeline.i: src/cli/alphazero_cli_pipeline.cpp.i
+.PHONY : src/cli/alphazero_cli_pipeline.i
+
+# target to preprocess a source file
+src/cli/alphazero_cli_pipeline.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.i
+.PHONY : src/cli/alphazero_cli_pipeline.cpp.i
+
+src/cli/alphazero_cli_pipeline.s: src/cli/alphazero_cli_pipeline.cpp.s
+.PHONY : src/cli/alphazero_cli_pipeline.s
+
+# target to generate assembly for a file
+src/cli/alphazero_cli_pipeline.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.s
+.PHONY : src/cli/alphazero_cli_pipeline.cpp.s
+
+src/cli/alphazero_pipeline.o: src/cli/alphazero_pipeline.cpp.o
+.PHONY : src/cli/alphazero_pipeline.o
+
+# target to build an object file
+src/cli/alphazero_pipeline.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o
+.PHONY : src/cli/alphazero_pipeline.cpp.o
+
+src/cli/alphazero_pipeline.i: src/cli/alphazero_pipeline.cpp.i
+.PHONY : src/cli/alphazero_pipeline.i
+
+# target to preprocess a source file
+src/cli/alphazero_pipeline.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.i
+.PHONY : src/cli/alphazero_pipeline.cpp.i
+
+src/cli/alphazero_pipeline.s: src/cli/alphazero_pipeline.cpp.s
+.PHONY : src/cli/alphazero_pipeline.s
+
+# target to generate assembly for a file
+src/cli/alphazero_pipeline.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.s
+.PHONY : src/cli/alphazero_pipeline.cpp.s
 
 src/cli/cli_manager.o: src/cli/cli_manager.cpp.o
 .PHONY : src/cli/cli_manager.o
@@ -1271,6 +1332,54 @@ src/selfplay/self_play_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.s
 .PHONY : src/selfplay/self_play_manager.cpp.s
 
+src/training/data_loader.o: src/training/data_loader.cpp.o
+.PHONY : src/training/data_loader.o
+
+# target to build an object file
+src/training/data_loader.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o
+.PHONY : src/training/data_loader.cpp.o
+
+src/training/data_loader.i: src/training/data_loader.cpp.i
+.PHONY : src/training/data_loader.i
+
+# target to preprocess a source file
+src/training/data_loader.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/training/data_loader.cpp.i
+.PHONY : src/training/data_loader.cpp.i
+
+src/training/data_loader.s: src/training/data_loader.cpp.s
+.PHONY : src/training/data_loader.s
+
+# target to generate assembly for a file
+src/training/data_loader.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/training/data_loader.cpp.s
+.PHONY : src/training/data_loader.cpp.s
+
+src/training/dataset.o: src/training/dataset.cpp.o
+.PHONY : src/training/dataset.o
+
+# target to build an object file
+src/training/dataset.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/training/dataset.cpp.o
+.PHONY : src/training/dataset.cpp.o
+
+src/training/dataset.i: src/training/dataset.cpp.i
+.PHONY : src/training/dataset.i
+
+# target to preprocess a source file
+src/training/dataset.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/training/dataset.cpp.i
+.PHONY : src/training/dataset.cpp.i
+
+src/training/dataset.s: src/training/dataset.cpp.s
+.PHONY : src/training/dataset.s
+
+# target to generate assembly for a file
+src/training/dataset.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/training/dataset.cpp.s
+.PHONY : src/training/dataset.cpp.s
+
 src/training/training_data_manager.o: src/training/training_data_manager.cpp.o
 .PHONY : src/training/training_data_manager.o
 
@@ -1622,6 +1731,30 @@ tests/games/gomoku/gomoku_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/games/gomoku/gomoku_test.cpp.s
 .PHONY : tests/games/gomoku/gomoku_test.cpp.s
 
+tests/integration/games/self_play_games_test.o: tests/integration/games/self_play_games_test.cpp.o
+.PHONY : tests/integration/games/self_play_games_test.o
+
+# target to build an object file
+tests/integration/games/self_play_games_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test.cpp.o
+.PHONY : tests/integration/games/self_play_games_test.cpp.o
+
+tests/integration/games/self_play_games_test.i: tests/integration/games/self_play_games_test.cpp.i
+.PHONY : tests/integration/games/self_play_games_test.i
+
+# target to preprocess a source file
+tests/integration/games/self_play_games_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test.cpp.i
+.PHONY : tests/integration/games/self_play_games_test.cpp.i
+
+tests/integration/games/self_play_games_test.s: tests/integration/games/self_play_games_test.cpp.s
+.PHONY : tests/integration/games/self_play_games_test.s
+
+# target to generate assembly for a file
+tests/integration/games/self_play_games_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test.cpp.s
+.PHONY : tests/integration/games/self_play_games_test.cpp.s
+
 tests/integration/mcts_with_nn_test.o: tests/integration/mcts_with_nn_test.cpp.o
 .PHONY : tests/integration/mcts_with_nn_test.o
 
@@ -1900,10 +2033,17 @@ help:
 	@echo "... model_evaluator_test"
 	@echo "... neural_network_test"
 	@echo "... omoknuni_cli"
+	@echo "... self_play_games_test"
 	@echo "... self_play_manager_test"
 	@echo "... training_data_manager_test"
 	@echo "... transposition_integration_test"
 	@echo "... transposition_table_test"
+	@echo "... src/cli/alphazero_cli_pipeline.o"
+	@echo "... src/cli/alphazero_cli_pipeline.i"
+	@echo "... src/cli/alphazero_cli_pipeline.s"
+	@echo "... src/cli/alphazero_pipeline.o"
+	@echo "... src/cli/alphazero_pipeline.i"
+	@echo "... src/cli/alphazero_pipeline.s"
 	@echo "... src/cli/cli_manager.o"
 	@echo "... src/cli/cli_manager.i"
 	@echo "... src/cli/cli_manager.s"
@@ -1970,6 +2110,12 @@ help:
 	@echo "... src/selfplay/self_play_manager.o"
 	@echo "... src/selfplay/self_play_manager.i"
 	@echo "... src/selfplay/self_play_manager.s"
+	@echo "... src/training/data_loader.o"
+	@echo "... src/training/data_loader.i"
+	@echo "... src/training/data_loader.s"
+	@echo "... src/training/dataset.o"
+	@echo "... src/training/dataset.i"
+	@echo "... src/training/dataset.s"
 	@echo "... src/training/training_data_manager.o"
 	@echo "... src/training/training_data_manager.i"
 	@echo "... src/training/training_data_manager.s"
@@ -2012,6 +2158,9 @@ help:
 	@echo "... tests/games/gomoku/gomoku_test.o"
 	@echo "... tests/games/gomoku/gomoku_test.i"
 	@echo "... tests/games/gomoku/gomoku_test.s"
+	@echo "... tests/integration/games/self_play_games_test.o"
+	@echo "... tests/integration/games/self_play_games_test.i"
+	@echo "... tests/integration/games/self_play_games_test.s"
 	@echo "... tests/integration/mcts_with_nn_test.o"
 	@echo "... tests/integration/mcts_with_nn_test.i"
 	@echo "... tests/integration/mcts_with_nn_test.s"

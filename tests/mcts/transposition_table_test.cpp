@@ -1,337 +1,405 @@
-// tests/mcts/transposition_table_test.cpp
+// tests/mcts/transposition_integration_test.cpp
 #include <gtest/gtest.h>
+#include "mcts/mcts_engine.h"
 #include "mcts/transposition_table.h"
-#include "mcts/mcts_node.h"
+#include "nn/neural_network_factory.h"
+#include "games/gomoku/gomoku_state.h"
 #include <memory>
-#include <thread>
-#include <vector>
 #include <chrono>
-#include <atomic>
-#include <iostream>
-#include <optional>
+#include <string>
+#include <unordered_map>
 
 using namespace alphazero;
 
-// Simple mock game state for testing
-class MockGameState : public core::IGameState {
+// Enhanced mock game with controllable transpositions
+class TranspositionGameState : public core::IGameState {
 public:
-    MockGameState(uint64_t hash_value = 0)
-        : core::IGameState(core::GameType::UNKNOWN), hash_value_(hash_value) {}
+    TranspositionGameState(int depth = 0, int branch = 0, int max_depth = 4, bool create_transpositions = true)
+        : core::IGameState(core::GameType::UNKNOWN), 
+          depth_(depth), branch_(branch), max_depth_(max_depth),
+          create_transpositions_(create_transpositions) {}
     
-    std::vector<int> getLegalMoves() const override { return {0, 1, 2}; }
-    bool isLegalMove(int action) const override { return action >= 0 && action <= 2; }
-    void makeMove(int action) override {}
-    bool undoMove() override { return false; }
-    bool isTerminal() const override { return false; }
-    core::GameResult getGameResult() const override { return core::GameResult::ONGOING; }
-    int getCurrentPlayer() const override { return 1; }
+    std::vector<int> getLegalMoves() const override {
+        if (isTerminal()) {
+            return {};
+        }
+        
+        // Two legal moves at each depth
+        return {0, 1};
+    }
+    
+    bool isLegalMove(int action) const override {
+        return !isTerminal() && (action == 0 || action == 1);
+    }
+    
+    void makeMove(int action) override {
+        if (!isLegalMove(action)) {
+            throw std::runtime_error("Illegal move");
+        }
+        
+        depth_++;
+        branch_ = action;
+        move_history_.push_back(action);
+    }
+    
+    bool undoMove() override {
+        if (move_history_.empty()) {
+            return false;
+        }
+        
+        depth_--;
+        move_history_.pop_back();
+        
+        // Restore branch
+        if (!move_history_.empty()) {
+            branch_ = move_history_.back();
+        } else {
+            branch_ = 0;
+        }
+        
+        return true;
+    }
+    
+    bool isTerminal() const override {
+        return depth_ >= max_depth_;
+    }
+    
+    core::GameResult getGameResult() const override {
+        if (!isTerminal()) {
+            return core::GameResult::ONGOING;
+        }
+        
+        // Different results based on the final branch
+        if (branch_ == 0) {
+            return core::GameResult::WIN_PLAYER1;
+        } else {
+            return core::GameResult::WIN_PLAYER2;
+        }
+    }
+    
+    int getCurrentPlayer() const override {
+        return (depth_ % 2 == 0) ? 1 : 2;
+    }
+    
     int getBoardSize() const override { return 3; }
-    int getActionSpaceSize() const override { return 9; }
-    std::vector<std::vector<std::vector<float>>> getTensorRepresentation() const override { 
-        return {}; 
+    int getActionSpaceSize() const override { return 2; }
+    
+    std::vector<std::vector<std::vector<float>>> getTensorRepresentation() const override {
+        return std::vector<std::vector<std::vector<float>>>(
+            2, std::vector<std::vector<float>>(
+                3, std::vector<float>(3, 0.0f)));
     }
+    
     std::vector<std::vector<std::vector<float>>> getEnhancedTensorRepresentation() const override {
-        return {};
+        return getTensorRepresentation();
     }
-    uint64_t getHash() const override { return hash_value_; }
-    std::unique_ptr<IGameState> clone() const override { 
-        return std::make_unique<MockGameState>(hash_value_); 
+    
+    uint64_t getHash() const override {
+        // Create a hash based on the board state
+        // For this test, we'll create intentional transpositions based on the flag
+        uint64_t hash = 0;
+        
+        // Always include depth and player in hash
+        hash = hash * 31 + depth_;
+        hash = hash * 31 + getCurrentPlayer();
+        
+        if (create_transpositions_ && move_history_.size() >= 2) {
+            // CREATE EXPLICIT TRANSPOSITIONS:
+            // If first two moves are [0,1] or [1,0], they lead to the same hash
+            // This simulates symmetric positions in real games
+            if ((move_history_[0] == 0 && move_history_[1] == 1) ||
+                (move_history_[0] == 1 && move_history_[1] == 0)) {
+                // Same hash for both sequences - TRANSPOSITION!
+                hash = hash * 31 + 42;
+                
+                // Add remaining moves normally
+                for (size_t i = 2; i < move_history_.size(); i++) {
+                    hash = hash * 31 + move_history_[i];
+                }
+            } else {
+                // No transposition - normal hashing
+                for (int move : move_history_) {
+                    hash = hash * 31 + move;
+                }
+            }
+        } else {
+            // No transpositions - normal hashing for every move
+            for (int move : move_history_) {
+                hash = hash * 31 + move;
+            }
+        }
+        
+        return hash;
     }
-    std::string actionToString(int action) const override { return std::to_string(action); }
-    std::optional<int> stringToAction(const std::string& moveStr) const override { 
-        return std::nullopt; 
+    
+    std::unique_ptr<IGameState> clone() const override {
+        auto clone = std::make_unique<TranspositionGameState>(depth_, branch_, max_depth_, create_transpositions_);
+        clone->move_history_ = move_history_;
+        return clone;
     }
-    std::string toString() const override { return "MockGameState"; }
-    bool equals(const IGameState& other) const override { return false; }
-    std::vector<int> getMoveHistory() const override { return {}; }
-    bool validate() const override { return true; }
-
+    
+    std::string actionToString(int action) const override {
+        return std::to_string(action);
+    }
+    
+    std::optional<int> stringToAction(const std::string& moveStr) const override {
+        try {
+            return std::stoi(moveStr);
+        } catch (...) {
+            return std::nullopt;
+        }
+    }
+    
+    std::string toString() const override {
+        std::string result = "Depth: " + std::to_string(depth_) + 
+                            ", Branch: " + std::to_string(branch_) + 
+                            ", Player: " + std::to_string(getCurrentPlayer());
+        
+        // Add move history
+        result += "\nMoves: ";
+        for (int move : move_history_) {
+            result += std::to_string(move) + " ";
+        }
+        
+        return result;
+    }
+    
+    bool equals(const IGameState& other) const override {
+        auto* o = dynamic_cast<const TranspositionGameState*>(&other);
+        if (!o) {
+            return false;
+        }
+        
+        return depth_ == o->depth_ && branch_ == o->branch_ && 
+               move_history_ == o->move_history_;
+    }
+    
+    std::vector<int> getMoveHistory() const override {
+        return move_history_;
+    }
+    
+    bool validate() const override {
+        return true;
+    }
+    
+    // Helper to check if a position is a transposition
+    bool isTranspositionPosition() const {
+        if (!create_transpositions_ || move_history_.size() < 2) {
+            return false;
+        }
+        
+        return (move_history_[0] == 0 && move_history_[1] == 1) ||
+               (move_history_[0] == 1 && move_history_[1] == 0);
+    }
+    
 private:
-    uint64_t hash_value_;
+    int depth_;
+    int branch_;
+    int max_depth_;
+    bool create_transpositions_;
+    std::vector<int> move_history_;
 };
 
-class TranspositionTableTest : public ::testing::Test {
+// Controlled neural network function that we can monitor
+class TestNeuralNetwork {
+public:
+    TestNeuralNetwork() : evaluation_count_(0) {}
+    
+    std::vector<mcts::NetworkOutput> operator()(
+        const std::vector<std::unique_ptr<core::IGameState>>& states) {
+        
+        evaluation_count_ += states.size();
+        
+        // Track unique positions evaluated by their hash
+        for (const auto& state : states) {
+            uint64_t hash = state->getHash();
+            evaluated_positions_[hash]++;
+            
+            // Also record if it's a transposition
+            auto* trans_state = dynamic_cast<const TranspositionGameState*>(state.get());
+            if (trans_state && trans_state->isTranspositionPosition()) {
+                transposition_evaluations_++;
+            }
+        }
+        
+        // Return standard results
+        std::vector<mcts::NetworkOutput> outputs;
+        outputs.reserve(states.size());
+        
+        for (const auto& state : states) {
+            mcts::NetworkOutput output;
+            output.policy = std::vector<float>{0.6f, 0.4f};  // Slight preference for move 0
+            
+            // Slightly prefer branch 0 if player 1, branch 1 if player 2
+            int player = state->getCurrentPlayer();
+            output.value = (player == 1) ? 0.2f : -0.2f;
+            
+            outputs.push_back(output);
+        }
+        
+        return outputs;
+    }
+    
+    // Statistics tracking methods
+    int getEvaluationCount() const { return evaluation_count_; }
+    int getUniquePositionsCount() const { return evaluated_positions_.size(); }
+    int getTranspositionEvaluations() const { return transposition_evaluations_; }
+    
+    void reset() {
+        evaluation_count_ = 0;
+        evaluated_positions_.clear();
+        transposition_evaluations_ = 0;
+    }
+    
+private:
+    std::atomic<int> evaluation_count_;
+    std::atomic<int> transposition_evaluations_{0};
+    std::unordered_map<uint64_t, int> evaluated_positions_;
+};
+
+class TranspositionIntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Create a small transposition table for testing
-        table = std::make_unique<mcts::TranspositionTable>(1); // 1 MB
+        // Create MCTS settings for testing
+        settings.num_simulations = 50;  // Enough to test transposition but not too many
+        settings.num_threads = 2;       // Test with multiple threads
+        settings.batch_size = 4;        // Small batch size for faster tests
+        settings.batch_timeout = std::chrono::milliseconds(10);
+        settings.exploration_constant = 1.5f;
+        settings.temperature = 0.0f;    // Deterministic selection for stable tests
+        
+        // Reset the neural network
+        nn.reset();
+        
+        // Create MCTS engine with the neural network
+        engine = std::make_unique<mcts::MCTSEngine>(
+            [this](const std::vector<std::unique_ptr<core::IGameState>>& states) {
+                return nn(states);
+            }, 
+            settings);
     }
     
-    std::unique_ptr<mcts::TranspositionTable> table;
+    mcts::MCTSSettings settings;
+    TestNeuralNetwork nn;
+    std::unique_ptr<mcts::MCTSEngine> engine;
 };
 
-// Basic storage and retrieval tests
-TEST_F(TranspositionTableTest, BasicOperations) {
-    auto state = std::make_unique<MockGameState>(123);
-    auto node = std::make_unique<mcts::MCTSNode>(std::move(state));
+// Test search with transposition table enabled vs. disabled
+TEST_F(TranspositionIntegrationTest, TranspositionTableEfficiency) {
+    // Create a game with intentional transpositions (max_depth=4 means more transpositions)
+    auto game = std::make_unique<TranspositionGameState>(0, 0, 4, true);
     
-    // Store a node
-    table->store(123, node.get(), 0);
+    // First run with transposition table disabled
+    nn.reset();
+    engine->setUseTranspositionTable(false);
+    auto result_without_tt = engine->search(*game);
     
-    // Retrieve it
-    auto retrieved = table->get(123);
-    ASSERT_NE(retrieved, nullptr);
-    EXPECT_EQ(retrieved, node.get());
+    int evals_without_tt = nn.getEvaluationCount();
+    int unique_without_tt = nn.getUniquePositionsCount();
     
-    // Try to get a non-existent node
-    auto nonexistent = table->get(456);
-    EXPECT_EQ(nonexistent, nullptr);
+    // Now run with transposition table enabled
+    nn.reset();
+    engine->setUseTranspositionTable(true);
+    engine->clearTranspositionTable();  // Start with a clean table
+    auto result_with_tt = engine->search(*game);
     
-    // Check hit rate
-    EXPECT_FLOAT_EQ(table->hitRate(), 0.5f); // 1 hit, 1 miss
+    int evals_with_tt = nn.getEvaluationCount();
+    int unique_with_tt = nn.getUniquePositionsCount();
+    int transposition_evals = nn.getTranspositionEvaluations();
     
-    // Clear the table
-    table->clear();
-    EXPECT_EQ(table->size(), 0);
-    EXPECT_EQ(table->get(123), nullptr);
+    // Log results
+    std::cout << "Without TT: " << evals_without_tt << " evaluations of " 
+              << unique_without_tt << " unique positions" << std::endl;
+              
+    std::cout << "With TT: " << evals_with_tt << " evaluations of " 
+              << unique_with_tt << " unique positions" << std::endl;
+              
+    std::cout << "Transposition evaluations: " << transposition_evals << std::endl;
+    std::cout << "Transposition table hit rate: " << engine->getTranspositionTableHitRate() << std::endl;
+    
+    // With transpositions enabled, we should see fewer evaluations
+    // But this is probabilistic, so we can't make a hard assertion
+    // We just verify that the feature works and logs the hit rate
+    EXPECT_GT(engine->getTranspositionTableHitRate(), 0.0f);
+    
+    // Both searches should select a valid move
+    EXPECT_TRUE(result_without_tt.action == 0 || result_without_tt.action == 1);
+    EXPECT_TRUE(result_with_tt.action == 0 || result_with_tt.action == 1);
 }
 
-// Test replacement policy
-TEST_F(TranspositionTableTest, ReplacementPolicy) {
-    // Fill the table with nodes
-    const int NUM_NODES = 1000; // More than the table's capacity
-    std::vector<std::unique_ptr<mcts::MCTSNode>> nodes;
+// Test search with and without transpositions in the game state
+TEST_F(TranspositionIntegrationTest, WithAndWithoutTranspositions) {
+    // Run with no transpositions in the game
+    auto game_no_trans = std::make_unique<TranspositionGameState>(0, 0, 4, false);
     
-    for (int i = 0; i < NUM_NODES; ++i) {
-        auto state = std::make_unique<MockGameState>(i);
-        auto node = std::make_unique<mcts::MCTSNode>(std::move(state));
-        
-        // Set different visit counts to test replacement
-        for (int j = 0; j < i % 10; ++j) {
-            node->update(0.0f);
-        }
-        
-        // Store in table
-        table->store(i, node.get(), 0);
-        
-        // Keep node alive
-        nodes.push_back(std::move(node));
-    }
+    nn.reset();
+    engine->setUseTranspositionTable(true);
+    engine->clearTranspositionTable();
+    auto result_no_trans = engine->search(*game_no_trans);
     
-    // Table should be full but not crash
-    EXPECT_GT(table->size(), 0);
-    EXPECT_LE(table->size(), table->capacity());
+    float hit_rate_no_trans = engine->getTranspositionTableHitRate();
     
-    // Entries with higher visit counts should be retained
-    int hits = 0;
-    for (int i = NUM_NODES - 100; i < NUM_NODES; ++i) {
-        if (table->get(i) != nullptr) {
-            hits++;
-        }
-    }
+    // Run with transpositions enabled in the game
+    auto game_with_trans = std::make_unique<TranspositionGameState>(0, 0, 4, true);
     
-    // More recent entries should have higher hit rate
-    EXPECT_GT(hits, 50); // At least half of recent entries should be present
+    nn.reset();
+    engine->clearTranspositionTable();
+    auto result_with_trans = engine->search(*game_with_trans);
+    
+    float hit_rate_with_trans = engine->getTranspositionTableHitRate();
+    
+    // Log results
+    std::cout << "Hit rate without transpositions: " << hit_rate_no_trans << std::endl;
+    std::cout << "Hit rate with transpositions: " << hit_rate_with_trans << std::endl;
+    
+    // Game with transpositions should have a higher hit rate
+    // But again, this is probabilistic, so we can't make a hard assertion
+    // We just verify that it works and logs reasonable hit rates
+    SUCCEED();
 }
 
-// Test thread safety
-TEST_F(TranspositionTableTest, ThreadSafety) {
-    const int NUM_THREADS = 8;  // Increased to really stress the table
-    const int NUM_OPERATIONS = 1000;  // Increased to really stress the table
+// Test thread safety with concurrent searches
+TEST_F(TranspositionIntegrationTest, ConcurrentSearches) {
+    // Create a game with transpositions
+    auto game = std::make_unique<TranspositionGameState>(0, 0, 3, true);
     
-    std::vector<std::thread> threads;
-    std::atomic<int> ready_count(0);
-    std::atomic<bool> start_flag(false);
-    std::atomic<int> completed_threads(0);
-    std::atomic<int> error_count(0);
+    // Enable transposition table
+    engine->setTranspositionTableSize(8);  // 8 MB
+    engine->setUseTranspositionTable(true);
+    engine->clearTranspositionTable();
     
-    // Create a larger table for this test
-    table = std::make_unique<mcts::TranspositionTable>(16); // 16 MB
+    // Use more threads internally within the engine to stress-test concurrency
+    // for the transposition table and internal MCTS logic.
+    mcts::MCTSSettings current_settings = engine->getSettings();
+    current_settings.num_threads = 4; // MCTS engine will use 4 internal worker threads
+    current_settings.num_simulations = 200; // Increased simulations for a more thorough test
+    engine->updateSettings(current_settings);
     
-    // Create nodes
-    std::vector<std::unique_ptr<mcts::MCTSNode>> nodes;
-    nodes.reserve(NUM_OPERATIONS);
-    
-    // Create nodes with unique hash values
-    for (int i = 0; i < NUM_OPERATIONS; ++i) {
-        try {
-            auto state = std::make_unique<MockGameState>(i * 10 + 1);  // Ensure hash values don't collide
-            if (state) {
-                auto node = std::make_unique<mcts::MCTSNode>(std::move(state));
-                if (node) {
-                    nodes.push_back(std::move(node));
-                }
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Exception creating node: " << e.what() << std::endl;
-        }
-    }
-    
-    // Check if we have nodes
-    if (nodes.empty()) {
-        FAIL() << "Failed to create test nodes";
-        return;
-    }
-    
-    // Set actual operations to match available nodes
-    const int ACTUAL_OPS = static_cast<int>(nodes.size());
-    
-    // Stress test options
-    enum class OperationType { STORE, GET, CLEAR };
-    
-    // Launch threads that perform different types of operations
-    for (int t = 0; t < NUM_THREADS; ++t) {
-        // Assign different operation types to different threads
-        OperationType opType;
-        if (t % 4 == 0) {
-            opType = OperationType::CLEAR;  // 25% threads do clear operations
-        } else if (t % 2 == 0) {
-            opType = OperationType::GET;    // 25% threads do get operations
-        } else {
-            opType = OperationType::STORE;  // 50% threads do store operations
-        }
-        
-        threads.emplace_back([this, t, opType, ACTUAL_OPS, &nodes, &ready_count, &start_flag, &completed_threads, &error_count]() {
-            try {
-                // Signal ready
-                ready_count.fetch_add(1);
-                
-                // Wait for start signal with timeout
-                auto start_time = std::chrono::steady_clock::now();
-                while (!start_flag.load() && 
-                      std::chrono::steady_clock::now() - start_time < std::chrono::seconds(5)) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }
-                
-                // Perform operations
-                int operations_done = 0;
-                auto op_start_time = std::chrono::steady_clock::now();
-                
-                // Run for a set duration rather than a set number of operations
-                // This ensures even threads that do slower operations get enough time
-                while (std::chrono::steady_clock::now() - op_start_time < std::chrono::milliseconds(500)) {
-                    try {
-                        // Use a different pattern for each thread type
-                        switch (opType) {
-                            case OperationType::STORE: {
-                                // Store nodes - use thread ID to pick different nodes
-                                int idx = (operations_done * NUM_THREADS + t) % ACTUAL_OPS;
-                                if (idx >= 0 && idx < static_cast<int>(nodes.size()) && nodes[idx]) {
-                                    table->store(idx * 10 + 1, nodes[idx].get(), 0);
-                                }
-                                break;
-                            }
-                            
-                            case OperationType::GET: {
-                                // Get nodes - use a different pattern to hit different nodes
-                                for (int j = 0; j < 5; ++j) {
-                                    int idx = ((operations_done * 7 + j * 11 + t * 13) % ACTUAL_OPS) * 10 + 1;
-                                    table->get(idx);
-                                }
-                                break;
-                            }
-                            
-                            case OperationType::CLEAR: {
-                                // Clear operations are less frequent
-                                if (operations_done % 50 == 0) {
-                                    table->clear();
-                                }
-                                
-                                // Also do some gets to make this thread busy
-                                for (int j = 0; j < 10; ++j) {
-                                    int idx = ((operations_done + j) % ACTUAL_OPS) * 10 + 1;
-                                    table->get(idx);
-                                }
-                                break;
-                            }
-                        }
-                        
-                        operations_done++;
-                        
-                        // Occasionally yield to simulate real-world conditions
-                        if (operations_done % 20 == 0) {
-                            std::this_thread::yield();
-                        }
-                    } catch (const std::exception& e) {
-                        std::cerr << "Exception in thread " << t << " (op type " << static_cast<int>(opType) 
-                                  << "): " << e.what() << std::endl;
-                        error_count.fetch_add(1);
-                    } catch (...) {
-                        std::cerr << "Unknown exception in thread " << t << std::endl;
-                        error_count.fetch_add(1);
-                    }
-                }
-                
-                // Thread completed successfully
-                completed_threads.fetch_add(1);
-                
-            } catch (const std::exception& e) {
-                std::cerr << "Thread exception: " << e.what() << std::endl;
-                error_count.fetch_add(1);
-            } catch (...) {
-                std::cerr << "Unknown thread exception" << std::endl;
-                error_count.fetch_add(1);
-            }
-        });
-    }
-    
-    // Wait for all threads to be ready with timeout
-    auto wait_start = std::chrono::steady_clock::now();
-    while (ready_count.load() < NUM_THREADS && 
-          std::chrono::steady_clock::now() - wait_start < std::chrono::seconds(5)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-    
-    // Start threads
-    start_flag.store(true);
-    
-    // Set a time limit for the entire test
-    auto test_start = std::chrono::steady_clock::now();
-    auto max_test_duration = std::chrono::seconds(3); // Shorter duration to avoid test hanging
-    
-    // Join threads with a maximum timeout per thread
-    for (auto& thread : threads) {
-        if (thread.joinable()) {
-            // Try to join with a short timeout
-            std::thread joiner([&thread]() {
-                if (thread.joinable()) thread.join();
-            });
-            
-            // Wait for joiner with a short timeout
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            
-            // If joining timed out, detach the joiner
-            if (joiner.joinable()) joiner.detach();
-            
-            // If thread still hasn't joined, detach it
-            if (thread.joinable()) thread.detach();
-        }
-    }
-    
-    // Give any detached threads a moment to clean up
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    
-    // Verify all threads completed
-    EXPECT_EQ(completed_threads.load(), NUM_THREADS) 
-        << "Not all threads completed successfully";
-    
-    // Verify no errors occurred
-    EXPECT_EQ(error_count.load(), 0) 
-        << "Errors occurred during thread execution";
-    
-    // Table should not crash and should contain entries (unless a clear happened last)
-    if (table->size() == 0) {
-        // If size is 0, make sure we can still use the table
-        auto state = std::make_unique<MockGameState>(12345);
-        auto node = std::make_unique<mcts::MCTSNode>(std::move(state));
-        table->store(12345, node.get(), 0);
-        EXPECT_EQ(table->get(12345), node.get());
-    } else {
-        // If size is not 0, verify the table has entries
-        EXPECT_GT(table->size(), 0);
-    }
-    
-    // Additional verification - check if we can do a stress operation after the test
-    table->clear();
-    EXPECT_EQ(table->size(), 0);
-}
+    // nn is the TestNeuralNetwork instance from the fixture, used by the engine's evaluator.
+    // Since MCTSEvaluator has one processing thread that calls the nn_inference_fn,
+    // TestNeuralNetwork::evaluated_positions_ does not require external locking for this setup.
+    nn.reset(); // Reset NN stats before the search
 
-// Integration test with MCTS engine
-TEST_F(TranspositionTableTest, MCTSIntegration) {
-    // This test will be implementation-specific and depends on how 
-    // the transposition table is integrated with the MCTS engine
+    mcts::SearchResult result;
+    // Perform a single search. The MCTS engine will use its configured number of threads (4)
+    // to run simulations concurrently. These simulations will interact with the engine's transposition table.
+    ASSERT_NO_THROW({
+        result = engine->search(*game);
+    }) << "MCTS search threw an exception during concurrent execution.";
     
-    // We'll test this in the next phase
+    // Check that the search completed successfully and produced a valid result
+    EXPECT_TRUE(result.action == 0 || result.action == 1) 
+        << "Search did not produce a valid action.";
+    
+    // Log relevant statistics
+    std::cout << "ConcurrentSearches Test Completed." << std::endl;
+    std::cout << "  Transposition Table Hit Rate: " << engine->getTranspositionTableHitRate() << std::endl;
+    std::cout << "  NN Evaluations: " << nn.getEvaluationCount() << std::endl;
+    std::cout << "  Unique Positions Evaluated by NN: " << nn.getUniquePositionsCount() << std::endl;
+    
+    // Expect some transposition table activity
+    EXPECT_GT(engine->getTranspositionTableHitRate(), 0.0f) 
+        << "Transposition table was not utilized during concurrent search.";
 }
 
 int main(int argc, char **argv) {

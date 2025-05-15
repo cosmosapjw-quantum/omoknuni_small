@@ -75,6 +75,7 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar2.h \
  /usr/include/c++/11/bits/shared_ptr_base.h /usr/include/c++/11/typeinfo \
  /usr/include/c++/11/bits/allocated_ptr.h \
  /usr/include/c++/11/bits/refwrap.h \
@@ -138,16 +139,20 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/include/x86_64-linux-gnu/sys/select.h \
  /usr/include/x86_64-linux-gnu/bits/select.h \
  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
- /usr/include/alloca.h /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/x86_64-linux-gnu/bits/select2.h /usr/include/alloca.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib.h \
  /usr/include/c++/11/bits/std_abs.h /usr/include/c++/11/cstdio \
  /usr/include/stdio.h /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
- /usr/include/c++/11/cerrno /usr/include/errno.h \
- /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
- /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio2.h /usr/include/c++/11/cerrno \
+ /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
+ /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
  /usr/include/c++/11/bits/charconv.h \
@@ -247,6 +252,19 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap.h \
+ /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /usr/include/c++/11/iterator /usr/include/c++/11/bits/stream_iterator.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_fwd_decl.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_utils.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_bits.h \
+ /usr/include/byteswap.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_config.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
+ /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
+ /usr/include/c++/11/shared_mutex \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
  /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
  /usr/include/c++/11/fstream /usr/include/c++/11/bits/codecvt.h \
@@ -274,7 +292,6 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/include/c++/11/bits/fs_path.h /usr/include/c++/11/codecvt \
  /usr/include/c++/11/bits/fs_dir.h /usr/include/c++/11/bits/fs_ops.h \
  /home/cosmos/omoknuni_small/include/nlohmann/json.hpp \
- /usr/include/c++/11/iterator /usr/include/c++/11/bits/stream_iterator.h \
  /usr/include/c++/11/forward_list /usr/include/c++/11/bits/forward_list.h \
  /usr/include/c++/11/bits/forward_list.tcc /usr/include/c++/11/valarray \
  /usr/include/c++/11/bits/valarray_array.h \
@@ -286,6 +303,5 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/include/c++/11/bits/gslice_array.h \
  /usr/include/c++/11/bits/mask_array.h \
  /usr/include/c++/11/bits/indirect_array.h /usr/include/c++/11/version \
- /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
  /usr/include/c++/11/any \
  /home/cosmos/omoknuni_small/include/core/game_export.h

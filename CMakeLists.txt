@@ -111,6 +111,11 @@ option(BUILD_EXAMPLES         "Build examples"         OFF)
 
 include(GNUInstallDirs)
 
+# Make sure the include/cli directory is recognized
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/cli")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/cli")
+endif()
+
 # ─────────────────────────── Configure library exports ────────────────────────
 # Define macros for symbol visibility in shared libraries
 if(WIN32)
@@ -720,11 +725,17 @@ set(SELFPLAY_SOURCES
 )
 set(TRAINING_SOURCES
     src/training/training_data_manager.cpp
+    src/training/dataset.cpp
+    src/training/data_loader.cpp
 )
 set(EVALUATION_SOURCES
     src/evaluation/model_evaluator.cpp
 )
-set(CLI_SOURCES src/cli/cli_manager.cpp)
+set(CLI_SOURCES 
+    src/cli/cli_manager.cpp
+    src/cli/alphazero_pipeline.cpp
+    src/cli/alphazero_cli_pipeline.cpp
+)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/mcts/mcts.cpp")
     list(APPEND MCTS_SOURCES src/mcts/mcts.cpp)
@@ -762,6 +773,9 @@ target_include_directories(alphazero
 if(BUILD_SHARED_LIBS)
     target_compile_definitions(alphazero PRIVATE -DALPHAZERO_EXPORTS)
 endif()
+
+# Add CUDA synchronization definitions
+target_compile_definitions(alphazero PRIVATE -DWITH_CUDA_SYNC)
 
 if(MSVC)
     # Always use multithreaded DLL runtime (/MD) for both library and tests for consistency
@@ -836,6 +850,51 @@ if(MSVC)
 else()
     target_compile_options(alphazero PRIVATE -Wall -Wextra -Wno-unknown-pragmas -Wno-unused-parameter -Wno-sign-compare)
 endif()
+
+find_package(phmap CONFIG QUIET)
+if(phmap_FOUND)
+    message(STATUS "Found parallel-hashmap: ${phmap_VERSION}")
+else()
+    # Try to find parallel-hashmap directly
+    find_path(PHMAP_INCLUDE_DIR parallel_hashmap/phmap.h
+        PATHS
+            /usr/include
+            /usr/local/include
+            ${CMAKE_PREFIX_PATH}
+        NO_DEFAULT_PATH
+    )
+    
+    if(PHMAP_INCLUDE_DIR)
+        message(STATUS "Found parallel-hashmap include dir: ${PHMAP_INCLUDE_DIR}")
+        include_directories(BEFORE SYSTEM ${PHMAP_INCLUDE_DIR})
+        
+        # Create the target manually if find_package failed
+        if(NOT TARGET parallel_hashmap::parallel_hashmap)
+            add_library(parallel_hashmap::parallel_hashmap INTERFACE IMPORTED)
+            set_target_properties(parallel_hashmap::parallel_hashmap PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${PHMAP_INCLUDE_DIR}")
+        endif()
+    else()
+        # Download parallel-hashmap header files
+        message(STATUS "parallel-hashmap not found - downloading header-only library")
+        include(FetchContent)
+        FetchContent_Declare(
+            phmap
+            GIT_REPOSITORY https://github.com/greg7mdp/parallel-hashmap.git
+            GIT_TAG v1.3.8  # Use a specific tag for stability
+        )
+        FetchContent_MakeAvailable(phmap)
+        message(STATUS "Downloaded parallel-hashmap to ${phmap_SOURCE_DIR}")
+        include_directories(BEFORE SYSTEM ${phmap_SOURCE_DIR})
+        
+        add_library(parallel_hashmap::parallel_hashmap INTERFACE IMPORTED)
+        set_target_properties(parallel_hashmap::parallel_hashmap PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${phmap_SOURCE_DIR}")
+    endif()
+endif()
+
+# Add parallel_hashmap to the target link libraries
+target_link_libraries(alphazero PUBLIC parallel_hashmap::parallel_hashmap)
 
 # ───────────────────────────── Runtime Library Copy Helper ──────────────────────────
 if(WITH_TORCH)
@@ -1217,6 +1276,7 @@ if(BUILD_TESTS)
     make_test(model_evaluator_test tests/evaluation/model_evaluator_test.cpp)
     make_test(transposition_table_test tests/mcts/transposition_table_test.cpp)
     make_test(transposition_integration_test tests/mcts/transposition_integration_test.cpp)
+    make_test(self_play_games_test tests/integration/games/self_play_games_test.cpp)
     if(MCTS_TEST_SOURCES)
         make_test(mcts_tests ${MCTS_TEST_SOURCES})
     endif()

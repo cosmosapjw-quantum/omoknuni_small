@@ -72,6 +72,7 @@ CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar2.h \
  /usr/include/c++/11/bits/shared_ptr_base.h /usr/include/c++/11/typeinfo \
  /usr/include/c++/11/bits/allocated_ptr.h \
  /usr/include/c++/11/bits/refwrap.h \
@@ -135,16 +136,20 @@ CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o: \
  /usr/include/x86_64-linux-gnu/sys/select.h \
  /usr/include/x86_64-linux-gnu/bits/select.h \
  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
- /usr/include/alloca.h /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/x86_64-linux-gnu/bits/select2.h /usr/include/alloca.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib.h \
  /usr/include/c++/11/bits/std_abs.h /usr/include/c++/11/cstdio \
  /usr/include/stdio.h /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
- /usr/include/c++/11/cerrno /usr/include/errno.h \
- /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
- /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio2.h /usr/include/c++/11/cerrno \
+ /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
+ /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
  /usr/include/c++/11/bits/charconv.h \
@@ -234,6 +239,8 @@ CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/util/llvmMathExtras.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/bit_cast.h \
  /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
  /usr/include/c++/11/climits \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
@@ -4947,4 +4954,54 @@ CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/sparse.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
- /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
+ /home/cosmos/omoknuni_small/include/utils/device_utils.h \
+ /usr/local/cuda-12.8/include/cuda_runtime.h \
+ /usr/local/cuda-12.8/include/crt/host_config.h \
+ /usr/local/cuda-12.8/include/builtin_types.h \
+ /usr/local/cuda-12.8/include/device_types.h \
+ /usr/local/cuda-12.8/include/crt/host_defines.h \
+ /usr/local/cuda-12.8/include/driver_types.h \
+ /usr/local/cuda-12.8/include/vector_types.h \
+ /usr/local/cuda-12.8/include/surface_types.h \
+ /usr/local/cuda-12.8/include/texture_types.h \
+ /usr/local/cuda-12.8/include/library_types.h \
+ /usr/local/cuda-12.8/include/channel_descriptor.h \
+ /usr/local/cuda-12.8/include/cuda_runtime_api.h \
+ /usr/local/cuda-12.8/include/cuda_device_runtime_api.h \
+ /usr/local/cuda-12.8/include/driver_functions.h \
+ /usr/local/cuda-12.8/include/vector_functions.h \
+ /usr/local/cuda-12.8/include/vector_functions.hpp \
+ /opt/libtorch-2.7.0-cu128/include/ATen/cuda/CUDAContext.h \
+ /opt/libtorch-2.7.0-cu128/include/ATen/cuda/CUDAContextLight.h \
+ /usr/local/cuda-12.8/include/cuda_runtime_api.h \
+ /usr/local/cuda-12.8/include/cusparse.h \
+ /usr/local/cuda-12.8/include/cuComplex.h /usr/include/c++/11/math.h \
+ /usr/local/cuda-12.8/include/library_types.h \
+ /usr/local/cuda-12.8/include/cuda_fp16.h \
+ /usr/local/cuda-12.8/include/nv/target \
+ /usr/local/cuda-12.8/include/nv/detail/__target_macros \
+ /usr/local/cuda-12.8/include/nv/detail/__preprocessor \
+ /usr/local/cuda-12.8/include/cuda_fp16.hpp \
+ /usr/local/cuda-12.8/include/cublas_v2.h \
+ /usr/local/cuda-12.8/include/cublas_api.h \
+ /usr/local/cuda-12.8/include/cuComplex.h \
+ /usr/local/cuda-12.8/include/cuda_bf16.h \
+ /usr/local/cuda-12.8/include/cuda_fp16.h \
+ /usr/local/cuda-12.8/include/cuda_bf16.hpp \
+ /usr/local/cuda-12.8/include/cublasLt.h \
+ /usr/local/cuda-12.8/include/cublas_api.h \
+ /usr/local/cuda-12.8/include/cusolverDn.h \
+ /usr/local/cuda-12.8/include/cublas_v2.h \
+ /usr/local/cuda-12.8/include/cusolver_common.h /usr/include/inttypes.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAFunctions.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/core/impl/GPUTrace.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAException.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDADeviceAssertionHost.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAMacros.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/impl/cuda_cmake_macros.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAMiscFunctions.h \
+ /usr/local/cuda-12.8/include/cuda.h /usr/include/c++/11/stdlib.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAStream.h \
+ /opt/libtorch-2.7.0-cu128/include/ATen/cuda/Exceptions.h \
+ /usr/local/cuda-12.8/include/cusolver_common.h

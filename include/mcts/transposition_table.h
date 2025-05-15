@@ -6,8 +6,10 @@
 #include <memory>
 #include <atomic>
 #include <mutex>
-#include <unordered_map>
+#include <utility>
+#include <cstddef>
 #include "core/export_macros.h"
+#include "parallel_hashmap/phmap.h"
 
 namespace alphazero {
 namespace mcts {
@@ -19,7 +21,7 @@ class MCTSNode;
  */
 struct ALPHAZERO_API TranspositionEntry {
     // The MCTS node for this position
-    std::atomic<MCTSNode*> node;
+    MCTSNode* node;
     
     // The hash key of the position
     uint64_t hash;
@@ -30,8 +32,8 @@ struct ALPHAZERO_API TranspositionEntry {
     // The number of visits at the time of storage
     int visits;
     
-    // A lock for thread-safe access with timeout capability
-    std::timed_mutex lock;
+    // A mutex for thread-safe access to this entry
+    std::mutex mutex;
     
     // Constructor
     TranspositionEntry(MCTSNode* n, uint64_t h, int d, int v);
@@ -42,23 +44,23 @@ struct ALPHAZERO_API TranspositionEntry {
  * 
  * A thread-safe table that allows the MCTS algorithm to recognize and
  * reuse previously searched positions, significantly improving efficiency.
+ * This implementation uses the parallel-hashmap library for high-performance
+ * concurrent access.
  */
 class ALPHAZERO_API TranspositionTable {
 public:
     /**
      * @brief Constructor
      * 
-     * @param size_mb Size of the table in megabytes
+     * @param size_mb Size of the table in megabytes (approximate)
+     * @param num_shards Number of internal shards for parallelism (0 for auto)
      */
-    explicit TranspositionTable(size_t size_mb = 128);
-    
-    /**
-     * @brief Destructor - safely cleans up resources
-     */
-    ~TranspositionTable();
+    explicit TranspositionTable(size_t size_mb = 128, size_t /*num_shards*/ = 0);
     
     /**
      * @brief Get a node from the table
+     * 
+     * Thread-safe method to retrieve a node by its hash.
      * 
      * @param hash Position hash
      * @return Pointer to the node, or nullptr if not found
@@ -68,6 +70,9 @@ public:
     /**
      * @brief Store a node in the table
      * 
+     * Thread-safe method to store a node in the table.
+     * Uses a replacement policy that favors nodes with more visits.
+     * 
      * @param hash Position hash
      * @param node The node to store
      * @param depth The current search depth
@@ -76,6 +81,8 @@ public:
     
     /**
      * @brief Clear the table
+     * 
+     * Removes all entries from the table.
      */
     void clear();
     
@@ -89,7 +96,7 @@ public:
     /**
      * @brief Get the capacity of the table
      * 
-     * @return Maximum number of entries
+     * @return Maximum number of entries (approximate)
      */
     size_t capacity() const;
     
@@ -106,32 +113,33 @@ public:
     void resetStats();
     
 private:
-    // Table storage - unique_ptrs to entries
-    std::vector<std::unique_ptr<TranspositionEntry>> entries_;
+    // Entry type for our hash map
+    using EntryPtr = std::shared_ptr<TranspositionEntry>;
     
-    // Hash to entry index mapping
-    std::unordered_map<uint64_t, size_t> index_map_;
+    // Thread-safe parallel hash map with built-in sharding
+    // We use shared_ptr<TranspositionEntry> to maintain thread safety when erasing
+    using HashMapType = phmap::parallel_flat_hash_map<uint64_t, EntryPtr>;
     
-    // Size of the table (capacity in number of entries)
+    // Main storage for transposition entries
+    HashMapType entries_;
+    
+    // Target capacity (approximate)
     size_t capacity_;
     
-    // Hit statistics - atomic counters for thread safety
+    // Atomic counters for hit statistics
     std::atomic<size_t> hits_;
     std::atomic<size_t> misses_;
     
-    // Locks for thread-safety - one per shard
-    std::vector<std::unique_ptr<std::timed_mutex>> table_locks_;
+    // Mutex for clear operations (rare, so one global mutex is fine)
+    mutable std::mutex clear_mutex_;
     
-    // Number of locks (shards) - higher number reduces contention
-    static constexpr size_t NUM_LOCKS = 1024;
-    
-    // Flag to track if the table is being destroyed
-    std::atomic<bool> is_shutdown_{false};
-    
-    // Get lock for a hash
-    std::timed_mutex& getLock(uint64_t hash) {
-        return *table_locks_[hash % NUM_LOCKS];
-    }
+    /**
+     * @brief Enforce the capacity limit
+     * 
+     * Removes the least valuable entries if the table exceeds capacity.
+     * Uses a sampling approach for efficiency.
+     */
+    void enforceCapacityLimit();
 };
 
 } // namespace mcts

@@ -1,0 +1,10 @@
+[20250515_123358] Starting AlphaZero training pipeline
+[20250515_123358] Game: gomoku, Board size: 15
+[20250515_123358] Training for 10 iterations
+[20250515_123358] Found existing best model at models/best_model.pt
+[20250515_123358] Starting iteration 1/10
+[20250515_123400] Starting self-play generation...
+[20250515_123402] Completed self-play: 500 games generated
+[20250515_123402] Starting neural network training...
+[20250515_123404] Loaded 500 self-play games for training
+[20250515_123409] Generated 54459 training examples

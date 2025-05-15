@@ -1,4 +1,8 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o"
+  "CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o.d"
+  "CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o"
+  "CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o"
   "CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/core/game_export.cpp.o"
@@ -39,6 +43,10 @@ file(REMOVE_RECURSE
   "CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o"
   "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o.d"
+  "CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o"
+  "CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o.d"
+  "CMakeFiles/alphazero.dir/src/training/dataset.cpp.o"
+  "CMakeFiles/alphazero.dir/src/training/dataset.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o"
   "CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o"
@@ -49,8 +57,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o"
   "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o.d"
-  "lib/Debug/libalphazero.pdb"
-  "lib/Debug/libalphazero.so"
+  "lib/Release/libalphazero.pdb"
+  "lib/Release/libalphazero.so"
 )
 
 # Per-language clean rules from dependency scanning.

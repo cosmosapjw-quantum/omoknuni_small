@@ -17,6 +17,8 @@
 #include <chrono>
 #include "nn/neural_network_factory.h"
 #include "selfplay/self_play_manager.h"
+#include "evaluation/model_evaluator.h"
+#include "cli/alphazero_pipeline.h"
 
 // Configure PyTorch CUDA initialization
 #define PYTORCH_NO_CUDA_INIT_OVERRIDE 0
@@ -28,7 +30,9 @@ volatile sig_atomic_t g_watchdog_timer_expired = 0;
 constexpr int WATCHDOG_TIMEOUT_SECONDS = 60; // 60 seconds timeout
 
 // Signal handler for watchdog timer
-void watchdog_handler(int sig) {
+void watchdog_handler(int /*sig*/) {
+    std::cerr << "Timeout reached! Terminating program." << std::endl;
+    // Cleanly exit, possibly logging state if feasible
     g_watchdog_timer_expired = 1;
 }
 
@@ -359,6 +363,10 @@ int main(int argc, char** argv) {
                     return 1;
                 }
             }
+        );
+
+        cli.addCommand("pipeline", "Run complete AlphaZero training pipeline",
+            alphazero::cli::runPipelineCommand
         );
 
         cli.addCommand("train", "Train neural network from self-play data",
@@ -1018,7 +1026,7 @@ int main(int argc, char** argv) {
                     
                     // Game loop
                     int player = 1;  // Human is always player 1
-                    int ai_player = 2;
+                    // int ai_player = 2; // Unused variable
                     bool human_turn = true;
                     
                     while (!game_state->isTerminal()) {

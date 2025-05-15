@@ -8,6 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/cosmos/omoknuni_small/src/cli/alphazero_cli_pipeline.cpp" "CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/cli/alphazero_pipeline.cpp" "CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/cli/cli_manager.cpp" "CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/core/game_export.cpp" "CMakeFiles/alphazero.dir/src/core/game_export.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/core/game_export.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/core/igamestate.cpp" "CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o.d"
@@ -28,6 +30,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/src/nn/neural_network_factory.cpp" "CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/nn/resnet_model.cpp" "CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/selfplay/self_play_manager.cpp" "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/training/data_loader.cpp" "CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/training/dataset.cpp" "CMakeFiles/alphazero.dir/src/training/dataset.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/training/dataset.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/training/training_data_manager.cpp" "CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/attack_defense_module.cpp" "CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/debug_monitor.cpp" "CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o.d"

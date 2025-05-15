@@ -1,0 +1,22 @@
+[20250515_141234] Starting AlphaZero training pipeline
+[20250515_141234] Game: gomoku, Board size: 15
+[20250515_141234] Training for 10 iterations
+[20250515_141234] Found existing best model at models/best_model.pt
+[20250515_141234] Starting iteration 1/10
+[20250515_141236] Starting self-play generation...
+[20250515_141238] Completed self-play: 500 games generated
+[20250515_141238] Starting neural network training...
+[20250515_141240] Loaded 500 self-play games for training
+[20250515_141240] DEBUG: Starting convertToTrainingExamples...
+[20250515_141244] Generated 54459 training examples
+[20250515_141244] DEBUG: First example dimensions: 17 x 15 x 15
+[20250515_141244] DEBUG: First policy size: 225
+[20250515_141244] DEBUG: First value: -1.000000
+[20250515_141244] DEBUG: Random sample #0 (index 21305) - dimensions: 17 x 15 x 15, policy size: 225, value: 1.000000
+[20250515_141244] DEBUG: Random sample #1 (index 32989) - dimensions: 17 x 15 x 15, policy size: 225, value: -1.000000
+[20250515_141244] DEBUG: Random sample #2 (index 18459) - dimensions: 17 x 15 x 15, policy size: 225, value: 1.000000
+[20250515_141244] DEBUG: Random sample #3 (index 49712) - dimensions: 17 x 15 x 15, policy size: 225, value: -1.000000
+[20250515_141244] DEBUG: Random sample #4 (index 41423) - dimensions: 17 x 15 x 15, policy size: 225, value: -1.000000
+[20250515_141244] DEBUG: Casting neural_net to ResNetModel
+[20250515_141244] DEBUG: Setting model to training mode
+[20250515_141244] DEBUG: Getting model device

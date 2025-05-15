@@ -26,11 +26,11 @@ struct ALPHAZERO_API MCTSSettings {
     // Number of worker threads
     int num_threads = 4;
     
-    // Neural network batch size
-    int batch_size = 8;
+    // Neural network batch size - increased for better GPU utilization
+    int batch_size = 32;
     
-    // Neural network batch timeout
-    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(5);
+    // Neural network batch timeout - increased to allow for more batching
+    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(10);
     
     // Exploration constant for PUCT formula
     float exploration_constant = 1.4f;
@@ -175,6 +175,14 @@ public:
      */
     float getTranspositionTableHitRate() const;
 
+    /**
+     * @brief Start the neural network evaluator if it hasn't been started yet
+     * 
+     * @return true if the evaluator was started successfully or already running
+     * @return false if the evaluator failed to start
+     */
+    bool ensureEvaluatorStarted();
+
 private:
     // Internal search method
     void runSearch(const core::IGameState& state);
@@ -233,9 +241,6 @@ private:
     // Whether the evaluator thread has been started
     bool evaluator_started_;
 
-    // Safely start the evaluator if it hasn't been started yet
-    bool ensureEvaluatorStarted();
-
     // Safely stop the evaluator if it was started
     void safelyStopEvaluator();
 
@@ -244,7 +249,10 @@ private:
     void processPendingSimulations();
     void distributeSimulations();
     void waitForSimulationsToComplete(std::chrono::steady_clock::time_point start_time);
-    void countTreeStatistics();    
+    void countTreeStatistics();
+
+    // New atomic member
+    std::atomic<int> num_workers_actively_processing_{0};
 };
 
 } // namespace mcts

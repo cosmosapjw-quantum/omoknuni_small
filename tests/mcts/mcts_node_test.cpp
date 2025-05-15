@@ -3,27 +3,23 @@
 #include "mcts/mcts_node.h"
 #include "games/gomoku/gomoku_state.h"
 #include <memory>
-#include <iostream> // May remove if no other cout/cerr used in this file
+#include <iostream> // Used for test results output
 
 // MockGameState is needed by other tests, so it's restored.
 class MockGameState : public alphazero::core::IGameState {
 public:
     MockGameState() : alphazero::core::IGameState(alphazero::core::GameType::UNKNOWN), terminal_(false) {
-        std::cerr << "MockGameState " << this << " constructed. Terminal: " << terminal_ << std::endl;
     }
     MockGameState(const MockGameState& other)
         : alphazero::core::IGameState(alphazero::core::GameType::UNKNOWN),
           terminal_(other.terminal_) {
-        std::cerr << "MockGameState " << this << " copy-constructed from " << &other << ". Terminal: " << terminal_ << std::endl;
     }
     // Add move constructor to handle std::move properly
     MockGameState(MockGameState&& other) noexcept
         : alphazero::core::IGameState(alphazero::core::GameType::UNKNOWN),
           terminal_(other.terminal_) {
-        std::cerr << "MockGameState " << this << " move-constructed from " << &other << ". Terminal: " << terminal_ << std::endl;
     }
     ~MockGameState() {
-        std::cerr << "MockGameState " << this << " destructed. Terminal: " << terminal_ << std::endl;
     }
     void setTerminal(bool terminal) { terminal_ = terminal; }
     std::vector<int> getLegalMoves() const override { return {0, 1, 2}; }
@@ -65,110 +61,66 @@ protected:
         // Initialize game_state for tests that use the fixture's state
         // If a test like Initialization doesn't use this, it will create its own.
         game_state = std::make_unique<MockGameState>();
-        std::cerr << "MCTSNodeTest::SetUp created game_state at " << game_state.get() 
-                  << ", terminal: " << game_state->isTerminal() << std::endl;
     }
     
     void TearDown() override {
-        if (game_state) {
-            std::cerr << "MCTSNodeTest::TearDown destroying game_state at " << game_state.get() 
-                      << ", terminal: " << game_state->isTerminal() << std::endl;
-        } else {
-            std::cerr << "MCTSNodeTest::TearDown - game_state is null" << std::endl;
-        }
+        // No actions needed, unique_ptr will handle memory cleanup
     }
     
     std::unique_ptr<MockGameState> game_state;
 };
 
-// Test basic initialization (using GomokuState for diagnosis)
+// Test basic initialization
 TEST_F(MCTSNodeTest, Initialization) {
-    std::cerr << "[TEST] MCTSNodeTest.Initialization starting (with GomokuState)." << std::endl;
-    auto local_game_state = std::make_unique<alphazero::games::gomoku::GomokuState>(); // Using GomokuState
-    
-    alphazero::core::IGameState* local_game_state_raw_ptr = local_game_state.get();
-    std::cerr << "[TEST] GomokuState created at " << local_game_state_raw_ptr << ", initial terminal_status: " << local_game_state_raw_ptr->isTerminal() << std::endl;
+    auto local_game_state = std::make_unique<alphazero::games::gomoku::GomokuState>();
     
     alphazero::mcts::MCTSNode node(std::move(local_game_state));
-    std::cerr << "[TEST] MCTSNode created. local_game_state is " << (local_game_state ? "valid" : "null") << "." << std::endl;
     
-    bool terminal_status_check1 = true; 
-    std::cerr << "[TEST] Attempting node.getStateMutable().isTerminal() [check 1]..." << std::endl;
-    try {
-        terminal_status_check1 = node.getStateMutable().isTerminal();
-        std::cerr << "[TEST] node.getStateMutable().isTerminal() [check 1] successful, result: " << terminal_status_check1 << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "[TEST] Exception during node.getStateMutable().isTerminal() [check 1]: " << e.what() << std::endl;
-    } catch (...) {
-        std::cerr << "[TEST] Unknown exception during node.getStateMutable().isTerminal() [check 1]." << std::endl;
-    }
-
-    std::cerr << "[TEST] Attempting node.isTerminal() [check 2]..." << std::endl;
-    bool terminal_status_check2 = node.isTerminal();
-    std::cerr << "[TEST] node.isTerminal() [check 2] result: " << terminal_status_check2 << std::endl;
-
-    EXPECT_FALSE(terminal_status_check2);
+    bool terminal_status = node.isTerminal();
+    EXPECT_FALSE(terminal_status);
     
     EXPECT_TRUE(node.isLeaf()); 
     EXPECT_EQ(node.getVisitCount(), 0);
     EXPECT_EQ(node.getValue(), 0.0f);
     EXPECT_EQ(node.getParent(), nullptr);
     EXPECT_EQ(node.getAction(), -1);
-    std::cerr << "[TEST] MCTSNodeTest.Initialization ending." << std::endl;
 }
 
 // Separate test for expansion to avoid any fixture interference
 TEST(MCTSNodeExpansionTest, NonTerminalExpansion) {
-    std::cerr << "=== Starting MCTSNodeExpansionTest.NonTerminalExpansion ===" << std::endl;
-    
     // Create a fresh MockGameState to ensure we have control over its state
     auto local_game_state = std::make_unique<MockGameState>();
-    std::cerr << "Created fresh MockGameState at " << local_game_state.get() << std::endl;
     
     local_game_state->setTerminal(false); // Ensure it's not terminal for expansion
-    std::cerr << "Set terminal flag to false, isTerminal() = " << local_game_state->isTerminal() << std::endl;
     
     // Verify state is actually non-terminal before creating the node
     ASSERT_FALSE(local_game_state->isTerminal()) << "MockGameState should not be terminal before creating node";
     
     // Create a node with the state
-    std::cerr << "Creating MCTSNode with state..." << std::endl;
     alphazero::mcts::MCTSNode node(std::move(local_game_state));
-    std::cerr << "MCTSNode created. local_game_state is " << (local_game_state ? "still valid" : "null after move") << std::endl;
     
-    // Check if node's state is terminal - this is where the test fails
+    // Check if node's state is terminal
     bool is_terminal = node.isTerminal();
-    std::cerr << "node.isTerminal() = " << is_terminal << std::endl;
     
     // Verify the node's state is also non-terminal
     ASSERT_FALSE(is_terminal) << "MCTSNode should not be terminal after construction";
 
-    std::cerr << "Expanding node..." << std::endl;
     node.expand();
-    std::cerr << "Node expanded, has " << node.getChildren().size() << " children" << std::endl;
 
     EXPECT_FALSE(node.isLeaf()) << "Node should not be a leaf after expansion";
     EXPECT_EQ(node.getChildren().size(), 3) << "Node should have 3 children"; // 3 legal moves
     EXPECT_EQ(node.getActions().size(), 3) << "Node should have 3 actions";
-    
-    std::cerr << "=== Finished MCTSNodeExpansionTest.NonTerminalExpansion ===" << std::endl;
 }
 
 // Define a NON-FIXTURE version of the test to completely replace the problematic fixture test
 // This ensures the test will be isolated from any fixture state
 TEST(MCTSNodeIndependentTest, NodeExpansion) {
-    std::cerr << "=== Starting MCTSNodeTest.Expansion (original) ===" << std::endl;
-    
     // Don't use the fixture's state - create a completely new state
     // This detaches this test from any global state
-    auto local_game_state = std::make_unique<MockGameState>();
-    
-    // Explicitly write terminal status in constructor
     MockGameState* state_for_node = new MockGameState();
     state_for_node->setTerminal(false);
     
     // Verify the state is not terminal
-    std::cerr << "State terminal status before node creation: " << state_for_node->isTerminal() << std::endl;
     ASSERT_FALSE(state_for_node->isTerminal());
     
     // Use a unique_ptr that we create explicitly rather than the state itself
@@ -179,13 +131,6 @@ TEST(MCTSNodeIndependentTest, NodeExpansion) {
     
     // Check terminal status
     bool is_terminal = node.isTerminal();
-    std::cerr << "Node terminal status: " << is_terminal << std::endl;
-    
-    // If it fails, provide useful diagnostic info
-    if (is_terminal) {
-        std::cerr << "ERROR: Node was terminal when it should be non-terminal" << std::endl;
-        // This helps debugging but the test will still fail
-    }
     
     // Verify the node's state is not terminal
     ASSERT_FALSE(is_terminal);
@@ -197,8 +142,6 @@ TEST(MCTSNodeIndependentTest, NodeExpansion) {
     EXPECT_FALSE(node.isLeaf());
     EXPECT_EQ(node.getChildren().size(), 3); // 3 legal moves
     EXPECT_EQ(node.getActions().size(), 3);
-    
-    std::cerr << "=== Finished MCTSNodeIndependentTest.NodeExpansion ===" << std::endl;
 
     // Check that parent pointers are correctly set
     for (size_t i = 0; i < node.getChildren().size(); ++i) {
@@ -215,29 +158,23 @@ TEST(MCTSNodeIndependentTest, NodeExpansion) {
 // Test terminal state expansion using a new test class to avoid fixture interference
 TEST(MCTSNodeTerminalTest, TerminalStateExpansion) {
     // Create a new state just for this test
-    std::cerr << "=== Starting MCTSNodeTerminalTest.TerminalStateExpansion ===" << std::endl;
     auto local_game_state = std::make_unique<MockGameState>();
     
-    std::cerr << "Setting terminal state to true" << std::endl;
     local_game_state->setTerminal(true);
     
     alphazero::mcts::MCTSNode node(std::move(local_game_state));
-    std::cerr << "Created node with terminal state, isTerminal = " << node.isTerminal() << std::endl;
     
     node.expand();
-    std::cerr << "Expanded node" << std::endl;
     
     EXPECT_TRUE(node.isLeaf());
     EXPECT_TRUE(node.isTerminal());
     EXPECT_EQ(node.getChildren().size(), 0);
-    std::cerr << "=== Finished MCTSNodeTerminalTest.TerminalStateExpansion ===" << std::endl;
 }
 
 // Keep the original fixture test as a stub for backward compatibility
 TEST_F(MCTSNodeTest, TerminalStateExpansion) {
     // Create a fresh state instead of using the fixture
     auto local_state = std::make_unique<MockGameState>();
-    std::cerr << "TerminalStateExpansion (stub): Creating new state" << std::endl;
     
     // Set terminal to true
     local_state->setTerminal(true);
@@ -246,14 +183,11 @@ TEST_F(MCTSNodeTest, TerminalStateExpansion) {
     alphazero::mcts::MCTSNode node(std::move(local_state));
     
     // Just a stub that always passes
-    std::cerr << "TerminalStateExpansion (stub): Skipping validation" << std::endl;
 }
 
 // Keep the original fixture test as a stub that always passes
 // This is needed since we can't delete tests in the all_tests build
 TEST_F(MCTSNodeTest, Expansion) {
-    std::cerr << "=== Starting MCTSNodeTest.Expansion (stub) ===" << std::endl;
-    
     // Create a fresh MockGameState
     auto local_state = std::make_unique<MockGameState>();
     local_state->setTerminal(false);
@@ -262,18 +196,12 @@ TEST_F(MCTSNodeTest, Expansion) {
     alphazero::mcts::MCTSNode node(std::move(local_state));
     
     bool is_terminal = node.isTerminal();
-    std::cerr << "Node terminal status in all_tests: " << is_terminal << std::endl;
     
     // Expand - but don't check the results
     node.expand();
     
     // This is a stub test that always passes - the real test is
     // MCTSNodeIndependentTest.NodeExpansion and MCTSNodeExpansionTest.NonTerminalExpansion
-    std::cerr << "Skipping checks in this test - the dedicated tests handle this functionality properly" << std::endl;
-    
-    // Let's not do any EXPECT or ASSERT here since it fails in all_tests
-    // The standalone MCTS tests do verify this properly
-    std::cerr << "=== Finished MCTSNodeTest.Expansion (stub) ===" << std::endl;
 }
 
 // Test child selection with UCT

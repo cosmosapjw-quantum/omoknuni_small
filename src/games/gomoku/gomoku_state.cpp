@@ -170,43 +170,83 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getTensorRepresentatio
 }
 
 std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepresentation() const {
-    const int num_history_pairs = 8; 
-    const int num_feature_planes = 2 * num_history_pairs + 1; 
-    
-    std::vector<std::vector<std::vector<float>>> tensor(
-        num_feature_planes, std::vector<std::vector<float>>(
-            board_size_, std::vector<float>(board_size_, 0.0f)));
+    try {
+        const int num_history_pairs = 8; 
+        const int num_feature_planes = 2 * num_history_pairs + 1; 
+        
+        std::vector<std::vector<std::vector<float>>> tensor(
+            num_feature_planes, std::vector<std::vector<float>>(
+                board_size_, std::vector<float>(board_size_, 0.0f)));
 
-    int history_len = move_history_.size();
-    
-    std::vector<int> current_player_moves_in_history;
-    std::vector<int> opponent_player_moves_in_history;
+        int history_len = move_history_.size();
+        
+        std::vector<int> current_player_moves_in_history;
+        std::vector<int> opponent_player_moves_in_history;
 
-    for(int k=0; k < history_len; ++k) {
-        int move_action = move_history_[history_len - 1 - k];
-        if (k % 2 == 0) { 
-            opponent_player_moves_in_history.push_back(move_action);
-        } else { 
-            current_player_moves_in_history.push_back(move_action);
+        for(int k=0; k < history_len; ++k) {
+            int move_action = move_history_[history_len - 1 - k];
+            if (k % 2 == 0) { 
+                opponent_player_moves_in_history.push_back(move_action);
+            } else { 
+                current_player_moves_in_history.push_back(move_action);
+            }
         }
-    }
 
-    for(int i=0; i < num_history_pairs && i < current_player_moves_in_history.size(); ++i) {
-        auto [r,c] = action_to_coords_pair(current_player_moves_in_history[i]);
-        tensor[i*2][r][c] = 1.0f; 
-    }
-    for(int i=0; i < num_history_pairs && i < opponent_player_moves_in_history.size(); ++i) {
-        auto [r,c] = action_to_coords_pair(opponent_player_moves_in_history[i]);
-        tensor[i*2 + 1][r][c] = 1.0f; 
-    }
-
-    float color_plane_val = (current_player_ == BLACK) ? 1.0f : 0.0f;
-    for (int r = 0; r < board_size_; ++r) {
-        for (int c = 0; c < board_size_; ++c) {
-            tensor[num_feature_planes - 1][r][c] = color_plane_val;
+        // Add bounds checking to prevent segfaults
+        for(int i=0; i < num_history_pairs && i < current_player_moves_in_history.size(); ++i) {
+            auto coords = action_to_coords_pair(current_player_moves_in_history[i]);
+            int r = coords.first;
+            int c = coords.second;
+            if (r >= 0 && r < board_size_ && c >= 0 && c < board_size_ && (i*2) < num_feature_planes) {
+                tensor[i*2][r][c] = 1.0f;
+            }
         }
+        
+        for(int i=0; i < num_history_pairs && i < opponent_player_moves_in_history.size(); ++i) {
+            auto coords = action_to_coords_pair(opponent_player_moves_in_history[i]);
+            int r = coords.first;
+            int c = coords.second;
+            if (r >= 0 && r < board_size_ && c >= 0 && c < board_size_ && (i*2 + 1) < num_feature_planes) {
+                tensor[i*2 + 1][r][c] = 1.0f;
+            }
+        }
+
+        float color_plane_val = (current_player_ == BLACK) ? 1.0f : 0.0f;
+        for (int r = 0; r < board_size_; ++r) {
+            for (int c = 0; c < board_size_; ++c) {
+                tensor[num_feature_planes - 1][r][c] = color_plane_val;
+            }
+        }
+        return tensor;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in getEnhancedTensorRepresentation: " << e.what() << std::endl;
+        
+        // Return a default tensor with the correct dimensions (17 channels)
+        const int num_history_pairs = 8;
+        const int num_feature_planes = 2 * num_history_pairs + 1; // 17 channels
+        
+        return std::vector<std::vector<std::vector<float>>>(
+            num_feature_planes, 
+            std::vector<std::vector<float>>(
+                board_size_, 
+                std::vector<float>(board_size_, 0.0f)
+            )
+        );
+    } catch (...) {
+        std::cerr << "Unknown exception in getEnhancedTensorRepresentation" << std::endl;
+        
+        // Return a default tensor with the correct dimensions (17 channels)
+        const int num_history_pairs = 8;
+        const int num_feature_planes = 2 * num_history_pairs + 1; // 17 channels
+        
+        return std::vector<std::vector<std::vector<float>>>(
+            num_feature_planes, 
+            std::vector<std::vector<float>>(
+                board_size_, 
+                std::vector<float>(board_size_, 0.0f)
+            )
+        );
     }
-    return tensor;
 }
 
 

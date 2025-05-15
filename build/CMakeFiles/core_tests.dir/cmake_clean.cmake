@@ -5,8 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/core_tests.dir/tests/core/igamestate_test.cpp.o.d"
   "CMakeFiles/core_tests.dir/tests/core_tests_main.cpp.o"
   "CMakeFiles/core_tests.dir/tests/core_tests_main.cpp.o.d"
-  "bin/Debug/core_tests"
-  "bin/Debug/core_tests.pdb"
+  "bin/Release/core_tests"
+  "bin/Release/core_tests.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

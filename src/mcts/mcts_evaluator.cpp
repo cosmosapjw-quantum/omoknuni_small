@@ -57,7 +57,6 @@ void MCTSEvaluator::start() {
     std::lock_guard<std::mutex> lock(cv_mutex_);
     
     if (worker_thread_.joinable()) {
-        std::cerr << "MCTSEvaluator::start - Thread already running" << std::endl;
         return; // Already started
     }
     
@@ -65,11 +64,23 @@ void MCTSEvaluator::start() {
     shutdown_flag_.store(false, std::memory_order_release);
     
     // Clear the queue in case of previous leftover requests
-    EvaluationRequest dummy(nullptr, nullptr);
-    while (request_queue_.try_dequeue(dummy)) {
+    int cleared_items = 0;
+    while (true) {
+        // Create a fresh dummy request each time to avoid use-after-move issues
+        EvaluationRequest dummy(nullptr, nullptr, 10);
+        
+        if (!request_queue_.try_dequeue(dummy)) {
+            break; // No more items in queue
+        }
+        
+        cleared_items++;
+        
         // Fulfill any pending promises to avoid memory leaks
         try {
             NetworkOutput empty_output;
+            empty_output.value = 0.0f;
+            int action_size = dummy.action_space_size > 0 ? dummy.action_space_size : 10;
+            empty_output.policy.resize(action_size, 1.0f / action_size);
             dummy.promise.set_value(std::move(empty_output));
         } catch (...) {
             // Promise might have been fulfilled or broken already
@@ -78,7 +89,6 @@ void MCTSEvaluator::start() {
     
     try {
         worker_thread_ = std::thread(&MCTSEvaluator::processBatches, this);
-        std::cout << "MCTSEvaluator started successfully" << std::endl;
     } catch (const std::exception& e) {
         shutdown_flag_.store(true, std::memory_order_release);
         std::cerr << "Failed to start MCTSEvaluator thread: " << e.what() << std::endl;
@@ -103,73 +113,113 @@ void MCTSEvaluator::stop() {
     }
     
     if (need_join) {
-        // Set timeout for joining the thread
-        auto join_start = std::chrono::steady_clock::now();
-        
-        // Try to join with timeout (up to 5 seconds)
+        // First, try joining directly with a short timeout
         if (worker_thread_.joinable()) {
-            std::thread joiner([this]() {
+            // Use a direct future-based approach for the main join attempt
+            auto join_future = std::async(std::launch::async, [this]() {
                 if (worker_thread_.joinable()) {
                     worker_thread_.join();
+                    return true;
                 }
+                return false;
             });
             
-            if (joiner.joinable()) {
-                if (join_for(joiner, std::chrono::seconds(5))) {
-                    // Joined successfully
-                } else {
-                    // Timed out, detach the joiner
-                    joiner.detach();
-                    std::cerr << "Warning: Timed out waiting for evaluator thread to join" << std::endl;
+            // Wait for joining to complete with a timeout
+            if (join_future.wait_for(std::chrono::seconds(2)) == std::future_status::ready) {
+                // Thread joined successfully
+            } else {
+                std::cerr << "Warning: Timeout waiting for MCTSEvaluator thread to join" << std::endl;
+                
+                // Secondary approach: create a dedicated joiner thread with longer timeout
+                std::thread joiner([this]() {
+                    if (worker_thread_.joinable()) {
+                        worker_thread_.join();
+                    }
+                });
+                
+                if (joiner.joinable()) {
+                    if (join_for(joiner, std::chrono::seconds(3))) {
+                        // Thread joined on second attempt
+                    } else {
+                        // Still failed, detach the joiner thread
+                        joiner.detach();
+                        std::cerr << "ERROR: Timeout waiting for MCTSEvaluator thread to join" << std::endl;
+                        std::cerr << "WARNING: MCTSEvaluator thread may be permanently blocked" << std::endl;
+                    }
                 }
             }
         }
         
-        // Clear any remaining requests with default responses
-        EvaluationRequest request(nullptr, nullptr);
-        while (request_queue_.try_dequeue(request)) {
+        // Drain the queue to ensure no pending requests
+        int cleared_requests = 0;
+        while (true) {
+            // Create a fresh request object for each iteration to avoid use-after-move issues
+            EvaluationRequest request(nullptr, nullptr, 10);
+            
+            if (!request_queue_.try_dequeue(request)) {
+                break; // Queue is empty
+            }
+            
             try {
                 NetworkOutput default_output;
-                if (request.node) {
-                    int action_size = request.node->getState().getActionSpaceSize();
-                    default_output.policy.resize(action_size, 1.0f / action_size);
-                }
+                default_output.value = 0.0f;
+                int action_size = request.action_space_size > 0 ? request.action_space_size : 10;
+                default_output.policy.resize(action_size, 1.0f / action_size);
                 request.promise.set_value(std::move(default_output));
+                cleared_requests++;
             } catch (...) {
                 // Promise might be broken already, just continue
             }
         }
-        
-        std::cout << "MCTSEvaluator stopped" << std::endl;
     }
 }
 
 std::future<NetworkOutput> MCTSEvaluator::evaluateState(MCTSNode* node, std::unique_ptr<core::IGameState> state) {
     if (shutdown_flag_.load(std::memory_order_acquire)) {
-        throw std::runtime_error("MCTSEvaluator is not running");
-    }
-    
-    if (!node || !state) {
-        // Handle invalid input with immediate default response
+        // Create a default response if evaluator is shutting down
         std::promise<NetworkOutput> promise;
         NetworkOutput default_output;
+        default_output.value = 0.0f;
         
-        if (node) {
-            try {
+        try {
+            if (node) {
                 int action_size = node->getState().getActionSpaceSize();
                 default_output.policy.resize(action_size, 1.0f / action_size);
-            } catch (...) {
-                // Default size if we can't get action space
+            } else {
                 default_output.policy.resize(10, 0.1f);
             }
+        } catch (...) {
+            // Default size if we can't get action space
+            default_output.policy.resize(10, 0.1f);
         }
         
         promise.set_value(std::move(default_output));
         return promise.get_future();
     }
     
-    // Create the request
-    EvaluationRequest request(node, std::move(state));
+    // Create a safe policy size before potentially moving the state
+    int policy_size = 10; // Default fallback
+    if (node && state) {
+        try {
+            policy_size = state->getActionSpaceSize();
+        } catch (...) {
+            // Keep default size if we can't access action space
+        }
+    }
+    
+    if (!node || !state) {
+        // Handle invalid input with immediate default response
+        std::promise<NetworkOutput> promise;
+        NetworkOutput default_output;
+        default_output.value = 0.0f;
+        default_output.policy.resize(policy_size, 1.0f / policy_size);
+        
+        promise.set_value(std::move(default_output));
+        return promise.get_future();
+    }
+    
+    // Create the request with a copy of the policy_size for safety
+    EvaluationRequest request(node, std::move(state), policy_size);
     std::future<NetworkOutput> future = request.promise.get_future();
     
     // Enqueue the request
@@ -180,25 +230,14 @@ std::future<NetworkOutput> MCTSEvaluator::evaluateState(MCTSNode* node, std::uni
         std::promise<NetworkOutput> error_promise;
         NetworkOutput error_output;
         error_output.value = 0.0f;
-        
-        try {
-            if (node) {
-                int action_size = node->getState().getActionSpaceSize();
-                error_output.policy.resize(action_size, 1.0f / action_size);
-            } else {
-                error_output.policy.resize(10, 0.1f);
-            }
-        } catch (...) {
-            // Default size if we can't get action space
-            error_output.policy.resize(10, 0.1f);
-        }
+        error_output.policy.resize(policy_size, 1.0f / policy_size);
         
         error_promise.set_value(std::move(error_output));
         return error_promise.get_future();
     }
     
     // Notify worker thread that a new request is available
-    cv_.notify_one();
+    cv_.notify_all(); // Notify all waiting threads for redundancy
     
     return future;
 }
@@ -226,15 +265,22 @@ size_t MCTSEvaluator::getTotalEvaluations() const {
 void MCTSEvaluator::processBatches() {
     // Thread name setting code (platform-specific, omitted for brevity)
     
-    std::cout << "Starting MCTSEvaluator processing thread" << std::endl;
-    
     const int max_consecutive_errors = 5;
     int consecutive_errors = 0;
+    int idle_count = 0;  // Track consecutive idle iterations
     
     while (!shutdown_flag_.load(std::memory_order_acquire)) {
         try {
+            // Check shutdown flag at beginning of loop
+            if (shutdown_flag_.load(std::memory_order_acquire)) {
+                break;
+            }
+            
+            // Get the current approximate queue size once to avoid repeated calls
+            size_t queue_size = request_queue_.size_approx();
+            
             // Process any requests in the queue
-            if (request_queue_.size_approx() > 0) {
+            if (queue_size > 0) {
                 // Collect a batch of states with the timeout
                 auto batch = collectBatch();
                 
@@ -242,18 +288,41 @@ void MCTSEvaluator::processBatches() {
                     // Process the batch safely
                     processBatch(batch);
                     consecutive_errors = 0; // Reset error counter on success
+                    idle_count = 0;        // Reset idle counter on activity
                 }
             } else {
                 // If queue is empty, wait for a short period to avoid busy-waiting
                 std::unique_lock<std::mutex> lock(cv_mutex_);
-                auto wait_result = cv_.wait_for(lock, std::chrono::milliseconds(10), [this]() {
+                
+                // Adaptive wait timeout: use longer waits when consistently idle
+                auto wait_timeout = (idle_count > 10) ? 
+                    std::chrono::milliseconds(50) : std::chrono::milliseconds(10);
+                    
+                auto wait_result = cv_.wait_for(lock, wait_timeout, [this]() {
                     return request_queue_.size_approx() > 0 || shutdown_flag_.load(std::memory_order_acquire);
                 });
                 
-                // Prevent tight spinning with a small sleep if we've been woken up
-                // but there are still no requests and no shutdown signal
-                if (!wait_result && !shutdown_flag_.load(std::memory_order_acquire)) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                // Check shutdown flag immediately after wait
+                if (shutdown_flag_.load(std::memory_order_acquire)) {
+                    break;
+                }
+                
+                // Handle idle state
+                if (!wait_result) {
+                    idle_count++;
+                    
+                    // Apply exponential backoff for sleep duration based on idle count
+                    // to reduce CPU usage during prolonged idle periods
+                    if (idle_count > 100) { // Very long idle time - back off significantly
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    } else if (idle_count > 10) { // Moderate idle time
+                        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                    } else {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    }
+                } else {
+                    // Reset idle count if we were woken up for a reason
+                    idle_count = 0;
                 }
             }
         } catch (const std::exception& e) {
@@ -262,7 +331,7 @@ void MCTSEvaluator::processBatches() {
             
             // If too many consecutive errors, sleep to avoid thrashing
             if (consecutive_errors >= max_consecutive_errors) {
-                std::cerr << "Too many consecutive errors, sleeping..." << std::endl;
+                std::cerr << "Too many consecutive errors, sleeping to avoid thrashing" << std::endl;
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 consecutive_errors = 0; // Reset after sleeping
             }
@@ -277,13 +346,53 @@ void MCTSEvaluator::processBatches() {
             }
         }
         
-        // Prevent tight loops
-        if (request_queue_.size_approx() == 0 && !shutdown_flag_.load(std::memory_order_acquire)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        // Extra check for shutdown flag at end of each loop iteration
+        if (shutdown_flag_.load(std::memory_order_acquire)) {
+            break;
         }
     }
-    
-    std::cout << "MCTSEvaluator processing thread exiting" << std::endl;
+
+    // Process any remaining items in the queue before exiting
+    int cleaned_up_count = 0;
+    try {
+        // Drain the queue and fulfill any pending promises
+        while (true) {
+            // Create a fresh request object for each iteration
+            EvaluationRequest request(nullptr, nullptr);
+            
+            if (!request_queue_.try_dequeue(request)) {
+                break; // Queue is empty
+            }
+            
+            try {
+                NetworkOutput default_output;
+                default_output.value = 0.0f;
+                
+                // Be extra careful about accessing node and state
+                if (request.node) {
+                    try {
+                        int action_size = request.node->getState().getActionSpaceSize();
+                        default_output.policy.resize(action_size, 1.0f / action_size);
+                    } catch (...) {
+                        // Use stored action space size as fallback
+                        int action_size = request.action_space_size > 0 ? request.action_space_size : 10;
+                        default_output.policy.resize(action_size, 1.0f / action_size);
+                    }
+                } else {
+                    // Use stored action space size as fallback
+                    int action_size = request.action_space_size > 0 ? request.action_space_size : 10;
+                    default_output.policy.resize(action_size, 1.0f / action_size);
+                }
+                
+                request.promise.set_value(std::move(default_output));
+                cleaned_up_count++;
+            } catch (...) {
+                // Promise might be broken already, just continue
+            }
+        }
+    } catch (...) {
+        // Ignore any errors during final cleanup
+    }
 }
 
 std::vector<EvaluationRequest> MCTSEvaluator::collectBatch() {
@@ -295,7 +404,7 @@ std::vector<EvaluationRequest> MCTSEvaluator::collectBatch() {
     auto timeout_point = start_time + timeout_;
     
     // First try to dequeue as many requests as available immediately, up to batch_size_
-    EvaluationRequest request(nullptr, nullptr);
+    // Create a fresh request object each iteration to prevent reusing a moved-from object
     
     // Get an estimate of current queue size
     size_t initial_queue_size = request_queue_.size_approx();
@@ -309,6 +418,9 @@ std::vector<EvaluationRequest> MCTSEvaluator::collectBatch() {
                 break;
             }
             
+            // Create a fresh request object for each dequeue attempt
+            EvaluationRequest request(nullptr, nullptr);
+            
             if (request_queue_.try_dequeue(request)) {
                 if (request.node && request.state) {
                     batch.push_back(std::move(request));
@@ -317,11 +429,9 @@ std::vector<EvaluationRequest> MCTSEvaluator::collectBatch() {
                     try {
                         NetworkOutput default_output;
                         default_output.value = 0.0f;
-                        // Set empty policy vector
-                        if (request.node) {
-                            int action_size = request.node->getState().getActionSpaceSize();
-                            default_output.policy.resize(action_size, 1.0f / action_size);
-                        }
+                        // Use the stored action_space_size for safety
+                        int action_size = request.action_space_size > 0 ? request.action_space_size : 10;
+                        default_output.policy.resize(action_size, 1.0f / action_size);
                         request.promise.set_value(std::move(default_output));
                     } catch (...) {
                         // Promise might be broken, ignore
@@ -360,6 +470,9 @@ std::vector<EvaluationRequest> MCTSEvaluator::collectBatch() {
         if (!shutdown_flag_.load(std::memory_order_acquire)) {
             size_t remaining = batch_size_ - batch.size();
             for (size_t i = 0; i < remaining; ++i) {
+                // Create a fresh request object for each dequeue attempt
+                EvaluationRequest request(nullptr, nullptr);
+                
                 if (request_queue_.try_dequeue(request)) {
                     if (request.node && request.state) {
                         batch.push_back(std::move(request));
@@ -371,6 +484,10 @@ std::vector<EvaluationRequest> MCTSEvaluator::collectBatch() {
                             // Set empty policy vector
                             if (request.node) {
                                 int action_size = request.node->getState().getActionSpaceSize();
+                                default_output.policy.resize(action_size, 1.0f / action_size);
+                            } else {
+                                // Use the stored action_space_size for safety
+                                int action_size = request.action_space_size > 0 ? request.action_space_size : 10;
                                 default_output.policy.resize(action_size, 1.0f / action_size);
                             }
                             request.promise.set_value(std::move(default_output));
@@ -471,14 +588,28 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
     bool inference_succeeded = false;
     
     try {
-        std::cout << "Running neural network inference for " << states.size() << " states" << std::endl;
-        outputs = inference_fn_(states);
+        // Critical fix: ensure the inference_fn_ is valid
+        if (!inference_fn_) {
+            std::cerr << "ERROR: Neural network inference function is null during batch processing" << std::endl;
+            throw std::runtime_error("Neural network inference function is null");
+        }
+        
+        // Run the actual inference with additional safety checks
+        try {
+            outputs = inference_fn_(states);
+        } catch (const std::exception& e) {
+            std::cerr << "Exception during inference call: " << e.what() << std::endl;
+            throw; // Re-throw after logging
+        } catch (...) {
+            std::cerr << "Unknown exception during inference call" << std::endl;
+            throw; // Re-throw after logging
+        }
         inference_succeeded = (outputs.size() == states.size());
         
         // Check if we got valid outputs
         if (!inference_succeeded) {
-            std::cerr << "Error: neural network returned " << outputs.size()
-                      << " outputs for " << states.size() << " inputs!" << std::endl;
+            std::cerr << "Error: Neural network returned " << outputs.size() 
+                     << " outputs for " << states.size() << " inputs" << std::endl;
             
             // Resize outputs vector if we got more than expected
             if (outputs.size() > states.size()) {
@@ -498,7 +629,7 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
         
         // Check index validity
         if (batch_idx >= batch.size()) {
-            std::cerr << "Invalid batch index: " << batch_idx << std::endl;
+            std::cerr << "Invalid batch index " << batch_idx << " (batch size: " << batch.size() << ")" << std::endl;
             continue;
         }
         
@@ -540,9 +671,29 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
                 request.promise.set_value(std::move(default_output));
             }
         } catch (const std::exception& e) {
-            std::cerr << "Error fulfilling promise: " << e.what() << std::endl;
+            std::cerr << "Error fulfilling promise at index " << batch_idx << ": " << e.what() << std::endl;
+            
+            // Critical: Still need to fulfill the promise to prevent hanging threads
+            try {
+                NetworkOutput default_output;
+                default_output.value = 0.0f;
+                default_output.policy.resize(10, 0.1f);
+                request.promise.set_value(std::move(default_output));
+            } catch (...) {
+                // Last resort - promise might be broken beyond repair
+            }
         } catch (...) {
-            std::cerr << "Unknown error fulfilling promise" << std::endl;
+            std::cerr << "Unknown error fulfilling promise at index " << batch_idx << std::endl;
+            
+            // Critical: Still need to fulfill the promise to prevent hanging threads
+            try {
+                NetworkOutput default_output;
+                default_output.value = 0.0f;
+                default_output.policy.resize(10, 0.1f);
+                request.promise.set_value(std::move(default_output));
+            } catch (...) {
+                // Last resort - promise might be broken beyond repair
+            }
         }
     }
     
@@ -554,8 +705,6 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
     total_evaluations_.fetch_add(states.size(), std::memory_order_relaxed);
     cumulative_batch_size_.fetch_add(states.size(), std::memory_order_relaxed);
     cumulative_batch_time_ms_.fetch_add(elapsed_ms, std::memory_order_relaxed);
-    
-    std::cout << "Batch processed: " << states.size() << " states in " << elapsed_ms << "ms" << std::endl;
 }
 
 } // namespace mcts

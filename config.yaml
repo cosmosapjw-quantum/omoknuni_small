@@ -6,38 +6,55 @@ board_size: 15
 
 # Neural network settings
 network:
-  num_res_blocks: 5
-  num_filters: 64
+  num_res_blocks: 19
+  num_filters: 256
 
 # Model paths
-model_path: /tmp/test_model.pt
+model_dir: models
+data_dir: data
+log_dir: logs
+
+# Training settings
+train:
+  iterations: 10
+  epochs: 20
+  batch_size: 1024
+  learning_rate: 0.001
+  weight_decay: 0.0001
 
 # MCTS settings
 mcts:
-  num_simulations: 200
-  num_threads: 8
-  batch_size: 16
+  num_simulations: 800
+  num_threads: 20  # Using most of your 24 threads but leaving some for system
+  batch_size: 128  # Good batch size for RTX 3060 Ti
   exploration_constant: 1.5
   virtual_loss: 3
   add_dirichlet_noise: true
   dirichlet_alpha: 0.3
   dirichlet_epsilon: 0.25
   temperature: 1.0
-  batch_timeout_ms: 50
+  batch_timeout_ms: 50  # Lower timeout for faster batching
 
 # Self-play settings
 self_play:
-  num_games: 5
-  num_parallel_games: 4
+  num_games: 500
+  num_parallel_games: 16  # High parallelism for your CPU
   max_moves: 0  # 0 means calculate based on board size
   temperature_threshold: 30
   high_temperature: 1.0
-  low_temperature: 0.1
+  low_temperature: 0.0
   output_dir: data/selfplay
   output_format: json
 
 # Evaluation settings
 evaluation:
-  num_games: 20
-  num_parallel_games: 4
-  max_moves: 0  # 0 means calculate based on board size
+  num_games: 100
+  num_parallel_games: 16
+  max_moves: 0
+  elo_threshold: 15.0
+
+# Arena settings
+arena:
+  enabled: true
+  num_games: 60
+  num_threads: 20

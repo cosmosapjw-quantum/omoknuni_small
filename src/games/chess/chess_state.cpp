@@ -3,6 +3,7 @@
 #include "games/chess/chess_rules.h"
 #include "games/chess/chess960.h"
 #include <sstream>
+#include <iostream>
 #include <iomanip>
 #include <algorithm>
 #include <cctype>
@@ -719,64 +720,99 @@ std::vector<std::vector<std::vector<float>>> ChessState::getTensorRepresentation
 }
 
 std::vector<std::vector<std::vector<float>>> ChessState::getEnhancedTensorRepresentation() const {
-    // Start with basic representation
-    std::vector<std::vector<std::vector<float>>> tensor = getTensorRepresentation();
-    
-    // Add additional planes for enhanced features
-    
-    // 13: Current player (1 for white, 0 for black)
-    tensor.push_back(std::vector<std::vector<float>>(8, 
-                     std::vector<float>(8, current_player_ == PieceColor::WHITE ? 1.0f : 0.0f)));
-    
-    // 14: Castling rights
-    std::vector<std::vector<float>> castlingPlane(8, std::vector<float>(8, 0.0f));
-    float castlingValue = 0.0f;
-    if (castling_rights_.white_kingside) castlingValue += 0.25f;
-    if (castling_rights_.white_queenside) castlingValue += 0.25f;
-    if (castling_rights_.black_kingside) castlingValue += 0.25f;
-    if (castling_rights_.black_queenside) castlingValue += 0.25f;
-    
-    for (int rank = 0; rank < 8; ++rank) {
-        for (int file = 0; file < 8; ++file) {
-            castlingPlane[rank][file] = castlingValue;
+    try {
+        // Start with basic representation
+        std::vector<std::vector<std::vector<float>>> tensor = getTensorRepresentation();
+        
+        // Add additional planes for enhanced features
+        const int boardSize = 8;
+        
+        // 13: Current player (1 for white, 0 for black)
+        tensor.push_back(std::vector<std::vector<float>>(boardSize, 
+                        std::vector<float>(boardSize, current_player_ == PieceColor::WHITE ? 1.0f : 0.0f)));
+        
+        // 14: Castling rights
+        std::vector<std::vector<float>> castlingPlane(boardSize, std::vector<float>(boardSize, 0.0f));
+        float castlingValue = 0.0f;
+        if (castling_rights_.white_kingside) castlingValue += 0.25f;
+        if (castling_rights_.white_queenside) castlingValue += 0.25f;
+        if (castling_rights_.black_kingside) castlingValue += 0.25f;
+        if (castling_rights_.black_queenside) castlingValue += 0.25f;
+        
+        for (int rank = 0; rank < boardSize; ++rank) {
+            for (int file = 0; file < boardSize; ++file) {
+                castlingPlane[rank][file] = castlingValue;
+            }
         }
-    }
-    tensor.push_back(castlingPlane);
-    
-    // 15: En passant square
-    std::vector<std::vector<float>> enPassantPlane(8, std::vector<float>(8, 0.0f));
-    if (en_passant_square_ >= 0 && en_passant_square_ < NUM_SQUARES) {
-        int rank = getRank(en_passant_square_);
-        int file = getFile(en_passant_square_);
-        enPassantPlane[rank][file] = 1.0f;
-    }
-    tensor.push_back(enPassantPlane);
-    
-    // 16: Halfmove clock (normalized)
-    float normalizedHalfmove = std::min(1.0f, static_cast<float>(halfmove_clock_) / 100.0f);
-    tensor.push_back(std::vector<std::vector<float>>(8, 
-                     std::vector<float>(8, normalizedHalfmove)));
-    
-    // 17: Chess960 mode
-    tensor.push_back(std::vector<std::vector<float>>(8, 
-                     std::vector<float>(8, chess960_ ? 1.0f : 0.0f)));
-    
-    // 18: Repetition count (normalized)
-    std::vector<std::vector<float>> repetitionPlane(8, std::vector<float>(8, 0.0f));
-    if (!hash_dirty_) {
-        auto it = position_history_.find(hash_);
-        if (it != position_history_.end()) {
-            float repetitionCount = static_cast<float>(it->second) / 3.0f;  // Normalize to [0,1] with 3 as max
-            for (int rank = 0; rank < 8; ++rank) {
-                for (int file = 0; file < 8; ++file) {
-                    repetitionPlane[rank][file] = repetitionCount;
+        tensor.push_back(castlingPlane);
+        
+        // 15: En passant square
+        std::vector<std::vector<float>> enPassantPlane(boardSize, std::vector<float>(boardSize, 0.0f));
+        if (en_passant_square_ >= 0 && en_passant_square_ < NUM_SQUARES) {
+            int rank = getRank(en_passant_square_);
+            int file = getFile(en_passant_square_);
+            if (rank >= 0 && rank < boardSize && file >= 0 && file < boardSize) {
+                enPassantPlane[rank][file] = 1.0f;
+            }
+        }
+        tensor.push_back(enPassantPlane);
+        
+        // 16: Halfmove clock (normalized)
+        float normalizedHalfmove = std::min(1.0f, static_cast<float>(halfmove_clock_) / 100.0f);
+        tensor.push_back(std::vector<std::vector<float>>(boardSize, 
+                        std::vector<float>(boardSize, normalizedHalfmove)));
+        
+        // 17: Chess960 mode
+        tensor.push_back(std::vector<std::vector<float>>(boardSize, 
+                        std::vector<float>(boardSize, chess960_ ? 1.0f : 0.0f)));
+        
+        // 18: Repetition count (normalized)
+        std::vector<std::vector<float>> repetitionPlane(boardSize, std::vector<float>(boardSize, 0.0f));
+        if (!hash_dirty_) {
+            auto it = position_history_.find(hash_);
+            if (it != position_history_.end()) {
+                float repetitionCount = static_cast<float>(it->second) / 3.0f;  // Normalize to [0,1] with 3 as max
+                repetitionCount = std::min(1.0f, std::max(0.0f, repetitionCount)); // Clamp to [0,1]
+                for (int rank = 0; rank < boardSize; ++rank) {
+                    for (int file = 0; file < boardSize; ++file) {
+                        repetitionPlane[rank][file] = repetitionCount;
+                    }
                 }
             }
         }
+        tensor.push_back(repetitionPlane);
+        
+        return tensor;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in ChessState::getEnhancedTensorRepresentation: " << e.what() << std::endl;
+        
+        // Return a default tensor with the correct dimensions
+        // Chess enhanced tensor has 19 planes (12 piece planes + 7 additional planes)
+        const int num_planes = 19;
+        const int boardSize = 8;
+        
+        return std::vector<std::vector<std::vector<float>>>(
+            num_planes,
+            std::vector<std::vector<float>>(
+                boardSize,
+                std::vector<float>(boardSize, 0.0f)
+            )
+        );
+    } catch (...) {
+        std::cerr << "Unknown exception in ChessState::getEnhancedTensorRepresentation" << std::endl;
+        
+        // Return a default tensor with the correct dimensions
+        const int num_planes = 19;
+        const int boardSize = 8;
+        
+        return std::vector<std::vector<std::vector<float>>>(
+            num_planes,
+            std::vector<std::vector<float>>(
+                boardSize,
+                std::vector<float>(boardSize, 0.0f)
+            )
+        );
     }
-    tensor.push_back(repetitionPlane);
-    
-    return tensor;
 }
 
 uint64_t ChessState::getHash() const {
