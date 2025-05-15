@@ -117,6 +117,9 @@ public:
     void clear();
     
 private:
+    // Settings
+    TrainingDataSettings settings_;
+
     // Training examples per iteration
     std::unordered_map<int, std::vector<TrainingExample>> examples_by_iteration_;
     
@@ -125,9 +128,6 @@ private:
     
     // Current iterations (sorted)
     std::vector<int> iterations_;
-    
-    // Settings
-    TrainingDataSettings settings_;
     
     // Random number generator
     std::mt19937 rng_;

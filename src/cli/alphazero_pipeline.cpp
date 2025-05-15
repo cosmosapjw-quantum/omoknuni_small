@@ -8,6 +8,9 @@
 #include "nn/ddw_randwire_resnet.h"
 #include "utils/debug_monitor.h"
 #include <torch/torch.h>
+#include <c10/cuda/CUDACachingAllocator.h>
+#include <c10/cuda/CUDAFunctions.h>
+#include <ATen/cuda/CUDAContext.h>
 #include <fstream>
 #include <iostream>
 #include <chrono>
@@ -265,6 +268,27 @@ std::vector<selfplay::GameData> AlphaZeroPipeline::runSelfPlay(const std::string
 
 float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData>& games, const std::string& iteration_dir) {
     try {
+        // Print CUDA memory info at start
+        if (torch::cuda::is_available()) {
+            std::cout << "Training start - CUDA memory info:" << std::endl;
+            for (int dev = 0; dev < torch::cuda::device_count(); dev++) {
+                std::cout << "  Device " << dev << ": " 
+                          << "allocated=" << c10::cuda::CUDACachingAllocator::getDeviceStats(dev).allocated_bytes[static_cast<size_t>(0)].current << " bytes, "
+                          << "reserved=" << c10::cuda::CUDACachingAllocator::getDeviceStats(dev).reserved_bytes[static_cast<size_t>(0)].current << " bytes" << std::endl;
+                
+                try {
+                    size_t allocated_memory = c10::cuda::CUDACachingAllocator::getDeviceStats(dev).allocated_bytes[static_cast<size_t>(0)].current;
+                    size_t total_memory = at::cuda::getDeviceProperties(dev)->totalGlobalMem;
+                    //size_t estimated_free = total_memory - allocated_memory;
+                    
+                    //std::cout << "Total memory: " << total_memory / (1024 * 1024) << " MB" << std::endl;
+                    //std::cout << "Available memory: " << available_memory / (1024 * 1024) << " MB" << std::endl;
+                } catch (...) {
+                    std::cout << "  Error getting detailed memory stats" << std::endl;
+                }
+            }
+        }
+    
         // Convert games to training examples
         std::cout << "Converting games to training examples..." << std::endl;
         auto [states, targets] = selfplay::SelfPlayManager::convertToTrainingExamples(games);
@@ -272,9 +296,56 @@ float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData
         
         std::cout << "Created " << states.size() << " training examples" << std::endl;
         
+        // Determine dataset device based on available memory
+        torch::Device dataset_device = torch::kCPU;
+        
+        // Only attempt GPU dataset if use_gpu is enabled
+        if (config_.use_gpu && torch::cuda::is_available()) {
+            try {
+                // Calculate approximate size of training data
+                size_t num_examples = states.size();
+                size_t channels = states[0].size();
+                size_t height = states[0][0].size();
+                size_t width = states[0][0][0].size();
+                size_t policy_size = policies[0].size();
+                
+                // Calculate approximate memory usage
+                size_t states_elements = num_examples * channels * height * width;
+                size_t policies_elements = num_examples * policy_size;
+                size_t values_elements = num_examples;
+                size_t total_elements = states_elements + policies_elements + values_elements;
+                size_t approx_bytes = total_elements * 4; // float32 = 4 bytes
+                
+                std::cout << "Estimated dataset memory: " << approx_bytes << " bytes" << std::endl;
+                std::cout << "CUDA memory allocated: " << c10::cuda::CUDACachingAllocator::getDeviceStats(c10::cuda::current_device()).allocated_bytes[static_cast<size_t>(0)].current
+                          << ", reserved: " << c10::cuda::CUDACachingAllocator::getDeviceStats(c10::cuda::current_device()).reserved_bytes[static_cast<size_t>(0)].current << std::endl;
+                    
+                // Check if we have enough memory headroom
+                for (int device_idx = 0; device_idx < torch::cuda::device_count(); device_idx++) {
+                    const auto* props = at::cuda::getDeviceProperties(device_idx);
+                    size_t total_memory = props->totalGlobalMem;
+                    size_t memory_threshold = 0.8 * total_memory; // 80% threshold for safety
+                    
+                    std::cout << "CUDA device " << device_idx << " total memory: " << total_memory << " bytes" << std::endl;
+                    
+                    if (approx_bytes < memory_threshold) {
+                        dataset_device = torch::Device(torch::kCUDA, device_idx);
+                        std::cout << "Selected CUDA device " << device_idx << " for dataset" << std::endl;
+                        break;
+                    }
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error checking GPU memory: " << e.what() << std::endl;
+                std::cerr << "Defaulting to CPU for dataset" << std::endl;
+                dataset_device = torch::kCPU;
+            }
+        }
+        
+        std::cout << "Creating dataset on device: " << dataset_device << std::endl;
+        
         // Create dataset
         auto dataset = std::make_shared<training::AlphaZeroDataset>(
-            states, policies, values, torch::kCPU
+            states, policies, values, dataset_device
         );
         
         // Create data loader
@@ -283,7 +354,7 @@ float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData
             config_.train_batch_size,
             true,  // shuffle
             config_.train_num_workers,
-            true,  // pin memory
+            dataset->device().is_cpu(),  // only pin memory if dataset is on CPU
             false  // don't drop last
         );
         
@@ -292,8 +363,18 @@ float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData
         if (torch::cuda::is_available() && config_.use_gpu) {
             device = torch::kCUDA;
             std::cout << "Using CUDA device for training" << std::endl;
+            // Print CUDA device properties for debugging
+            std::cout << "CUDA Device count: " << torch::cuda::device_count() << std::endl;
+            std::cout << "CUDA Device name: " << at::cuda::getDeviceProperties(c10::cuda::current_device())->name << std::endl;
+            std::cout << "CUDA Device memory: " << c10::cuda::CUDACachingAllocator::getDeviceStats(c10::cuda::current_device()).allocated_bytes[static_cast<size_t>(0)].current << " bytes allocated, "
+                      << c10::cuda::CUDACachingAllocator::getDeviceStats(c10::cuda::current_device()).reserved_bytes[static_cast<size_t>(0)].current << " bytes reserved" << std::endl;
         } else {
             std::cout << "Using CPU for training (CUDA not available or disabled)" << std::endl;
+            if (torch::cuda::is_available()) {
+                std::cout << "Note: CUDA is available but disabled in config" << std::endl;
+            } else {
+                std::cout << "Note: CUDA is not available on this system" << std::endl;
+            }
         }
         
         // Create and initialize training model based on network type
@@ -320,8 +401,115 @@ float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData
             throw std::runtime_error("Failed to initialize training model");
         }
         
-        // Move model to device
-        training_model->to(device);
+        // Move model to device with error handling
+        std::cout << "Moving model to device: " << device << std::endl;
+        try {
+            // Check current model device
+            torch::Device model_device = torch::kCPU;
+            for (const auto& param : training_model->parameters()) {
+                model_device = param.device();
+                break;
+            }
+            std::cout << "Current model device: " << model_device << std::endl;
+            
+            // Move model to target device
+            training_model->to(device);
+            
+            // Verify model device after movement
+            bool model_on_correct_device = true;
+            for (const auto& param : training_model->parameters()) {
+                if (param.device() != device) {
+                    model_on_correct_device = false;
+                    std::cerr << "ERROR: Model parameter still on " << param.device()
+                              << " instead of " << device << std::endl;
+                }
+                break; // Just check the first parameter
+            }
+            
+            if (model_on_correct_device) {
+                std::cout << "Model successfully moved to " << device << std::endl;
+            } else {
+                std::cerr << "Failed to directly move model parameters to " << device << std::endl;
+                std::cerr << "Trying alternative approach to move model to GPU..." << std::endl;
+                
+                // Alternative approach - copy state dict and recreate model on correct device
+                if (device.is_cuda()) {
+                    try {
+                        // Save model parameters
+                        std::vector<torch::Tensor> params;
+                        for (const auto& param : training_model->parameters()) {
+                            params.push_back(param.clone());
+                        }
+                        
+                        // Recreate model directly on GPU
+                        if (config_.network_type == "resnet") {
+                            auto* model = dynamic_cast<nn::ResNetModel*>(training_model);
+                            if (model) {
+                                std::cout << "Recreating ResNet model directly on GPU" << std::endl;
+                                auto new_model = std::make_shared<nn::ResNetModel>(
+                                    config_.input_channels, 
+                                    config_.board_size,
+                                    config_.num_res_blocks,
+                                    config_.num_filters,
+                                    config_.policy_size
+                                );
+                                
+                                // Move to GPU first
+                                new_model->to(device);
+                                
+                                // Copy parameters without in-place operations
+                                auto new_params = new_model->parameters();
+                                if (params.size() == new_params.size()) {
+                                    for (size_t i = 0; i < params.size(); ++i) {
+                                        // Clone parameter to avoid in-place operations on parameters that require grad
+                                        torch::Tensor device_param = params[i].to(device).detach().clone();
+                                        new_params[i].data().copy_(device_param);
+                                    }
+                                    
+                                    // Replace model
+                                    training_model = new_model.get();
+                                    current_model_ = std::move(new_model);
+                                    std::cout << "Successfully recreated model on GPU" << std::endl;
+                                } else {
+                                    std::cerr << "Parameter count mismatch during model recreation" << std::endl;
+                                    device = torch::kCPU;
+                                    training_model->to(device);
+                                }
+                            } else {
+                                std::cerr << "Failed to cast model during recreation" << std::endl;
+                                device = torch::kCPU;
+                                training_model->to(device);
+                            }
+                        } else {
+                            std::cerr << "Alternative GPU approach only implemented for ResNet" << std::endl;
+                            device = torch::kCPU;
+                            training_model->to(device);
+                        }
+                    } catch (const std::exception& e) {
+                        std::cerr << "Error during alternative GPU approach: " << e.what() << std::endl;
+                        device = torch::kCPU;
+                        training_model->to(device);
+                    }
+                } else {
+                    // Not attempting to move to GPU, just use CPU directly
+                    device = torch::kCPU;
+                    training_model->to(device);
+                }
+            }
+        } catch (const torch::Error& e) {
+            std::cerr << "PyTorch error moving model to device: " << e.what() << std::endl;
+            std::cerr << "Falling back to CPU" << std::endl;
+            device = torch::kCPU;
+            try {
+                training_model->to(device);
+            } catch (...) {
+                std::cerr << "Critical error moving model to CPU. This should not happen." << std::endl;
+                throw;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Standard error moving model to device: " << e.what() << std::endl;
+            throw;
+        }
         
         // Set up optimizer
         torch::optim::Adam optimizer(
@@ -352,50 +540,136 @@ float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData
             // Set model to training mode
             training_model->train();
             
+            // Ensure all model parameters require gradients
+            for (auto& param : training_model->parameters()) {
+                param.set_requires_grad(true);
+            }
+            
             // Iterate through batches
             for (const auto& batch : data_loader) {
-                // Move batch to device
-                auto states_tensor = batch.states.to(device);
-                auto policies_tensor = batch.policies.to(device);
-                auto values_tensor = batch.values.to(device);
-
+                // Move batch to device with error handling
+                
+                torch::Tensor states_tensor, policies_tensor, values_tensor;
+                
+                try {
+                    // Move tensors one by one with error checking
+                    states_tensor = batch.states.to(device);
+                    policies_tensor = batch.policies.to(device);
+                    values_tensor = batch.values.to(device);
+                } catch (const torch::Error& e) {
+                    std::cerr << "PyTorch error moving batch to device: " << e.what() << std::endl;
+                    std::cerr << "Attempting emergency fallback to CPU" << std::endl;
+                    
+                    device = torch::kCPU;
+                    training_model->to(device);
+                    
+                    // Use original tensors if they're already on CPU
+                    states_tensor = batch.states;
+                    policies_tensor = batch.policies;
+                    values_tensor = batch.values;
+                } catch (const std::exception& e) {
+                    std::cerr << "Standard error moving batch to device: " << e.what() << std::endl;
+                    throw;
+                }
+                
                 // Reset gradients
                 optimizer.zero_grad();
                 
-                // Forward pass
                 std::tuple<torch::Tensor, torch::Tensor> output;
-                if (config_.network_type == "resnet") {
-                    auto* resnet_model_ptr = dynamic_cast<nn::ResNetModel*>(training_model);
-                    if (!resnet_model_ptr) throw std::runtime_error("Failed to cast training_model to ResNetModel for forward pass");
-                    output = resnet_model_ptr->forward(states_tensor);
-                } else {
-                    // DDW-RandWire is not fully implemented for training here yet, this would crash.
-                    // For now, to make it compile, let's assume a similar forward if we were to implement it.
-                    // This part needs proper implementation for DDWRandWireResNet.
-                    throw std::runtime_error("DDW-RandWire training forward pass not implemented in this class-based pipeline.");
-                    // auto* ddw_model_ptr = dynamic_cast<nn::DDWRandWireResNet*>(training_model);
-                    // if (!ddw_model_ptr) throw std::runtime_error("Failed to cast training_model to DDWRandWireResNet for forward pass");
-                    // output = ddw_model_ptr->forward(states_tensor); // Assuming DDWRandWireResNet has such a forward
+                try {
+                    if (config_.network_type == "resnet") {
+                        auto* resnet_model_ptr = dynamic_cast<nn::ResNetModel*>(training_model);
+                        if (!resnet_model_ptr) throw std::runtime_error("Failed to cast training_model to ResNetModel for forward pass");
+                        
+                        // Double-check that all tensors are on the same device
+                        if (states_tensor.device() != device) {
+                            states_tensor = states_tensor.to(device);
+                        }
+                        
+                        // Ensure input tensor has requires_grad=true for backpropagation
+                        if (!states_tensor.requires_grad()) {
+                            states_tensor = states_tensor.detach().requires_grad_(true);
+                        }
+                        
+                        output = resnet_model_ptr->forward(states_tensor);
+                    } else {
+                        // DDW-RandWire is not fully implemented for training here yet, this would crash.
+                        // For now, to make it compile, let's assume a similar forward if we were to implement it.
+                        // This part needs proper implementation for DDWRandWireResNet.
+                        throw std::runtime_error("DDW-RandWire training forward pass not implemented in this class-based pipeline.");
+                        // auto* ddw_model_ptr = dynamic_cast<nn::DDWRandWireResNet*>(training_model);
+                        // if (!ddw_model_ptr) throw std::runtime_error("Failed to cast training_model to DDWRandWireResNet for forward pass");
+                        // output = ddw_model_ptr->forward(states_tensor); // Assuming DDWRandWireResNet has such a forward
+                    }
+                } catch (const torch::Error& e) {
+                    std::cerr << "PyTorch error during forward pass: " << e.what() << std::endl;
+                    throw;
+                } catch (const std::exception& e) {
+                    std::cerr << "Standard exception during forward pass: " << e.what() << std::endl;
+                    throw;
+                } catch (...) {
+                    std::cerr << "Unknown error during forward pass" << std::endl;
+                    throw;
                 }
 
                 auto policy_output = std::get<0>(output);
                 auto value_output = std::get<1>(output);
                 
                 // Calculate loss
-                // Policy loss: as used in the other pipeline function
-                auto policy_loss = -torch::sum(policies_tensor * torch::log_softmax(policy_output, 1)) / policies_tensor.size(0);
+                // Make sure policy_output and policies_tensor are on the same device
+                if (policy_output.device() != policies_tensor.device()) {
+                    policy_output = policy_output.to(policies_tensor.device());
+                }
+                
+                // Ensure policy_output has requires_grad
+                if (!policy_output.requires_grad()) {
+                    policy_output = policy_output.detach().requires_grad_(true);
+                }
+                
+                auto log_softmax_policy = torch::log_softmax(policy_output, 1);
+                auto policy_loss = -torch::sum(policies_tensor * log_softmax_policy) / policies_tensor.size(0);
                 
                 // Value loss: MSE
-                auto value_loss = torch::nn::functional::mse_loss(
-                    value_output.view({-1}), values_tensor
-                );
+                // Make sure value_output and values_tensor are on the same device
+                if (value_output.device() != values_tensor.device()) {
+                    value_output = value_output.to(values_tensor.device());
+                }
+                
+                // Ensure value_output has requires_grad
+                if (!value_output.requires_grad()) {
+                    value_output = value_output.detach().requires_grad_(true);
+                }
+                
+                // Fix value tensor shape to match exactly
+                values_tensor = values_tensor.view(value_output.sizes());
+                auto value_loss = torch::nn::functional::mse_loss(value_output, values_tensor);
                 
                 // Combined loss
                 auto loss = policy_loss + value_loss;
                 
-                // Backward pass and optimize
-                loss.backward();
-                optimizer.step();
+                // Backward pass and optimize with error handling
+                try {
+                    loss.backward();
+                    optimizer.step();
+                } catch (const torch::Error& e) {
+                    std::cerr << "PyTorch error during backward/optimize: " << e.what() << std::endl;
+                    
+                    // Try to recover if possible
+                    if (device.is_cuda()) {
+                        std::cerr << "Attempting to recover from CUDA error during backward/optimize..." << std::endl;
+                        try {
+                            c10::cuda::CUDACachingAllocator::emptyCache();
+                            std::cerr << "CUDA cache cleared. Skipping problematic batch." << std::endl;
+                        } catch (const std::exception& cache_exc) {
+                            std::cerr << "Exception while clearing CUDA cache: " << cache_exc.what() << std::endl;
+                        }
+                        continue; // Skip this batch and continue with the next one on the original 'device'
+                    } else {
+                        // If already on CPU and still failing, this is a critical error
+                        std::cerr << "Error occurred on CPU during backward/optimize. Rethrowing." << std::endl;
+                        throw;
+                    }
+                }
                 
                 // Update metrics
                 epoch_loss += loss.item<float>();
@@ -425,6 +699,28 @@ float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData
                       << " completed. Avg Loss: " << epoch_loss
                       << " (Policy: " << policy_loss_sum
                       << ", Value: " << value_loss_sum << ")" << std::endl;
+            
+            // Print GPU memory stats after each epoch
+            if (torch::cuda::is_available()) {
+                try {
+                    std::cout << "End of epoch " << (epoch + 1) << " - CUDA memory stats:" << std::endl;
+                    for (int dev = 0; dev < torch::cuda::device_count(); dev++) {
+                        std::cout << "  Device " << dev << ": " 
+                                << "allocated=" << c10::cuda::CUDACachingAllocator::getDeviceStats(dev).allocated_bytes[static_cast<size_t>(0)].current << " bytes, "
+                                << "reserved=" << c10::cuda::CUDACachingAllocator::getDeviceStats(dev).reserved_bytes[static_cast<size_t>(0)].current << " bytes" << std::endl;
+                    }
+                    
+                    // Force CUDA memory cleanup after each epoch to prevent memory buildup
+                    if (c10::cuda::CUDACachingAllocator::getDeviceStats(c10::cuda::current_device()).reserved_bytes[static_cast<size_t>(0)].current > 0) {
+                        std::cout << "Running CUDA garbage collection..." << std::endl;
+                        c10::cuda::CUDACachingAllocator::emptyCache();
+                        std::cout << "After GC: allocated=" << c10::cuda::CUDACachingAllocator::getDeviceStats(c10::cuda::current_device()).allocated_bytes[static_cast<size_t>(0)].current
+                                << ", reserved=" << c10::cuda::CUDACachingAllocator::getDeviceStats(c10::cuda::current_device()).reserved_bytes[static_cast<size_t>(0)].current << std::endl;
+                    }
+                } catch (...) {
+                    std::cout << "Error getting CUDA memory stats at end of epoch" << std::endl;
+                }
+            }
             
             // Save model if loss improved
             if (epoch_loss < best_loss) {

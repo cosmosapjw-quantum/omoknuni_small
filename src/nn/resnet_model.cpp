@@ -1,6 +1,10 @@
 // src/nn/resnet_model.cpp
 #include "nn/resnet_model.h"
 #include <stdexcept>
+#include <ATen/cuda/CUDAContext.h>
+#include <c10/cuda/CUDACachingAllocator.h>
+#include <chrono> // For timing
+#include <iostream> // For logging
 
 namespace alphazero {
 namespace nn {
@@ -35,13 +39,11 @@ ResNetModel::ResNetModel(int64_t input_channels, int64_t board_size,
       board_size_(board_size),
       policy_size_(policy_size) {
     
-    // If policy size not specified, default to board_size^2
     if (policy_size_ == 0) {
         policy_size_ = board_size_ * board_size_;
     }
     
     // Input layers
-    // Always create input layer with the actual channel count needed (17 for Gomoku)
     input_conv_ = torch::nn::Conv2d(torch::nn::Conv2dOptions(input_channels_, num_filters, 3)
                                   .padding(1).bias(false));
     input_bn_ = torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(num_filters));
@@ -53,13 +55,18 @@ ResNetModel::ResNetModel(int64_t input_channels, int64_t board_size,
     res_blocks_ = torch::nn::ModuleList();
     for (int64_t i = 0; i < num_res_blocks; ++i) {
         res_blocks_->push_back(std::make_shared<ResNetResidualBlock>(num_filters));
-        register_module("res_block_" + std::to_string(i), res_blocks_[i]);
+        // No need to register individual blocks if ModuleList itself is registered and holds them.
+        // However, explicit registration is safer for direct access by name if needed.
+        // register_module("res_block_" + std::to_string(i), res_blocks_[i]); 
     }
+    register_module("res_blocks", res_blocks_); // Register the ModuleList
     
     // Policy head
     policy_conv_ = torch::nn::Conv2d(torch::nn::Conv2dOptions(num_filters, 32, 1).bias(false));
     policy_bn_ = torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(32));
-    policy_fc_ = torch::nn::Linear(32 * board_size_ * board_size_, policy_size_);
+    // Ensure board_size_ is positive to avoid negative dimensions
+    int64_t policy_fc_input_features = 32 * (board_size_ > 0 ? board_size_ : 1) * (board_size_ > 0 ? board_size_ : 1);
+    policy_fc_ = torch::nn::Linear(policy_fc_input_features, policy_size_);
     
     register_module("policy_conv", policy_conv_);
     register_module("policy_bn", policy_bn_);
@@ -68,7 +75,8 @@ ResNetModel::ResNetModel(int64_t input_channels, int64_t board_size,
     // Value head
     value_conv_ = torch::nn::Conv2d(torch::nn::Conv2dOptions(num_filters, 32, 1).bias(false));
     value_bn_ = torch::nn::BatchNorm2d(torch::nn::BatchNorm2dOptions(32));
-    value_fc1_ = torch::nn::Linear(32 * board_size_ * board_size_, 256);
+    int64_t value_fc1_input_features = 32 * (board_size_ > 0 ? board_size_ : 1) * (board_size_ > 0 ? board_size_ : 1);
+    value_fc1_ = torch::nn::Linear(value_fc1_input_features, 256);
     value_fc2_ = torch::nn::Linear(256, 1);
     
     register_module("value_conv", value_conv_);
@@ -78,465 +86,404 @@ ResNetModel::ResNetModel(int64_t input_channels, int64_t board_size,
 }
 
 std::tuple<torch::Tensor, torch::Tensor> ResNetModel::forward(torch::Tensor x) {
+    auto forward_total_start_time = std::chrono::high_resolution_clock::now();
+    // std::cout << "[FWD] Entered. Input x device: " << x.device() << ", shape: " << x.sizes() << std::endl;
+
     try {
-        // Check input device matches model device
-        torch::Device model_device = torch::kCPU;
-        auto param_iter = this->parameters().begin();
-        if (param_iter != this->parameters().end()) {
-            model_device = param_iter->device();
-        }
-        
+        torch::Device model_device = (!this->parameters().empty() && this->parameters().front().defined()) ? this->parameters().front().device() : torch::kCPU;
+        // std::cout << "[FWD] Model device: " << model_device << std::endl;
+
         if (x.device() != model_device) {
-            std::cerr << "WARNING: Input tensor device (" << x.device() << ") doesn't match model device (" 
-                      << model_device << "). Moving input to model device." << std::endl;
+            // std::cout << "[FWD] WARN: Input on " << x.device() << ", model on " << model_device << ". Moving input." << std::endl;
             x = x.to(model_device);
         }
-        
-        // Verify tensor shape before proceeding
-        if (x.dim() != 4 || x.size(1) != input_channels_ || 
-            x.size(2) != board_size_ || x.size(3) != board_size_) {
-            std::cerr << "Error: Input tensor has wrong shape. Got: ["
-                      << x.size(0) << ", " << x.size(1) << ", " 
-                      << x.size(2) << ", " << x.size(3) << "], Expected: ["
-                      << "batch_size" << ", " << input_channels_ << ", " 
-                      << board_size_ << ", " << board_size_ << "]" << std::endl;
-                      
-            // Create default outputs instead of crashing
+
+        if (x.size(1) != input_channels_) {
+            // std::cout << "[FWD] Adapting channels from " << x.size(1) << " to " << input_channels_ << std::endl;
             auto batch_size = x.size(0);
-            torch::Tensor default_policy = torch::ones({batch_size, policy_size_}, x.options()) / policy_size_;
-            torch::Tensor default_value = torch::zeros({batch_size, 1}, x.options());
-            return {default_policy, default_value};
+            auto height = x.size(2);
+            auto width = x.size(3);
+            torch::Tensor adapted_x = torch::zeros({batch_size, input_channels_, height, width}, x.options());
+            int64_t channels_to_copy = std::min(x.size(1), input_channels_);
+            adapted_x.slice(/*dim=*/1, /*start=*/0, /*end=*/channels_to_copy) = x.slice(/*dim=*/1, /*start=*/0, /*end=*/channels_to_copy);
+            x = adapted_x;
         }
         
-        // Common layers
+        auto input_layer_start_time = std::chrono::high_resolution_clock::now();
         x = torch::relu(input_bn_(input_conv_(x)));
+        auto input_layer_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - input_layer_start_time);
+        std::cout << "[FWD] Input layer: " << input_layer_duration.count() << " us. Device: " << x.device() << std::endl;
         
-        // Residual blocks with defensive coding
-        for (size_t i = 0; i < res_blocks_->size(); i++) {
-            try {
-                // Use operator[] instead of .at()
-                const auto& block = (*res_blocks_)[i];
-                if (!block) {
-                    std::cerr << "Error: Null residual block at index " << i << std::endl;
-                    continue;
-                }
-                // Use std::dynamic_pointer_cast instead of as<T>
-                auto residual_block = std::dynamic_pointer_cast<ResNetResidualBlock>(block);
-                if (residual_block) {
-                    x = residual_block->forward(x);
-                } else {
-                    std::cerr << "Error: Failed to cast block at index " << i << std::endl;
-                }
-            } catch (const std::exception& e) {
-                std::cerr << "Error in residual block " << i << ": " << e.what() << std::endl;
-                // Continue with the current x rather than crashing
-            }
-        }
-        
-        // Policy head with defensive coding
-        torch::Tensor policy;
-        try {
-            policy = torch::relu(policy_bn_(policy_conv_(x)));
-            policy = policy.view({policy.size(0), -1});
-            
-            // Check for dimension mismatch before multiplication
-            if (policy.size(1) != policy_fc_->weight.size(1)) {
-                std::cerr << "ERROR: Dimension mismatch in policy_fc_ layer!" << std::endl;
-                std::cerr << "Policy input features: " << policy.size(1) 
-                          << ", Expected: " << policy_fc_->weight.size(1) << std::endl;
-                          
-                // Create default policy instead of crashing
-                policy = torch::ones({x.size(0), policy_size_}, x.options()) / policy_size_;
+        auto res_blocks_total_start_time = std::chrono::high_resolution_clock::now();
+        int block_idx = 0;
+        for (const auto& block_module : *res_blocks_) {
+            auto res_block_single_start_time = std::chrono::high_resolution_clock::now();
+            auto* block_ptr = block_module->as<ResNetResidualBlock>();
+            if (block_ptr) {
+                 x = block_ptr->forward(x);
             } else {
-                policy = torch::log_softmax(policy_fc_(policy), 1);
+                 std::cerr << "[FWD] Error: Non-ResNetResidualBlock in res_blocks_" << std::endl;
             }
-        } catch (const std::exception& e) {
-            std::cerr << "Error in policy head: " << e.what() << std::endl;
-            // Create default policy
-            policy = torch::ones({x.size(0), policy_size_}, x.options()) / policy_size_;
+            auto res_block_single_end_time = std::chrono::high_resolution_clock::now();
+            auto res_block_single_duration = std::chrono::duration_cast<std::chrono::microseconds>(res_block_single_end_time - res_block_single_start_time);
+            if (block_idx < 2 || block_idx == res_blocks_->size() -1) { // Log first 2 and last block
+                 std::cout << "[FWD] ResBlock " << block_idx << ": " << res_block_single_duration.count() << " us. Device: " << x.device() << std::endl;
+            }
+            block_idx++;
         }
+        auto res_blocks_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - res_blocks_total_start_time);
+        std::cout << "[FWD] All ResBlocks: " << res_blocks_total_duration.count() << " us. Device: " << x.device() << std::endl;
         
-        // Value head with defensive coding
-        torch::Tensor value;
-        try {
-            value = torch::relu(value_bn_(value_conv_(x)));
-            value = value.view({value.size(0), -1});
-            value = torch::relu(value_fc1_(value));
-            value = torch::tanh(value_fc2_(value));
-        } catch (const std::exception& e) {
-            std::cerr << "Error in value head: " << e.what() << std::endl;
-            // Create default value
-            value = torch::zeros({x.size(0), 1}, x.options());
-        }
+        auto policy_head_total_start_time = std::chrono::high_resolution_clock::now();
+        torch::Tensor policy_out = x; // Start with output from res_blocks
+
+        auto policy_conv_bn_relu_start_time = std::chrono::high_resolution_clock::now();
+        policy_out = torch::relu(policy_bn_(policy_conv_(policy_out)));
+        auto policy_conv_bn_relu_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_conv_bn_relu_start_time);
+        std::cout << "[FWD] Policy Head Conv+BN+ReLU: " << policy_conv_bn_relu_duration.count() << " us. Shape: " << policy_out.sizes() << std::endl;
+
+        auto policy_view_start_time = std::chrono::high_resolution_clock::now();
+        policy_out = policy_out.view({policy_out.size(0), -1});
+        auto policy_view_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_view_start_time);
+        std::cout << "[FWD] Policy Head View: " << policy_view_duration.count() << " us. Shape: " << policy_out.sizes() << std::endl;
+
+        auto policy_fc_start_time = std::chrono::high_resolution_clock::now();
+        policy_out = policy_fc_(policy_out);
+        auto policy_fc_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_fc_start_time);
+        std::cout << "[FWD] Policy Head FC: " << policy_fc_duration.count() << " us. Shape: " << policy_out.sizes() << std::endl;
         
-        return {policy, value};
+        auto policy_log_softmax_start_time = std::chrono::high_resolution_clock::now();
+        policy_out = torch::log_softmax(policy_out, 1);
+        auto policy_log_softmax_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_log_softmax_start_time);
+        std::cout << "[FWD] Policy Head LogSoftmax: " << policy_log_softmax_duration.count() << " us. Device: " << policy_out.device() << std::endl;
+
+        auto policy_head_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_head_total_start_time);
+        std::cout << "[FWD] Policy head (Total): " << policy_head_total_duration.count() << " us. Device: " << policy_out.device() << std::endl;
+        
+        auto value_head_total_start_time = std::chrono::high_resolution_clock::now();
+        torch::Tensor value_out = x; // Start with output from res_blocks
+
+        auto value_conv_bn_relu_start_time = std::chrono::high_resolution_clock::now();
+        value_out = torch::relu(value_bn_(value_conv_(value_out)));
+        auto value_conv_bn_relu_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_conv_bn_relu_start_time);
+        std::cout << "[FWD] Value Head Conv+BN+ReLU: " << value_conv_bn_relu_duration.count() << " us. Shape: " << value_out.sizes() << std::endl;
+
+        auto value_view_start_time = std::chrono::high_resolution_clock::now();
+        value_out = value_out.view({value_out.size(0), -1});
+        auto value_view_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_view_start_time);
+        std::cout << "[FWD] Value Head View: " << value_view_duration.count() << " us. Shape: " << value_out.sizes() << std::endl;
+
+        auto value_fc1_relu_start_time = std::chrono::high_resolution_clock::now();
+        value_out = torch::relu(value_fc1_(value_out));
+        auto value_fc1_relu_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_fc1_relu_start_time);
+        std::cout << "[FWD] Value Head FC1+ReLU: " << value_fc1_relu_duration.count() << " us. Shape: " << value_out.sizes() << std::endl;
+        
+        auto value_fc2_tanh_start_time = std::chrono::high_resolution_clock::now();
+        value_out = torch::tanh(value_fc2_(value_out));
+        auto value_fc2_tanh_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_fc2_tanh_start_time);
+        std::cout << "[FWD] Value Head FC2+Tanh: " << value_fc2_tanh_duration.count() << " us. Device: " << value_out.device() << std::endl;
+        
+        auto value_head_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_head_total_start_time);
+        std::cout << "[FWD] Value head (Total): " << value_head_total_duration.count() << " us. Device: " << value_out.device() << std::endl;
+        
+        auto forward_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - forward_total_start_time);
+        std::cout << "[FWD] Exiting. Total time: " << forward_total_duration.count() << " us. PolicyDev: " << policy_out.device() << " ValDev: " << value_out.device() << std::endl;
+        return {policy_out, value_out};
+
     } catch (const c10::Error& e) {
-        std::cerr << "PyTorch error in forward pass: " << e.what() << std::endl;
-        
-        // Create default outputs instead of re-throwing
-        auto batch_size = x.size(0);
-        torch::Tensor default_policy = torch::ones({batch_size, policy_size_}, x.options()) / policy_size_;
-        torch::Tensor default_value = torch::zeros({batch_size, 1}, x.options());
-        return {default_policy, default_value};
+        std::cerr << "[FWD] PyTorch c10::Error: " << e.what() << ". Input x device: " << x.device() << std::endl;
+        throw;
     } catch (const std::exception& e) {
-        std::cerr << "Standard exception in forward pass: " << e.what() << std::endl;
-        
-        // Create default outputs for any other exception
-        auto batch_size = x.size(0);
-        torch::Tensor default_policy = torch::ones({batch_size, policy_size_}, x.options()) / policy_size_;
-        torch::Tensor default_value = torch::zeros({batch_size, 1}, x.options());
-        return {default_policy, default_value};
-    } catch (...) {
-        std::cerr << "Unknown exception in forward pass" << std::endl;
-        
-        // Create default outputs for any unknown exception
-        auto batch_size = x.size(0);
-        torch::Tensor default_policy = torch::ones({batch_size, policy_size_}, x.options()) / policy_size_;
-        torch::Tensor default_value = torch::zeros({batch_size, 1}, x.options());
-        return {default_policy, default_value};
+        std::cerr << "[FWD] Std::exception: " << e.what() << ". Input x device: " << x.device() << std::endl;
+        throw;
     }
 }
 
-torch::Tensor ResNetModel::prepareInputTensor(const std::vector<std::unique_ptr<core::IGameState>>& states) {
+// New overloaded version of prepareInputTensor
+torch::Tensor ResNetModel::prepareInputTensor(
+    const std::vector<std::unique_ptr<core::IGameState>>& states, 
+    torch::Device target_device) {
+
     if (states.empty()) {
+        // std::cerr << "ResNetModel::prepareInputTensor - Empty states vector." << std::endl;
+        return torch::Tensor(); // Return an empty tensor
+    }
+
+    const auto& first_state_ptr = states[0];
+    if (!first_state_ptr) {
+        std::cerr << "ERROR: First state in vector is null in prepareInputTensor" << std::endl;
         return torch::Tensor();
     }
     
-    // Determine dimensions once based on the first state
-    const auto& first_state = states[0];
-    std::vector<std::vector<std::vector<float>>> first_tensor;
-    
-    // Use regular or enhanced tensor representation based on expected input channels
-    if (input_channels_ == 3) {
-        first_tensor = first_state->getTensorRepresentation();
-    } else {
-        first_tensor = first_state->getEnhancedTensorRepresentation();
-    }
-    
-    // Get dimensions
-    int64_t channels = static_cast<int64_t>(first_tensor.size());
-    int64_t height = static_cast<int64_t>(first_tensor[0].size());
-    int64_t width = static_cast<int64_t>(first_tensor[0][0].size());
-    
-    // Create batch tensor directly with the right dimensions for all states
-    // Get device from model parameters to ensure consistent device placement
-    torch::Device device = torch::kCPU;
+    // Determine expected channels from model configuration for consistency
+    std::vector<std::vector<std::vector<float>>> first_tensor_data;
     try {
-        auto param_iter = this->parameters().begin();
-        if (param_iter != this->parameters().end()) {
-            device = param_iter->device();
-        }
+         first_tensor_data = (input_channels_ == 3) ? 
+            first_state_ptr->getTensorRepresentation() : 
+            first_state_ptr->getEnhancedTensorRepresentation();
     } catch (const std::exception& e) {
-        std::cerr << "Error getting device in prepareInputTensor: " << e.what() << std::endl;
+        std::cerr << "ERROR: Exception getting tensor representation from first state: " << e.what() << std::endl;
+        return torch::Tensor();
     }
+
+
+    if (first_tensor_data.empty() || first_tensor_data[0].empty() || first_tensor_data[0][0].empty()) {
+        std::cerr << "ERROR: Empty tensor data from first state in prepareInputTensor" << std::endl;
+        return torch::Tensor();
+    }
+
+    int64_t actual_data_channels = static_cast<int64_t>(first_tensor_data.size());
+    int64_t height = static_cast<int64_t>(first_tensor_data[0].size());
+    int64_t width = static_cast<int64_t>(first_tensor_data[0][0].size());
+
+    if (height != board_size_ || width != board_size_) {
+        std::cerr << "ERROR: State tensor dimensions HxW (" << height << "x" << width 
+                  << ") do not match model's expected board_size_ (" << board_size_ << ") in prepareInputTensor." << std::endl;
+        return torch::Tensor();
+    }
+    // The number of channels in the actual data might differ from input_channels_ the model's first conv layer expects.
+    // The forward() method is responsible for adapting this. So, we create the tensor with actual_data_channels.
+
+    // Create a CPU tensor first, then move if needed.
+    // This simplifies data population from std::vector.
+    auto tensor_alloc_start_time = std::chrono::high_resolution_clock::now();
+    auto options_cpu = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCPU);
+    torch::Tensor batch_tensor_cpu = torch::empty({static_cast<int64_t>(states.size()), actual_data_channels, height, width}, options_cpu);
+    auto tensor_alloc_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
+    // std::cout << "[PREP] CPU Tensor alloc: " << tensor_alloc_duration.count() << " us." << std::endl;
     
-    auto options = torch::TensorOptions().dtype(torch::kFloat32).device(device);
-    torch::Tensor batch = torch::zeros({static_cast<int64_t>(states.size()), channels, height, width}, options);
-    
-    // Fill batch tensor
-    for (size_t batch_idx = 0; batch_idx < states.size(); ++batch_idx) {
-        const auto& state = states[batch_idx];
-        std::vector<std::vector<std::vector<float>>> tensor;
-        
-        // Use regular or enhanced tensor representation
-        if (input_channels_ == 3) {
-            tensor = state->getTensorRepresentation();
-        } else {
-            tensor = state->getEnhancedTensorRepresentation();
+    auto accessor = batch_tensor_cpu.accessor<float, 4>();
+
+    auto data_retrieval_loop_start_time = std::chrono::high_resolution_clock::now();
+    for (size_t i = 0; i < states.size(); ++i) {
+        if (!states[i]) {
+            // std::cerr << "WARNING: Null state at index " << i << " in prepareInputTensor. Filling with zeros." << std::endl;
+            for(int64_t c = 0; c < actual_data_channels; ++c) for(int64_t h = 0; h < height; ++h) for(int64_t w = 0; w < width; ++w) accessor[i][c][h][w] = 0.0f;
+            continue;
+        }
+        const auto& current_state_ptr = states[i];
+        std::vector<std::vector<std::vector<float>>> tensor_data;
+        try {
+            tensor_data = (input_channels_ == 3) ? 
+                current_state_ptr->getTensorRepresentation() : 
+                current_state_ptr->getEnhancedTensorRepresentation();
+        } catch (const std::exception& e) {
+            std::cerr << "ERROR: Exception getting tensor representation from state " << i << ": " << e.what() << ". Filling with zeros." << std::endl;
+            for(int64_t c = 0; c < actual_data_channels; ++c) for(int64_t h = 0; h < height; ++h) for(int64_t w = 0; w < width; ++w) accessor[i][c][h][w] = 0.0f;
+            continue;
+        }
+
+
+        if (tensor_data.size() != static_cast<size_t>(actual_data_channels) || 
+            (actual_data_channels > 0 && tensor_data[0].size() != static_cast<size_t>(height)) ||
+            (actual_data_channels > 0 && height > 0 && tensor_data[0][0].size() != static_cast<size_t>(width))) {
+            // std::cerr << "WARNING: Tensor dimension mismatch for state " << i << ". Filling with zeros." << std::endl;
+            for(int64_t c = 0; c < actual_data_channels; ++c) for(int64_t h = 0; h < height; ++h) for(int64_t w = 0; w < width; ++w) accessor[i][c][h][w] = 0.0f;
+            continue;
         }
         
-        // Verify dimensions match the expected size
-        if (tensor.size() != static_cast<size_t>(channels) || 
-            tensor[0].size() != static_cast<size_t>(height) || 
-            tensor[0][0].size() != static_cast<size_t>(width)) {
-            std::cerr << "Warning: State tensor dimensions don't match batch dimensions. Expected: ["
-                      << channels << ", " << height << ", " << width << "], Got: ["
-                      << tensor.size() << ", " << tensor[0].size() << ", " << tensor[0][0].size() << "]" << std::endl;
-            continue;  // Skip this state to avoid crashes
-        }
-        
-        // Copy data efficiently - use flattened memory layout for better performance
-        for (int64_t c = 0; c < channels; ++c) {
+        for (int64_t c = 0; c < actual_data_channels; ++c) {
             for (int64_t h = 0; h < height; ++h) {
-                // Use memcpy for each row which is much faster than element-by-element
-                std::memcpy(batch[batch_idx][c][h].data_ptr(), tensor[c][h].data(), width * sizeof(float));
+                for (int64_t w = 0; w < width; ++w) {
+                    accessor[i][c][h][w] = tensor_data[c][h][w];
+                }
             }
         }
     }
-    
-    return batch;
+    auto data_retrieval_loop_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - data_retrieval_loop_start_time);
+    std::cout << "[PREP] Data retrieval loop: " << data_retrieval_loop_duration.count() << " us for " << states.size() << " states." << std::endl;
+
+    if (target_device == torch::kCPU) {
+        auto prep_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
+        std::cout << "[PREP] Total prep (to CPU): " << prep_total_duration.count() << " us." << std::endl;
+        return batch_tensor_cpu;
+    } else {
+        // For CUDA, use pinned memory for potentially faster transfer.
+        try {
+            auto pin_memory_start_time = std::chrono::high_resolution_clock::now();
+            torch::Tensor pinned_cpu_tensor = batch_tensor_cpu.pin_memory();
+            auto pin_memory_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - pin_memory_start_time);
+            std::cout << "[PREP] Pin memory: " << pin_memory_duration.count() << " us." << std::endl;
+
+            auto to_device_start_time = std::chrono::high_resolution_clock::now();
+            torch::Tensor result_tensor = pinned_cpu_tensor.to(target_device, /*non_blocking=*/true);
+            auto to_device_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - to_device_start_time);
+            std::cout << "[PREP] Move to " << target_device << ": " << to_device_duration.count() << " us." << std::endl;
+            
+            auto prep_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
+            std::cout << "[PREP] Total prep (to " << target_device << "): " << prep_total_duration.count() << " us." << std::endl;
+            return result_tensor;
+        } catch (const c10::Error& e) {
+            std::cerr << "ResNetModel::prepareInputTensor - PyTorch error pinning or moving tensor to " << target_device << ": " << e.what() 
+                      << ". Returning tensor on CPU." << std::endl;
+            auto prep_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
+            std::cout << "[PREP] Total prep (to " << target_device << ", exception): " << prep_total_duration.count() << " us." << std::endl;
+            return batch_tensor_cpu; // Fallback to CPU tensor
+        }
+    }
 }
+
+// Original signature, calls the overloaded one.
+torch::Tensor ResNetModel::prepareInputTensor(const std::vector<std::unique_ptr<core::IGameState>>& states) {
+    torch::Device model_device = torch::kCPU; // Default
+    try {
+        if (!this->parameters().empty() && this->parameters().front().defined()) {
+            model_device = this->parameters().front().device();
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "ResNetModel::prepareInputTensor (old signature) - Warning: Could not determine model device: " 
+                  << e.what() << ". Defaulting to CPU for tensor preparation." << std::endl;
+    }
+    return prepareInputTensor(states, model_device);
+}
+
 
 std::vector<mcts::NetworkOutput> ResNetModel::inference(
     const std::vector<std::unique_ptr<core::IGameState>>& states) {
+    auto inference_total_start_time = std::chrono::high_resolution_clock::now();
+    // std::cout << "[INF] Entered. Num states: " << states.size() << std::endl;
     
-    std::vector<mcts::NetworkOutput> outputs;
-    
-    try {
-        // Early exit for empty input
-        if (states.empty()) {
-            return outputs;
+    std::vector<mcts::NetworkOutput> default_outputs;
+    if (states.empty()) return default_outputs;
+    default_outputs.reserve(states.size());
+    for (size_t i = 0; i < states.size(); ++i) {
+        mcts::NetworkOutput out;
+        size_t actual_policy_size = policy_size_;
+        if (actual_policy_size == 0 && states[i]) { 
+             try { actual_policy_size = states[i]->getActionSpaceSize(); } catch(...) { actual_policy_size = 1; }
         }
-        
-        // Create default outputs for all states up front
-        outputs.reserve(states.size());
-        for (size_t i = 0; i < states.size(); ++i) {
-            mcts::NetworkOutput output;
-            output.policy.resize(policy_size_, 1.0f / policy_size_);
-            output.value = 0.0f;
-            outputs.push_back(std::move(output));
-        }
-        
-        // Try to prepare input tensor, but if it fails, we already have default outputs
-        torch::Tensor input;
-        try {
-            input = prepareInputTensor(states);
-        } catch (const std::exception& e) {
-            std::cerr << "Error preparing input tensor: " << e.what() << std::endl;
-            return outputs; // Return default outputs
-        }
-        
-        // Verify board dimensions match the model's expected dimensions
-        if (input.dim() != 4 || input.size(1) != input_channels_ ||
-            input.size(2) != board_size_ || input.size(3) != board_size_) {
-            std::cerr << "WARNING: Input dimensions don't match model's expected dimensions." << std::endl;
-            std::cerr << "Expected: [batch_size, " << input_channels_ << ", " << board_size_ << ", " << board_size_ << "]" << std::endl;
-            std::cerr << "Got: [" << input.size(0) << ", " << input.size(1) << ", " << input.size(2) << ", " << input.size(3) << "]" << std::endl;
-            std::cerr << "Using default outputs to avoid dimension mismatch errors" << std::endl;
-            
-            // Return default outputs when dimensions don't match
-            return outputs;
-        }
-    
-        // Use eval mode
-        this->eval();
-        
-        // Run inference
-        torch::NoGradGuard no_grad;
-        
-        // Use the safer device detection
-        torch::Device device = torch::kCPU;  // Default to CPU
-        try {
-            // Get device and validate it
-            auto param_iter = this->parameters().begin();
-            if (param_iter == this->parameters().end()) {
-                std::cerr << "WARNING: No parameters found in the model. Using CPU." << std::endl;
-            } else {
-                // Safely get the device, handling the potential "Unknown device: 101" error
-                try {
-                    device = param_iter->device();
-                    
-                    // Validate device index for CUDA
-                    if (device.is_cuda() && device.index() >= torch::cuda::device_count()) {
-                        std::cerr << "WARNING: Invalid CUDA device index: " << device.index() 
-                                 << ". Max index is: " << (torch::cuda::device_count() - 1)
-                                 << ". Falling back to CUDA:0." << std::endl;
-                        device = torch::Device(torch::kCUDA, 0);
-                    }
-                    
-                    // Check if the device ID is valid (catches the "Unknown device: 101" error)
-                    std::string device_str;
-                    try {
-                        device_str = device.str();
-                    } catch (...) {
-                        std::cerr << "WARNING: Invalid device detected. Falling back to GPU if available, otherwise CPU." << std::endl;
-                        // Try to use CUDA if available
-                        if (torch::cuda::is_available()) {
-                            device = torch::Device(torch::kCUDA, 0);
-                        } else {
-                            device = torch::kCPU;
-                        }
-                    }
-                } catch (const c10::Error& e) {
-                    std::cerr << "PyTorch error getting device: " << e.what() << std::endl;
-                    // Try to use CUDA if available
-                    if (torch::cuda::is_available()) {
-                        device = torch::Device(torch::kCUDA, 0);
-                        std::cerr << "Falling back to CUDA:0" << std::endl;
-                    } else {
-                        device = torch::kCPU;
-                        std::cerr << "Falling back to CPU" << std::endl;
-                    }
-                } catch (const std::exception& e) {
-                    std::cerr << "Standard error getting device: " << e.what() << ". Using GPU if available, otherwise CPU." << std::endl;
-                    // Try to use CUDA if available
-                    if (torch::cuda::is_available()) {
-                        device = torch::Device(torch::kCUDA, 0);
-                    } else {
-                        device = torch::kCPU;
-                    }
-                } catch (...) {
-                    std::cerr << "Unknown error getting device. Using GPU if available, otherwise CPU." << std::endl;
-                    // Try to use CUDA if available
-                    if (torch::cuda::is_available()) {
-                        device = torch::Device(torch::kCUDA, 0);
-                    } else {
-                        device = torch::kCPU;
-                    }
-                }
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "ERROR getting device from parameters: " << e.what() << std::endl;
-            // Try to use CUDA if available
-            if (torch::cuda::is_available()) {
-                device = torch::Device(torch::kCUDA, 0);
-                std::cerr << "Falling back to CUDA:0" << std::endl;
-            } else {
-                device = torch::kCPU;
-                std::cerr << "Falling back to CPU" << std::endl;
-            }
-        }
-        
-        std::cerr << "Using device: " << device << " for inference" << std::endl;
-        
-        // Move input to the appropriate device with error handling
-        try {
-            input = input.to(device);
-        } catch (const c10::Error& e) {
-            std::cerr << "ERROR moving input to device: " << e.what() << ". Using default outputs." << std::endl;
-            return outputs; // Return default outputs
-        } catch (const std::exception& e) {
-            std::cerr << "Exception moving input to device: " << e.what() << ". Using default outputs." << std::endl;
-            return outputs; // Return default outputs
-        }
-        
-        // Add try-catch to detect and log dimension errors
-        // Set a timeout for the forward pass
-        std::future<std::tuple<torch::Tensor, torch::Tensor>> future_result;
-        try {
-            // Run forward pass with a timeout
-            auto forward_done = std::make_shared<std::atomic<bool>>(false);
-            future_result = std::async(std::launch::async, [this, &input, forward_done]() {
-                auto result = this->forward(input);
-                forward_done->store(true);
-                return result;
-            });
-            
-            // Wait for forward pass with a timeout
-            if (future_result.wait_for(std::chrono::seconds(5)) != std::future_status::ready) {
-                std::cerr << "Forward pass timed out after 5 seconds. Using default outputs." << std::endl;
-                return outputs; // Return default outputs
-            }
-            
-            // Get the result
-            auto [policy, value] = future_result.get();
-            
-            // Apply softmax to policy
-            policy = torch::softmax(policy, 1);
-            
-            // Clear existing outputs (which are defaults) and prepare for actual results
-            outputs.clear();
-            outputs.reserve(states.size());
-            
-            // Get tensors for access - use CPU for data transfer if needed
-            torch::Tensor policy_cpu, value_cpu;
-            
-            // Only convert to CPU if we're on a different device
-            if (policy.device().is_cuda()) {
-                policy_cpu = policy.to(torch::kCPU);
-                value_cpu = value.to(torch::kCPU);
-            } else {
-                policy_cpu = policy;
-                value_cpu = value;
-            }
-            
-            if (policy_cpu.dim() != 2 || policy_cpu.size(0) != static_cast<int64_t>(states.size()) || 
-                policy_cpu.size(1) != policy_size_) {
-                std::cerr << "Policy tensor has unexpected dimensions: [" 
-                          << policy_cpu.size(0) << ", " << policy_cpu.size(1) << "]" << std::endl;
-                std::cerr << "Expected: [" << states.size() << ", " << policy_size_ << "]" << std::endl;
-                // Return the default outputs we created earlier
-                return outputs;
-            }
-            
-            // Get accessors
-            auto policy_accessor = policy_cpu.accessor<float, 2>();
-            auto value_accessor = value_cpu.accessor<float, 2>();
-            
-            // Create output for each state
-            for (size_t i = 0; i < states.size(); ++i) {
-                mcts::NetworkOutput output;
-                output.policy.resize(policy_size_);
-                
-                // Safely copy policy data
-                for (int64_t j = 0; j < policy_size_; ++j) {
-                    output.policy[j] = policy_accessor[i][j];
-                }
-                
-                // Get value
-                output.value = value_accessor[i][0];
-                
-                outputs.push_back(std::move(output));
-            }
-        } catch (const c10::Error& e) {
-            std::cerr << "PyTorch error during inference: " << e.what() << std::endl;
-            // Return the default outputs we created earlier
-        } catch (const std::exception& e) {
-            std::cerr << "Exception during inference: " << e.what() << std::endl;
-            // Return the default outputs we created earlier
-        } catch (...) {
-            std::cerr << "Unknown error during inference" << std::endl;
-            // Return the default outputs we created earlier
-        }
-    } catch (...) {
-        std::cerr << "Unexpected error in inference method" << std::endl;
-        // We already have default outputs, so just return them
+        if (actual_policy_size == 0) actual_policy_size = 1; // Final fallback for policy size
+        out.policy.resize(actual_policy_size, 1.0f / actual_policy_size);
+        out.value = 0.0f;
+        default_outputs.push_back(std::move(out));
     }
-    
-    return outputs;
+
+    try {
+        torch::Device model_device = torch::kCPU;
+        if (!this->parameters().empty() && this->parameters().front().defined()) {
+            model_device = this->parameters().front().device();
+        }
+        // std::cout << "[INF] Model device: " << model_device << std::endl;
+
+        this->eval(); 
+        torch::NoGradGuard no_grad;
+
+        auto prepare_input_start_time = std::chrono::high_resolution_clock::now();
+        torch::Tensor input_tensor = prepareInputTensor(states, model_device); // Assuming this uses the new signature
+        auto prepare_input_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - prepare_input_start_time);
+        std::cout << "[INF] prepareInputTensor: " << prepare_input_duration.count() << " us. Input tensor device: " << input_tensor.device() << ", shape: " << input_tensor.sizes() << std::endl;
+
+        if (!input_tensor.defined() || input_tensor.numel() == 0) {
+            std::cerr << "[INF] prepareInputTensor returned invalid tensor." << std::endl;
+            return default_outputs;
+        }
+        
+        auto forward_pass_start_time = std::chrono::high_resolution_clock::now();
+        auto [policy_batch, value_batch] = this->forward(input_tensor);
+        auto forward_pass_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - forward_pass_start_time);
+        std::cout << "[INF] Forward pass: " << forward_pass_duration.count() << " us. PolicyDev: " << policy_batch.device() << ", ValDev: " << value_batch.device() << std::endl;
+
+        auto outputs_to_cpu_detach_start_time = std::chrono::high_resolution_clock::now();
+        torch::Tensor policy_cpu = policy_batch.to(torch::kCPU, /*non_blocking=*/model_device.is_cuda()).detach();
+        torch::Tensor value_cpu = value_batch.to(torch::kCPU, /*non_blocking=*/model_device.is_cuda()).detach();
+        auto outputs_to_cpu_detach_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - outputs_to_cpu_detach_start_time);
+        std::cout << "[INF] Outputs to CPU & detach: " << outputs_to_cpu_detach_duration.count() << " us." << std::endl;
+        
+        if (model_device.is_cuda()) {
+            auto cuda_sync_start_time = std::chrono::high_resolution_clock::now();
+            try {
+                at::cuda::CUDAStream stream = at::cuda::getCurrentCUDAStream(model_device.index());
+                stream.synchronize();
+            } catch (const c10::Error& e) {
+                std::cerr << "[INF] CUDA sync error: " << e.what() << std::endl;
+            }
+            auto cuda_sync_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - cuda_sync_start_time);
+            std::cout << "[INF] CUDA sync: " << cuda_sync_duration.count() << " us." << std::endl;
+        }
+
+        if (policy_cpu.size(0) != static_cast<int64_t>(states.size()) || value_cpu.size(0) != static_cast<int64_t>(states.size()) ||
+            (policy_size_ > 0 && policy_cpu.size(1) != policy_size_) || value_cpu.size(1) != 1) { // check policy_size_ only if it's set
+            std::cerr << "[INF] Output tensor dimension mismatch. Policy: " << policy_cpu.sizes()
+                      << " (expected [~" << states.size() << "," << policy_size_ << "]), Value: " << value_cpu.sizes()
+                      << " (expected [~" << states.size() << ",1])." << std::endl;
+            return default_outputs;
+        }
+
+        auto policy_accessor = policy_cpu.accessor<float, 2>();
+        auto value_accessor = value_cpu.accessor<float, 2>();
+
+        std::vector<mcts::NetworkOutput> final_outputs;
+        final_outputs.reserve(states.size());
+
+        for (int64_t i = 0; i < policy_accessor.size(0); ++i) {
+            mcts::NetworkOutput out;
+            out.value = value_accessor[i][0];
+            out.policy.resize(policy_accessor.size(1));
+            for (int64_t j = 0; j < policy_accessor.size(1); ++j) {
+                out.policy[j] = policy_accessor[i][j];
+            }
+            final_outputs.push_back(std::move(out));
+        }
+        
+        auto inference_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - inference_total_start_time);
+        std::cout << "[INF] Exiting. Total time: " << inference_total_duration.count() << " us for " << states.size() << " states. Final policy_size: " << (final_outputs.empty() ? 0 : final_outputs[0].policy.size()) << std::endl;
+        return final_outputs;
+
+    } catch (const c10::Error& e) {
+        std::cerr << "[INF] PyTorch c10::Error: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "[INF] Std::exception: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "[INF] Unknown error." << std::endl;
+    }
+    auto inference_total_duration_exception = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - inference_total_start_time);
+    std::cout << "[INF] Exiting due to exception. Total time: " << inference_total_duration_exception.count() << " us." << std::endl;
+    return default_outputs;
 }
 
 void ResNetModel::save(const std::string& path) {
     try {
-        // First ensure we have a valid device before saving
-        torch::Device valid_device = torch::kCPU;
-        if (torch::cuda::is_available()) {
-            valid_device = torch::Device(torch::kCUDA, 0);
-        }
-        
-        // Move model to a valid device before saving to avoid device corruption
-        this->to(valid_device);
-        
-        // Get shared_ptr to this model
-        auto self = shared_from_this();
-        
-        // Save the model
-        torch::save(self, path);
-        
-        std::cout << "Model saved successfully to " << path << " on device " << valid_device << std::endl;
+        torch::serialize::OutputArchive archive;
+        // Call the base torch::nn::Module's save method to serialize parameters and buffers.
+        // This saves the state_dict implicitly.
+        this->torch::nn::Module::save(archive);
+        archive.save_to(path);
+        // std::cout << "ResNetModel saved state_dict to " << path << std::endl;
     } catch (const c10::Error& e) {
-        std::cerr << "PyTorch error saving model: " << e.what() << std::endl;
-        throw;
+        std::cerr << "PyTorch error saving model state_dict: " << e.what() << std::endl;
+        throw; // Rethrow
     } catch (const std::exception& e) {
-        std::cerr << "Error saving model: " << e.what() << std::endl;
-        throw;
+        std::cerr << "Error saving model state_dict: " << e.what() << std::endl;
+        throw; // Rethrow
     }
 }
 
 void ResNetModel::load(const std::string& path) {
     try {
-        // First ensure we have a valid device
-        torch::Device valid_device = torch::kCPU;
-        if (torch::cuda::is_available()) {
-            valid_device = torch::Device(torch::kCUDA, 0);
+        torch::NoGradGuard no_grad; // Disable gradients during loading
+        torch::serialize::InputArchive archive;
+        
+        // Determine the device the model is currently on.
+        // This device should have been set by the NeuralNetworkFactory before calling load.
+        torch::Device model_device = torch::kCPU; // Default if not yet moved or no parameters
+        if (!this->parameters().empty() && this->parameters().front().defined()) {
+            model_device = this->parameters().front().device();
         }
+        // std::cout << "ResNetModel::load - Loading model state_dict from " << path << " onto device: " << model_device << std::endl;
         
-        // Get shared_ptr to this model
-        auto self = shared_from_this();
+        // Load the archive from file, mapping tensors to the model's current device.
+        archive.load_from(path, model_device); 
         
-        // Load the model
-        torch::load(self, path);
-        
-        // Move model to valid device after loading to ensure all parameters are on valid device
-        this->to(valid_device);
-        
-        std::cout << "Model loaded successfully from " << path << " to device " << valid_device << std::endl;
+        // Call the base torch::nn::Module's load method to deserialize parameters and buffers from the archive.
+        this->torch::nn::Module::load(archive); 
+        this->eval(); // Set to evaluation mode after loading weights.
+
     } catch (const c10::Error& e) {
-        std::cerr << "PyTorch error loading model: " << e.what() << std::endl;
-        throw;
+        std::cerr << "PyTorch error loading model state_dict from " << path << ": " << e.what() << std::endl;
+        throw; // Rethrow
     } catch (const std::exception& e) {
-        std::cerr << "Error loading model: " << e.what() << std::endl;
-        throw;
+        std::cerr << "Error loading model state_dict from " << path << ": " << e.what() << std::endl;
+        throw; // Rethrow
     }
 }
 

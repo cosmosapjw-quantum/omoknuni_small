@@ -2,6 +2,12 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
+#include <random> // For std::random_device and std::mt19937
+
+// Add necessary headers for CUDA API calls
+#include <c10/cuda/CUDACachingAllocator.h>
+#include <c10/cuda/CUDAFunctions.h>
+#include <ATen/cuda/CUDAContext.h>
 
 namespace alphazero {
 namespace training {
@@ -31,6 +37,13 @@ AlphaZeroDataset::AlphaZeroDataset(
     std::cout << "Creating dataset with " << num_examples << " examples, "
               << "state shape: [" << channels << ", " << height << ", " << width << "], "
               << "policy size: " << policy_size << std::endl;
+    
+    // Debug device
+    std::cout << "Dataset target device: " << device << std::endl;
+    std::cout << "Is CUDA available: " << (torch::cuda::is_available() ? "yes" : "no") << std::endl;
+    if (torch::cuda::is_available()) {
+        std::cout << "CUDA device count: " << torch::cuda::device_count() << std::endl;
+    }
     
     // Create tensor options with appropriate device
     auto options = torch::TensorOptions().dtype(torch::kFloat32).device(device);
@@ -96,20 +109,76 @@ AlphaZeroDataset::AlphaZeroDataset(
         
         // Now safely move to target device with error handling
         try {
-            states_ = temp_states.to(device);
-            policies_ = temp_policies.to(device);
-            values_ = temp_values.to(device);
-        } catch (const c10::Error& e) {
-            std::cerr << "PyTorch error moving tensors to device " << device << ": " << e.what() << std::endl;
-            std::cerr << "Falling back to CPU" << std::endl;
+            torch::Device effective_final_device = device; // Local variable for effective device
+
+            // Check GPU memory before movement (based on original requested device)
+            if (device.is_cuda()) {
+                std::cout << "Before moving to GPU (requested device " << device << "): " 
+                          << "GPU memory allocated=" << c10::cuda::CUDACachingAllocator::getDeviceStats(device.index()).allocated_bytes[static_cast<size_t>(0)].current 
+                          << ", reserved=" << c10::cuda::CUDACachingAllocator::getDeviceStats(device.index()).reserved_bytes[static_cast<size_t>(0)].current << std::endl;
+                
+                // Calculate tensor sizes
+                size_t total_elements = static_cast<size_t>(temp_states.numel()) + 
+                                      static_cast<size_t>(temp_policies.numel()) + 
+                                      static_cast<size_t>(temp_values.numel());
+                size_t approx_bytes = total_elements * 4; // float32 = 4 bytes
+                std::cout << "Estimated tensor memory for dataset: " << approx_bytes << " bytes" << std::endl;
+                
+                // Check if we should move to GPU
+                if (approx_bytes > 0.9 * at::cuda::getDeviceProperties(device.index())->totalGlobalMem) {
+                    std::cerr << "WARNING: Tensor size too large for GPU memory. Falling back to CPU for dataset tensors." << std::endl;
+                    effective_final_device = torch::kCPU; // Fallback to CPU
+                }
+            }
+            
+            std::cout << "Moving dataset tensors to final device: " << effective_final_device << std::endl;
+            
+            // Move tensors individually with verbose error handling
+            try {
+                states_ = temp_states.to(effective_final_device);
+                std::cout << "States tensor moved successfully to " << effective_final_device << std::endl;
+            } catch (const torch::Error& e) { // Use torch::Error
+                std::cerr << "Error moving states tensor: " << e.what() << std::endl;
+                throw;
+            }
+            
+            try {
+                policies_ = temp_policies.to(effective_final_device);
+                std::cout << "Policies tensor moved successfully to " << effective_final_device << std::endl;
+            } catch (const torch::Error& e) { // Use torch::Error
+                std::cerr << "Error moving policies tensor: " << e.what() << std::endl;
+                throw;
+            }
+            
+            try {
+                values_ = temp_values.to(effective_final_device);
+                std::cout << "Values tensor moved successfully to " << effective_final_device << std::endl;
+            } catch (const torch::Error& e) { // Use torch::Error
+                std::cerr << "Error moving values tensor: " << e.what() << std::endl;
+                throw;
+            }
+            
+            // Verify tensors are on the correct device
+            std::cout << "Final tensor devices - States: " << states_.device() 
+                     << ", Policies: " << policies_.device()
+                     << ", Values: " << values_.device() << std::endl;
+            
+            if (effective_final_device.is_cuda()) {
+                std::cout << "After moving to GPU (device " << effective_final_device << "): "
+                          << "GPU memory allocated=" << c10::cuda::CUDACachingAllocator::getDeviceStats(effective_final_device.index()).allocated_bytes[static_cast<size_t>(0)].current
+                          << ", reserved=" << c10::cuda::CUDACachingAllocator::getDeviceStats(effective_final_device.index()).reserved_bytes[static_cast<size_t>(0)].current << std::endl;
+            }
+        } catch (const torch::Error& e) { // Use torch::Error
+            std::cerr << "PyTorch error moving tensors to device: " << e.what() << std::endl;
+            std::cerr << "Falling back to CPU for dataset tensors" << std::endl;
             // Keep the CPU tensors as-is if we can't move them
             states_ = temp_states;
             policies_ = temp_policies;
             values_ = temp_values;
         }
         
-        // Clear CPU tensors to free memory if we successfully moved to device
-        if (device != torch::kCPU && states_.device() == device) {
+        // Clear CPU tensors to free memory if we successfully moved to a different device (GPU)
+        if (states_.device() != torch::kCPU) { // Check actual device of states_
             temp_states = torch::Tensor();
             temp_policies = torch::Tensor();
             temp_values = torch::Tensor();
@@ -220,7 +289,7 @@ AlphaZeroDataset& AlphaZeroDataset::to(const torch::Device& device) {
         states_ = states_.to(device);
         policies_ = policies_.to(device);
         values_ = values_.to(device);
-    } catch (const c10::Error& e) {
+    } catch (const torch::Error& e) { // Use torch::Error
         std::cerr << "PyTorch error moving dataset to device " << device << ": " << e.what() << std::endl;
         throw;
     } catch (const std::exception& e) {

@@ -19,6 +19,7 @@
 #include "selfplay/self_play_manager.h"
 #include "evaluation/model_evaluator.h"
 #include "cli/alphazero_pipeline.h"
+#include <optional>
 
 // Configure PyTorch CUDA initialization
 #define PYTORCH_NO_CUDA_INIT_OVERRIDE 0
@@ -63,6 +64,70 @@ bool check_library(const char* libname) {
     }
     dlclose(handle);
     return true;
+}
+
+// Helper function to safely get an integer config value
+int getIntConfigValue(const std::map<std::string, std::string>& config, const std::string& key, int defaultValue) {
+    auto it = config.find(key);
+    if (it != config.end()) {
+        try {
+            return std::stoi(it->second);
+        } catch (const std::invalid_argument& ia) {
+            std::cerr << "Warning: Invalid value for " << key << ": '" << it->second << "'. Using default value: " << defaultValue << std::endl;
+        } catch (const std::out_of_range& oor) {
+            std::cerr << "Warning: Value for " << key << " out of range: '" << it->second << "'. Using default value: " << defaultValue << std::endl;
+        }
+    } else {
+        std::cerr << "Warning: Config key '" << key << "' not found. Using default value: " << defaultValue << std::endl;
+    }
+    return defaultValue;
+}
+
+// Helper function to safely get a float config value
+float getFloatConfigValue(const std::map<std::string, std::string>& config, const std::string& key, float defaultValue) {
+    auto it = config.find(key);
+    if (it != config.end()) {
+        try {
+            return std::stof(it->second);
+        } catch (const std::invalid_argument& ia) {
+            std::cerr << "Warning: Invalid value for " << key << ": '" << it->second << "'. Using default value: " << defaultValue << std::endl;
+        } catch (const std::out_of_range& oor) {
+            std::cerr << "Warning: Value for " << key << " out of range: '" << it->second << "'. Using default value: " << defaultValue << std::endl;
+        }
+    } else {
+        std::cerr << "Warning: Config key '" << key << "' not found. Using default value: " << defaultValue << std::endl;
+    }
+    return defaultValue;
+}
+
+// Helper function to safely get a boolean config value
+bool getBoolConfigValue(const std::map<std::string, std::string>& config, const std::string& key, bool defaultValue) {
+    auto it = config.find(key);
+    if (it != config.end()) {
+        std::string val_str = it->second;
+        std::transform(val_str.begin(), val_str.end(), val_str.begin(), ::tolower);
+        if (val_str == "true" || val_str == "1") {
+            return true;
+        } else if (val_str == "false" || val_str == "0") {
+            return false;
+        } else {
+            std::cerr << "Warning: Invalid boolean value for " << key << ": '" << it->second << "'. Using default value: " << defaultValue << std::endl;
+        }
+    } else {
+        std::cerr << "Warning: Config key '" << key << "' not found. Using default value: " << defaultValue << std::endl;
+    }
+    return defaultValue;
+}
+
+// Helper function to safely get a string config value
+std::string getStringConfigValue(const std::map<std::string, std::string>& config, const std::string& key, const std::string& defaultValue) {
+    auto it = config.find(key);
+    if (it != config.end()) {
+        return it->second;
+    } else {
+        std::cerr << "Warning: Config key '" << key << "' not found. Using default value: '" << defaultValue << "'" << std::endl;
+    }
+    return defaultValue;
 }
 
 int main(int argc, char** argv) {
@@ -123,7 +188,6 @@ int main(int argc, char** argv) {
         cli.addCommand("self-play", "Generate self-play games for training",
             [](const std::vector<std::string>& args) {
                 std::cout << "Executing self-play..." << std::endl;
-                
                 
                 // Parse arguments for configuration
                 std::string config_path;
@@ -186,28 +250,28 @@ int main(int argc, char** argv) {
                     }
                     
                     // Extract relevant configuration values
-                    std::string game_type_str = config["game"];
-                    int board_size = std::stoi(config["board_size"]);
-                    std::string model_path = config["model_path"];
-                    int num_simulations = std::stoi(config["mcts.num_simulations"]);
-                    int num_threads = std::stoi(config["mcts.num_threads"]);
-                    int batch_size = std::stoi(config["mcts.batch_size"]);
-                    float exploration_constant = std::stof(config["mcts.exploration_constant"]);
-                    int virtual_loss = std::stoi(config["mcts.virtual_loss"]);
-                    bool add_dirichlet_noise = (config["mcts.add_dirichlet_noise"] == "true");
-                    float dirichlet_alpha = std::stof(config["mcts.dirichlet_alpha"]);
-                    float dirichlet_epsilon = std::stof(config["mcts.dirichlet_epsilon"]);
-                    float temperature = std::stof(config["mcts.temperature"]);
-                    int batch_timeout_ms = std::stoi(config["mcts.batch_timeout_ms"]);
+                    std::string game_type_str = getStringConfigValue(config, "game_type", "gomoku");
+                    int board_size = getIntConfigValue(config, "board_size", 15);
+                    std::string model_path = getStringConfigValue(config, "model_path", "models/model.pt");
+                    int num_simulations = getIntConfigValue(config, "mcts_num_simulations", 800);
+                    int num_threads = getIntConfigValue(config, "mcts_num_threads", 4);
+                    int batch_size = getIntConfigValue(config, "mcts_batch_size", 16);
+                    float exploration_constant = getFloatConfigValue(config, "mcts_exploration_constant", 1.5f);
+                    int virtual_loss = getIntConfigValue(config, "mcts_virtual_loss", 3);
+                    bool add_dirichlet_noise = getBoolConfigValue(config, "mcts_add_dirichlet_noise", true);
+                    float dirichlet_alpha = getFloatConfigValue(config, "mcts_dirichlet_alpha", 0.3f);
+                    float dirichlet_epsilon = getFloatConfigValue(config, "mcts_dirichlet_epsilon", 0.25f);
+                    float temperature = getFloatConfigValue(config, "mcts_temperature", 1.0f);
+                    int batch_timeout_ms = getIntConfigValue(config, "mcts_batch_timeout_ms", 1000);
                     
-                    int num_games = std::stoi(config["self_play.num_games"]);
-                    int num_parallel_games = std::stoi(config["self_play.num_parallel_games"]);
-                    int max_moves = std::stoi(config["self_play.max_moves"]);
-                    int temperature_threshold = std::stoi(config["self_play.temperature_threshold"]);
-                    float high_temperature = std::stof(config["self_play.high_temperature"]);
-                    float low_temperature = std::stof(config["self_play.low_temperature"]);
-                    std::string output_dir = config["self_play.output_dir"];
-                    std::string output_format = config["self_play.output_format"];
+                    int num_games = getIntConfigValue(config, "self_play_num_games", 100);
+                    int num_parallel_games = getIntConfigValue(config, "self_play_num_parallel_games", 4);
+                    int max_moves = getIntConfigValue(config, "self_play_max_moves", 0);
+                    int temperature_threshold = getIntConfigValue(config, "self_play_temperature_threshold", 30);
+                    float high_temperature = getFloatConfigValue(config, "self_play_high_temperature", 1.0f);
+                    float low_temperature = getFloatConfigValue(config, "self_play_low_temperature", 0.1f);
+                    std::string output_dir = getStringConfigValue(config, "self_play_output_dir", "data/self_play_games");
+                    std::string output_format = getStringConfigValue(config, "self_play_output_format", "json");
                     
                     // Convert game type string to enum
                     alphazero::core::GameType game_type;
@@ -434,11 +498,11 @@ int main(int argc, char** argv) {
                     }
                     
                     // Extract relevant configuration values
-                    std::string game_type_str = config["game"];
-                    int board_size = std::stoi(config["board_size"]);
-                    std::string model_path = config["model_path"];
-                    std::string selfplay_dir = config["self_play.output_dir"];
-                    std::string selfplay_format = config["self_play.output_format"];
+                    std::string game_type_str = getStringConfigValue(config, "game_type", "gomoku");
+                    int board_size = getIntConfigValue(config, "board_size", 15);
+                    std::string model_path = getStringConfigValue(config, "model_path", "models/model.pt");
+                    std::string selfplay_dir = getStringConfigValue(config, "self_play_output_dir", "data/self_play_games");
+                    std::string selfplay_format = getStringConfigValue(config, "self_play_output_format", "json");
                     
                     // Convert game type string to enum
                     alphazero::core::GameType game_type;
@@ -515,14 +579,14 @@ int main(int argc, char** argv) {
                         float learning_rate = 0.001f;
                         int num_epochs = 10;
                         
-                        if (config.find("train.batch_size") != config.end()) {
-                            batch_size = std::stoi(config["train.batch_size"]);
+                        if (config.find("train_batch_size") != config.end()) {
+                            batch_size = std::stoi(config["train_batch_size"]);
                         }
-                        if (config.find("train.learning_rate") != config.end()) {
-                            learning_rate = std::stof(config["train.learning_rate"]);
+                        if (config.find("train_learning_rate") != config.end()) {
+                            learning_rate = std::stof(config["train_learning_rate"]);
                         }
-                        if (config.find("train.num_epochs") != config.end()) {
-                            num_epochs = std::stoi(config["train.num_epochs"]);
+                        if (config.find("train_num_epochs") != config.end()) {
+                            num_epochs = std::stoi(config["train_num_epochs"]);
                         }
                         
                         // Train the model using libtorch
@@ -726,35 +790,37 @@ int main(int argc, char** argv) {
                     }
                     
                     // Extract relevant configuration values
-                    std::string game_type_str = config["game"];
-                    int board_size = std::stoi(config["board_size"]);
-                    std::string model_path = config["model_path"];
+                    std::string game_type_str_eval = getStringConfigValue(config, "game_type", "gomoku");
+                    int board_size_eval = getIntConfigValue(config, "board_size", 15);
+                    std::string model_path_eval = getStringConfigValue(config, "model_path", "models/model.pt");
                     
                     // Extract evaluation specific settings
-                    int num_eval_games = std::stoi(config["evaluation.num_games"]);
-                    int num_parallel_eval_games = std::stoi(config["evaluation.num_parallel_games"]);
-                    int max_moves = std::stoi(config["evaluation.max_moves"]);
+                    int num_eval_games = getIntConfigValue(config, "evaluation_num_games", 20);
+                    int num_parallel_eval_games = getIntConfigValue(config, "evaluation_num_parallel_games", 4);
+                    int max_moves_eval = getIntConfigValue(config, "evaluation_max_moves", 0);
                     
-                    // MCTS settings
-                    int num_simulations = std::stoi(config["mcts.num_simulations"]);
-                    int num_threads = std::stoi(config["mcts.num_threads"]);
-                    int batch_size = std::stoi(config["mcts.batch_size"]);
-                    float exploration_constant = std::stof(config["mcts.exploration_constant"]);
-                    int virtual_loss = std::stoi(config["mcts.virtual_loss"]);
-                    bool add_dirichlet_noise = (config["mcts.add_dirichlet_noise"] == "true");
-                    float temperature = std::stof(config["mcts.temperature"]);
-                    int batch_timeout_ms = std::stoi(config["mcts.batch_timeout_ms"]);
+                    // MCTS settings for evaluation
+                    int num_simulations_eval = getIntConfigValue(config, "mcts_num_simulations", 100);
+                    int num_threads_eval = getIntConfigValue(config, "mcts_num_threads", 4);
+                    int batch_size_eval = getIntConfigValue(config, "mcts_batch_size", 32);
+                    float exploration_constant_eval = getFloatConfigValue(config, "mcts_exploration_constant", 1.5f);
+                    int virtual_loss_eval = getIntConfigValue(config, "mcts_virtual_loss", 3);
+                    bool add_dirichlet_noise_eval = getBoolConfigValue(config, "mcts_add_dirichlet_noise", false);
+                    float dirichlet_alpha_eval = getFloatConfigValue(config, "mcts_dirichlet_alpha", 0.3f);
+                    float dirichlet_epsilon_eval = getFloatConfigValue(config, "mcts_dirichlet_epsilon", 0.25f);
+                    float temperature_eval = getFloatConfigValue(config, "mcts_temperature", 0.1f);
+                    int batch_timeout_ms_eval = getIntConfigValue(config, "mcts_batch_timeout_ms", 25);
                     
                     // Convert game type string to enum
                     alphazero::core::GameType game_type;
-                    if (game_type_str == "gomoku") {
+                    if (game_type_str_eval == "gomoku") {
                         game_type = alphazero::core::GameType::GOMOKU;
-                    } else if (game_type_str == "chess") {
+                    } else if (game_type_str_eval == "chess") {
                         game_type = alphazero::core::GameType::CHESS;
-                    } else if (game_type_str == "go") {
+                    } else if (game_type_str_eval == "go") {
                         game_type = alphazero::core::GameType::GO;
                     } else {
-                        std::cerr << "Error: Unknown game type: " << game_type_str << std::endl;
+                        std::cerr << "Error: Unknown game type: " << game_type_str_eval << std::endl;
                         return 1;
                     }
                     
@@ -766,7 +832,7 @@ int main(int argc, char** argv) {
                     switch (game_type) {
                         case alphazero::core::GameType::GOMOKU:
                             num_channels = 17;  // Enhanced representation with history (2*8 for history pairs + 1 turn plane)
-                            policy_size = board_size * board_size;
+                            policy_size = board_size_eval * board_size_eval;
                             break;
                         case alphazero::core::GameType::CHESS:
                             num_channels = 17;  // 12 piece planes + 3 special + 1 turn + 1 move count
@@ -774,7 +840,7 @@ int main(int argc, char** argv) {
                             break;
                         case alphazero::core::GameType::GO:
                             num_channels = 17;  // 2 player planes + 1 turn + 8 history
-                            policy_size = board_size * board_size + 1;  // +1 for pass
+                            policy_size = board_size_eval * board_size_eval + 1;  // +1 for pass
                             break;
                         default:
                             std::cerr << "Error: Unknown game type" << std::endl;
@@ -782,18 +848,18 @@ int main(int argc, char** argv) {
                     }
                     
                     // Check if model exists
-                    if (!std::filesystem::exists(model_path)) {
-                        std::cerr << "Error: Model file not found: " << model_path << std::endl;
+                    if (!std::filesystem::exists(model_path_eval)) {
+                        std::cerr << "Error: Model file not found: " << model_path_eval << std::endl;
                         return 1;
                     }
                     
                     // Load model
-                    std::cout << "Loading model from: " << model_path << std::endl;
+                    std::cout << "Loading model from: " << model_path_eval << std::endl;
                     std::shared_ptr<alphazero::nn::NeuralNetwork> neural_net;
                     try {
                         bool use_gpu = alphazero::nn::NeuralNetworkFactory::isCudaAvailable();
                         neural_net = alphazero::nn::NeuralNetworkFactory::loadResNet(
-                            model_path, num_channels, board_size, policy_size, use_gpu);
+                            model_path_eval, num_channels, board_size_eval, policy_size, use_gpu);
                     } catch (const std::exception& e) {
                         std::cerr << "Error loading model: " << e.what() << std::endl;
                         return 1;
@@ -801,27 +867,29 @@ int main(int argc, char** argv) {
                     
                     // Setup MCTS settings
                     alphazero::mcts::MCTSSettings mcts_settings;
-                    mcts_settings.num_simulations = num_simulations;
-                    mcts_settings.num_threads = num_threads;
-                    mcts_settings.batch_size = batch_size;
-                    mcts_settings.batch_timeout = std::chrono::milliseconds(batch_timeout_ms);
-                    mcts_settings.exploration_constant = exploration_constant;
-                    mcts_settings.virtual_loss = virtual_loss;
-                    mcts_settings.add_dirichlet_noise = add_dirichlet_noise;
-                    mcts_settings.temperature = temperature;
+                    mcts_settings.num_simulations = num_simulations_eval;
+                    mcts_settings.num_threads = num_threads_eval;
+                    mcts_settings.batch_size = batch_size_eval;
+                    mcts_settings.batch_timeout = std::chrono::milliseconds(batch_timeout_ms_eval);
+                    mcts_settings.exploration_constant = exploration_constant_eval;
+                    mcts_settings.virtual_loss = virtual_loss_eval;
+                    mcts_settings.add_dirichlet_noise = add_dirichlet_noise_eval;
+                    mcts_settings.dirichlet_alpha = dirichlet_alpha_eval;
+                    mcts_settings.dirichlet_epsilon = dirichlet_epsilon_eval;
+                    mcts_settings.temperature = temperature_eval;
                     
                     // Set up self-play settings for evaluation
                     alphazero::selfplay::SelfPlaySettings self_play_settings;
                     self_play_settings.mcts_settings = mcts_settings;
                     self_play_settings.num_parallel_games = num_parallel_eval_games;
-                    self_play_settings.max_moves = max_moves;
+                    self_play_settings.max_moves = max_moves_eval;
                     
                     // Run evaluation
-                    std::cout << "Running evaluation on model: " << model_path << std::endl;
+                    std::cout << "Running evaluation on model: " << model_path_eval << std::endl;
                     std::cout << "Playing " << num_eval_games << " games..." << std::endl;
                     
                     alphazero::selfplay::SelfPlayManager selfplay_manager(neural_net, self_play_settings);
-                    auto games = selfplay_manager.generateGames(game_type, num_eval_games, board_size);
+                    auto games = selfplay_manager.generateGames(game_type, num_eval_games, board_size_eval);
                     
                     // Calculate statistics
                     int player1_wins = 0;
@@ -925,29 +993,32 @@ int main(int argc, char** argv) {
                     }
                     
                     // Extract relevant configuration values
-                    std::string game_type_str = config["game"];
-                    int board_size = std::stoi(config["board_size"]);
-                    std::string model_path = config["model_path"];
+                    std::string game_type_str_play = getStringConfigValue(config, "game_type", "gomoku");
+                    int board_size_play = getIntConfigValue(config, "board_size", 15);
+                    std::string model_path_play = getStringConfigValue(config, "model_path", "models/best_model.pt");
                     
-                    // MCTS settings
-                    int num_simulations = std::stoi(config["mcts.num_simulations"]);
-                    int num_threads = std::stoi(config["mcts.num_threads"]);
-                    int batch_size = std::stoi(config["mcts.batch_size"]);
-                    float exploration_constant = std::stof(config["mcts.exploration_constant"]);
-                    int virtual_loss = std::stoi(config["mcts.virtual_loss"]);
-                    float temperature = std::stof(config["mcts.temperature"]);
-                    int batch_timeout_ms = std::stoi(config["mcts.batch_timeout_ms"]);
+                    // MCTS settings for play
+                    int num_simulations_play = getIntConfigValue(config, "mcts_num_simulations", 800);
+                    int num_threads_play = getIntConfigValue(config, "mcts_num_threads", 2);
+                    int batch_size_play = getIntConfigValue(config, "mcts_batch_size", 1);
+                    float exploration_constant_play = getFloatConfigValue(config, "mcts_exploration_constant", 1.0f);
+                    int virtual_loss_play = getIntConfigValue(config, "mcts_virtual_loss", 3);
+                    bool add_dirichlet_noise_play = getBoolConfigValue(config, "mcts_add_dirichlet_noise", false);
+                    float dirichlet_alpha_play = getFloatConfigValue(config, "mcts_dirichlet_alpha", 0.3f);
+                    float dirichlet_epsilon_play = getFloatConfigValue(config, "mcts_dirichlet_epsilon", 0.25f);
+                    float temperature_play = getFloatConfigValue(config, "mcts_temperature", 0.1f);
+                    int batch_timeout_ms_play = getIntConfigValue(config, "mcts_batch_timeout_ms", 0);
                     
                     // Convert game type string to enum
                     alphazero::core::GameType game_type;
-                    if (game_type_str == "gomoku") {
+                    if (game_type_str_play == "gomoku") {
                         game_type = alphazero::core::GameType::GOMOKU;
-                    } else if (game_type_str == "chess") {
+                    } else if (game_type_str_play == "chess") {
                         game_type = alphazero::core::GameType::CHESS;
-                    } else if (game_type_str == "go") {
+                    } else if (game_type_str_play == "go") {
                         game_type = alphazero::core::GameType::GO;
                     } else {
-                        std::cerr << "Error: Unknown game type: " << game_type_str << std::endl;
+                        std::cerr << "Error: Unknown game type: " << game_type_str_play << std::endl;
                         return 1;
                     }
                     
@@ -959,7 +1030,7 @@ int main(int argc, char** argv) {
                     switch (game_type) {
                         case alphazero::core::GameType::GOMOKU:
                             num_channels = 17;  // Enhanced representation with history (2*8 for history pairs + 1 turn plane)
-                            policy_size = board_size * board_size;
+                            policy_size = board_size_play * board_size_play;
                             break;
                         case alphazero::core::GameType::CHESS:
                             num_channels = 17;  // 12 piece planes + 3 special + 1 turn + 1 move count
@@ -967,7 +1038,7 @@ int main(int argc, char** argv) {
                             break;
                         case alphazero::core::GameType::GO:
                             num_channels = 17;  // 2 player planes + 1 turn + 8 history
-                            policy_size = board_size * board_size + 1;  // +1 for pass
+                            policy_size = board_size_play * board_size_play + 1;  // +1 for pass
                             break;
                         default:
                             std::cerr << "Error: Unknown game type" << std::endl;
@@ -975,18 +1046,18 @@ int main(int argc, char** argv) {
                     }
                     
                     // Check if model exists
-                    if (!std::filesystem::exists(model_path)) {
-                        std::cerr << "Error: Model file not found: " << model_path << std::endl;
+                    if (!std::filesystem::exists(model_path_play)) {
+                        std::cerr << "Error: Model file not found: " << model_path_play << std::endl;
                         return 1;
                     }
                     
                     // Load model
-                    std::cout << "Loading model from: " << model_path << std::endl;
+                    std::cout << "Loading model from: " << model_path_play << std::endl;
                     std::shared_ptr<alphazero::nn::NeuralNetwork> neural_net;
                     try {
                         bool use_gpu = alphazero::nn::NeuralNetworkFactory::isCudaAvailable();
                         neural_net = alphazero::nn::NeuralNetworkFactory::loadResNet(
-                            model_path, num_channels, board_size, policy_size, use_gpu);
+                            model_path_play, num_channels, board_size_play, policy_size, use_gpu);
                     } catch (const std::exception& e) {
                         std::cerr << "Error loading model: " << e.what() << std::endl;
                         return 1;
@@ -994,13 +1065,16 @@ int main(int argc, char** argv) {
                     
                     // Setup MCTS settings
                     alphazero::mcts::MCTSSettings mcts_settings;
-                    mcts_settings.num_simulations = num_simulations;
-                    mcts_settings.num_threads = num_threads;
-                    mcts_settings.batch_size = batch_size;
-                    mcts_settings.batch_timeout = std::chrono::milliseconds(batch_timeout_ms);
-                    mcts_settings.exploration_constant = exploration_constant;
-                    mcts_settings.virtual_loss = virtual_loss;
-                    mcts_settings.temperature = temperature;
+                    mcts_settings.num_simulations = num_simulations_play;
+                    mcts_settings.num_threads = num_threads_play;
+                    mcts_settings.batch_size = batch_size_play;
+                    mcts_settings.batch_timeout = std::chrono::milliseconds(batch_timeout_ms_play);
+                    mcts_settings.exploration_constant = exploration_constant_play;
+                    mcts_settings.virtual_loss = virtual_loss_play;
+                    mcts_settings.add_dirichlet_noise = add_dirichlet_noise_play;
+                    mcts_settings.dirichlet_alpha = dirichlet_alpha_play;
+                    mcts_settings.dirichlet_epsilon = dirichlet_epsilon_play;
+                    mcts_settings.temperature = temperature_play;
                     
                     // Create MCTS engine
                     alphazero::mcts::MCTSEngine mcts(neural_net, mcts_settings);
@@ -1009,20 +1083,20 @@ int main(int argc, char** argv) {
                     std::unique_ptr<alphazero::core::IGameState> game_state;
                     switch (game_type) {
                         case alphazero::core::GameType::GOMOKU:
-                            game_state = std::make_unique<alphazero::games::gomoku::GomokuState>(board_size);
+                            game_state = std::make_unique<alphazero::games::gomoku::GomokuState>(board_size_play);
                             break;
                         case alphazero::core::GameType::CHESS:
                             game_state = std::make_unique<alphazero::games::chess::ChessState>();
                             break;
                         case alphazero::core::GameType::GO:
-                            game_state = std::make_unique<alphazero::games::go::GoState>(board_size);
+                            game_state = std::make_unique<alphazero::games::go::GoState>(board_size_play);
                             break;
                         default:
                             std::cerr << "Error: Unknown game type" << std::endl;
                             return 1;
                     }
                     
-                    std::cout << "\nStarting a new game of " << game_type_str << ".\n";
+                    std::cout << "\nStarting a new game of " << game_type_str_play << ".\n";
                     
                     // Game loop
                     int player = 1;  // Human is always player 1
@@ -1094,7 +1168,7 @@ int main(int argc, char** argv) {
                                         // Parse row,col format
                                         if (input == "pass" && game_type == alphazero::core::GameType::GO) {
                                             // Special case for Go pass move
-                                            move = board_size * board_size;  // Pass move index
+                                            move = board_size_play * board_size_play;  // Pass move index
                                         } else {
                                             size_t comma_pos = input.find(',');
                                             if (comma_pos == std::string::npos) {
@@ -1106,7 +1180,7 @@ int main(int argc, char** argv) {
                                             int col = std::stoi(input.substr(comma_pos + 1));
                                             
                                             // Convert to move index
-                                            move = row * board_size + col;
+                                            move = row * board_size_play + col;
                                         }
                                         break;
                                     }

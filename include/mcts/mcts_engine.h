@@ -26,11 +26,11 @@ struct ALPHAZERO_API MCTSSettings {
     // Number of worker threads
     int num_threads = 4;
     
-    // Neural network batch size - increased for better GPU utilization
-    int batch_size = 32;
+    // Neural network batch size - adjusted for optimal GPU throughput
+    int batch_size = 16;
     
-    // Neural network batch timeout - increased to allow for more batching
-    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(10);
+    // Neural network batch timeout - adjusted for better batching efficiency
+    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(25);
     
     // Exploration constant for PUCT formula
     float exploration_constant = 1.4f;
@@ -250,6 +250,10 @@ private:
     void distributeSimulations();
     void waitForSimulationsToComplete(std::chrono::steady_clock::time_point start_time);
     void countTreeStatistics();
+
+    // Methods for statistics calculation
+    size_t countTreeNodes(MCTSNode* node);
+    int calculateMaxDepth(MCTSNode* node);
 
     // New atomic member
     std::atomic<int> num_workers_actively_processing_{0};

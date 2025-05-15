@@ -10,7 +10,7 @@
 #include <iomanip>
 
 // Configurable debug level
-#define MCTS_DEBUG 0
+#define MCTS_DEBUG 1
 
 namespace alphazero {
 namespace mcts {
@@ -241,22 +241,106 @@ MCTSEngine::~MCTSEngine() {
 }
 
 SearchResult MCTSEngine::search(const core::IGameState& state) {
+    std::cout << "MCTSEngine::search - Starting search..." << std::endl;
     auto start_time = std::chrono::steady_clock::now();
 
-    // Make sure evaluator is running
-    if (!ensureEvaluatorStarted()) {
-        throw std::runtime_error("Failed to start neural network evaluator");
+    // Validate the state before proceeding
+    try {
+        std::cout << "MCTSEngine::search - Validating state..." << std::endl;
+        if (!state.validate()) {
+            std::cerr << "MCTSEngine::search - Invalid game state passed to search method" << std::endl;
+            SearchResult result;
+            result.action = -1;
+            result.value = 0.0f;
+            // Return best guess from legal moves
+            std::cout << "MCTSEngine::search - Getting legal moves from invalid state..." << std::endl;
+            auto legal_moves = state.getLegalMoves();
+            if (!legal_moves.empty()) {
+                result.action = legal_moves[0];
+                // Create a uniform policy
+                result.probabilities.resize(state.getActionSpaceSize(), 1.0f / state.getActionSpaceSize());
+                std::cout << "MCTSEngine::search - Using first legal move: " << result.action << std::endl;
+            }
+            return result;
+        }
+        std::cout << "MCTSEngine::search - State validated successfully" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "MCTSEngine::search - Exception during state validation: " << e.what() << std::endl;
+        SearchResult result; // Return default/error result
+        result.action = -1;
+        return result;
+    } catch (...) {
+        std::cerr << "MCTSEngine::search - Unknown exception during state validation" << std::endl;
+        SearchResult result; // Return default/error result
+        result.action = -1;
+        return result;
     }
 
-    // Run the search with proper exception handling
+    // Critical: Reset the previous search state (tree and root)
+    // This will delete all MCTSNode objects from the previous search.
+    root_.reset();
+
+    // Critical: Clear the transposition table as its node pointers might now be dangling
+    // after root_.reset() deleted the previous tree. Also clear its statistics for the new search.
+    if (use_transposition_table_ && transposition_table_) {
+        std::cout << "MCTSEngine::search - Clearing transposition table for new search." << std::endl;
+        transposition_table_->clear(); // Clear all entries
+        transposition_table_->resetStats(); // Reset hit/miss stats
+    }
+    
+    // Ensure evaluator is started (idempotent)
+    if (!evaluator_started_) {
+        if (!ensureEvaluatorStarted()) {
+            std::cerr << "MCTSEngine::search - Evaluator could not be started. Aborting search." << std::endl;
+            SearchResult result; // Return default/error result
+            result.action = -1;
+            return result;
+        }
+    }
+
+    // Initialize statistics for the new search
+    last_stats_ = MCTSStats();
+    last_stats_.tt_size = transposition_table_ ? transposition_table_->size() : 0;
+
+    // Check if the game state is terminal before starting the search
+    if (state.isTerminal()) {
+        std::cout << "MCTSEngine::search - Game state is already terminal. No search needed." << std::endl;
+        SearchResult result;
+        result.action = -1; // No action to take
+        try {
+            core::GameResult game_res = state.getGameResult();
+            int current_player = state.getCurrentPlayer();
+            if (game_res == core::GameResult::WIN_PLAYER1) {
+                result.value = (current_player == 1) ? 1.0f : -1.0f;
+            } else if (game_res == core::GameResult::WIN_PLAYER2) {
+                result.value = (current_player == 2) ? 1.0f : -1.0f;
+            } else { // Draw or Ongoing (though isTerminal() should be true)
+                result.value = 0.0f;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "MCTSEngine::search - Error getting terminal value: " << e.what() << std::endl;
+            result.value = 0.0f;
+        }
+        result.probabilities.assign(state.getActionSpaceSize(), 0.0f);
+        last_stats_.search_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
+        return result;
+    }
+
     try {
+        std::cout << "MCTSEngine::search - Calling runSearch()..." << std::endl;
         runSearch(state);
+        std::cout << "MCTSEngine::search - runSearch() completed successfully" << std::endl;
     }
     catch (const std::exception& e) {
-        // Commented out: Error during search with error message
+        std::cerr << "MCTSEngine::search - Error during search: " << e.what() << std::endl;
         // Ensure proper cleanup before rethrowing
         safelyStopEvaluator();
         throw;
+    }
+    catch (...) {
+        std::cerr << "MCTSEngine::search - Unknown error during search" << std::endl;
+        safelyStopEvaluator();
+        throw std::runtime_error("Unknown error during search");
     }
 
     auto end_time = std::chrono::steady_clock::now();
@@ -337,13 +421,34 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
         result.value = root_ ? root_->getValue() : 0.0f;
     }
     catch (const std::exception& e) {
-        // Commented out: Error extracting search results with error message
+        std::cerr << "Error extracting search results: " << e.what() << std::endl;
         
         // Set fallback results
         if (result.action < 0) {
-            auto legal_moves = state.getLegalMoves();
-            if (!legal_moves.empty()) {
-                result.action = legal_moves[0];
+            try {
+                auto legal_moves = state.getLegalMoves();
+                if (!legal_moves.empty()) {
+                    result.action = legal_moves[0];
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error getting legal moves: " << e.what() << std::endl;
+            } catch (...) {
+                std::cerr << "Unknown error getting legal moves" << std::endl;
+            }
+        }
+    }
+    catch (...) {
+        std::cerr << "Unknown error extracting search results" << std::endl;
+        
+        // Set fallback results
+        if (result.action < 0) {
+            try {
+                auto legal_moves = state.getLegalMoves();
+                if (!legal_moves.empty()) {
+                    result.action = legal_moves[0];
+                }
+            } catch (...) {
+                // Silently ignore errors here
             }
         }
     }
@@ -382,12 +487,19 @@ const MCTSStats& MCTSEngine::getLastStats() const {
 }
 
 void MCTSEngine::runSearch(const core::IGameState& state) {
+    std::cout << "MCTSEngine::runSearch - Starting runSearch..." << std::endl;
     // Reset statistics
     last_stats_ = MCTSStats();
     
     // Wait for all worker threads to finish processing before cleaning up
     // from any previous search iteration on this engine instance.
     {
+        std::cout << "MCTSEngine::runSearch - Waiting for worker threads to finish processing..." << std::endl;
+        std::cout << "MCTSEngine::runSearch - Current num_workers_actively_processing_: " 
+                 << num_workers_actively_processing_.load(std::memory_order_acquire) << std::endl;
+        std::cout << "MCTSEngine::runSearch - Shutdown flag: " 
+                 << (shutdown_.load(std::memory_order_acquire) ? "true" : "false") << std::endl;
+                 
         std::unique_lock<std::mutex> lock(cv_mutex_);
         // Wait for workers to finish their processing block, indicated by num_workers_actively_processing_ == 0.
         // Timeout after a reasonable period (e.g., 5 seconds).
@@ -397,13 +509,15 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         })) {
             // Timeout occurred and the condition is false (workers still active and not shutting down)
             if (!shutdown_.load(std::memory_order_acquire)) {
-                // WARNING: Timeout waiting for worker threads, will attempt recovery
+                std::cerr << "MCTSEngine::runSearch - WARNING: Timeout waiting for worker threads, will attempt recovery" << std::endl;
                 
                 // Recovery strategy: reset active_simulations_ to 0 to prevent workers from taking new work
                 active_simulations_.store(0, std::memory_order_release);
+                std::cout << "MCTSEngine::runSearch - Reset active_simulations_ to 0" << std::endl;
                 
                 // Signal all worker threads to check their state
                 cv_.notify_all();
+                std::cout << "MCTSEngine::runSearch - Notified all worker threads" << std::endl;
                 
                 // Wait a short time to see if this resolves the issue
                 if (!cv_.wait_for(lock, std::chrono::milliseconds(500), [this]() {
@@ -411,25 +525,37 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                           shutdown_.load(std::memory_order_acquire);
                 })) {
                     // If still not resolved, we'll proceed anyway but log it
-                    // WARNING: Unable to fully recover stuck workers, proceeding anyway
+                    std::cerr << "MCTSEngine::runSearch - WARNING: Unable to fully recover stuck workers, proceeding anyway" << std::endl;
                     // Force reset the counter - risky but prevents permanent stalling
                     num_workers_actively_processing_.store(0, std::memory_order_release);
+                    std::cout << "MCTSEngine::runSearch - Force reset num_workers_actively_processing_ to 0" << std::endl;
                 }
             }
         }
+        std::cout << "MCTSEngine::runSearch - Worker threads are now inactive, can proceed" << std::endl;
         // It's now safer to proceed with resetting shared resources like the root node.
     }
     
     // Clean up the old root if it exists. This invalidates all nodes in the previous tree.
+    std::cout << "MCTSEngine::runSearch - Cleaning up old root node..." << std::endl;
+    if (root_) {
+        std::cout << "MCTSEngine::runSearch - Old root exists, cleaning up..." << std::endl;
+    } else {
+        std::cout << "MCTSEngine::runSearch - No old root exists" << std::endl;
+    }
     root_.reset();
+    std::cout << "MCTSEngine::runSearch - Root node reset completed" << std::endl;
 
     // If using the transposition table, it must be cleared now to remove any dangling pointers
     // from the tree that was just deleted by root_.reset(). This ensures that the TT
     // does not serve stale pointers from a previous, unrelated search tree context.
     if (use_transposition_table_ && transposition_table_) {
+        std::cout << "MCTSEngine::runSearch - Clearing transposition table..." << std::endl;
         try {
             transposition_table_->clear();
+            std::cout << "MCTSEngine::runSearch - Transposition table cleared successfully" << std::endl;
         } catch (const std::exception& e) {
+            std::cerr << "MCTSEngine::runSearch - Error clearing transposition table: " << e.what() << std::endl;
             // In case of any exception during clear, recreate the table entirely
             // This is safer than potentially having dangling pointers
             size_t size_mb = 128; // Default size
@@ -437,8 +563,13 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
             if (settings_.num_threads > 0) {
                 num_shards = std::max(size_t(settings_.num_threads), num_shards);
             }
+            std::cout << "MCTSEngine::runSearch - Recreating transposition table with size_mb=" 
+                     << size_mb << ", num_shards=" << num_shards << std::endl;
             transposition_table_ = std::make_unique<TranspositionTable>(size_mb, num_shards);
+            std::cout << "MCTSEngine::runSearch - Transposition table recreated successfully" << std::endl;
         }
+    } else {
+        std::cout << "MCTSEngine::runSearch - Skipping transposition table clear (not used or null)" << std::endl;
     }
     
     // Create the new root node.
@@ -446,33 +577,90 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
     // from the input state and then add it to the TT.
     // We do not attempt to find the new root in the just-cleared TT, as that could lead to
     // using stale pointers if the clear operation was somehow incomplete or a hash collided.
+    std::cout << "MCTSEngine::runSearch - Creating new root node from state..." << std::endl;
     try {
-        auto state_clone = state.clone();
-        if (!state_clone) {
-            throw std::runtime_error("Failed to clone state for root node");
+        // Clone the state with proper error handling
+        std::unique_ptr<core::IGameState> state_clone;
+        std::cout << "MCTSEngine::runSearch - Cloning state..." << std::endl;
+        try {
+            state_clone = state.clone();
+            if (!state_clone) {
+                std::cerr << "MCTSEngine::runSearch - ERROR: state.clone() returned nullptr" << std::endl;
+                throw std::runtime_error("state.clone() returned nullptr");
+            }
+            std::cout << "MCTSEngine::runSearch - State cloned successfully" << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "MCTSEngine::runSearch - Exception during state cloning: " << e.what() << std::endl;
+            throw std::runtime_error(std::string("Failed to clone state: ") + e.what());
+        } catch (...) {
+            std::cerr << "MCTSEngine::runSearch - Unknown exception during state cloning" << std::endl;
+            throw std::runtime_error("Unknown error when cloning state");
         }
         
         // Additional validation of the cloned state
-        if (!state_clone->validate()) {
-            throw std::runtime_error("Cloned state failed validation");
+        std::cout << "MCTSEngine::runSearch - Validating cloned state..." << std::endl;
+        try {
+            if (!state_clone->validate()) {
+                std::cerr << "MCTSEngine::runSearch - Cloned state failed validation" << std::endl;
+                throw std::runtime_error("Cloned state failed validation");
+            }
+            std::cout << "MCTSEngine::runSearch - Cloned state validated successfully" << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "MCTSEngine::runSearch - Exception validating cloned state: " << e.what() << std::endl;
+            throw std::runtime_error(std::string("Cloned state validation error: ") + e.what());
+        } catch (...) {
+            std::cerr << "MCTSEngine::runSearch - Unknown exception validating cloned state" << std::endl;
+            throw std::runtime_error("Unknown error when validating cloned state");
         }
         
-        root_ = std::make_unique<MCTSNode>(std::move(state_clone));
+        // Create root node with proper error handling
+        std::cout << "MCTSEngine::runSearch - Creating root node..." << std::endl;
+        try {
+            root_ = std::make_unique<MCTSNode>(std::move(state_clone));
+            std::cout << "MCTSEngine::runSearch - Root node created successfully" << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "MCTSEngine::runSearch - Exception creating root node: " << e.what() << std::endl;
+            throw std::runtime_error(std::string("Failed to create root node: ") + e.what());
+        } catch (...) {
+            std::cerr << "MCTSEngine::runSearch - Unknown exception creating root node" << std::endl;
+            throw std::runtime_error("Unknown error creating root node");
+        }
 
         // Ensure we have a valid root
         if (!root_) {
+            std::cerr << "MCTSEngine::runSearch - Failed to create root node" << std::endl;
             throw std::runtime_error("Failed to create root node");
         }
+        std::cout << "MCTSEngine::runSearch - Root node pointer is valid" << std::endl;
         
         // Validate the root node's state
-        if (!root_->getState().validate()) {
-            throw std::runtime_error("Root node state invalid after creation");
+        std::cout << "MCTSEngine::runSearch - Validating root node's state..." << std::endl;
+        try {
+            if (!root_->getState().validate()) {
+                std::cerr << "MCTSEngine::runSearch - Root node state invalid after creation" << std::endl;
+                throw std::runtime_error("Root node state invalid after creation");
+            }
+            std::cout << "MCTSEngine::runSearch - Root node's state validated successfully" << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "MCTSEngine::runSearch - Exception validating root node state: " << e.what() << std::endl;
+            throw std::runtime_error(std::string("Root node state validation error: ") + e.what());
+        } catch (...) {
+            std::cerr << "MCTSEngine::runSearch - Unknown exception validating root node state" << std::endl;
+            throw std::runtime_error("Unknown error validating root node state");
         }
 
         // If using transposition table, store the new root.
         if (use_transposition_table_ && transposition_table_) {
-            uint64_t hash = state.getHash(); // Get hash of the new root's state
-            transposition_table_->store(hash, root_.get(), 0);
+            try {
+                uint64_t hash = state.getHash(); // Get hash of the new root's state
+                transposition_table_->store(hash, root_.get(), 0);
+            } catch (const std::exception& e) {
+                std::cerr << "Error storing root in transposition table: " << e.what() << std::endl;
+                // Continue without transposition table storage
+            } catch (...) {
+                std::cerr << "Unknown error storing root in transposition table" << std::endl;
+                // Continue without transposition table storage
+            }
             
             #if MCTS_DEBUG
             // Commented out: Debug printing about storing new root in transposition table with hash value
@@ -481,7 +669,15 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
 
         // Add Dirichlet noise to root node policy for exploration
         if (settings_.add_dirichlet_noise) {
-            addDirichletNoise(root_.get());
+            try {
+                addDirichletNoise(root_.get());
+            } catch (const std::exception& e) {
+                std::cerr << "Error adding Dirichlet noise: " << e.what() << std::endl;
+                // Continue without noise - non-fatal
+            } catch (...) {
+                std::cerr << "Unknown error adding Dirichlet noise" << std::endl;
+                // Continue without noise - non-fatal
+            }
         }
 
         // Set search running flag
@@ -490,195 +686,148 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
 
         // Create worker threads if they don't exist yet
         if (worker_threads_.empty() && settings_.num_threads > 0) {
-            for (int i = 0; i < settings_.num_threads; ++i) {
-                worker_threads_.emplace_back([this, thread_id = i]() {
-                    // Set thread name on Windows
-                    #ifdef _MSC_VER
-                    const DWORD MS_VC_EXCEPTION = 0x406D1388;
-                    #pragma pack(push, 8)
-                    struct THREADNAME_INFO {
-                        DWORD dwType;     // Must be 0x1000
-                        LPCSTR szName;    // Pointer to name (in user addr space)
-                        DWORD dwThreadID; // Thread ID (-1=caller thread)
-                        DWORD dwFlags;    // Reserved for future use, must be zero
-                    };
-                    #pragma pack(pop)
+            // Create worker threads with proper error handling
+            try {
+                for (int i = 0; i < settings_.num_threads; ++i) {
+                    worker_threads_.emplace_back([this, thread_id = i]() {
+                        // Set thread name on Windows
+                        #ifdef _MSC_VER
+                        const DWORD MS_VC_EXCEPTION = 0x406D1388;
+                        #pragma pack(push, 8)
+                        struct THREADNAME_INFO {
+                            DWORD dwType;     // Must be 0x1000
+                            LPCSTR szName;    // Pointer to name (in user addr space)
+                            DWORD dwThreadID; // Thread ID (-1=caller thread)
+                            DWORD dwFlags;    // Reserved for future use, must be zero
+                        };
+                        #pragma pack(pop)
 
-                    char threadName[32];
-                    sprintf_s(threadName, "MCTSWorker%d", thread_id);
-                    
-                    THREADNAME_INFO info;
-                    info.dwType = 0x1000;
-                    info.szName = threadName;
-                    info.dwThreadID = GetCurrentThreadId();
-                    info.dwFlags = 0;
-                    
-                    __try {
-                        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
-                    } __except (EXCEPTION_EXECUTE_HANDLER) {
-                        // Just continue
-                    }
-                    #endif
-
-                    // Worker thread main loop
-                    while (!shutdown_) {
-                        bool has_work = false;
-                        {
-                            std::unique_lock<std::mutex> lock(cv_mutex_);
-                            has_work = cv_.wait_for(lock, std::chrono::milliseconds(10), [this]() {
-                                return active_simulations_.load(std::memory_order_acquire) > 0 || shutdown_;
-                            });
-
-                            if (shutdown_) break;
+                        char threadName[32];
+                        sprintf_s(threadName, "MCTSWorker%d", thread_id);
+                        
+                        THREADNAME_INFO info;
+                        info.dwType = 0x1000;
+                        info.szName = threadName;
+                        info.dwThreadID = GetCurrentThreadId();
+                        info.dwFlags = 0;
+                        
+                        __try {
+                            RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+                        } __except (EXCEPTION_EXECUTE_HANDLER) {
+                            // Just continue
                         }
+                        #endif
 
-                        // Run simulations if work is available
-                        if (has_work && root_) {
-                            int actual_sims_taken_this_worker = 0;
-                            const int max_sims_per_worker_cycle = 5; // Max simulations a worker tries to take in one go
+                        // Worker thread main loop
+                        while (!shutdown_) {
+                            bool has_work = false;
+                            {
+                                std::unique_lock<std::mutex> lock(cv_mutex_);
+                                has_work = cv_.wait_for(lock, std::chrono::milliseconds(10), [this]() {
+                                    return active_simulations_.load(std::memory_order_acquire) > 0 || shutdown_;
+                                });
 
-                            for (int k = 0; k < max_sims_per_worker_cycle; ++k) {
-                                if (active_simulations_.fetch_sub(1, std::memory_order_acq_rel) > 0) {
-                                    // Successfully claimed one simulation
-                                    actual_sims_taken_this_worker++;
-                                } else {
-                                    // Failed to claim (e.g., active_simulations_ was 0 or negative)
-                                    // Add back the 1 we tried to subtract.
-                                    active_simulations_.fetch_add(1, std::memory_order_release);
-                                    break; // Stop trying to claim more in this cycle
-                                }
+                                if (shutdown_) break;
                             }
 
-                            if (actual_sims_taken_this_worker > 0) {
-                                num_workers_actively_processing_.fetch_add(1, std::memory_order_release);
-                                for (int i = 0; i < actual_sims_taken_this_worker; ++i) {
-                                    if (shutdown_.load(std::memory_order_acquire)) {
-                                        // If shutdown during processing, return the remaining (unprocessed) simulations to the pool
-                                        active_simulations_.fetch_add(actual_sims_taken_this_worker - i, std::memory_order_release);
-                                        break; // Exit loop
-                                    }
-                                    try {
-                                        runSimulation(root_.get());
-                                    } catch (const std::exception& e) {
-                                        // Error in simulation
-                                    } catch (...) {
-                                        // Unknown error in simulation
+                            // Run simulations if work is available
+                            if (has_work && root_) {
+                                int actual_sims_taken_this_worker = 0;
+                                const int max_sims_per_worker_cycle = 5; // Max simulations a worker tries to take in one go
+
+                                for (int k = 0; k < max_sims_per_worker_cycle; ++k) {
+                                    if (active_simulations_.fetch_sub(1, std::memory_order_acq_rel) > 0) {
+                                        // Successfully claimed one simulation
+                                        actual_sims_taken_this_worker++;
+                                    } else {
+                                        // Failed to claim (e.g., active_simulations_ was 0 or negative)
+                                        // Add back the 1 we tried to subtract.
+                                        active_simulations_.fetch_add(1, std::memory_order_release);
+                                        break; // Stop trying to claim more in this cycle
                                     }
                                 }
-                                num_workers_actively_processing_.fetch_sub(1, std::memory_order_release);
-                                cv_.notify_all(); // Notify potentially waiting main thread or other workers
+
+                                if (actual_sims_taken_this_worker > 0) {
+                                    num_workers_actively_processing_.fetch_add(1, std::memory_order_release);
+                                    for (int i = 0; i < actual_sims_taken_this_worker; ++i) {
+                                        if (shutdown_.load(std::memory_order_acquire)) {
+                                            // If shutdown during processing, return the remaining (unprocessed) simulations to the pool
+                                            active_simulations_.fetch_add(actual_sims_taken_this_worker - i, std::memory_order_release);
+                                            break; // Exit loop
+                                        }
+                                        try {
+                                            runSimulation(root_.get());
+                                        } catch (const std::exception& e) {
+                                            // Error in simulation
+                                        } catch (...) {
+                                            // Unknown error in simulation
+                                        }
+                                    }
+                                    num_workers_actively_processing_.fetch_sub(1, std::memory_order_release);
+                                    cv_.notify_all(); // Notify potentially waiting main thread or other workers
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error creating worker threads: " << e.what() << std::endl;
+                throw std::runtime_error(std::string("Failed to create worker threads: ") + e.what());
+            } catch (...) {
+                std::cerr << "Unknown error creating worker threads" << std::endl;
+                throw std::runtime_error("Unknown error creating worker threads");
             }
         }
 
-        // For tests with num_threads=0, run simulations in the current thread
-        if (settings_.num_threads == 0) {
-            for (int i = 0; i < settings_.num_simulations; ++i) {
-                runSimulation(root_.get());
-            }
-        } else {
-            // Launch simulations on worker threads in batches for better efficiency
-            int remaining = settings_.num_simulations;
-            const int batch_size = std::min(100, settings_.num_simulations / 10 + 1);
-
-            while (remaining > 0) {
-                int batch = std::min(batch_size, remaining);
-                active_simulations_.fetch_add(batch, std::memory_order_release);
-                cv_.notify_all();
-                remaining -= batch;
-
-                // Small sleep to avoid overloading the queue
-                if (remaining > 0) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                }
-            }
-
-            // Wait for all active workers to finish their current batch of simulations
-            auto wait_processing_start = std::chrono::steady_clock::now();
-            
-            // Create a lambda for the wait condition to avoid code duplication
-            auto no_active_workers = [this]() {
-                return (active_simulations_.load(std::memory_order_acquire) <= 0 && 
-                        num_workers_actively_processing_.load(std::memory_order_acquire) <= 0);
-            };
-            
-            // First try a condition variable wait with periodic wakeups
-            bool all_finished = false;
-            for (int attempt = 0; attempt < 30 && !all_finished; ++attempt) { // Try for about 3 seconds total
-                // Notify all workers to check their state
-                cv_.notify_all();
-                
-                // Wait with timeout
-                std::unique_lock<std::mutex> lock(cv_mutex_);
-                all_finished = cv_.wait_for(lock, std::chrono::milliseconds(100), no_active_workers);
-            }
-            
-            // If condition variable wait didn't work, fall back to polling with a longer timeout
-            if (!all_finished) {
-                while (!no_active_workers()) {
-                    auto now = std::chrono::steady_clock::now();
-                    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - wait_processing_start);
-
-                    if (elapsed.count() > 15) { // Reduced timeout from 30 to 15 seconds
-                        // Warning: Timeout waiting for worker threads
-                        // Force reset the counters to prevent permanent stalls
-                        active_simulations_.store(0, std::memory_order_release);
-                        num_workers_actively_processing_.store(0, std::memory_order_release);
-                        break;
-                    }
-                    cv_.notify_all();
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }
-            }
-            
-            // Double-check that we have zero workers processing
-            if (num_workers_actively_processing_.load(std::memory_order_acquire) > 0) {
-                // Warning: Worker threads still processing after wait timeout
-                // Force reset to prevent permanent stalling
-                num_workers_actively_processing_.store(0, std::memory_order_release);
-            }
+        // Calculate the number of simulations to run
+        int num_simulations = settings_.num_simulations;
+        if (num_simulations <= 0) {
+            num_simulations = 800; // Default value
         }
 
-        // Set search running flag to false
-        search_running_ = false;
+        // Run iterations until we reach the simulation limit
+        for (int i = 0; i < num_simulations; i++) {
+            // Set up atomic counter for active simulations
+            active_simulations_.fetch_add(1, std::memory_order_release);
+            cv_.notify_all(); // Wake up workers
+        }
+
+        // Wait for all simulations to complete
+        std::unique_lock<std::mutex> lock(cv_mutex_);
+        cv_.wait(lock, [this]() {
+            return active_simulations_.load(std::memory_order_acquire) == 0 ||
+                  shutdown_.load(std::memory_order_acquire);
+        });
         
-        // Count nodes and find max depth
-        size_t count = 0;
-        int max_depth = 0;
-        
-        // Helper function to count nodes and find max depth
-        std::function<void(MCTSNode*, int)> countNodes = [&count, &max_depth, &countNodes](MCTSNode* node, int depth) {
-            if (!node) return;
-            
-            count++;
-            max_depth = std::max(max_depth, depth);
-            
-            for (auto* child : node->getChildren()) {
-                if (child) {
-                    countNodes(child, depth + 1);
-                }
-            }
-        };
-        
+        // Record search statistics
         if (root_) {
-            countNodes(root_.get(), 0);
+            last_stats_.total_nodes = countTreeNodes(root_.get());
+            last_stats_.max_depth = calculateMaxDepth(root_.get());
         }
         
-        last_stats_.total_nodes = count;
-        last_stats_.max_depth = max_depth;
-    }
-    catch (const std::exception& e) {
-        // Error in runSearch
+        // Mark search as completed
         search_running_ = false;
-        throw;
-    }
-    catch (...) {
-        // Unknown error in runSearch
+        
+    } catch (const std::exception& e) {
+        // Log the error
+        std::cerr << "Exception during MCTS search: " << e.what() << std::endl;
+        
+        // Reset search state
         search_running_ = false;
+        active_simulations_.store(0, std::memory_order_release);
+        
+        // Rethrow to allow caller to handle the error
         throw;
+    } catch (...) {
+        // Handle unknown exceptions
+        std::cerr << "Unknown exception during MCTS search" << std::endl;
+        
+        // Reset search state
+        search_running_ = false;
+        active_simulations_.store(0, std::memory_order_release);
+        
+        // Rethrow with a more descriptive message
+        throw std::runtime_error("Unknown error occurred during MCTS search");
     }
 }
 
@@ -686,17 +835,28 @@ void MCTSEngine::runSimulation(MCTSNode* root) {
     if (!root) {
         return;
     }
+    auto sim_start_time = std::chrono::high_resolution_clock::now();
+    long long selection_time_us = 0;
+    long long evaluation_time_us = 0;
+    long long backprop_time_us = 0;
 
     try {
+        auto selection_start_time = std::chrono::high_resolution_clock::now();
         // Selection phase - find a leaf node
         auto [leaf, path] = selectLeafNode(root);
+        auto selection_end_time = std::chrono::high_resolution_clock::now();
+        selection_time_us = std::chrono::duration_cast<std::chrono::microseconds>(selection_end_time - selection_start_time).count();
 
         if (!leaf) {
+            // std::cout << "[SIM_TRACE] Simulation ended early: No leaf node found." << std::endl;
+            active_simulations_.fetch_sub(1, std::memory_order_release); // Ensure this is correctly decremented if returning early.
+            cv_.notify_all(); // Notify if a worker is done.
             return;  // Something went wrong during selection
         }
 
         // Expansion and evaluation phase
         float value = 0.0f;
+        auto evaluation_start_time = std::chrono::high_resolution_clock::now();
         try {
             // We need to handle terminal states differently
             if (leaf->isTerminal()) {
@@ -741,13 +901,28 @@ void MCTSEngine::runSimulation(MCTSNode* root) {
             #endif
             value = 0.0f;  // Use a default value
         }
+        auto evaluation_end_time = std::chrono::high_resolution_clock::now();
+        evaluation_time_us = std::chrono::duration_cast<std::chrono::microseconds>(evaluation_end_time - evaluation_start_time).count();
 
         // Backpropagation phase
+        auto backprop_start_time = std::chrono::high_resolution_clock::now();
         backPropagate(path, value);
+        auto backprop_end_time = std::chrono::high_resolution_clock::now();
+        backprop_time_us = std::chrono::duration_cast<std::chrono::microseconds>(backprop_end_time - backprop_start_time).count();
+
     } catch (const std::exception& e) {
         #if MCTS_DEBUG
         // Commented out: Debug error message during simulation
         #endif
+        // Ensure simulation count is decremented even on exception
+        // active_simulations_.fetch_sub(1, std::memory_order_release); // Already handled by the worker loop that calls this
+        // cv_.notify_all();
+    }
+    auto sim_end_time = std::chrono::high_resolution_clock::now();
+    long long total_sim_time_us = std::chrono::duration_cast<std::chrono::microseconds>(sim_end_time - sim_start_time).count();
+    // Log only if total time is significant to reduce log spam
+    if (total_sim_time_us > 5000) { // e.g. > 5ms
+        std::cout << "[SIM_PROFILE] Total: " << total_sim_time_us << "us (Sel: " << selection_time_us << "us, Eval: " << evaluation_time_us << "us, BP: " << backprop_time_us << "us)" << std::endl;
     }
 }
 
@@ -892,8 +1067,6 @@ float MCTSEngine::expandAndEvaluate(MCTSNode* leaf, const std::vector<MCTSNode*>
     }
     
     // Evaluate with the neural network
-    float value = 0.0f;
-    
     try {
         // Special fast path for serial mode (no worker threads)
         if (settings_.num_threads == 0) {
@@ -926,7 +1099,8 @@ float MCTSEngine::expandAndEvaluate(MCTSNode* leaf, const std::vector<MCTSNode*>
             auto future = evaluator_->evaluateState(leaf, std::move(state_clone));
             
             // Wait for the result with a reasonable timeout
-            auto status = future.wait_for(std::chrono::seconds(2));
+            // Increased timeout to avoid premature fallback to uniform policy if batching is slow
+            auto status = future.wait_for(std::chrono::seconds(15)); 
             if (status == std::future_status::ready) {
                 auto result = future.get();
                 leaf->setPriorProbabilities(result.policy);
@@ -1144,6 +1318,31 @@ void MCTSEngine::addDirichletNoise(MCTSNode* root) {
                            settings_.dirichlet_epsilon * noise[i];
         child->setPriorProbability(noisy_prior);
     }
+}
+
+size_t MCTSEngine::countTreeNodes(MCTSNode* node) {
+    if (!node) return 0;
+    
+    size_t count = 1; // Count this node
+    for (auto* child : node->getChildren()) {
+        if (child) {
+            count += countTreeNodes(child);
+        }
+    }
+    return count;
+}
+
+int MCTSEngine::calculateMaxDepth(MCTSNode* node) {
+    if (!node) return 0;
+    if (node->getChildren().empty()) return 0;
+    
+    int max_depth = 0;
+    for (auto* child : node->getChildren()) {
+        if (child) {
+            max_depth = std::max(max_depth, calculateMaxDepth(child) + 1);
+        }
+    }
+    return max_depth;
 }
 
 } // namespace mcts

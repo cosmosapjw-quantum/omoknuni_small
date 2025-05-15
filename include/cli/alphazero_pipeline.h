@@ -19,7 +19,7 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     // General settings
     core::GameType game_type = core::GameType::GOMOKU;
     int board_size = 15;
-    int input_channels = 20;
+    int input_channels = 17;  // Match Gomoku's enhanced tensor representation (17 planes)
     int policy_size = 0;  // Will be derived from board size if 0
     std::string model_dir = "models";
     std::string data_dir = "data";
@@ -29,8 +29,8 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     int num_iterations = 10;
     
     // Neural network settings
-    int num_res_blocks = 19;
-    int num_filters = 256;
+    int num_res_blocks = 6;  // Reduced from 19 to fit on 8GB VRAM
+    int num_filters = 64;    // Reduced from 256 to fit on 8GB VRAM
     
     // Self-play settings
     int self_play_num_games = 500;
@@ -54,8 +54,8 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     
     // Training settings
     int train_epochs = 20;
-    int train_batch_size = 1024;
-    int train_num_workers = 4;
+    int train_batch_size = 128;  // Reduced from 1024 to lower memory usage
+    int train_num_workers = 2;   // Reduced from 4 to lower memory usage
     float train_learning_rate = 0.001f;
     float train_weight_decay = 0.0001f;
     int train_lr_step_size = 10;

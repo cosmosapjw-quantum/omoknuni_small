@@ -4955,6 +4955,10 @@ CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
+ /usr/include/c++/11/fstream \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
+ /usr/include/c++/11/bits/fstream.tcc \
  /home/cosmos/omoknuni_small/include/utils/device_utils.h \
  /usr/local/cuda-12.8/include/cuda_runtime.h \
  /usr/local/cuda-12.8/include/crt/host_config.h \

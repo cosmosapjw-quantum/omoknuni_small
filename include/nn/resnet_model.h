@@ -113,8 +113,10 @@ private:
     torch::nn::Linear value_fc1_{nullptr};
     torch::nn::Linear value_fc2_{nullptr};
     
-    // Tensor preparation
+    // Tensor preparation - original signature
     torch::Tensor prepareInputTensor(const std::vector<std::unique_ptr<core::IGameState>>& states);
+    // Tensor preparation - overloaded signature with target device
+    torch::Tensor prepareInputTensor(const std::vector<std::unique_ptr<core::IGameState>>& states, torch::Device target_device);
 };
 
 } // namespace nn

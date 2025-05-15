@@ -44,9 +44,6 @@ DataLoader::DataLoader(
         start_workers();
     }
     
-    std::cout << "DataLoader created with " << dataset_size << " examples, "
-              << num_batches_ << " batches, batch size " << batch_size_
-              << ", " << num_workers_ << " workers" << std::endl;
 }
 
 DataLoader::~DataLoader() {
@@ -138,19 +135,22 @@ Batch DataLoader::load_batch(size_t batch_index) {
     batch.policies = torch::stack(policies);
     batch.values = torch::stack(values);
     
-    // Pin memory if requested
-    if (pin_memory_ && !batch.states.is_pinned()) {
-        batch.states = batch.states.pin_memory();
-        batch.policies = batch.policies.pin_memory();
-        batch.values = batch.values.pin_memory();
+    // Pin memory if requested (but only if tensors are on CPU)
+    if (pin_memory_ && batch.states.device().is_cpu() && !batch.states.is_pinned()) {
+        try {
+            batch.states = batch.states.pin_memory();
+            batch.policies = batch.policies.pin_memory();
+            batch.values = batch.values.pin_memory();
+        } catch (const std::exception& e) {
+            std::cerr << "Error pinning memory: " << e.what() << std::endl;
+            std::cerr << "Continuing without pinned memory" << std::endl;
+        }
     }
     
     return batch;
 }
 
 void DataLoader::start_workers() {
-    std::cout << "Starting " << num_workers_ << " worker threads" << std::endl;
-    
     // Initialize stop flag
     stop_workers_.store(false);
     
@@ -166,8 +166,6 @@ void DataLoader::start_workers() {
 }
 
 void DataLoader::stop_workers() {
-    std::cout << "Stopping worker threads" << std::endl;
-    
     // Set stop flag
     stop_workers_.store(true);
     

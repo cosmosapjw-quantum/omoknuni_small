@@ -24,6 +24,7 @@ struct ALPHAZERO_API EvaluationRequest {
     std::promise<NetworkOutput> promise;
     int action_space_size; // Store action space size for safe fallback
     
+    EvaluationRequest() noexcept; // Default constructor
     EvaluationRequest(MCTSNode* n, std::unique_ptr<core::IGameState> s, int action_size = 10);
     
     // Add proper move constructor

@@ -8,6 +8,11 @@ EvaluationRequest::EvaluationRequest(MCTSNode* n, std::unique_ptr<core::IGameSta
     : node(n), state(std::move(s)), action_space_size(action_size) {
 }
 
+EvaluationRequest::EvaluationRequest() noexcept
+    : node(nullptr), state(nullptr), promise(), action_space_size(10) {
+    // Default constructor initializes to a safe empty state.
+}
+
 EvaluationRequest::EvaluationRequest(EvaluationRequest&& other) noexcept
     : node(other.node),
       state(std::move(other.state)),

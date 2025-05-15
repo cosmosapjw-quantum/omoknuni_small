@@ -53,7 +53,8 @@ private:
     void processBatches();
     
     // Collect a batch of requests from the queue
-    std::vector<EvaluationRequest> collectBatch();
+    // If target_batch_size is 0, uses the default batch_size_
+    std::vector<EvaluationRequest> collectBatch(size_t target_batch_size = 0);
     
     // Process a batch of requests
     void processBatch(std::vector<EvaluationRequest>& batch);
@@ -86,6 +87,15 @@ private:
     std::atomic<size_t> timeouts_{0};
     std::atomic<size_t> full_batches_{0};
     std::atomic<size_t> partial_batches_{0};
+    
+    // Min batch size to attempt GPU inference (optimization)
+    size_t min_batch_size_{1};
+    
+    // Time to wait for additional requests after reaching min_batch_size
+    std::chrono::milliseconds additional_wait_time_{10};
+    
+    // Queue size tracking for adaptive timeouts
+    std::atomic<size_t> last_queue_size_{0};
 };
 
 } // namespace mcts
