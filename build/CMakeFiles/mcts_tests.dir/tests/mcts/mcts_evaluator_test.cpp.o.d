@@ -179,15 +179,9 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: \
  /usr/include/c++/11/bits/shared_ptr_atomic.h \
  /usr/include/c++/11/backward/auto_ptr.h \
  /usr/include/c++/11/pstl/glue_memory_defs.h \
- /usr/include/c++/11/pstl/execution_defs.h \
- /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
- /usr/include/c++/11/future /usr/include/c++/11/bits/atomic_futex.h \
- /home/cosmos/omoknuni_small/include/core/igamestate.h \
- /usr/include/c++/11/optional \
- /home/cosmos/omoknuni_small/include/core/export_macros.h \
- /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
- /usr/include/c++/11/sstream /usr/include/c++/11/istream \
- /usr/include/c++/11/ios /usr/include/c++/11/bits/ios_base.h \
+ /usr/include/c++/11/pstl/execution_defs.h /usr/include/c++/11/iostream \
+ /usr/include/c++/11/ostream /usr/include/c++/11/ios \
+ /usr/include/c++/11/bits/ios_base.h \
  /usr/include/c++/11/bits/locale_classes.h \
  /usr/include/c++/11/bits/locale_classes.tcc \
  /usr/include/c++/11/streambuf /usr/include/c++/11/bits/streambuf.tcc \
@@ -198,10 +192,16 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: \
  /usr/include/c++/11/bits/streambuf_iterator.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/ctype_inline.h \
  /usr/include/c++/11/bits/locale_facets.tcc \
- /usr/include/c++/11/bits/basic_ios.tcc /usr/include/c++/11/ostream \
- /usr/include/c++/11/bits/ostream.tcc \
+ /usr/include/c++/11/bits/basic_ios.tcc \
+ /usr/include/c++/11/bits/ostream.tcc /usr/include/c++/11/istream \
  /usr/include/c++/11/bits/istream.tcc \
- /usr/include/c++/11/bits/sstream.tcc \
+ /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
+ /usr/include/c++/11/future /usr/include/c++/11/bits/atomic_futex.h \
+ /home/cosmos/omoknuni_small/include/core/igamestate.h \
+ /usr/include/c++/11/optional \
+ /home/cosmos/omoknuni_small/include/core/export_macros.h \
+ /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
+ /usr/include/c++/11/sstream /usr/include/c++/11/bits/sstream.tcc \
  /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
  /usr/include/c++/11/cassert /usr/include/assert.h \
  /usr/include/c++/11/cstddef /usr/include/c++/11/algorithm \
@@ -282,7 +282,6 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/statx-generic.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_statx_timestamp.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_statx.h \
- /usr/include/c++/11/iostream \
  /usr/include/gtest/internal/custom/gtest-port.h \
  /usr/include/gtest/internal/gtest-port-arch.h /usr/include/unistd.h \
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \

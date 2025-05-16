@@ -1,0 +1,19 @@
+# Memory optimized config
+game_type: gomoku
+board_size: 15
+mcts_num_simulations: 50
+mcts_num_threads: 4
+mcts_batch_size: 32
+mcts_batch_timeout_ms: 20
+mcts_puct_constant: 1.0
+mcts_virtual_loss: 1
+# Memory optimization settings
+mcts_transposition_table_size_mb: 32  # Reduce from 128MB to 32MB per engine
+mcts_use_transposition_table: true
+self_play_num_games: 10
+self_play_num_parallel_games: 8
+model_path: models/model.pt
+model_feature_channels: 256
+model_num_blocks: 10
+history_length: 7
+device: cuda

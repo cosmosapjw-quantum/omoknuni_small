@@ -263,6 +263,12 @@ int main(int argc, char** argv) {
                     float dirichlet_epsilon = getFloatConfigValue(config, "mcts_dirichlet_epsilon", 0.25f);
                     float temperature = getFloatConfigValue(config, "mcts_temperature", 1.0f);
                     int batch_timeout_ms = getIntConfigValue(config, "mcts_batch_timeout_ms", 1000);
+                    bool use_transposition_table = getBoolConfigValue(config, "mcts_use_transposition_table", true);
+                    int transposition_table_size_mb = getIntConfigValue(config, "mcts_transposition_table_size_mb", 128);
+                    
+                    // Neural network configuration
+                    int num_res_blocks = getIntConfigValue(config, "num_res_blocks", 10);
+                    int num_filters = getIntConfigValue(config, "num_filters", 64);
                     
                     int num_games = getIntConfigValue(config, "self_play_num_games", 100);
                     int num_parallel_games = getIntConfigValue(config, "self_play_num_parallel_games", 4);
@@ -301,6 +307,8 @@ int main(int argc, char** argv) {
                     mcts_settings.dirichlet_alpha = dirichlet_alpha;
                     mcts_settings.dirichlet_epsilon = dirichlet_epsilon;
                     mcts_settings.temperature = temperature;
+                    mcts_settings.use_transposition_table = use_transposition_table;
+                    mcts_settings.transposition_table_size_mb = transposition_table_size_mb;
                     
                     // Setup self-play settings
                     alphazero::selfplay::SelfPlaySettings self_play_settings;
@@ -373,12 +381,12 @@ int main(int argc, char** argv) {
                         if (std::filesystem::exists(model_path)) {
                             std::cout << "Loading existing model from: " << model_path << std::endl;
                             neural_net = alphazero::nn::NeuralNetworkFactory::loadResNet(
-                                model_path, num_channels, board_size, policy_size, use_gpu);
+                                model_path, num_channels, board_size, num_res_blocks, num_filters, policy_size, use_gpu);
                         } else {
                             std::cout << "Creating new model and saving to: " << model_path << std::endl;
                             std::cout << "Full model path: " << std::filesystem::absolute(model_path).string() << std::endl;
                             neural_net = alphazero::nn::NeuralNetworkFactory::createResNet(
-                                num_channels, board_size, 10, 64, policy_size, use_gpu);
+                                num_channels, board_size, num_res_blocks, num_filters, policy_size, use_gpu);
                             
                             // Create parent directory if it doesn't exist
                             try {
@@ -504,6 +512,14 @@ int main(int argc, char** argv) {
                     std::string selfplay_dir = getStringConfigValue(config, "self_play_output_dir", "data/self_play_games");
                     std::string selfplay_format = getStringConfigValue(config, "self_play_output_format", "json");
                     
+                    // Get neural network parameters
+                    int num_res_blocks = getIntConfigValue(config, "num_res_blocks", 10);
+                    int num_filters = getIntConfigValue(config, "num_filters", 64);
+                    
+                    // Neural network configuration
+                    int num_res_blocks_train = getIntConfigValue(config, "num_res_blocks", 10);
+                    int num_filters_train = getIntConfigValue(config, "num_filters", 64);
+                    
                     // Convert game type string to enum
                     alphazero::core::GameType game_type;
                     if (game_type_str == "gomoku") {
@@ -565,7 +581,7 @@ int main(int argc, char** argv) {
                         if (std::filesystem::exists(model_path)) {
                             std::cout << "Loading existing model from: " << model_path << std::endl;
                             neural_net = alphazero::nn::NeuralNetworkFactory::loadResNet(
-                                model_path, num_channels, board_size, policy_size, use_gpu);
+                                model_path, num_channels, board_size, num_res_blocks_train, num_filters_train, policy_size, use_gpu);
                         } else {
                             std::cerr << "Error: Model file not found: " << model_path << std::endl;
                             return 1;
@@ -794,6 +810,10 @@ int main(int argc, char** argv) {
                     int board_size_eval = getIntConfigValue(config, "board_size", 15);
                     std::string model_path_eval = getStringConfigValue(config, "model_path", "models/model.pt");
                     
+                    // Neural network configuration
+                    int num_res_blocks_eval = getIntConfigValue(config, "num_res_blocks", 10);
+                    int num_filters_eval = getIntConfigValue(config, "num_filters", 64);
+                    
                     // Extract evaluation specific settings
                     int num_eval_games = getIntConfigValue(config, "evaluation_num_games", 20);
                     int num_parallel_eval_games = getIntConfigValue(config, "evaluation_num_parallel_games", 4);
@@ -859,7 +879,7 @@ int main(int argc, char** argv) {
                     try {
                         bool use_gpu = alphazero::nn::NeuralNetworkFactory::isCudaAvailable();
                         neural_net = alphazero::nn::NeuralNetworkFactory::loadResNet(
-                            model_path_eval, num_channels, board_size_eval, policy_size, use_gpu);
+                            model_path_eval, num_channels, board_size_eval, num_res_blocks_eval, num_filters_eval, policy_size, use_gpu);
                     } catch (const std::exception& e) {
                         std::cerr << "Error loading model: " << e.what() << std::endl;
                         return 1;
@@ -997,6 +1017,10 @@ int main(int argc, char** argv) {
                     int board_size_play = getIntConfigValue(config, "board_size", 15);
                     std::string model_path_play = getStringConfigValue(config, "model_path", "models/best_model.pt");
                     
+                    // Neural network configuration
+                    int num_res_blocks_play = getIntConfigValue(config, "num_res_blocks", 10);
+                    int num_filters_play = getIntConfigValue(config, "num_filters", 64);
+                    
                     // MCTS settings for play
                     int num_simulations_play = getIntConfigValue(config, "mcts_num_simulations", 800);
                     int num_threads_play = getIntConfigValue(config, "mcts_num_threads", 2);
@@ -1057,7 +1081,7 @@ int main(int argc, char** argv) {
                     try {
                         bool use_gpu = alphazero::nn::NeuralNetworkFactory::isCudaAvailable();
                         neural_net = alphazero::nn::NeuralNetworkFactory::loadResNet(
-                            model_path_play, num_channels, board_size_play, policy_size, use_gpu);
+                            model_path_play, num_channels, board_size_play, num_res_blocks_play, num_filters_play, policy_size, use_gpu);
                     } catch (const std::exception& e) {
                         std::cerr << "Error loading model: " << e.what() << std::endl;
                         return 1;

@@ -26,11 +26,14 @@ struct ALPHAZERO_API MCTSSettings {
     // Number of worker threads
     int num_threads = 4;
     
-    // Neural network batch size - adjusted for optimal GPU throughput
-    int batch_size = 16;
+    // Neural network batch size - balanced for GPU efficiency and responsiveness
+    int batch_size = 64;  // Balanced size to avoid deadlock
     
-    // Neural network batch timeout - adjusted for better batching efficiency
-    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(25);
+    // Neural network batch timeout - reduced for better responsiveness
+    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(50);  // Reduced for quick processing
+    
+    // Maximum concurrent simulations to prevent memory explosion
+    int max_concurrent_simulations = 512;
     
     // Exploration constant for PUCT formula
     float exploration_constant = 1.4f;
@@ -47,6 +50,10 @@ struct ALPHAZERO_API MCTSSettings {
     
     // Temperature for move selection
     float temperature = 1.0f;
+    
+    // Transposition table settings
+    bool use_transposition_table = true;
+    size_t transposition_table_size_mb = 128; // Default 128MB
 };
 
 struct ALPHAZERO_API MCTSStats {
@@ -183,27 +190,78 @@ public:
      */
     bool ensureEvaluatorStarted();
 
+public:
+    // Pending evaluation tracking
+    struct PendingEvaluation {
+        std::shared_ptr<MCTSNode> node;
+        std::vector<std::shared_ptr<MCTSNode>> path;
+        std::unique_ptr<core::IGameState> state;
+        int batch_id;
+        int request_id;
+        
+        // Default constructor
+        PendingEvaluation() = default;
+        
+        // Move constructor
+        PendingEvaluation(PendingEvaluation&& other) noexcept
+            : node(std::move(other.node)),
+              path(std::move(other.path)),
+              state(std::move(other.state)),
+              batch_id(other.batch_id),
+              request_id(other.request_id) {
+        }
+        
+        // Move assignment
+        PendingEvaluation& operator=(PendingEvaluation&& other) noexcept {
+            if (this != &other) {
+                node = std::move(other.node);
+                path = std::move(other.path);
+                state = std::move(other.state);
+                batch_id = other.batch_id;
+                request_id = other.request_id;
+            }
+            return *this;
+        }
+        
+        // Delete copy operations
+        PendingEvaluation(const PendingEvaluation&) = delete;
+        PendingEvaluation& operator=(const PendingEvaluation&) = delete;
+    };
+    
+    // Batch tracking
+    struct BatchInfo {
+        std::vector<PendingEvaluation> evaluations;
+        std::chrono::steady_clock::time_point created_time;
+        bool submitted;
+    };
+    
 private:
     // Internal search method
     void runSearch(const core::IGameState& state);
     
     // Run a single simulation
-    void runSimulation(MCTSNode* root);
+    void runSimulation(std::shared_ptr<MCTSNode> root);
     
     // Select leaf node for expansion
-    std::pair<MCTSNode*, std::vector<MCTSNode*>> selectLeafNode(MCTSNode* root);
+    std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> selectLeafNode(std::shared_ptr<MCTSNode> root);
     
     // Expand and evaluate a leaf node
-    float expandAndEvaluate(MCTSNode* leaf, const std::vector<MCTSNode*>& path);
+    float expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::vector<std::shared_ptr<MCTSNode>>& path);
     
     // Back up value through the tree
-    void backPropagate(std::vector<MCTSNode*>& path, float value);
+    void backPropagate(std::vector<std::shared_ptr<MCTSNode>>& path, float value);
     
     // Convert tree to action probabilities
-    std::vector<float> getActionProbabilities(MCTSNode* root, float temperature);
+    std::vector<float> getActionProbabilities(std::shared_ptr<MCTSNode> root, float temperature);
     
     // Add Dirichlet noise to root node policy
-    void addDirichletNoise(MCTSNode* root);
+    void addDirichletNoise(std::shared_ptr<MCTSNode> root);
+    
+    // New specialized worker methods
+    void treeTraversalWorker(int worker_id);
+    void batchAccumulatorWorker();
+    void resultDistributorWorker();
+    void traverseTree(std::shared_ptr<MCTSNode> root);
     
     // Settings
     MCTSSettings settings_;
@@ -215,10 +273,9 @@ private:
     std::unique_ptr<MCTSEvaluator> evaluator_;
     
     // Tree root
-    std::unique_ptr<MCTSNode> root_;
+    std::shared_ptr<MCTSNode> root_;
     
-    // Thread pool
-    std::vector<std::thread> worker_threads_;
+    // Thread pool (removed in favor of specialized workers)
     
     // Control flags
     std::atomic<bool> shutdown_;
@@ -252,11 +309,41 @@ private:
     void countTreeStatistics();
 
     // Methods for statistics calculation
-    size_t countTreeNodes(MCTSNode* node);
-    int calculateMaxDepth(MCTSNode* node);
+    size_t countTreeNodes(std::shared_ptr<MCTSNode> node);
+    int calculateMaxDepth(std::shared_ptr<MCTSNode> node);
 
     // New atomic member
     std::atomic<int> num_workers_actively_processing_{0};
+    
+    // Producer-consumer queues and tracking
+    std::atomic<int> pending_evaluations_{0};
+    std::atomic<int> batch_counter_{0};
+    std::atomic<int> total_leaves_generated_{0};
+    std::atomic<int> total_results_processed_{0};
+    
+    // Producer-consumer queues
+    moodycamel::ConcurrentQueue<PendingEvaluation> leaf_queue_;
+    moodycamel::ConcurrentQueue<BatchInfo> batch_queue_;
+    moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>> result_queue_;
+    
+    // Additional synchronization for new architecture
+    std::mutex batch_mutex_;
+    std::condition_variable batch_cv_;
+    std::mutex result_mutex_;
+    std::condition_variable result_cv_;
+    
+    // Specialized worker threads
+    std::thread batch_accumulator_worker_;
+    std::thread result_distributor_worker_;
+    std::vector<std::thread> tree_traversal_workers_;
+    
+    // Control flag for specialized workers
+    std::atomic<bool> workers_active_{false};
+    
+    // Flags to track mutex destruction
+    std::atomic<bool> cv_mutex_destroyed_{false};
+    std::atomic<bool> batch_mutex_destroyed_{false};
+    std::atomic<bool> result_mutex_destroyed_{false};
 };
 
 } // namespace mcts

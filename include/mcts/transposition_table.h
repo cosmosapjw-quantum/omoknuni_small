@@ -20,8 +20,8 @@ class MCTSNode;
  * @brief Entry in the transposition table
  */
 struct ALPHAZERO_API TranspositionEntry {
-    // The MCTS node for this position
-    MCTSNode* node;
+    // The MCTS node for this position (weak_ptr to avoid memory leaks)
+    std::weak_ptr<MCTSNode> node;
     
     // The hash key of the position
     uint64_t hash;
@@ -35,8 +35,11 @@ struct ALPHAZERO_API TranspositionEntry {
     // A mutex for thread-safe access to this entry
     std::mutex mutex;
     
+    // Check if the node is still valid
+    bool isValid() const { return !node.expired(); }
+    
     // Constructor
-    TranspositionEntry(MCTSNode* n, uint64_t h, int d, int v);
+    TranspositionEntry(std::weak_ptr<MCTSNode> n, uint64_t h, int d, int v);
 };
 
 /**
@@ -63,9 +66,9 @@ public:
      * Thread-safe method to retrieve a node by its hash.
      * 
      * @param hash Position hash
-     * @return Pointer to the node, or nullptr if not found
+     * @return Shared pointer to the node, or nullptr if not found
      */
-    MCTSNode* get(uint64_t hash);
+    std::shared_ptr<MCTSNode> get(uint64_t hash);
     
     /**
      * @brief Store a node in the table
@@ -74,10 +77,10 @@ public:
      * Uses a replacement policy that favors nodes with more visits.
      * 
      * @param hash Position hash
-     * @param node The node to store
+     * @param node The node to store (weak_ptr)
      * @param depth The current search depth
      */
-    void store(uint64_t hash, MCTSNode* node, int depth);
+    void store(uint64_t hash, std::weak_ptr<MCTSNode> node, int depth);
     
     /**
      * @brief Clear the table

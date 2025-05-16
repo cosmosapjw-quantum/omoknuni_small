@@ -1,0 +1,22 @@
+game: gomoku
+board_size: 15
+
+# Self-play settings with heavy workload
+self_play_games: 100
+self_play_parallel_games: 16
+self_play_num_threads: 8
+
+# MCTS settings
+mcts_simulations: 800
+mcts_batch_size: 64
+mcts_num_threads: 16
+
+# Evaluation settings
+evaluator_batch_size: 64
+evaluator_min_batch_size: 32
+evaluator_timeout_ms: 2
+evaluator_additional_wait_ms: 1
+
+# Device settings
+devices: [gpu]
+use_gpu: true

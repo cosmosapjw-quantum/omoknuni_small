@@ -240,6 +240,7 @@ CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o: \
  /usr/include/c++/11/bits/stl_heap.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
+ /usr/include/c++/11/iostream \
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
  /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
  /usr/include/c++/11/cassert /usr/include/assert.h \
@@ -282,4 +283,4 @@ CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o: \
  /usr/include/c++/11/fstream \
  /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
- /usr/include/c++/11/bits/fstream.tcc /usr/include/c++/11/iostream
+ /usr/include/c++/11/bits/fstream.tcc

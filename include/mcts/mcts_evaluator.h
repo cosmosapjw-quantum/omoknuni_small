@@ -10,6 +10,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <memory>
+#include <iostream>
 #include "mcts/evaluation_types.h"
 #include "core/export_macros.h"
 
@@ -37,7 +38,7 @@ public:
     void stop();
     
     // Submit a state for evaluation
-    std::future<NetworkOutput> evaluateState(MCTSNode* node, std::unique_ptr<core::IGameState> state);
+    std::future<NetworkOutput> evaluateState(std::shared_ptr<MCTSNode> node, std::unique_ptr<core::IGameState> state);
     
     // Get metrics
     size_t getQueueSize() const;
@@ -48,9 +49,23 @@ public:
     // Get direct access to the inference function (for serial mode)
     InferenceFunction getInferenceFunction() const { return inference_fn_; }
     
+    // Set external queues for direct batch processing
+    void setExternalQueues(void* batch_queue, void* result_queue) {
+        batch_queue_ptr_ = batch_queue;
+        result_queue_ptr_ = result_queue;
+        use_external_queues_ = true;
+        std::cout << "[EVALUATOR] External queues set. use_external_queues_ is now " << use_external_queues_ << std::endl;
+    }
+    
 private:
     // Worker thread function
     void processBatches();
+    
+    // New evaluation loop with smarter batching
+    void evaluationLoop();
+    
+    // Process a single batch
+    bool processBatch();
     
     // Collect a batch of requests from the queue
     // If target_batch_size is 0, uses the default batch_size_
@@ -96,6 +111,17 @@ private:
     
     // Queue size tracking for adaptive timeouts
     std::atomic<size_t> last_queue_size_{0};
+    
+    // External queue integration
+    void* batch_queue_ptr_{nullptr};
+    void* result_queue_ptr_{nullptr};
+    bool use_external_queues_{false};
+    
+    // Queue mutex for synchronization
+    std::mutex queue_mutex_;
+    
+    // Condition variable for batch readiness
+    std::condition_variable batch_ready_cv_;
 };
 
 } // namespace mcts

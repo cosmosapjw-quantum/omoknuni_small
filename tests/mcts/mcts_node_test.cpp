@@ -74,16 +74,16 @@ protected:
 TEST_F(MCTSNodeTest, Initialization) {
     auto local_game_state = std::make_unique<alphazero::games::gomoku::GomokuState>();
     
-    alphazero::mcts::MCTSNode node(std::move(local_game_state));
+    auto node = alphazero::mcts::MCTSNode::create(std::move(local_game_state));
     
-    bool terminal_status = node.isTerminal();
+    bool terminal_status = node->isTerminal();
     EXPECT_FALSE(terminal_status);
     
-    EXPECT_TRUE(node.isLeaf()); 
-    EXPECT_EQ(node.getVisitCount(), 0);
-    EXPECT_EQ(node.getValue(), 0.0f);
-    EXPECT_EQ(node.getParent(), nullptr);
-    EXPECT_EQ(node.getAction(), -1);
+    EXPECT_TRUE(node->isLeaf()); 
+    EXPECT_EQ(node->getVisitCount(), 0);
+    EXPECT_EQ(node->getValue(), 0.0f);
+    EXPECT_EQ(node->getParent(), nullptr);
+    EXPECT_EQ(node->getAction(), -1);
 }
 
 // Separate test for expansion to avoid any fixture interference
@@ -97,19 +97,19 @@ TEST(MCTSNodeExpansionTest, NonTerminalExpansion) {
     ASSERT_FALSE(local_game_state->isTerminal()) << "MockGameState should not be terminal before creating node";
     
     // Create a node with the state
-    alphazero::mcts::MCTSNode node(std::move(local_game_state));
+    auto node = alphazero::mcts::MCTSNode::create(std::move(local_game_state));
     
     // Check if node's state is terminal
-    bool is_terminal = node.isTerminal();
+    bool is_terminal = node->isTerminal();
     
     // Verify the node's state is also non-terminal
     ASSERT_FALSE(is_terminal) << "MCTSNode should not be terminal after construction";
 
-    node.expand();
+    node->expand();
 
-    EXPECT_FALSE(node.isLeaf()) << "Node should not be a leaf after expansion";
-    EXPECT_EQ(node.getChildren().size(), 3) << "Node should have 3 children"; // 3 legal moves
-    EXPECT_EQ(node.getActions().size(), 3) << "Node should have 3 actions";
+    EXPECT_FALSE(node->isLeaf()) << "Node should not be a leaf after expansion";
+    EXPECT_EQ(node->getChildren().size(), 3) << "Node should have 3 children"; // 3 legal moves
+    EXPECT_EQ(node->getActions().size(), 3) << "Node should have 3 actions";
 }
 
 // Define a NON-FIXTURE version of the test to completely replace the problematic fixture test
@@ -127,29 +127,29 @@ TEST(MCTSNodeIndependentTest, NodeExpansion) {
     auto node_state = std::unique_ptr<MockGameState>(state_for_node);
     
     // Create the node
-    alphazero::mcts::MCTSNode node(std::move(node_state));
+    auto node = alphazero::mcts::MCTSNode::create(std::move(node_state));
     
     // Check terminal status
-    bool is_terminal = node.isTerminal();
+    bool is_terminal = node->isTerminal();
     
     // Verify the node's state is not terminal
     ASSERT_FALSE(is_terminal);
     
     // Expand
-    node.expand();
+    node->expand();
     
     // Verify expanded correctly
-    EXPECT_FALSE(node.isLeaf());
-    EXPECT_EQ(node.getChildren().size(), 3); // 3 legal moves
-    EXPECT_EQ(node.getActions().size(), 3);
+    EXPECT_FALSE(node->isLeaf());
+    EXPECT_EQ(node->getChildren().size(), 3); // 3 legal moves
+    EXPECT_EQ(node->getActions().size(), 3);
 
     // Check that parent pointers are correctly set
-    for (size_t i = 0; i < node.getChildren().size(); ++i) {
-        EXPECT_EQ(node.getChildren()[i]->getParent(), &node);
+    for (size_t i = 0; i < node->getChildren().size(); ++i) {
+        EXPECT_EQ(node->getChildren()[i]->getParent(), node);
 
         // Instead of checking exact action values which might be shuffled due to random shuffle in expand(),
         // just verify that each action is in the valid range
-        int action = node.getChildren()[i]->getAction();
+        int action = node->getChildren()[i]->getAction();
         EXPECT_GE(action, 0);
         EXPECT_LE(action, 2);
     }
@@ -162,13 +162,13 @@ TEST(MCTSNodeTerminalTest, TerminalStateExpansion) {
     
     local_game_state->setTerminal(true);
     
-    alphazero::mcts::MCTSNode node(std::move(local_game_state));
+    auto node = alphazero::mcts::MCTSNode::create(std::move(local_game_state));
     
-    node.expand();
+    node->expand();
     
-    EXPECT_TRUE(node.isLeaf());
-    EXPECT_TRUE(node.isTerminal());
-    EXPECT_EQ(node.getChildren().size(), 0);
+    EXPECT_TRUE(node->isLeaf());
+    EXPECT_TRUE(node->isTerminal());
+    EXPECT_EQ(node->getChildren().size(), 0);
 }
 
 // Keep the original fixture test as a stub for backward compatibility
@@ -180,7 +180,7 @@ TEST_F(MCTSNodeTest, TerminalStateExpansion) {
     local_state->setTerminal(true);
     
     // Create a node
-    alphazero::mcts::MCTSNode node(std::move(local_state));
+    auto node = alphazero::mcts::MCTSNode::create(std::move(local_state));
     
     // Just a stub that always passes
 }
@@ -193,12 +193,12 @@ TEST_F(MCTSNodeTest, Expansion) {
     local_state->setTerminal(false);
     
     // Create node
-    alphazero::mcts::MCTSNode node(std::move(local_state));
+    auto node = alphazero::mcts::MCTSNode::create(std::move(local_state));
     
-    bool is_terminal = node.isTerminal();
+    bool is_terminal = node->isTerminal();
     
     // Expand - but don't check the results
-    node.expand();
+    node->expand();
     
     // This is a stub test that always passes - the real test is
     // MCTSNodeIndependentTest.NodeExpansion and MCTSNodeExpansionTest.NonTerminalExpansion
@@ -209,25 +209,25 @@ TEST_F(MCTSNodeTest, ChildSelection) {
     // game_state is provided by the fixture
     ASSERT_NE(game_state, nullptr);
     game_state->setTerminal(false);
-    alphazero::mcts::MCTSNode node(std::move(game_state));
+    auto node = alphazero::mcts::MCTSNode::create(std::move(game_state));
     
-    node.expand();
+    node->expand();
     
     // Set different prior probabilities
-    node.getChildren()[0]->setPriorProbability(0.7f);
-    node.getChildren()[1]->setPriorProbability(0.2f);
-    node.getChildren()[2]->setPriorProbability(0.1f);
+    node->getChildren()[0]->setPriorProbability(0.7f);
+    node->getChildren()[1]->setPriorProbability(0.2f);
+    node->getChildren()[2]->setPriorProbability(0.1f);
     
     // First selection should be the highest prior
-    alphazero::mcts::MCTSNode* selected = node.selectChild(1.0f);
-    EXPECT_EQ(selected, node.getChildren()[0]);
+    std::shared_ptr<alphazero::mcts::MCTSNode> selected = node->selectChild(1.0f);
+    EXPECT_EQ(selected, node->getChildren()[0]);
     
     // Update the first child with a negative value
     selected->update(-1.0f);
     
     // Next selection should prefer exploration
-    selected = node.selectChild(1.0f);
-    EXPECT_NE(selected, node.getChildren()[0]);
+    selected = node->selectChild(1.0f);
+    EXPECT_NE(selected, node->getChildren()[0]);
 }
 
 // Test virtual loss
@@ -235,28 +235,28 @@ TEST_F(MCTSNodeTest, VirtualLoss) {
     // game_state is provided by the fixture
     ASSERT_NE(game_state, nullptr);
     game_state->setTerminal(false);
-    alphazero::mcts::MCTSNode node(std::move(game_state));
+    auto node = alphazero::mcts::MCTSNode::create(std::move(game_state));
     
-    node.expand();
+    node->expand();
     
     // Set equal prior probabilities
-    for (auto* child : node.getChildren()) {
+    for (auto child : node->getChildren()) {
         child->setPriorProbability(1.0f/3);
     }
     
     // First selection
-    alphazero::mcts::MCTSNode* selected = node.selectChild(1.0f);
+    std::shared_ptr<alphazero::mcts::MCTSNode> selected = node->selectChild(1.0f);
     selected->addVirtualLoss();
     
     // Next selection should be different
-    alphazero::mcts::MCTSNode* second = node.selectChild(1.0f);
+    std::shared_ptr<alphazero::mcts::MCTSNode> second = node->selectChild(1.0f);
     EXPECT_NE(second, selected);
     
     // Remove virtual loss
     selected->removeVirtualLoss();
     
     // Should be back to original selection
-    alphazero::mcts::MCTSNode* third = node.selectChild(1.0f);
+    std::shared_ptr<alphazero::mcts::MCTSNode> third = node->selectChild(1.0f);
     EXPECT_EQ(third, selected);
 }
 
@@ -265,14 +265,14 @@ TEST_F(MCTSNodeTest, Backpropagation) {
     // game_state is provided by the fixture
     ASSERT_NE(game_state, nullptr);
     game_state->setTerminal(false);
-    alphazero::mcts::MCTSNode node(std::move(game_state));
+    auto node = alphazero::mcts::MCTSNode::create(std::move(game_state));
     
     // Update statistics
-    node.update(1.0f);
-    node.update(0.5f);
+    node->update(1.0f);
+    node->update(0.5f);
     
-    EXPECT_EQ(node.getVisitCount(), 2);
-    EXPECT_FLOAT_EQ(node.getValue(), 0.75f); // (1.0 + 0.5) / 2
+    EXPECT_EQ(node->getVisitCount(), 2);
+    EXPECT_FLOAT_EQ(node->getValue(), 0.75f); // (1.0 + 0.5) / 2
 }
 
 // int main(int argc, char **argv) {

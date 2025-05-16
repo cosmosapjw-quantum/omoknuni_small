@@ -1,0 +1,19 @@
+# Optimized config for testing
+game_type: gomoku
+board_size: 15
+mcts_num_simulations: 50
+mcts_num_threads: 4
+mcts_batch_size: 32
+mcts_batch_timeout_ms: 20
+mcts_puct_constant: 1.0
+mcts_virtual_loss: 1
+self_play_num_games: 10
+self_play_num_parallel_games: 8
+model_path: models/model.pt
+model_feature_channels: 256
+model_num_blocks: 10
+history_length: 7
+device: cuda
+# Additional parameters to prevent timeouts
+search_timeout_seconds: 20
+max_search_time_ms: 15000

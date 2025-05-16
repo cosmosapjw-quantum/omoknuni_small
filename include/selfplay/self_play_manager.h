@@ -153,9 +153,10 @@ private:
      * @param game_type Game type
      * @param board_size Board size
      * @param game_id Game ID
+     * @param engine_id Engine ID to use for this game
      * @return Game data
      */
-    GameData generateGame(core::GameType game_type, int board_size, const std::string& game_id);
+    GameData generateGame(core::GameType game_type, int board_size, const std::string& game_id, int engine_id = -1);
     
     /**
      * @brief Worker function for parallel game generation

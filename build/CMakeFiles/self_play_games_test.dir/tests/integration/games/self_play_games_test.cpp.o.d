@@ -237,6 +237,7 @@ CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test
  /usr/include/c++/11/bits/stl_heap.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
+ /usr/include/c++/11/iostream \
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
  /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
  /usr/include/c++/11/cassert /usr/include/assert.h \
@@ -267,9 +268,8 @@ CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test
  /usr/include/c++/11/shared_mutex \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
  /home/cosmos/omoknuni_small/include/core/game_export.h \
- /usr/include/c++/11/iostream /usr/include/c++/11/filesystem \
- /usr/include/c++/11/bits/fs_fwd.h /usr/include/c++/11/bits/fs_path.h \
- /usr/include/c++/11/locale \
+ /usr/include/c++/11/filesystem /usr/include/c++/11/bits/fs_fwd.h \
+ /usr/include/c++/11/bits/fs_path.h /usr/include/c++/11/locale \
  /usr/include/c++/11/bits/locale_facets_nonio.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/messages_members.h \

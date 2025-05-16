@@ -1047,8 +1047,8 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
         YAML::Node yaml = YAML::LoadFile(config_path);
         
         // Parse game settings
-        if (yaml["game"]) {
-            std::string game_str = yaml["game"].as<std::string>();
+        if (yaml["game_type"]) {
+            std::string game_str = yaml["game_type"].as<std::string>();
             if (game_str == "gomoku") {
                 config.game_type = core::GameType::GOMOKU;
             } else if (game_str == "chess") {
@@ -1078,6 +1078,20 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
         }
         
         // Parse neural network settings
+        // First try the flat structure (as in config.yaml)
+        if (yaml["num_res_blocks"]) {
+            config.num_res_blocks = yaml["num_res_blocks"].as<int>();
+        }
+        
+        if (yaml["num_filters"]) {
+            config.num_filters = yaml["num_filters"].as<int>();
+        }
+        
+        if (yaml["input_channels"]) {
+            config.input_channels = yaml["input_channels"].as<int>();
+        }
+        
+        // Also support nested structure for backward compatibility
         if (yaml["network"]) {
             auto network = yaml["network"];
             
@@ -1087,6 +1101,10 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
             
             if (network["num_filters"]) {
                 config.num_filters = network["num_filters"].as<int>();
+            }
+            
+            if (network["input_channels"]) {
+                config.input_channels = network["input_channels"].as<int>();
             }
         }
         

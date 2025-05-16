@@ -60,9 +60,9 @@ protected:
 // Test single evaluation
 TEST_F(MCTSEvaluatorTest, SingleEvaluation) {
     auto state = createTestState();
-    auto node = std::make_unique<MCTSNode>(state->clone());
+    auto node = MCTSNode::create(state->clone());
     
-    auto future = evaluator->evaluateState(node.get(), std::move(state));
+    auto future = evaluator->evaluateState(node, std::move(state));
     
     // Wait for result with a generous timeout
     auto status = future.wait_for(std::chrono::seconds(1));
@@ -79,14 +79,14 @@ TEST_F(MCTSEvaluatorTest, SingleEvaluation) {
 // Test batch processing
 TEST_F(MCTSEvaluatorTest, BatchProcessing) {
     const int NUM_REQUESTS = 10;
-    std::vector<std::unique_ptr<MCTSNode>> nodes;
+    std::vector<std::shared_ptr<MCTSNode>> nodes;
     std::vector<std::future<NetworkOutput>> futures;
     
     // Create and submit multiple evaluation requests
     for (int i = 0; i < NUM_REQUESTS; ++i) {
         auto state = createTestState();
-        nodes.push_back(std::make_unique<MCTSNode>(state->clone()));
-        futures.push_back(evaluator->evaluateState(nodes.back().get(), std::move(state)));
+        nodes.push_back(MCTSNode::create(state->clone()));
+        futures.push_back(evaluator->evaluateState(nodes.back(), std::move(state)));
     }
     
     // Wait for all results with timeout
@@ -118,14 +118,14 @@ TEST_F(MCTSEvaluatorTest, SlowInference) {
     slowEvaluator->start();
     
     const int NUM_REQUESTS = 6;
-    std::vector<std::unique_ptr<MCTSNode>> nodes;
+    std::vector<std::shared_ptr<MCTSNode>> nodes;
     std::vector<std::future<NetworkOutput>> futures;
     
     // Create and submit multiple evaluation requests
     for (int i = 0; i < NUM_REQUESTS; ++i) {
         auto state = createTestState();
-        nodes.push_back(std::make_unique<MCTSNode>(state->clone()));
-        futures.push_back(slowEvaluator->evaluateState(nodes.back().get(), std::move(state)));
+        nodes.push_back(MCTSNode::create(state->clone()));
+        futures.push_back(slowEvaluator->evaluateState(nodes.back(), std::move(state)));
     }
     
     // Wait for all results with a longer timeout
@@ -155,9 +155,9 @@ TEST_F(MCTSEvaluatorTest, ErrorHandling) {
     errorEvaluator->start();
     
     auto state = createTestState();
-    auto node = std::make_unique<MCTSNode>(state->clone());
+    auto node = MCTSNode::create(state->clone());
     
-    auto future = errorEvaluator->evaluateState(node.get(), std::move(state));
+    auto future = errorEvaluator->evaluateState(node, std::move(state));
     
     // Wait for result with timeout
     auto status = future.wait_for(std::chrono::seconds(1));
@@ -177,9 +177,9 @@ TEST_F(MCTSEvaluatorTest, EmptyQueueTimeout) {
     
     // Submit a request after timeout
     auto state = createTestState();
-    auto node = std::make_unique<MCTSNode>(state->clone());
+    auto node = MCTSNode::create(state->clone());
     
-    auto future = evaluator->evaluateState(node.get(), std::move(state));
+    auto future = evaluator->evaluateState(node, std::move(state));
     
     // Should still get processed quickly
     auto status = future.wait_for(std::chrono::milliseconds(100));
@@ -193,7 +193,7 @@ TEST_F(MCTSEvaluatorTest, EmptyQueueTimeout) {
 TEST_F(MCTSEvaluatorTest, ConcurrentSubmitAndShutdown) {
     std::atomic<bool> running{true};
     std::atomic<int> submitted{0};
-    std::vector<std::unique_ptr<MCTSNode>> nodes;
+    std::vector<std::shared_ptr<MCTSNode>> nodes;
     std::vector<std::future<NetworkOutput>> futures;
     std::mutex mutex;
     
@@ -202,8 +202,8 @@ TEST_F(MCTSEvaluatorTest, ConcurrentSubmitAndShutdown) {
         while (running.load()) {
             std::lock_guard<std::mutex> lock(mutex);
             auto state = createTestState();
-            nodes.push_back(std::make_unique<MCTSNode>(state->clone()));
-            futures.push_back(evaluator->evaluateState(nodes.back().get(), std::move(state)));
+            nodes.push_back(MCTSNode::create(state->clone()));
+            futures.push_back(evaluator->evaluateState(nodes.back(), std::move(state)));
             submitted++;
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
@@ -225,8 +225,8 @@ TEST_F(MCTSEvaluatorTest, ConcurrentSubmitAndShutdown) {
     
     // Try a new request to make sure it's working
     auto state = createTestState();
-    auto node = std::make_unique<MCTSNode>(state->clone());
-    auto future = evaluator->evaluateState(node.get(), std::move(state));
+    auto node = MCTSNode::create(state->clone());
+    auto future = evaluator->evaluateState(node, std::move(state));
     
     auto status = future.wait_for(std::chrono::milliseconds(100));
     ASSERT_EQ(status, std::future_status::ready) << "Evaluation after restart timed out";

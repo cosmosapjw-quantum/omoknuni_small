@@ -1,0 +1,9 @@
+# Quick test config
+game_type: gomoku
+board_size: 15
+mcts_num_simulations: 10
+mcts_num_threads: 1
+mcts_batch_size: 4
+mcts_batch_timeout_ms: 10
+self_play_num_games: 1
+self_play_num_parallel_games: 1

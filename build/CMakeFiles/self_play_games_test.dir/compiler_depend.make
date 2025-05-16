@@ -291,6 +291,7 @@ CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test
   /usr/include/c++/11/bits/stl_heap.h \
   ../include/mcts/mcts_node.h \
   ../include/mcts/mcts_evaluator.h \
+  /usr/include/c++/11/iostream \
   ../include/mcts/evaluation_types.h \
   ../include/third_party/concurrentqueue.h \
   /usr/include/c++/11/cassert \
@@ -327,7 +328,6 @@ CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test
   /usr/include/c++/11/shared_mutex \
   ../include/nn/neural_network.h \
   ../include/core/game_export.h \
-  /usr/include/c++/11/iostream \
   /usr/include/c++/11/filesystem \
   /usr/include/c++/11/bits/fs_fwd.h \
   /usr/include/c++/11/bits/fs_path.h \

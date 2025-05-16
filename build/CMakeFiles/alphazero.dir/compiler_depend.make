@@ -5362,6 +5362,7 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: ../src/cli/alphazero_
   /usr/include/c++/11/bits/this_thread_sleep.h \
   ../include/mcts/mcts_node.h \
   ../include/mcts/mcts_evaluator.h \
+  /usr/include/c++/11/iostream \
   ../include/third_party/concurrentqueue.h \
   /usr/include/c++/11/cassert \
   /usr/include/assert.h \
@@ -5443,7 +5444,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: ../src/cli/alphazero_
   /opt/libtorch-2.7.0-cu128/include/c10/util/BFloat16-inl.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fn.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/floating_point_utils.h \
-  /usr/include/c++/11/iostream \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fn-inl.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fnuz.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fnuz-inl.h \
@@ -11333,6 +11333,7 @@ CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.o: ../src/evaluation
   /usr/include/c++/11/bits/stl_heap.h \
   ../include/mcts/mcts_node.h \
   ../include/mcts/mcts_evaluator.h \
+  /usr/include/c++/11/iostream \
   ../include/third_party/concurrentqueue.h \
   /usr/include/c++/11/cassert \
   /usr/include/assert.h \
@@ -11366,7 +11367,6 @@ CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.o: ../src/evaluation
   /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
   _deps/phmap-src/parallel_hashmap/phmap_base.h \
   /usr/include/c++/11/shared_mutex \
-  /usr/include/c++/11/iostream \
   ../include/games/chess/chess_state.h \
   /usr/include/c++/11/map \
   /usr/include/c++/11/bits/stl_tree.h \
@@ -13714,6 +13714,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o: ../src/mcts/mcts_engine.cpp
   /usr/include/c++/11/bits/sstream.tcc \
   ../include/mcts/mcts_evaluator.h \
   /usr/include/c++/11/condition_variable \
+  /usr/include/c++/11/iostream \
   ../include/mcts/evaluation_types.h \
   /usr/include/c++/11/future \
   /usr/include/c++/11/bits/atomic_futex.h \
@@ -13757,7 +13758,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o: ../src/mcts/mcts_engine.cpp
   /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
   /usr/include/c++/11/bits/fstream.tcc \
-  /usr/include/c++/11/iostream \
   /usr/include/c++/11/iomanip \
   /usr/include/c++/11/locale \
   /usr/include/c++/11/bits/locale_facets_nonio.h \
@@ -13993,15 +13993,8 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /usr/include/c++/11/backward/auto_ptr.h \
   /usr/include/c++/11/pstl/glue_memory_defs.h \
   /usr/include/c++/11/pstl/execution_defs.h \
-  ../include/mcts/evaluation_types.h \
-  /usr/include/c++/11/future \
-  /usr/include/c++/11/bits/atomic_futex.h \
-  ../include/core/igamestate.h \
-  /usr/include/c++/11/optional \
-  ../include/core/export_macros.h \
-  ../include/core/illegal_move_exception.h \
-  /usr/include/c++/11/sstream \
-  /usr/include/c++/11/istream \
+  /usr/include/c++/11/iostream \
+  /usr/include/c++/11/ostream \
   /usr/include/c++/11/ios \
   /usr/include/c++/11/bits/ios_base.h \
   /usr/include/c++/11/bits/locale_classes.h \
@@ -14018,9 +14011,17 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /usr/include/x86_64-linux-gnu/c++/11/bits/ctype_inline.h \
   /usr/include/c++/11/bits/locale_facets.tcc \
   /usr/include/c++/11/bits/basic_ios.tcc \
-  /usr/include/c++/11/ostream \
   /usr/include/c++/11/bits/ostream.tcc \
+  /usr/include/c++/11/istream \
   /usr/include/c++/11/bits/istream.tcc \
+  ../include/mcts/evaluation_types.h \
+  /usr/include/c++/11/future \
+  /usr/include/c++/11/bits/atomic_futex.h \
+  ../include/core/igamestate.h \
+  /usr/include/c++/11/optional \
+  ../include/core/export_macros.h \
+  ../include/core/illegal_move_exception.h \
+  /usr/include/c++/11/sstream \
   /usr/include/c++/11/bits/sstream.tcc \
   ../include/third_party/concurrentqueue.h \
   /usr/include/c++/11/cassert \
@@ -14039,6 +14040,82 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
   /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
   ../include/mcts/mcts_node.h \
+  ../include/mcts/mcts_engine.h \
+  /usr/include/c++/11/random \
+  /usr/include/c++/11/cmath \
+  /usr/include/math.h \
+  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
+  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
+  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
+  /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
+  /usr/include/c++/11/bits/specfun.h \
+  /usr/include/c++/11/tr1/gamma.tcc \
+  /usr/include/c++/11/tr1/special_function_util.h \
+  /usr/include/c++/11/tr1/bessel_function.tcc \
+  /usr/include/c++/11/tr1/beta_function.tcc \
+  /usr/include/c++/11/tr1/ell_integral.tcc \
+  /usr/include/c++/11/tr1/exp_integral.tcc \
+  /usr/include/c++/11/tr1/hypergeometric.tcc \
+  /usr/include/c++/11/tr1/legendre_function.tcc \
+  /usr/include/c++/11/tr1/modified_bessel_func.tcc \
+  /usr/include/c++/11/tr1/poly_hermite.tcc \
+  /usr/include/c++/11/tr1/poly_laguerre.tcc \
+  /usr/include/c++/11/tr1/riemann_zeta.tcc \
+  /usr/include/c++/11/bits/random.h \
+  /usr/include/x86_64-linux-gnu/c++/11/bits/opt_random.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/pmmintrin.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/emmintrin.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/xmmintrin.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/mmintrin.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/mm_malloc.h \
+  /usr/include/c++/11/stdlib.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/mwaitintrin.h \
+  /usr/include/c++/11/bits/random.tcc \
+  /usr/include/c++/11/numeric \
+  /usr/include/c++/11/bits/stl_numeric.h \
+  /usr/include/c++/11/pstl/glue_numeric_defs.h \
+  ../include/mcts/transposition_table.h \
+  _deps/phmap-src/parallel_hashmap/phmap.h \
+  /usr/include/c++/11/cstring \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+  /usr/include/c++/11/iterator \
+  /usr/include/c++/11/bits/stream_iterator.h \
+  _deps/phmap-src/parallel_hashmap/phmap_fwd_decl.h \
+  _deps/phmap-src/parallel_hashmap/phmap_utils.h \
+  _deps/phmap-src/parallel_hashmap/phmap_bits.h \
+  /usr/include/byteswap.h \
+  _deps/phmap-src/parallel_hashmap/phmap_config.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
+  _deps/phmap-src/parallel_hashmap/phmap_base.h \
+  /usr/include/c++/11/shared_mutex \
+  ../include/nn/neural_network.h \
+  ../include/utils/debug_monitor.h \
+  /usr/include/c++/11/fstream \
+  /usr/include/c++/11/bits/codecvt.h \
+  /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
+  /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
+  /usr/include/c++/11/bits/fstream.tcc \
+  /usr/include/c++/11/iomanip \
+  /usr/include/c++/11/locale \
+  /usr/include/c++/11/bits/locale_facets_nonio.h \
+  /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h \
+  /usr/include/x86_64-linux-gnu/c++/11/bits/messages_members.h \
+  /usr/include/libintl.h \
+  /usr/include/c++/11/bits/locale_facets_nonio.tcc \
+  /usr/include/c++/11/bits/locale_conv.h \
+  /usr/include/c++/11/bits/quoted_string.h \
+  /usr/include/c++/11/map \
+  /usr/include/c++/11/bits/stl_tree.h \
+  /usr/include/c++/11/bits/stl_map.h \
+  /usr/include/c++/11/bits/stl_multimap.h \
   /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
   /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
   /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h \
@@ -14071,37 +14148,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /opt/libtorch-2.7.0-cu128/include/c10/util/TypeTraits.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/llvmMathExtras.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/bit_cast.h \
-  /usr/include/c++/11/cstring \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
-  /usr/include/c++/11/cmath \
-  /usr/include/math.h \
-  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
-  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
-  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
-  /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
-  /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
-  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
-  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
-  /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
-  /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
-  /usr/include/c++/11/bits/specfun.h \
-  /usr/include/c++/11/tr1/gamma.tcc \
-  /usr/include/c++/11/tr1/special_function_util.h \
-  /usr/include/c++/11/tr1/bessel_function.tcc \
-  /usr/include/c++/11/tr1/beta_function.tcc \
-  /usr/include/c++/11/tr1/ell_integral.tcc \
-  /usr/include/c++/11/tr1/exp_integral.tcc \
-  /usr/include/c++/11/tr1/hypergeometric.tcc \
-  /usr/include/c++/11/tr1/legendre_function.tcc \
-  /usr/include/c++/11/tr1/modified_bessel_func.tcc \
-  /usr/include/c++/11/tr1/poly_hermite.tcc \
-  /usr/include/c++/11/tr1/poly_laguerre.tcc \
-  /usr/include/c++/11/tr1/riemann_zeta.tcc \
-  /usr/include/c++/11/iterator \
-  /usr/include/c++/11/bits/stream_iterator.h \
   /opt/libtorch-2.7.0-cu128/include/c10/core/MemoryFormat.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/ArrayRef.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Deprecated.h \
@@ -14116,7 +14162,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /opt/libtorch-2.7.0-cu128/include/c10/util/BFloat16-inl.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fn.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/floating_point_utils.h \
-  /usr/include/c++/11/iostream \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fn-inl.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fnuz.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e4m3fnuz-inl.h \
@@ -14147,9 +14192,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /opt/libtorch-2.7.0-cu128/include/c10/core/SymFloat.h \
   /opt/libtorch-2.7.0-cu128/include/c10/core/SymInt.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Optional.h \
-  /usr/include/c++/11/numeric \
-  /usr/include/c++/11/bits/stl_numeric.h \
-  /usr/include/c++/11/pstl/glue_numeric_defs.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/TypeCast.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/overflows.h \
   /opt/libtorch-2.7.0-cu128/include/c10/core/ScalarTypeToTypeMeta.h \
@@ -14166,7 +14208,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /opt/libtorch-2.7.0-cu128/include/c10/core/StorageImpl.h \
   /opt/libtorch-2.7.0-cu128/include/c10/core/impl/COW.h \
   /opt/libtorch-2.7.0-cu128/include/c10/core/impl/COWDeleter.h \
-  /usr/include/c++/11/shared_mutex \
   /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PyObjectSlot.h \
   /opt/libtorch-2.7.0-cu128/include/c10/core/impl/HermeticPyObjectTLS.h \
   /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PyInterpreter.h \
@@ -14630,16 +14671,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /opt/libtorch-2.7.0-cu128/include/ATen/ops/zero_ops.h \
   /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/edge.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/hash.h \
-  /usr/include/c++/11/iomanip \
-  /usr/include/c++/11/locale \
-  /usr/include/c++/11/bits/locale_facets_nonio.h \
-  /usr/include/x86_64-linux-gnu/c++/11/bits/time_members.h \
-  /usr/include/x86_64-linux-gnu/c++/11/bits/messages_members.h \
-  /usr/include/libintl.h \
-  /usr/include/c++/11/bits/codecvt.h \
-  /usr/include/c++/11/bits/locale_facets_nonio.tcc \
-  /usr/include/c++/11/bits/locale_conv.h \
-  /usr/include/c++/11/bits/quoted_string.h \
   /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/forward_grad.h \
   /usr/include/c++/11/unordered_set \
   /usr/include/c++/11/bits/unordered_set.h \
@@ -14680,10 +14711,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /opt/libtorch-2.7.0-cu128/include/c10/util/FunctionRef.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/Logging.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/logging_is_not_google_glog.h \
-  /usr/include/c++/11/map \
-  /usr/include/c++/11/bits/stl_tree.h \
-  /usr/include/c++/11/bits/stl_map.h \
-  /usr/include/c++/11/bits/stl_multimap.h \
   /usr/include/c++/11/set \
   /usr/include/c++/11/bits/stl_set.h \
   /usr/include/c++/11/bits/stl_multiset.h \
@@ -18814,7 +18841,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /opt/libtorch-2.7.0-cu128/include/c10/cuda/impl/cuda_cmake_macros.h \
   /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAMiscFunctions.h \
   /usr/local/cuda-12.8/include/cuda.h \
-  /usr/include/c++/11/stdlib.h \
   /opt/libtorch-2.7.0-cu128/include/c10/util/ApproximateClock.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/x86intrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/x86gprintrin.h \
@@ -18832,7 +18858,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /usr/lib/gcc/x86_64-linux-gnu/11/include/lzcntintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/lwpintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/movdirintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/mwaitintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/mwaitxintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/pconfigintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/popcntintrin.h \
@@ -18853,12 +18878,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: ../src/mcts/mcts_evaluat
   /usr/lib/gcc/x86_64-linux-gnu/11/include/xtestintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/hresetintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/immintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/mmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/xmmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/mm_malloc.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/emmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/pmmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/smmintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/wmmintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/avxintrin.h \
@@ -35098,6 +35117,7 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: ../src/selfplay/s
   /usr/include/c++/11/bits/stl_heap.h \
   ../include/mcts/mcts_node.h \
   ../include/mcts/mcts_evaluator.h \
+  /usr/include/c++/11/iostream \
   ../include/mcts/evaluation_types.h \
   ../include/third_party/concurrentqueue.h \
   /usr/include/c++/11/cassert \
@@ -35139,7 +35159,6 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: ../src/selfplay/s
   /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
   /usr/include/c++/11/bits/fstream.tcc \
-  /usr/include/c++/11/iostream \
   /usr/include/c++/11/iomanip \
   /usr/include/c++/11/locale \
   /usr/include/c++/11/bits/locale_facets_nonio.h \
@@ -45663,6 +45682,7 @@ CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o: ../src/traini
   /usr/include/c++/11/bits/stl_heap.h \
   ../include/mcts/mcts_node.h \
   ../include/mcts/mcts_evaluator.h \
+  /usr/include/c++/11/iostream \
   ../include/mcts/evaluation_types.h \
   ../include/third_party/concurrentqueue.h \
   /usr/include/c++/11/cassert \
@@ -45717,8 +45737,7 @@ CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o: ../src/traini
   /usr/include/c++/11/fstream \
   /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
-  /usr/include/c++/11/bits/fstream.tcc \
-  /usr/include/c++/11/iostream
+  /usr/include/c++/11/bits/fstream.tcc
 
 CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o: ../src/utils/attack_defense_module.cpp \
   /usr/include/stdc-predef.h \

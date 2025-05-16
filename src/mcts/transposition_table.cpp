@@ -11,7 +11,7 @@
 namespace alphazero {
 namespace mcts {
 
-TranspositionEntry::TranspositionEntry(MCTSNode* n, uint64_t h, int d, int v)
+TranspositionEntry::TranspositionEntry(std::weak_ptr<MCTSNode> n, uint64_t h, int d, int v)
     : node(n), hash(h), depth(d), visits(v) {
 }
 
@@ -36,7 +36,7 @@ TranspositionTable::TranspositionTable(size_t size_mb, size_t /*num_shards_param
     entries_.reserve(initial_reserve);
 }
 
-MCTSNode* TranspositionTable::get(uint64_t hash) {
+std::shared_ptr<MCTSNode> TranspositionTable::get(uint64_t hash) {
     try {
         // Use the parallel_hashmap's find which is already thread-safe
         auto it = entries_.find(hash);
@@ -58,20 +58,18 @@ MCTSNode* TranspositionTable::get(uint64_t hash) {
             }
             
             // Double-check that the entry and node are still valid after acquiring the lock
-            if (it->second && it->second->node) {
-                // Additional safety check - we need to check the validity of the node
-                // without throwing an exception
+            if (it->second && it->second->isValid()) {
                 try {
-                    // If we can access visit count, we assume the node is still valid
-                    it->second->node->getVisitCount();
-                    
-                    // Found a valid entry
-                    hits_.fetch_add(1, std::memory_order_relaxed);
-                    return it->second->node;
+                    // Try to lock the weak_ptr to get a shared_ptr
+                    auto node_ptr = it->second->node.lock();
+                    if (node_ptr) {
+                        // Found a valid entry
+                        hits_.fetch_add(1, std::memory_order_relaxed);
+                        return node_ptr;
+                    }
                 } catch (...) {
                     // If accessing the node throws an exception, the node is invalid
-                    // Update the entry to mark it as invalid
-                    it->second->node = nullptr;
+                    // Just fall through to return nullptr
                 }
             }
         }
@@ -84,15 +82,19 @@ MCTSNode* TranspositionTable::get(uint64_t hash) {
     return nullptr;
 }
 
-void TranspositionTable::store(uint64_t hash, MCTSNode* node, int depth) {
-    if (!node) {
-        return;  // Don't store null nodes
+void TranspositionTable::store(uint64_t hash, std::weak_ptr<MCTSNode> node, int depth) {
+    if (node.expired()) {
+        return;  // Don't store expired nodes
     }
     
     // Safely get the visit count of the new node once to avoid repeated access
     int visit_count = 0;
     try {
-        visit_count = node->getVisitCount();
+        if (auto locked_node = node.lock()) {
+            visit_count = locked_node->getVisitCount();
+        } else {
+            return; // Node expired before we could read it
+        }
     } catch (...) {
         // If we can't even get the visit count of the new node, don't store it
         return;
@@ -114,8 +116,8 @@ void TranspositionTable::store(uint64_t hash, MCTSNode* node, int depth) {
                 return;
             }
             
-            // Only update if the existing node is null or the new node is better
-            if (!it->second->node || 
+            // Only update if the existing node is expired or the new node is better
+            if (it->second->node.expired() || 
                 visit_count > it->second->visits || 
                 depth > it->second->depth) {
                 

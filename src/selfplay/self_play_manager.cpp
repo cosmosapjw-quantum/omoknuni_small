@@ -55,22 +55,23 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         rng_.seed(static_cast<unsigned int>(settings_.random_seed));
     }
 
-    // Create MCTS engines for each worker thread
+    // Create MCTS engines for each worker thread with proper exception safety
     engines_.reserve(settings_.num_parallel_games);
-    for (int i = 0; i < settings_.num_parallel_games; ++i) {
-        std::cout << "SelfPlayManager: Creating MCTS engine " << i << std::endl;
-        try {
-            auto engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
-            
-            // Important: Start the evaluator immediately to ensure neural network is initialized properly
-            if (engine) {
-                // First, explicitly ensure the evaluator is started
-                std::cout << "SelfPlayManager: Ensuring evaluator is started for engine " << i << std::endl;
-                if (!engine->ensureEvaluatorStarted()) {
-                    std::cerr << "ERROR: Failed to start evaluator for engine " << i << std::endl;
-                    throw std::runtime_error("Failed to start evaluator for engine " + std::to_string(i));
-                }
-                std::cout << "SelfPlayManager: Evaluator successfully started for engine " << i << std::endl;
+    try {
+        for (int i = 0; i < settings_.num_parallel_games; ++i) {
+            std::cout << "SelfPlayManager: Creating MCTS engine " << i << std::endl;
+            try {
+                auto engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
+                
+                // Important: Start the evaluator immediately to ensure neural network is initialized properly
+                if (engine) {
+                    // First, explicitly ensure the evaluator is started
+                    std::cout << "SelfPlayManager: Ensuring evaluator is started for engine " << i << std::endl;
+                    if (!engine->ensureEvaluatorStarted()) {
+                        std::cerr << "ERROR: Failed to start evaluator for engine " << i << std::endl;
+                        throw std::runtime_error("Failed to start evaluator for engine " + std::to_string(i));
+                    }
+                    std::cout << "SelfPlayManager: Evaluator successfully started for engine " << i << std::endl;
                 
                 // GPU Warm-up sequence
                 std::cout << "SelfPlayManager: Performing GPU warm-up for engine " << i << "..." << std::endl;
@@ -132,7 +133,16 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         } catch (const std::exception& e) {
             std::cerr << "Error creating MCTS engine " << i << ": " << e.what() << std::endl;
             throw;
+            }
         }
+    } catch (const std::exception& e) {
+        // Clean up already created engines
+        std::cerr << "Error creating engines: " << e.what() << std::endl;
+        std::cerr << "Cleaning up " << engines_.size() << " already created engines" << std::endl;
+        
+        // Engines will be automatically cleaned up through unique_ptr destructor
+        engines_.clear();
+        throw; // Re-throw the exception
     }
     
     std::cout << "SelfPlayManager: Successfully created " << engines_.size() << " MCTS engines" << std::endl;
@@ -163,41 +173,58 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     // Create a timestamp base for game IDs
     std::string timestamp_base = getCurrentTimestamp();
     
-    for (int i = 0; i < num_games; i++) {
-        // Create a unique game ID
-        std::string game_id = timestamp_base + "_" + std::to_string(i);
+    // Determine the number of parallel games to run
+    int num_parallel_games = settings_.num_parallel_games;
+    if (num_parallel_games <= 0 || num_parallel_games > static_cast<int>(engines_.size())) {
+        num_parallel_games = static_cast<int>(engines_.size());
+    }
+    
+    std::cout << "Using " << num_parallel_games << " parallel game threads..." << std::endl;
+    
+    // Generate games in batches using parallel threads
+    int games_generated = 0;
+    while (games_generated < num_games) {
+        int batch_size = std::min(num_parallel_games, num_games - games_generated);
         
-        try {
-            // Create game state
-            auto game_state = createGame(game_type, board_size, i % settings_.num_start_positions);
-            if (!game_state) {
-                throw std::runtime_error("Failed to create game state");
-            }
+        // Create futures for parallel game generation
+        std::vector<std::future<alphazero::selfplay::GameData>> futures;
+        futures.reserve(batch_size);
+        
+        for (int j = 0; j < batch_size; j++) {
+            int game_index = games_generated + j;
+            std::string game_id = timestamp_base + "_" + std::to_string(game_index);
+            int engine_id = j % engines_.size();  // Deterministic assignment
             
-            // Prepare game data
-            alphazero::selfplay::GameData data;
-            data.game_id = game_id;
-            data.game_type = game_type;
-            data.board_size = board_size;
-            data.winner = 0;  // Default to draw
-            
-            
-            // Create a GameData object for this game
-            alphazero::selfplay::GameData game_data = generateGame(game_type, board_size, game_id);
-            
-            // Add game to results if it has at least one move
-            if (!game_data.moves.empty()) {
-                games.push_back(std::move(game_data));
-                std::cout << "Generated game " << i+1 << "/" << num_games
-                          << " with " << game_data.moves.size() << " moves" << std::endl;
-            } else {
-                std::cerr << "Failed to generate game " << i << ": no moves were made" << std::endl;
-                i--; // Try again for this index
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Error generating game " << i << ": " << e.what() << std::endl;
-            throw;
+            // Run game generation in a separate thread with specific engine  
+            futures.push_back(std::async(std::launch::async, [this, game_type, board_size, game_id, engine_id]() {
+                return generateGame(game_type, board_size, game_id, engine_id);
+            }));
         }
+        
+        // Collect results from all threads
+        for (int j = 0; j < batch_size; j++) {
+            try {
+                int game_index = games_generated + j;
+                auto game_data = futures[j].get();
+                
+                // Add game to results if it has at least one move
+                if (!game_data.moves.empty()) {
+                    games.push_back(std::move(game_data));
+                    std::cout << "Generated game " << games.size() << "/" << num_games
+                              << " with " << game_data.moves.size() << " moves" << std::endl;
+                } else {
+                    std::cerr << "Failed to generate game " << game_index << ": no moves were made" << std::endl;
+                    // Don't increment games_generated for this one, it will be retried
+                    continue;
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error generating game " << (games_generated + j) << ": " << e.what() << std::endl;
+                throw;
+            }
+        }
+        
+        // Increment the counter for successful games
+        games_generated += batch_size;
     }
     
     std::cout << "Successfully generated " << games.size() << " games" << std::endl;
@@ -205,18 +232,17 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
 }
 
 alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame(core::GameType game_type, int board_size,
-                                      const std::string& game_id) {
+                                      const std::string& game_id, int engine_id) {
     std::cout << "SelfPlayManager::generateGame - Starting for game_id: " << game_id << std::endl;
     
-    // Select a thread-specific MCTS engine
-    int thread_id = 0;
-    {
-        std::hash<std::thread::id> hasher;
-        thread_id = hasher(std::this_thread::get_id()) % engines_.size();
+    // Use the provided engine_id
+    int thread_id = engine_id;
+    if (thread_id < 0 || thread_id >= engines_.size()) {
+        std::cerr << "SelfPlayManager::generateGame - Invalid engine_id: " << engine_id << std::endl;
+        thread_id = 0; // Fallback to first engine
     }
     
-    std::cout << "SelfPlayManager::generateGame - Selected thread_id: " << thread_id << " for engine from " 
-             << engines_.size() << " available engines" << std::endl;
+    std::cout << "SelfPlayManager::generateGame - Using engine_id: " << thread_id << " for game " << game_id << std::endl;
     
     // Check engine validity before use
     if (thread_id >= engines_.size()) {
@@ -346,62 +372,36 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                      << " in game " << game_id << std::endl;
             
             std::cout << "SelfPlayManager::generateGame - Creating async search task..." << std::endl;
-            auto search_future = std::async(std::launch::async, [&]() {
-                try {
-                    std::cout << "SelfPlayManager::generateGame - Inside search thread for game " << game_id << std::endl;
-                    auto search_result = engine.search(*game);
-                    std::cout << "SelfPlayManager::generateGame - Search thread completed normally for game " 
-                             << game_id << std::endl;
-                    return search_result;
-                } catch (const std::exception& e) {
-                    std::cerr << "SelfPlayManager::generateGame - Exception in search thread for game " 
-                             << game_id << ": " << e.what() << std::endl;
-                    throw; // Re-throw to be caught by future.get()
-                } catch (...) {
-                    std::cerr << "SelfPlayManager::generateGame - Unknown exception in search thread for game " 
-                             << game_id << std::endl;
-                    throw; // Re-throw unknown exception
-                }
-            });
+            std::cout << "SelfPlayManager::generateGame - Creating search future for move " << move_count 
+                     << " in game " << game_id << std::endl;
             
-            // Wait for search with a generous timeout
-            std::cout << "SelfPlayManager::generateGame - Waiting for search result with 30 second timeout for game " 
-                     << game_id << std::endl;
-            auto search_status = search_future.wait_for(std::chrono::seconds(30));
-            
-            if (search_status != std::future_status::ready) {
-                std::cerr << "SelfPlayManager::generateGame - ERROR: MCTS search timed out after 30 seconds for game " 
-                         << game_id << std::endl;
-                // Log that we are about to throw
-                std::cout << "[SELFPLAY_TIMEOUT] MCTS search timed out for game " << game_id << ". Will throw std::runtime_error." << std::endl;
-                throw std::runtime_error("MCTS search timed out after 30 seconds");
-            }
-            
-            std::cout << "SelfPlayManager::generateGame - MCTS search future is ready. Getting result for game " 
-                     << game_id << std::endl;
-            
+            // Start the search directly - NO std::async
             try {
-                result = search_future.get();
-                std::cout << "SelfPlayManager::generateGame - MCTS search result obtained for game " 
-                         << game_id << ". Action: " << result.action << std::endl;
-                
-                // Verify the search result
-                if (result.action < 0) {
-                    std::cerr << "WARNING: Game " << game_id << ": MCTS search returned invalid action: " 
-                             << result.action << std::endl;
-                    
-                    // Try to recover - get a valid move from legal moves
-                    std::vector<int> legal_moves = game->getLegalMoves();
-                    if (!legal_moves.empty()) {
-                        result.action = legal_moves[0];
-                        std::cout << "Game " << game_id << ": Recovered with legal move: " << result.action << std::endl;
-                    } else {
-                        throw std::runtime_error("No legal moves available");
-                    }
-                }
+                std::cout << "SelfPlayManager::generateGame - Starting direct search for game " << game_id << std::endl;
+                result = engine.search(*game);
+                std::cout << "SelfPlayManager::generateGame - Direct search completed for game " << game_id 
+                         << ". Action: " << result.action << std::endl;
             } catch (const std::exception& e) {
-                std::cerr << "ERROR: Exception getting search result for game " << game_id << ": " << e.what() << std::endl;
+                std::cerr << "SelfPlayManager::generateGame - Exception during direct search: " << e.what() << std::endl;
                 throw;
+            } catch (...) {
+                std::cerr << "SelfPlayManager::generateGame - Unknown exception during direct search" << std::endl;
+                throw;
+            }
+                
+            // Verify the search result
+            if (result.action < 0) {
+                std::cerr << "WARNING: Game " << game_id << ": MCTS search returned invalid action: " 
+                         << result.action << std::endl;
+                
+                // Try to recover - get a valid move from legal moves
+                std::vector<int> legal_moves = game->getLegalMoves();
+                if (!legal_moves.empty()) {
+                    result.action = legal_moves[0];
+                    std::cout << "Game " << game_id << ": Recovered with legal move: " << result.action << std::endl;
+                } else {
+                    throw std::runtime_error("No legal moves available");
+                }
             }
 
             // Store move and policy

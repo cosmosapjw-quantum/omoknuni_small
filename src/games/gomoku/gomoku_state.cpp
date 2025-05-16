@@ -259,36 +259,16 @@ uint64_t GomokuState::getHash() const {
 }
 
 std::unique_ptr<core::IGameState> GomokuState::clone() const {
-    // Log the address of the object being cloned
-    std::cout << "[CLONE_ENTRY] Cloning GomokuState at address: " << static_cast<const void*>(this) << std::endl;
-    std::cout << "[CLONE_ENTRY_THIS_STATE] board_size: " << this->board_size_ << ", num_words: " << this->num_words_ 
-              << ", bb[0].size: " << (this->player_bitboards_.empty() ? 0 : this->player_bitboards_[0].size()) << std::endl;
-
     try {
-        // Validate the current state before cloning
-        if (!validate()) {
-            std::cerr << "[CLONE_FAIL_VALIDATE] Attempting to clone invalid GomokuState at " << static_cast<const void*>(this) << std::endl;
-            std::cerr << "[CLONE_FAIL_VALIDATE_STATE] board_size: " << this->board_size_ << ", num_words: " << this->num_words_ 
-                      << ", bb[0].size: " << (this->player_bitboards_.empty() ? 0 : this->player_bitboards_[0].size()) << std::endl;
-            throw std::runtime_error("Cannot clone invalid GomokuState");
-        }
-        std::cout << "[CLONE_POST_VALIDATE] Validation passed for state at " << static_cast<const void*>(this) << std::endl;
-        std::cout << "[CLONE_POST_VALIDATE_STATE] board_size: " << this->board_size_ << ", num_words: " << this->num_words_ 
-                  << ", bb[0].size: " << (this->player_bitboards_.empty() ? 0 : this->player_bitboards_[0].size()) << std::endl;
-        
-        // Create a new instance with all the same parameters
-        std::cout << "[CLONE_PRE_MAKE_UNIQUE] About to make_unique. Source board_size for new clone: " << this->board_size_ << std::endl;
-        std::unique_ptr<GomokuState> clone_ptr = std::make_unique<GomokuState>(
+        // Create a new instance with same parameters - don't do any validation yet
+        auto clone_ptr = std::make_unique<GomokuState>(
             board_size_,
             use_renju_,
             use_omok_,
-            0, // Using 0 as seed since we're copying the existing state
+            0, // Using 0 as seed since we're copying existing state
             use_pro_long_opening_
         );
-        std::cout << "[CLONE_POST_MAKE_UNIQUE] make_unique completed. Clone_ptr addr: " << static_cast<void*>(clone_ptr.get()) << std::endl;
-        std::cout << "[CLONE_POST_MAKE_UNIQUE_THIS_STATE] board_size: " << this->board_size_ << ", num_words: " << this->num_words_ 
-                  << ", bb[0].size: " << (this->player_bitboards_.empty() ? 0 : this->player_bitboards_[0].size()) << std::endl;
-
+        
         if (!clone_ptr) {
             throw std::runtime_error("Failed to allocate memory for GomokuState clone");
         }
@@ -296,83 +276,61 @@ std::unique_ptr<core::IGameState> GomokuState::clone() const {
         // Copy primitive state variables
         clone_ptr->current_player_ = current_player_;
         clone_ptr->black_first_stone_ = black_first_stone_;
-        clone_ptr->valid_moves_dirty_ = valid_moves_dirty_;
-        clone_ptr->cached_winner_ = cached_winner_;
-        clone_ptr->winner_check_dirty_ = winner_check_dirty_;
-        clone_ptr->hash_signature_ = hash_signature_;
-        clone_ptr->hash_dirty_ = hash_dirty_;
         clone_ptr->last_action_played_ = last_action_played_;
-        std::cout << "[CLONE_POST_PRIMITIVE_COPY_THIS_STATE] board_size: " << this->board_size_ << ", num_words: " << this->num_words_ 
-                  << ", bb[0].size: " << (this->player_bitboards_.empty() ? 0 : this->player_bitboards_[0].size()) << std::endl;
 
-        // Copy complex members (std::vector, std::unordered_set)
-        std::cout << "[CLONE_PRE_COMPLEX_COPY] Before copying complex members. Source board_size: " << this->board_size_ 
-                  << ", Source num_words: " << this->num_words_ 
-                  << ", Source bb[0].size: " << (this->player_bitboards_.empty() ? 0 : this->player_bitboards_[0].size()) << std::endl;
-
+        // Copy move history
         clone_ptr->move_history_ = move_history_; 
-
-        std::cout << "[CLONE_POST_MOVE_HIST] After move_history_ copy. Source board_size: " << this->board_size_ 
-                  << ", Source num_words: " << this->num_words_ 
-                  << ", Source bb[0].size: " << (this->player_bitboards_.empty() ? 0 : this->player_bitboards_[0].size()) << std::endl;
-
-        clone_ptr->cached_valid_moves_ = cached_valid_moves_; 
-
-        std::cout << "[CLONE_POST_VALID_MOVES] After cached_valid_moves_ copy. Source board_size: " << this->board_size_ 
-                  << ", Source num_words: " << this->num_words_ 
-                  << ", Source bb[0].size: " << (this->player_bitboards_.empty() ? 0 : this->player_bitboards_[0].size()) << std::endl;
-
-        // Deep copy of player_bitboards_
-        if (player_bitboards_.size() == 2 && clone_ptr->player_bitboards_.size() == 2) {
-            for (int p = 0; p < 2; ++p) {
-                std::cout << "[CLONE_DEBUG_BB_COPY] Comparing bitboard sizes for player " << p << ":" << std::endl;
-                std::cout << "[CLONE_DEBUG_BB_COPY]   Source (this) board_size_: " << this->board_size_ << std::endl;
-                std::cout << "[CLONE_DEBUG_BB_COPY]   Source (this) num_words_: " << this->num_words_ << std::endl;
-                std::cout << "[CLONE_DEBUG_BB_COPY]   Source (this) player_bitboards_[" << p << "].size(): " << this->player_bitboards_[p].size() << std::endl;
-                std::cout << "[CLONE_DEBUG_BB_COPY]   Cloned (clone_ptr) board_size_: " << clone_ptr->board_size_ << std::endl;
-                std::cout << "[CLONE_DEBUG_BB_COPY]   Cloned (clone_ptr) num_words_: " << clone_ptr->num_words_ << std::endl;
-                std::cout << "[CLONE_DEBUG_BB_COPY]   Cloned (clone_ptr) player_bitboards_[" << p << "].size(): " << clone_ptr->player_bitboards_[p].size() << std::endl;
-                int expected_num_words_for_source_calc = (this->board_size_ * this->board_size_ + 63) / 64;
-                std::cout << "[CLONE_DEBUG_BB_COPY]   Source (this) expected num_words (calc): " << expected_num_words_for_source_calc << std::endl;
-
-                if (player_bitboards_[p].size() == clone_ptr->player_bitboards_[p].size()) {
-                    for (size_t w = 0; w < player_bitboards_[p].size(); ++w) {
-                        clone_ptr->player_bitboards_[p][w] = player_bitboards_[p][w];
-                    }
-                } else {
-                    std::cerr << "[CLONE_ERROR] Bitboard size mismatch for player " << p << " during clone. "
-                              << "Source bb_size: " << player_bitboards_[p].size() 
-                              << ", Cloned bb_size: " << clone_ptr->player_bitboards_[p].size() 
-                              << ", Source num_words: " << num_words_ 
-                              << ", Cloned num_words: " << clone_ptr->num_words_
-                              << ", Source board_size: " << board_size_
-                              << ", Cloned board_size: " << clone_ptr->board_size_
-                              << std::endl;
-                    throw std::runtime_error("Bitboard size mismatch during clone");
-                }
-            }
-        } else {
-            std::cerr << "[CLONE_ERROR] Player bitboards outer array size mismatch during clone. "
-                      << "Source outer size: " << player_bitboards_.size()
-                      << ", Cloned outer size: " << clone_ptr->player_bitboards_.size()
-                      << std::endl;
-            throw std::runtime_error("Player bitboards array size mismatch during clone");
+        
+        // Don't copy cached data to avoid race conditions. Mark caches as dirty instead.
+        clone_ptr->valid_moves_dirty_ = true;  // Force recomputation of valid moves
+        clone_ptr->cached_valid_moves_.clear(); // Clear the cache
+        clone_ptr->cached_winner_ = NO_PLAYER;
+        clone_ptr->winner_check_dirty_ = true;  // Force recomputation of winner
+        clone_ptr->hash_signature_ = 0;
+        clone_ptr->hash_dirty_ = true;  // Force recomputation of hash 
+        
+        // Deep copy of player_bitboards_ with size checking
+        // First ensure both have the correct sizes
+        if (player_bitboards_.size() != 2) {
+            throw std::runtime_error("Source player bitboards has invalid size: " + std::to_string(player_bitboards_.size()));
         }
         
-        std::cout << "[CLONE_PRE_FINAL_VALIDATE_THIS_STATE] board_size: " << this->board_size_ << ", num_words: " << this->num_words_ 
-                  << ", bb[0].size: " << (this->player_bitboards_.empty() ? 0 : this->player_bitboards_[0].size()) << std::endl;
+        if (clone_ptr->player_bitboards_.size() != 2) {
+            throw std::runtime_error("Clone player bitboards has invalid size: " + std::to_string(clone_ptr->player_bitboards_.size()));
+        }
+        
+        // Ensure bitboards are properly sized for this board
+        size_t expected_size = (board_size_ * board_size_ + 63) / 64;
+        
+        for (int p = 0; p < 2; ++p) {
+            // Resize if necessary to match expected size
+            if (clone_ptr->player_bitboards_[p].size() != expected_size) {
+                clone_ptr->player_bitboards_[p].resize(expected_size, 0);
+            }
+            
+            if (player_bitboards_[p].size() != expected_size) {
+                throw std::runtime_error("Source bitboard[" + std::to_string(p) + "] has unexpected size: " + 
+                    std::to_string(player_bitboards_[p].size()) + " (expected " + std::to_string(expected_size) + ")");
+            }
+            
+            // Now copy with confidence that sizes match
+            std::copy(
+                player_bitboards_[p].begin(),
+                player_bitboards_[p].end(),
+                clone_ptr->player_bitboards_[p].begin()
+            );
+        }
+        
+        // Validate the clone (without extensive logging)
         if (!clone_ptr->validate()) {
-            std::cerr << "[CLONE_ERROR] Cloned GomokuState failed validation after deep copy." << std::endl;
             throw std::runtime_error("Cloned GomokuState failed validation");
         }
-        std::cout << "[CLONE_SUCCESS] Successfully cloned GomokuState at " << static_cast<const void*>(this) << " to " << static_cast<void*>(clone_ptr.get()) << std::endl;
+        
         return clone_ptr;
     } catch (const std::exception& e) {
-        std::cerr << "Exception in GomokuState::clone() for state at " << static_cast<const void*>(this) << ": " << e.what() << std::endl;
-        throw; 
-    } catch (...) {
-        std::cerr << "Unknown exception in GomokuState::clone() for state at " << static_cast<const void*>(this) << std::endl;
-        throw std::runtime_error("Unknown error during GomokuState cloning");
+        // Simple error reporting without complex logging
+        std::cerr << "Error in GomokuState::clone(): " << e.what() << std::endl;
+        throw;
     }
 }
 

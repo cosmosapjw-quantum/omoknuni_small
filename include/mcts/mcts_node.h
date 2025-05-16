@@ -12,13 +12,23 @@
 namespace alphazero {
 namespace mcts {
 
-class ALPHAZERO_API MCTSNode {
+class ALPHAZERO_API MCTSNode : public std::enable_shared_from_this<MCTSNode> {
+private:
+    // Private constructor to force using factory method
+    MCTSNode(std::unique_ptr<core::IGameState> state, std::weak_ptr<MCTSNode> parent = {});
+    
 public:
-    MCTSNode(std::unique_ptr<core::IGameState> state, MCTSNode* parent = nullptr);
+    // Factory method to create nodes as shared_ptr
+    static std::shared_ptr<MCTSNode> create(std::unique_ptr<core::IGameState> state, 
+                                          std::shared_ptr<MCTSNode> parent = nullptr);
+    
+    // Get shared pointer to self (for children management)
+    std::shared_ptr<MCTSNode> getSharedPtr();
+    
     ~MCTSNode();
 
     // Node selection using PUCT formula with virtual loss
-    MCTSNode* selectChild(float exploration_factor);
+    std::shared_ptr<MCTSNode> selectChild(float exploration_factor);
 
     // Expansion
     void expand();
@@ -36,9 +46,9 @@ public:
     // Getters
     const core::IGameState& getState() const;
     core::IGameState& getStateMutable();
-    std::vector<MCTSNode*>& getChildren();
+    std::vector<std::shared_ptr<MCTSNode>>& getChildren();
     std::vector<int>& getActions();
-    MCTSNode* getParent();
+    std::shared_ptr<MCTSNode> getParent();
     float getValue() const;
     int getVisitCount() const;
     int getAction() const;
@@ -48,14 +58,17 @@ public:
     void setAction(int action);
     void setPriorProbability(float prior);
     void setPriorProbabilities(const std::vector<float>& priors);
+    
+    // Direct parent access for expansion (to avoid circular reference)
+    void setParentDirectly(std::weak_ptr<MCTSNode> parent) { parent_ = parent; }
 
 private:
     // Game state
     std::unique_ptr<core::IGameState> state_;
     
     // Tree structure
-    MCTSNode* parent_;
-    std::vector<MCTSNode*> children_;
+    std::weak_ptr<MCTSNode> parent_;
+    std::vector<std::shared_ptr<MCTSNode>> children_;
     std::vector<int> actions_;
     int action_; // Action that led to this node
     

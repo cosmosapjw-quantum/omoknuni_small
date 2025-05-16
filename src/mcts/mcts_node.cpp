@@ -10,7 +10,7 @@
 namespace alphazero {
 namespace mcts {
 
-MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state_param, MCTSNode* parent_param)
+MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state_param, std::weak_ptr<MCTSNode> parent_param)
     : state_(std::move(state_param)),
       parent_(parent_param),
       action_(-1),
@@ -46,45 +46,33 @@ MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state_param, MCTSNode* pare
     }
 }
 
-MCTSNode::~MCTSNode() {
-    try {
-        // Protect against concurrent modification during destruction
-        std::lock_guard<std::mutex> lock(expansion_mutex_);
-        
-        // Make a local copy of children to delete and clear the vector
-        // This prevents any other threads from accessing children while we're deleting them
-        std::vector<MCTSNode*> children_to_delete;
-        children_to_delete.swap(children_); // Atomic swap operation
-        
-        // Now children_ is empty, and children_to_delete contains all the children
-        // Children nodes are now unreachable from this node
-        
-        // Delete each child - any concurrent accesses to this node will see empty children
-        for (auto child : children_to_delete) {
-            if (child) {
-                try {
-                    delete child;
-                } catch (...) {
-                    // Ignore any exceptions during child deletion
-                    // This prevents cascading failures during tree cleanup
-                }
-            }
-        }
-    } catch (...) {
-        // Ensure destruction completes even if there are exceptions
-        // This is critical for preventing memory leaks
+std::shared_ptr<MCTSNode> MCTSNode::create(std::unique_ptr<core::IGameState> state, 
+                                          std::shared_ptr<MCTSNode> parent) {
+    std::weak_ptr<MCTSNode> weak_parent;
+    if (parent) {
+        weak_parent = parent;
     }
+    return std::shared_ptr<MCTSNode>(new MCTSNode(std::move(state), weak_parent));
 }
 
-MCTSNode* MCTSNode::selectChild(float exploration_factor) {
+std::shared_ptr<MCTSNode> MCTSNode::getSharedPtr() {
+    return shared_from_this();
+}
+
+MCTSNode::~MCTSNode() {
+    // Children are now shared_ptr, so they will be cleaned up automatically
+    // No need for manual deletion
+}
+
+std::shared_ptr<MCTSNode> MCTSNode::selectChild(float exploration_factor) {
     float best_score = -std::numeric_limits<float>::infinity();
-    MCTSNode* best_child = nullptr;
+    std::shared_ptr<MCTSNode> best_child = nullptr;
     
     float exploration_param = exploration_factor * 
         std::sqrt(static_cast<float>(visit_count_.load(std::memory_order_relaxed)));
     
     for (size_t i = 0; i < children_.size(); ++i) {
-        MCTSNode* child = children_[i];
+        auto& child = children_[i];
         
         // Get stats (thread-safe reads)
         int child_visits = child->visit_count_.load(std::memory_order_relaxed);
@@ -172,46 +160,29 @@ void MCTSNode::expand() {
     std::shuffle(legal_moves.begin(), legal_moves.end(), local_rng);
     
     // Create children with proper exception handling
-    bool had_expansion_error = false;
     for (int move : legal_moves) {
         try {
             // Clone the state and make the move
             auto new_state = state_->clone();
             if (!new_state) {
-                // MCTSNode::expand - State clone returned nullptr
-                had_expansion_error = true;
                 continue;
             }
             
             new_state->makeMove(move);
             
-            // Create the child node
-            MCTSNode* child = new MCTSNode(std::move(new_state), this);
+            // Create the child node using factory method
+            // CRITICAL FIX: Pass nullptr first, then set parent after creation to avoid circular reference
+            auto child = MCTSNode::create(std::move(new_state), nullptr);
             child->setAction(move);
+            child->setParentDirectly(shared_from_this());  // Set weak parent reference
             
             children_.push_back(child);
             actions_.push_back(move);
         } 
-        catch (const std::bad_alloc& e) {
-            // MCTSNode::expand - Memory allocation failed
-            had_expansion_error = true;
-            break; // Stop expanding on memory allocation failure
-        } 
         catch (const std::exception& e) {
-            // MCTSNode::expand - Exception during child creation
-            had_expansion_error = true;
-            continue; // Try other moves
+            // Continue trying other moves on error
+            continue;
         }
-    }
-    
-    // Clean up on partial failure
-    if (had_expansion_error && !children_.empty()) {
-        for (auto* child : children_) {
-            delete child;
-        }
-        children_.clear();
-        actions_.clear();
-        return;
     }
     
     // Skip prior probability assignment if expansion failed
@@ -221,7 +192,7 @@ void MCTSNode::expand() {
     
     // Apply uniform prior probabilities (will be updated by network later)
     float uniform_prior = 1.0f / static_cast<float>(children_.size());
-    for (auto child : children_) {
+    for (auto& child : children_) {
         child->setPriorProbability(uniform_prior);
     }
     
@@ -281,17 +252,7 @@ core::IGameState& MCTSNode::getStateMutable() {
     return *state_;
 }
 
-std::vector<MCTSNode*>& MCTSNode::getChildren() {
-    return children_;
-}
-
-std::vector<int>& MCTSNode::getActions() {
-    return actions_;
-}
-
-MCTSNode* MCTSNode::getParent() {
-    return parent_;
-}
+// These getters are defined later in the file
 
 float MCTSNode::getValue() const {
     int visits = visit_count_.load(std::memory_order_relaxed);
@@ -400,6 +361,18 @@ void MCTSNode::setPriorProbabilities(const std::vector<float>& policy_vector) {
     } catch (...) {
         // Commented out: Unknown error in setPriorProbabilities
     }
+}
+
+std::vector<std::shared_ptr<MCTSNode>>& MCTSNode::getChildren() {
+    return children_;
+}
+
+std::vector<int>& MCTSNode::getActions() {
+    return actions_;
+}
+
+std::shared_ptr<MCTSNode> MCTSNode::getParent() {
+    return parent_.lock();
 }
 
 } // namespace mcts
