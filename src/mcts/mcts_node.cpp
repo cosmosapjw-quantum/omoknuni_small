@@ -76,7 +76,7 @@ std::shared_ptr<MCTSNode> MCTSNode::selectChild(float exploration_factor) {
         
         // Get stats (thread-safe reads)
         int child_visits = child->visit_count_.load(std::memory_order_relaxed);
-        int virtual_losses = child->virtual_loss_count_.load(std::memory_order_relaxed);
+        int virtual_losses = child->virtual_loss_count_.load(std::memory_order_acquire);
         float child_value = child->value_sum_.load(std::memory_order_relaxed);
         
         // Apply virtual loss penalty
@@ -162,8 +162,8 @@ void MCTSNode::expand() {
     // Create children with proper exception handling
     for (int move : legal_moves) {
         try {
-            // Clone the state and make the move
-            auto new_state = state_->clone();
+            // Clone the state using memory pool
+            auto new_state = utils::GameStatePoolManager::getInstance().cloneState(*state_);
             if (!new_state) {
                 continue;
             }
@@ -218,13 +218,19 @@ bool MCTSNode::isTerminal() const {
 }
 
 void MCTSNode::addVirtualLoss() {
-    // Use memory_order_acq_rel for better thread safety
-    virtual_loss_count_.fetch_add(1, std::memory_order_acq_rel);
+    virtual_loss_count_.fetch_add(1, std::memory_order_release);
 }
 
 void MCTSNode::removeVirtualLoss() {
-    // Use memory_order_acq_rel for better thread safety
-    virtual_loss_count_.fetch_sub(1, std::memory_order_acq_rel);
+    virtual_loss_count_.fetch_sub(1, std::memory_order_release);
+}
+
+void MCTSNode::applyVirtualLoss(int amount) {
+    virtual_loss_count_.fetch_add(amount, std::memory_order_release);
+}
+
+int MCTSNode::getVirtualLoss() const {
+    return virtual_loss_count_.load(std::memory_order_acquire);
 }
 
 void MCTSNode::update(float value) {
@@ -357,9 +363,9 @@ void MCTSNode::setPriorProbabilities(const std::vector<float>& policy_vector) {
             }
         }
     } catch (const std::exception& e) {
-        // Commented out: Error in setPriorProbabilities with error message
+        // Error in setPriorProbabilities
     } catch (...) {
-        // Commented out: Unknown error in setPriorProbabilities
+        // Unknown error in setPriorProbabilities
     }
 }
 
@@ -373,6 +379,31 @@ std::vector<int>& MCTSNode::getActions() {
 
 std::shared_ptr<MCTSNode> MCTSNode::getParent() {
     return parent_.lock();
+}
+
+bool MCTSNode::tryMarkForEvaluation() {
+    bool expected = false;
+    // Try to set the flag from false to true atomically
+    // If it's already true, this will fail and return false
+    return evaluation_in_progress_.compare_exchange_strong(expected, true, 
+                                                         std::memory_order_acq_rel);
+}
+
+void MCTSNode::clearEvaluationFlag() {
+    evaluation_in_progress_.store(false, std::memory_order_release);
+}
+
+bool MCTSNode::updateChildReference(const std::shared_ptr<MCTSNode>& old_child, const std::shared_ptr<MCTSNode>& new_child) {
+    std::lock_guard<std::mutex> lock(expansion_mutex_);
+    for (size_t i = 0; i < children_.size(); ++i) {
+        if (children_[i] == old_child) {
+            children_[i] = new_child;
+            // The corresponding action in actions_[i] remains the same,
+            // as new_child represents the same game state resulting from that action.
+            return true;
+        }
+    }
+    return false; // old_child not found
 }
 
 } // namespace mcts

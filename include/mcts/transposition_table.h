@@ -32,9 +32,6 @@ struct ALPHAZERO_API TranspositionEntry {
     // The number of visits at the time of storage
     int visits;
     
-    // A mutex for thread-safe access to this entry
-    std::mutex mutex;
-    
     // Check if the node is still valid
     bool isValid() const { return !node.expired(); }
     
@@ -47,7 +44,7 @@ struct ALPHAZERO_API TranspositionEntry {
  * 
  * A thread-safe table that allows the MCTS algorithm to recognize and
  * reuse previously searched positions, significantly improving efficiency.
- * This implementation uses the parallel-hashmap library for high-performance
+ * This implementation aggressively uses the parallel-hashmap library for high-performance
  * concurrent access.
  */
 class ALPHAZERO_API TranspositionTable {

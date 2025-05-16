@@ -260,6 +260,9 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o: ../tests/mcts/mcts_
   /usr/include/c++/11/stdexcept \
   /usr/include/c++/11/bits/std_mutex.h \
   /usr/include/c++/11/bits/unique_lock.h \
+  /usr/include/c++/11/future \
+  /usr/include/c++/11/condition_variable \
+  /usr/include/c++/11/bits/atomic_futex.h \
   ../include/core/igamestate.h \
   /usr/include/c++/11/optional \
   ../include/core/export_macros.h \
@@ -286,12 +289,13 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o: ../tests/mcts/mcts_
   /usr/include/c++/11/bits/ostream.tcc \
   /usr/include/c++/11/bits/istream.tcc \
   /usr/include/c++/11/bits/sstream.tcc \
-  ../include/mcts/mcts_evaluator.h \
-  /usr/include/c++/11/condition_variable \
-  /usr/include/c++/11/iostream \
   ../include/mcts/evaluation_types.h \
-  /usr/include/c++/11/future \
-  /usr/include/c++/11/bits/atomic_futex.h \
+  ../include/utils/gamestate_pool.h \
+  /usr/include/c++/11/deque \
+  /usr/include/c++/11/bits/stl_deque.h \
+  /usr/include/c++/11/bits/deque.tcc \
+  ../include/mcts/mcts_evaluator.h \
+  /usr/include/c++/11/iostream \
   ../include/third_party/concurrentqueue.h \
   /usr/include/c++/11/cassert \
   /usr/include/assert.h \
@@ -325,6 +329,7 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o: ../tests/mcts/mcts_
   /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
   _deps/phmap-src/parallel_hashmap/phmap_base.h \
   /usr/include/c++/11/shared_mutex \
+  ../include/mcts/node_tracker.h \
   ../include/nn/neural_network.h \
   ../include/games/gomoku/gomoku_state.h \
   ../include/utils/zobrist_hash.h \
@@ -708,6 +713,10 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: ../tests/mcts/mc
   /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
   /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
   ../include/mcts/mcts_node.h \
+  ../include/utils/gamestate_pool.h \
+  /usr/include/c++/11/deque \
+  /usr/include/c++/11/bits/stl_deque.h \
+  /usr/include/c++/11/bits/deque.tcc \
   ../include/games/gomoku/gomoku_state.h \
   ../include/utils/zobrist_hash.h \
   /usr/include/c++/11/random \
@@ -1196,9 +1205,18 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.o: ../tests/mcts/mcts_no
   /usr/include/c++/11/ratio \
   /usr/include/c++/11/bits/std_mutex.h \
   /usr/include/c++/11/bits/unique_lock.h \
+  /usr/include/c++/11/future \
+  /usr/include/c++/11/condition_variable \
+  /usr/include/c++/11/bits/atomic_futex.h \
+  /usr/include/c++/11/bits/std_thread.h \
   ../include/core/igamestate.h \
   ../include/core/export_macros.h \
   ../include/core/illegal_move_exception.h \
+  ../include/mcts/evaluation_types.h \
+  ../include/utils/gamestate_pool.h \
+  /usr/include/c++/11/deque \
+  /usr/include/c++/11/bits/stl_deque.h \
+  /usr/include/c++/11/bits/deque.tcc \
   ../include/games/gomoku/gomoku_state.h \
   ../include/utils/zobrist_hash.h \
   /usr/include/c++/11/random \
@@ -1342,8 +1360,6 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.o: ../tests/mcts/mcts_no
 
 /usr/include/x86_64-linux-gnu/asm/types.h:
 
-/usr/include/linux/stat.h:
-
 /usr/include/c++/11/bits/stl_set.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_stat.h:
@@ -1383,6 +1399,8 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.o: ../tests/mcts/mcts_no
 /usr/include/c++/11/bits/locale_facets_nonio.h:
 
 ../include/games/gomoku/gomoku_state.h:
+
+../include/mcts/node_tracker.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_statx.h:
 
@@ -1430,9 +1448,15 @@ _deps/phmap-src/parallel_hashmap/phmap.h:
 
 ../include/third_party/concurrentqueue.h:
 
-../include/mcts/evaluation_types.h:
-
 ../include/mcts/mcts_evaluator.h:
+
+/usr/include/c++/11/bits/deque.tcc:
+
+/usr/include/linux/stat.h:
+
+/usr/include/c++/11/deque:
+
+../include/mcts/evaluation_types.h:
 
 /usr/include/c++/11/bits/istream.tcc:
 
@@ -1505,6 +1529,8 @@ _deps/phmap-src/parallel_hashmap/phmap.h:
 /usr/include/c++/11/bits/unordered_map.h:
 
 /usr/include/x86_64-linux-gnu/bits/endian.h:
+
+/usr/include/c++/11/bits/stl_deque.h:
 
 /usr/include/x86_64-linux-gnu/gnu/stubs.h:
 
@@ -1679,6 +1705,8 @@ _deps/phmap-src/parallel_hashmap/phmap.h:
 /usr/include/c++/11/debug/assertions.h:
 
 /usr/include/limits.h:
+
+../include/utils/gamestate_pool.h:
 
 /usr/include/c++/11/bits/stl_relops.h:
 

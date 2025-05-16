@@ -52,7 +52,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=
+CMAKE_BUILD_TYPE:STRING=Release
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -90,7 +90,7 @@ CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-11
 CMAKE_CXX_FLAGS:STRING=
 
 //Flags used by the CXX compiler during DEBUG builds.
-CMAKE_CXX_FLAGS_DEBUG:STRING=-g
+CMAKE_CXX_FLAGS_DEBUG:STRING=-g -O0
 
 //Flags used by the CXX compiler during MINSIZEREL builds.
 CMAKE_CXX_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
@@ -698,6 +698,9 @@ Torch_DIR:PATH=/opt/libtorch-2.7.0-cu128/share/cmake/Torch
 
 //Enable cuDNN usage
 USE_CUDNN:BOOL=1
+
+//No help, variable specified on the command line.
+WITH_CUDNN:UNINITIALIZED=ON
 
 //Build with PyTorch
 WITH_TORCH:BOOL=ON

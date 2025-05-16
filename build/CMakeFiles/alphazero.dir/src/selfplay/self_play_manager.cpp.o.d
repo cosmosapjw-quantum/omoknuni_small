@@ -236,9 +236,12 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/include/c++/11/bits/algorithmfwd.h \
  /usr/include/c++/11/bits/stl_heap.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
+ /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
+ /usr/include/c++/11/deque /usr/include/c++/11/bits/stl_deque.h \
+ /usr/include/c++/11/bits/deque.tcc \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
  /usr/include/c++/11/iostream \
- /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
  /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
  /usr/include/c++/11/cassert /usr/include/assert.h \
  /usr/include/c++/11/cstddef /usr/include/c++/11/algorithm \
@@ -266,6 +269,7 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
  /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
  /usr/include/c++/11/shared_mutex \
+ /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
  /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
  /usr/include/c++/11/fstream /usr/include/c++/11/bits/codecvt.h \
@@ -289,6 +293,7 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/include/c++/11/bits/unordered_set.h \
  /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
+ /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
  /usr/include/c++/11/filesystem /usr/include/c++/11/bits/fs_fwd.h \
  /usr/include/c++/11/bits/fs_path.h /usr/include/c++/11/codecvt \
  /usr/include/c++/11/bits/fs_dir.h /usr/include/c++/11/bits/fs_ops.h \

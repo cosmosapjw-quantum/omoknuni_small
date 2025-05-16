@@ -1,5 +1,6 @@
 // src/nn/resnet_model.cpp
 #include "nn/resnet_model.h"
+#include "utils/memory_tracker.h"
 #include <stdexcept>
 #include <ATen/cuda/CUDAContext.h>
 #include <c10/cuda/CUDACachingAllocator.h>
@@ -112,7 +113,7 @@ std::tuple<torch::Tensor, torch::Tensor> ResNetModel::forward(torch::Tensor x) {
         auto input_layer_start_time = std::chrono::high_resolution_clock::now();
         x = torch::relu(input_bn_(input_conv_(x)));
         auto input_layer_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - input_layer_start_time);
-        std::cout << "[FWD] Input layer: " << input_layer_duration.count() << " us. Device: " << x.device() << std::endl;
+        // std::cout << "[FWD] Input layer: " << input_layer_duration.count() << " us. Device: " << x.device() << std::endl;
         
         auto res_blocks_total_start_time = std::chrono::high_resolution_clock::now();
         int block_idx = 0;
@@ -127,12 +128,12 @@ std::tuple<torch::Tensor, torch::Tensor> ResNetModel::forward(torch::Tensor x) {
             auto res_block_single_end_time = std::chrono::high_resolution_clock::now();
             auto res_block_single_duration = std::chrono::duration_cast<std::chrono::microseconds>(res_block_single_end_time - res_block_single_start_time);
             if (block_idx < 2 || block_idx == res_blocks_->size() -1) { // Log first 2 and last block
-                 std::cout << "[FWD] ResBlock " << block_idx << ": " << res_block_single_duration.count() << " us. Device: " << x.device() << std::endl;
+                 // std::cout << "[FWD] ResBlock " << block_idx << ": " << res_block_single_duration.count() << " us. Device: " << x.device() << std::endl;
             }
             block_idx++;
         }
         auto res_blocks_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - res_blocks_total_start_time);
-        std::cout << "[FWD] All ResBlocks: " << res_blocks_total_duration.count() << " us. Device: " << x.device() << std::endl;
+        // std::cout << "[FWD] All ResBlocks: " << res_blocks_total_duration.count() << " us. Device: " << x.device() << std::endl;
         
         auto policy_head_total_start_time = std::chrono::high_resolution_clock::now();
         torch::Tensor policy_out = x; // Start with output from res_blocks
@@ -140,25 +141,25 @@ std::tuple<torch::Tensor, torch::Tensor> ResNetModel::forward(torch::Tensor x) {
         auto policy_conv_bn_relu_start_time = std::chrono::high_resolution_clock::now();
         policy_out = torch::relu(policy_bn_(policy_conv_(policy_out)));
         auto policy_conv_bn_relu_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_conv_bn_relu_start_time);
-        std::cout << "[FWD] Policy Head Conv+BN+ReLU: " << policy_conv_bn_relu_duration.count() << " us. Shape: " << policy_out.sizes() << std::endl;
+        // std::cout << "[FWD] Policy Head Conv+BN+ReLU: " << policy_conv_bn_relu_duration.count() << " us. Shape: " << policy_out.sizes() << std::endl;
 
         auto policy_view_start_time = std::chrono::high_resolution_clock::now();
         policy_out = policy_out.view({policy_out.size(0), -1});
         auto policy_view_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_view_start_time);
-        std::cout << "[FWD] Policy Head View: " << policy_view_duration.count() << " us. Shape: " << policy_out.sizes() << std::endl;
+        // std::cout << "[FWD] Policy Head View: " << policy_view_duration.count() << " us. Shape: " << policy_out.sizes() << std::endl;
 
         auto policy_fc_start_time = std::chrono::high_resolution_clock::now();
         policy_out = policy_fc_(policy_out);
         auto policy_fc_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_fc_start_time);
-        std::cout << "[FWD] Policy Head FC: " << policy_fc_duration.count() << " us. Shape: " << policy_out.sizes() << std::endl;
+        // std::cout << "[FWD] Policy Head FC: " << policy_fc_duration.count() << " us. Shape: " << policy_out.sizes() << std::endl;
         
         auto policy_log_softmax_start_time = std::chrono::high_resolution_clock::now();
         policy_out = torch::log_softmax(policy_out, 1);
         auto policy_log_softmax_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_log_softmax_start_time);
-        std::cout << "[FWD] Policy Head LogSoftmax: " << policy_log_softmax_duration.count() << " us. Device: " << policy_out.device() << std::endl;
+        // std::cout << "[FWD] Policy Head LogSoftmax: " << policy_log_softmax_duration.count() << " us. Device: " << policy_out.device() << std::endl;
 
         auto policy_head_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - policy_head_total_start_time);
-        std::cout << "[FWD] Policy head (Total): " << policy_head_total_duration.count() << " us. Device: " << policy_out.device() << std::endl;
+        // std::cout << "[FWD] Policy head (Total): " << policy_head_total_duration.count() << " us. Device: " << policy_out.device() << std::endl;
         
         auto value_head_total_start_time = std::chrono::high_resolution_clock::now();
         torch::Tensor value_out = x; // Start with output from res_blocks
@@ -166,28 +167,28 @@ std::tuple<torch::Tensor, torch::Tensor> ResNetModel::forward(torch::Tensor x) {
         auto value_conv_bn_relu_start_time = std::chrono::high_resolution_clock::now();
         value_out = torch::relu(value_bn_(value_conv_(value_out)));
         auto value_conv_bn_relu_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_conv_bn_relu_start_time);
-        std::cout << "[FWD] Value Head Conv+BN+ReLU: " << value_conv_bn_relu_duration.count() << " us. Shape: " << value_out.sizes() << std::endl;
+        // std::cout << "[FWD] Value Head Conv+BN+ReLU: " << value_conv_bn_relu_duration.count() << " us. Shape: " << value_out.sizes() << std::endl;
 
         auto value_view_start_time = std::chrono::high_resolution_clock::now();
         value_out = value_out.view({value_out.size(0), -1});
         auto value_view_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_view_start_time);
-        std::cout << "[FWD] Value Head View: " << value_view_duration.count() << " us. Shape: " << value_out.sizes() << std::endl;
+        // std::cout << "[FWD] Value Head View: " << value_view_duration.count() << " us. Shape: " << value_out.sizes() << std::endl;
 
         auto value_fc1_relu_start_time = std::chrono::high_resolution_clock::now();
         value_out = torch::relu(value_fc1_(value_out));
         auto value_fc1_relu_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_fc1_relu_start_time);
-        std::cout << "[FWD] Value Head FC1+ReLU: " << value_fc1_relu_duration.count() << " us. Shape: " << value_out.sizes() << std::endl;
+        // std::cout << "[FWD] Value Head FC1+ReLU: " << value_fc1_relu_duration.count() << " us. Shape: " << value_out.sizes() << std::endl;
         
         auto value_fc2_tanh_start_time = std::chrono::high_resolution_clock::now();
         value_out = torch::tanh(value_fc2_(value_out));
         auto value_fc2_tanh_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_fc2_tanh_start_time);
-        std::cout << "[FWD] Value Head FC2+Tanh: " << value_fc2_tanh_duration.count() << " us. Device: " << value_out.device() << std::endl;
+        // std::cout << "[FWD] Value Head FC2+Tanh: " << value_fc2_tanh_duration.count() << " us. Device: " << value_out.device() << std::endl;
         
         auto value_head_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - value_head_total_start_time);
-        std::cout << "[FWD] Value head (Total): " << value_head_total_duration.count() << " us. Device: " << value_out.device() << std::endl;
+        // std::cout << "[FWD] Value head (Total): " << value_head_total_duration.count() << " us. Device: " << value_out.device() << std::endl;
         
         auto forward_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - forward_total_start_time);
-        std::cout << "[FWD] Exiting. Total time: " << forward_total_duration.count() << " us. PolicyDev: " << policy_out.device() << " ValDev: " << value_out.device() << std::endl;
+        // std::cout << "[FWD] Exiting. Total time: " << forward_total_duration.count() << " us. PolicyDev: " << policy_out.device() << " ValDev: " << value_out.device() << std::endl;
         return {policy_out, value_out};
 
     } catch (const c10::Error& e) {
@@ -291,11 +292,11 @@ torch::Tensor ResNetModel::prepareInputTensor(
         }
     }
     auto data_retrieval_loop_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - data_retrieval_loop_start_time);
-    std::cout << "[PREP] Data retrieval loop: " << data_retrieval_loop_duration.count() << " us for " << states.size() << " states." << std::endl;
+    // std::cout << "[PREP] Data retrieval loop: " << data_retrieval_loop_duration.count() << " us for " << states.size() << " states." << std::endl;
 
     if (target_device == torch::kCPU) {
         auto prep_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
-        std::cout << "[PREP] Total prep (to CPU): " << prep_total_duration.count() << " us." << std::endl;
+        // std::cout << "[PREP] Total prep (to CPU): " << prep_total_duration.count() << " us." << std::endl;
         return batch_tensor_cpu;
     } else {
         // For CUDA, use pinned memory for potentially faster transfer.
@@ -303,21 +304,21 @@ torch::Tensor ResNetModel::prepareInputTensor(
             auto pin_memory_start_time = std::chrono::high_resolution_clock::now();
             torch::Tensor pinned_cpu_tensor = batch_tensor_cpu.pin_memory();
             auto pin_memory_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - pin_memory_start_time);
-            std::cout << "[PREP] Pin memory: " << pin_memory_duration.count() << " us." << std::endl;
+            // std::cout << "[PREP] Pin memory: " << pin_memory_duration.count() << " us." << std::endl;
 
             auto to_device_start_time = std::chrono::high_resolution_clock::now();
             torch::Tensor result_tensor = pinned_cpu_tensor.to(target_device, /*non_blocking=*/true);
             auto to_device_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - to_device_start_time);
-            std::cout << "[PREP] Move to " << target_device << ": " << to_device_duration.count() << " us." << std::endl;
+            // std::cout << "[PREP] Move to " << target_device << ": " << to_device_duration.count() << " us." << std::endl;
             
             auto prep_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
-            std::cout << "[PREP] Total prep (to " << target_device << "): " << prep_total_duration.count() << " us." << std::endl;
+            // std::cout << "[PREP] Total prep (to " << target_device << "): " << prep_total_duration.count() << " us." << std::endl;
             return result_tensor;
         } catch (const c10::Error& e) {
             std::cerr << "ResNetModel::prepareInputTensor - PyTorch error pinning or moving tensor to " << target_device << ": " << e.what() 
                       << ". Returning tensor on CPU." << std::endl;
             auto prep_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
-            std::cout << "[PREP] Total prep (to " << target_device << ", exception): " << prep_total_duration.count() << " us." << std::endl;
+            // std::cout << "[PREP] Total prep (to " << target_device << ", exception): " << prep_total_duration.count() << " us." << std::endl;
             return batch_tensor_cpu; // Fallback to CPU tensor
         }
     }
@@ -338,10 +339,86 @@ torch::Tensor ResNetModel::prepareInputTensor(const std::vector<std::unique_ptr<
 }
 
 
+// TensorPool implementation
+void ResNetModel::TensorPool::init(int64_t batch_size, int64_t channels, int64_t height, int64_t width, torch::Device device) {
+    if (initialized) return;
+    
+    cpu_tensors.reserve(pool_size);
+    gpu_tensors.reserve(pool_size);
+    
+    // Pre-allocate tensors
+    for (size_t i = 0; i < pool_size; ++i) {
+        // Create pinned CPU tensors
+        auto cpu_tensor = torch::zeros({batch_size, channels, height, width}, 
+                                      torch::dtype(torch::kFloat32).pinned_memory(true));
+        cpu_tensors.push_back(cpu_tensor);
+        
+        // Create GPU tensors if device is CUDA
+        if (device.is_cuda()) {
+            auto gpu_tensor = torch::zeros({batch_size, channels, height, width}, 
+                                         torch::dtype(torch::kFloat32).device(device));
+            gpu_tensors.push_back(gpu_tensor);
+        }
+    }
+    
+    initialized = true;
+}
+
+torch::Tensor ResNetModel::TensorPool::getCPUTensor(size_t batch_size) {
+    if (!initialized || cpu_tensors.empty()) {
+        return torch::Tensor();
+    }
+    
+    size_t idx = current_idx.fetch_add(1) % pool_size;
+    auto tensor = cpu_tensors[idx];
+    
+    // Resize if needed
+    if (static_cast<int64_t>(batch_size) > tensor.size(0)) {
+        // Requested batch size is too large for this pooled tensor
+        return torch::Tensor(); // Return !defined, will cause fallback to non-pooled allocation
+    }
+
+    if (tensor.size(0) != static_cast<int64_t>(batch_size)) {
+        tensor = tensor.narrow(/*dim=*/0, /*start=*/0, /*length=*/batch_size);
+    }
+    
+    return tensor;
+}
+
+torch::Tensor ResNetModel::TensorPool::getGPUTensor(size_t batch_size) {
+    if (!initialized || gpu_tensors.empty()) {
+        return torch::Tensor();
+    }
+    
+    size_t idx = current_idx.fetch_add(1) % pool_size;
+    auto tensor = gpu_tensors[idx];
+    
+    // Resize if needed
+    if (static_cast<int64_t>(batch_size) > tensor.size(0)) {
+        // Requested batch size is too large for this pooled tensor
+        return torch::Tensor(); // Return !defined, will cause fallback to non-pooled allocation
+    }
+
+    if (tensor.size(0) != static_cast<int64_t>(batch_size)) {
+        tensor = tensor.narrow(/*dim=*/0, /*start=*/0, /*length=*/batch_size);
+    }
+    
+    return tensor;
+}
+
 std::vector<mcts::NetworkOutput> ResNetModel::inference(
     const std::vector<std::unique_ptr<core::IGameState>>& states) {
     auto inference_total_start_time = std::chrono::high_resolution_clock::now();
     // std::cout << "[INF] Entered. Num states: " << states.size() << std::endl;
+    
+    // Track memory periodically
+    static std::atomic<size_t> inference_count{0};
+    static const size_t cleanup_interval = 100;  // Clean every 100 inferences
+    
+    size_t count = inference_count.fetch_add(1);
+    if (count % 100 == 0) {
+        alphazero::utils::trackMemory("ResNet inference #" + std::to_string(count) + ", batch=" + std::to_string(states.size()));
+    }
     
     std::vector<mcts::NetworkOutput> default_outputs;
     if (states.empty()) return default_outputs;
@@ -367,11 +444,63 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
 
         this->eval(); 
         torch::NoGradGuard no_grad;
+        
+        // Initialize tensor pool if not already done
+        if (!tensor_pool_.initialized && !states.empty()) {
+            const auto& first_state = states[0];
+            if (first_state) {
+                auto tensor_data = first_state->getTensorRepresentation();
+                int64_t channels = static_cast<int64_t>(tensor_data.size());
+                // Reduced pool size to 2 tensors for much lower memory footprint
+                tensor_pool_.pool_size = 2;
+                tensor_pool_.init(/*batch_size=*/4, channels, board_size_, board_size_, model_device);  // Much smaller pool
+            }
+        }
 
         auto prepare_input_start_time = std::chrono::high_resolution_clock::now();
-        torch::Tensor input_tensor = prepareInputTensor(states, model_device); // Assuming this uses the new signature
+        torch::Tensor input_tensor;
+        
+        // Try to use pre-allocated tensor if available
+        if (tensor_pool_.initialized) {
+            auto cpu_tensor = tensor_pool_.getCPUTensor(states.size());
+            if (cpu_tensor.defined()) {
+                // Fill the pre-allocated tensor with state data
+                float* data_ptr = cpu_tensor.data_ptr<float>();
+                for (size_t i = 0; i < states.size(); ++i) {
+                    const auto& state = states[i];
+                    if (!state) continue;
+                    
+                    auto tensor_data = (input_channels_ == 3) ? 
+                        state->getTensorRepresentation() : 
+                        state->getEnhancedTensorRepresentation();
+                    
+                    // Copy data into the tensor
+                    size_t offset = i * tensor_data.size() * board_size_ * board_size_;
+                    for (size_t c = 0; c < tensor_data.size(); ++c) {
+                        for (size_t h = 0; h < tensor_data[c].size(); ++h) {
+                            for (size_t w = 0; w < tensor_data[c][h].size(); ++w) {
+                                data_ptr[offset++] = tensor_data[c][h][w];
+                            }
+                        }
+                    }
+                }
+                
+                // Move to GPU if needed
+                if (model_device.is_cuda()) {
+                    input_tensor = cpu_tensor.to(model_device, /*non_blocking=*/true);
+                } else {
+                    input_tensor = cpu_tensor;
+                }
+            }
+        }
+        
+        // Fallback to original method if pre-allocated tensor failed
+        if (!input_tensor.defined()) {
+            input_tensor = prepareInputTensor(states, model_device);
+        }
+        
         auto prepare_input_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - prepare_input_start_time);
-        std::cout << "[INF] prepareInputTensor: " << prepare_input_duration.count() << " us. Input tensor device: " << input_tensor.device() << ", shape: " << input_tensor.sizes() << std::endl;
+        // std::cout << "[INF] prepareInputTensor: " << prepare_input_duration.count() << " us. Input tensor device: " << input_tensor.device() << ", shape: " << input_tensor.sizes() << std::endl;
 
         if (!input_tensor.defined() || input_tensor.numel() == 0) {
             std::cerr << "[INF] prepareInputTensor returned invalid tensor." << std::endl;
@@ -381,13 +510,13 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
         auto forward_pass_start_time = std::chrono::high_resolution_clock::now();
         auto [policy_batch, value_batch] = this->forward(input_tensor);
         auto forward_pass_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - forward_pass_start_time);
-        std::cout << "[INF] Forward pass: " << forward_pass_duration.count() << " us. PolicyDev: " << policy_batch.device() << ", ValDev: " << value_batch.device() << std::endl;
+        // std::cout << "[INF] Forward pass: " << forward_pass_duration.count() << " us. PolicyDev: " << policy_batch.device() << ", ValDev: " << value_batch.device() << std::endl;
 
         auto outputs_to_cpu_detach_start_time = std::chrono::high_resolution_clock::now();
         torch::Tensor policy_cpu = policy_batch.to(torch::kCPU, /*non_blocking=*/model_device.is_cuda()).detach();
         torch::Tensor value_cpu = value_batch.to(torch::kCPU, /*non_blocking=*/model_device.is_cuda()).detach();
         auto outputs_to_cpu_detach_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - outputs_to_cpu_detach_start_time);
-        std::cout << "[INF] Outputs to CPU & detach: " << outputs_to_cpu_detach_duration.count() << " us." << std::endl;
+        // std::cout << "[INF] Outputs to CPU & detach: " << outputs_to_cpu_detach_duration.count() << " us." << std::endl;
         
         if (model_device.is_cuda()) {
             auto cuda_sync_start_time = std::chrono::high_resolution_clock::now();
@@ -398,7 +527,7 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
                 std::cerr << "[INF] CUDA sync error: " << e.what() << std::endl;
             }
             auto cuda_sync_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - cuda_sync_start_time);
-            std::cout << "[INF] CUDA sync: " << cuda_sync_duration.count() << " us." << std::endl;
+            // std::cout << "[INF] CUDA sync: " << cuda_sync_duration.count() << " us." << std::endl;
         }
 
         if (policy_cpu.size(0) != static_cast<int64_t>(states.size()) || value_cpu.size(0) != static_cast<int64_t>(states.size()) ||
@@ -426,7 +555,17 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
         }
         
         auto inference_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - inference_total_start_time);
-        std::cout << "[INF] Exiting. Total time: " << inference_total_duration.count() << " us for " << states.size() << " states. Final policy_size: " << (final_outputs.empty() ? 0 : final_outputs[0].policy.size()) << std::endl;
+        // std::cout << "[INF] Exiting. Total time: " << inference_total_duration.count() << " us for " << states.size() << " states. Final policy_size: " << (final_outputs.empty() ? 0 : final_outputs[0].policy.size()) << std::endl;
+        
+        // Periodic cleanup to prevent memory accumulation
+        inference_count++;
+        if (inference_count % cleanup_interval == 0) {
+            tensor_pool_.cleanup();
+            if (torch::cuda::is_available()) {
+                c10::cuda::CUDACachingAllocator::emptyCache();
+            }
+        }
+        
         return final_outputs;
 
     } catch (const c10::Error& e) {
@@ -437,7 +576,7 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
         std::cerr << "[INF] Unknown error." << std::endl;
     }
     auto inference_total_duration_exception = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - inference_total_start_time);
-    std::cout << "[INF] Exiting due to exception. Total time: " << inference_total_duration_exception.count() << " us." << std::endl;
+    // std::cout << "[INF] Exiting due to exception. Total time: " << inference_total_duration_exception.count() << " us." << std::endl;
     return default_outputs;
 }
 
@@ -493,6 +632,23 @@ std::vector<int64_t> ResNetModel::getInputShape() const {
 
 int64_t ResNetModel::getPolicySize() const {
     return policy_size_;
+}
+
+void ResNetModel::cleanupTensorPool() {
+    tensor_pool_.cleanup();
+}
+
+void ResNetModel::TensorPool::cleanup() {
+    // Clear all tensors to free memory
+    cpu_tensors.clear();
+    gpu_tensors.clear();
+    initialized = false;
+    current_idx = 0;
+    
+    // Force garbage collection
+    if (torch::cuda::is_available()) {
+        c10::cuda::CUDACachingAllocator::emptyCache();
+    }
 }
 
 } // namespace nn

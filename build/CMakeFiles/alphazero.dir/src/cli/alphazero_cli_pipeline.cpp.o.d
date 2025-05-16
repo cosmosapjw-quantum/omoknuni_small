@@ -253,6 +253,9 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
  /usr/include/c++/11/thread /usr/include/c++/11/bits/this_thread_sleep.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
+ /usr/include/c++/11/deque /usr/include/c++/11/bits/stl_deque.h \
+ /usr/include/c++/11/bits/deque.tcc \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
  /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
  /usr/include/c++/11/cassert /usr/include/assert.h \
@@ -281,6 +284,7 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
  /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
  /usr/include/c++/11/shared_mutex \
+ /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/include/cli/cli_manager.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
@@ -413,8 +417,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypePropertiesRegistry.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypeProperties.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/Generator.h \
- /usr/include/c++/11/deque /usr/include/c++/11/bits/stl_deque.h \
- /usr/include/c++/11/bits/deque.tcc \
  /opt/libtorch-2.7.0-cu128/include/c10/core/GeneratorImpl.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/NamedTensor.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/Dimname.h \

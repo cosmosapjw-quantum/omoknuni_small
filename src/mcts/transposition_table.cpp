@@ -15,25 +15,18 @@ TranspositionEntry::TranspositionEntry(std::weak_ptr<MCTSNode> n, uint64_t h, in
     : node(n), hash(h), depth(d), visits(v) {
 }
 
-TranspositionTable::TranspositionTable(size_t size_mb, size_t /*num_shards_param*/) // Parameter commented out/marked as unused
+TranspositionTable::TranspositionTable(size_t size_mb, size_t /*num_shards_param*/)
     : hits_(0), misses_(0) {
     // Calculate approximate number of entries based on memory size
-    // Assuming approximately 64 bytes per entry including overhead
-    capacity_ = (size_mb * 1024 * 1024) / 64;
+    // Assuming approximately 80 bytes per entry including overhead
+    capacity_ = (size_mb * 1024 * 1024) / 80;
     
-    // Determine number of shards if not provided
-    // if (num_shards == 0) {
-    //     // Use a reasonable default based on hardware concurrency
-    //     num_shards = std::max(4u, std::thread::hardware_concurrency());
-    // }
+    // Use aggressive number of shards for maximum parallelism
+    size_t num_shards = std::max(size_t(16), size_t(std::thread::hardware_concurrency() * 2));
     
-    // Initialize the hash map with appropriate number of submaps (shards)
-    // entries_.subcnt(num_shards); // Removed this line
-    
-    // Reserve some capacity to reduce initial rehashing
-    // We can't reserve the full capacity as it might be very large
-    size_t initial_reserve = std::min(capacity_, size_t(100000));
-    entries_.reserve(initial_reserve);
+    // parallel_flat_hash_map automatically handles sharding internally
+    // Just reserve the capacity
+    entries_.reserve(capacity_);
 }
 
 std::shared_ptr<MCTSNode> TranspositionTable::get(uint64_t hash) {
@@ -42,34 +35,16 @@ std::shared_ptr<MCTSNode> TranspositionTable::get(uint64_t hash) {
         auto it = entries_.find(hash);
         
         if (it != entries_.end() && it->second) {
-            // Safely check if the shared_ptr is valid before locking
-            if (!it->second) {
-                misses_.fetch_add(1, std::memory_order_relaxed);
-                return nullptr;
-            }
+            // Access the EntryPtr directly - it's thread-safe
+            auto entry = it->second;
             
-            // Take a lock on the entry to ensure thread safety when accessing the node
-            std::unique_lock<std::mutex> lock(it->second->mutex, std::try_to_lock);
-            
-            // If we couldn't immediately acquire the lock, it might be in use or in an invalid state
-            if (!lock.owns_lock()) {
-                misses_.fetch_add(1, std::memory_order_relaxed);
-                return nullptr;
-            }
-            
-            // Double-check that the entry and node are still valid after acquiring the lock
-            if (it->second && it->second->isValid()) {
-                try {
-                    // Try to lock the weak_ptr to get a shared_ptr
-                    auto node_ptr = it->second->node.lock();
-                    if (node_ptr) {
-                        // Found a valid entry
-                        hits_.fetch_add(1, std::memory_order_relaxed);
-                        return node_ptr;
-                    }
-                } catch (...) {
-                    // If accessing the node throws an exception, the node is invalid
-                    // Just fall through to return nullptr
+            if (entry && entry->isValid()) {
+                // Try to lock the weak_ptr to get a shared_ptr
+                auto node_ptr = entry->node.lock();
+                if (node_ptr) {
+                    // Found a valid entry
+                    hits_.fetch_add(1, std::memory_order_relaxed);
+                    return node_ptr;
                 }
             }
         }
@@ -92,6 +67,11 @@ void TranspositionTable::store(uint64_t hash, std::weak_ptr<MCTSNode> node, int 
     try {
         if (auto locked_node = node.lock()) {
             visit_count = locked_node->getVisitCount();
+            
+            // FIX: Additional validation to prevent storing nodes that are being cleaned up
+            if (!locked_node->getState().validate()) {
+                return; // Don't store nodes with invalid state
+            }
         } else {
             return; // Node expired before we could read it
         }
@@ -100,45 +80,11 @@ void TranspositionTable::store(uint64_t hash, std::weak_ptr<MCTSNode> node, int 
         return;
     }
     
-    // First, check if we already have this entry
-    auto it = entries_.find(hash);
-    if (it != entries_.end() && it->second) {
-        try {
-            // We found an existing entry - perform thread-safe update if needed
-            std::lock_guard<std::mutex> lock(it->second->mutex);
-            
-            // Double-check the entry is still valid after acquiring the lock
-            if (!it->second) {
-                // Entry became invalid while we were waiting for the lock
-                // Create a new entry instead
-                auto entry = std::make_shared<TranspositionEntry>(node, hash, depth, visit_count);
-                entries_.insert_or_assign(hash, std::move(entry));
-                return;
-            }
-            
-            // Only update if the existing node is expired or the new node is better
-            if (it->second->node.expired() || 
-                visit_count > it->second->visits || 
-                depth > it->second->depth) {
-                
-                it->second->node = node;
-                it->second->depth = depth;
-                it->second->visits = visit_count;
-            }
-        } catch (...) {
-            // If we hit any exception, create a new entry to be safe
-            auto entry = std::make_shared<TranspositionEntry>(node, hash, depth, visit_count);
-            entries_.insert_or_assign(hash, std::move(entry));
-        }
-        
-        return;
-    }
-    
     // Create a new entry
-    auto entry = std::make_shared<TranspositionEntry>(node, hash, depth, visit_count);
+    auto new_entry = std::make_shared<TranspositionEntry>(node, hash, depth, visit_count);
     
-    // Store in the hash map (thread-safe)
-    entries_.insert_or_assign(hash, std::move(entry));
+    // Try to insert or update the entry
+    entries_.insert_or_assign(hash, new_entry);
     
     // Periodically check and enforce capacity limits
     // We don't do this on every insertion for performance reasons
@@ -156,6 +102,18 @@ void TranspositionTable::store(uint64_t hash, std::weak_ptr<MCTSNode> node, int 
 void TranspositionTable::clear() {
     // Lock to prevent concurrent access during clear
     std::lock_guard<std::mutex> lock(clear_mutex_);
+    
+    // First, expire all weak_ptr references to prevent dangling pointers
+    try {
+        // Iterate through all entries and reset weak_ptr references  
+        for (auto& [hash, entry] : entries_) {
+            if (entry) {
+                entry->node.reset();  // Explicitly reset weak_ptr
+            }
+        }
+    } catch (...) {
+        // Continue with cleanup even if some entries can't be accessed
+    }
     
     // Clear the hash map and reset statistics
     entries_.clear();

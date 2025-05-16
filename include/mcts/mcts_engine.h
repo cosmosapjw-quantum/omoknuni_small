@@ -12,9 +12,11 @@
 #include "mcts/mcts_node.h"
 #include "mcts/mcts_evaluator.h"
 #include "mcts/transposition_table.h"
+#include "mcts/node_tracker.h"
 #include "core/igamestate.h"
 #include "core/export_macros.h"
 #include "nn/neural_network.h"
+#include "utils/gamestate_pool.h"
 
 namespace alphazero {
 namespace mcts {
@@ -26,11 +28,11 @@ struct ALPHAZERO_API MCTSSettings {
     // Number of worker threads
     int num_threads = 4;
     
-    // Neural network batch size - balanced for GPU efficiency and responsiveness
-    int batch_size = 64;  // Balanced size to avoid deadlock
+    // Neural network batch size - optimized for GPU efficiency
+    int batch_size = 128;  // Increased for better GPU utilization
     
-    // Neural network batch timeout - reduced for better responsiveness
-    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(50);  // Reduced for quick processing
+    // Neural network batch timeout - tuned for balance between latency and throughput
+    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(20);  // Reduced for faster response
     
     // Maximum concurrent simulations to prevent memory explosion
     int max_concurrent_simulations = 512;
@@ -83,6 +85,11 @@ struct ALPHAZERO_API MCTSStats {
     
     // Transposition table size
     size_t tt_size = 0;
+    
+    // Memory pool statistics
+    float pool_hit_rate = 0.0f;
+    size_t pool_size = 0;
+    size_t pool_total_allocated = 0;
 };
 
 struct ALPHAZERO_API SearchResult {
@@ -251,6 +258,9 @@ private:
     // Back up value through the tree
     void backPropagate(std::vector<std::shared_ptr<MCTSNode>>& path, float value);
     
+    // Process pending evaluations in the tree
+    void processPendingEvaluations(std::shared_ptr<MCTSNode> root);
+    
     // Convert tree to action probabilities
     std::vector<float> getActionProbabilities(std::shared_ptr<MCTSNode> root, float temperature);
     
@@ -311,10 +321,10 @@ private:
     // Methods for statistics calculation
     size_t countTreeNodes(std::shared_ptr<MCTSNode> node);
     int calculateMaxDepth(std::shared_ptr<MCTSNode> node);
-
-    // New atomic member
-    std::atomic<int> num_workers_actively_processing_{0};
     
+    // Helper method to clone game state using memory pool
+    std::unique_ptr<core::IGameState> cloneGameState(const core::IGameState& state);
+
     // Producer-consumer queues and tracking
     std::atomic<int> pending_evaluations_{0};
     std::atomic<int> batch_counter_{0};
@@ -344,6 +354,12 @@ private:
     std::atomic<bool> cv_mutex_destroyed_{false};
     std::atomic<bool> batch_mutex_destroyed_{false};
     std::atomic<bool> result_mutex_destroyed_{false};
+    
+    // Flag to enable memory pool for GameState cloning
+    bool game_state_pool_enabled_;
+    
+    // Node tracker for lock-free pending evaluation management
+    std::unique_ptr<NodeTracker> node_tracker_;
 };
 
 } // namespace mcts

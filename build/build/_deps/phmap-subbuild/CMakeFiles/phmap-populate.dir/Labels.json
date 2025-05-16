@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/CMakeFiles/phmap-populate"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/CMakeFiles/phmap-populate.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/CMakeFiles/phmap-populate-complete.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/phmap-populate-prefix/src/phmap-populate-stamp/phmap-populate-build.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/phmap-populate-prefix/src/phmap-populate-stamp/phmap-populate-configure.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/phmap-populate-prefix/src/phmap-populate-stamp/phmap-populate-download.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/phmap-populate-prefix/src/phmap-populate-stamp/phmap-populate-install.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/phmap-populate-prefix/src/phmap-populate-stamp/phmap-populate-mkdir.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/phmap-populate-prefix/src/phmap-populate-stamp/phmap-populate-patch.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/phmap-populate-prefix/src/phmap-populate-stamp/phmap-populate-test.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/build/_deps/phmap-subbuild/phmap-populate-prefix/src/phmap-populate-stamp/phmap-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"phmap-populate"
+		],
+		"name" : "phmap-populate"
+	}
+}

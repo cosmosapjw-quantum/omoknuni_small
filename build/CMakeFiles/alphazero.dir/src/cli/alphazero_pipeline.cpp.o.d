@@ -242,6 +242,9 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
  /usr/include/c++/11/thread /usr/include/c++/11/bits/this_thread_sleep.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
+ /usr/include/c++/11/deque /usr/include/c++/11/bits/stl_deque.h \
+ /usr/include/c++/11/bits/deque.tcc \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
  /usr/include/c++/11/iostream \
  /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
@@ -271,6 +274,7 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
  /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
  /usr/include/c++/11/shared_mutex \
+ /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/include/training/training_data_manager.h \
  /home/cosmos/omoknuni_small/include/training/dataset.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
@@ -391,8 +395,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypePropertiesRegistry.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypeProperties.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/Generator.h \
- /usr/include/c++/11/deque /usr/include/c++/11/bits/stl_deque.h \
- /usr/include/c++/11/bits/deque.tcc \
  /opt/libtorch-2.7.0-cu128/include/c10/core/GeneratorImpl.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/NamedTensor.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/Dimname.h \

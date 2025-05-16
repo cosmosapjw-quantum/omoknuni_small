@@ -40,6 +40,11 @@ public:
     // Submit a state for evaluation
     std::future<NetworkOutput> evaluateState(std::shared_ptr<MCTSNode> node, std::unique_ptr<core::IGameState> state);
     
+    // Submit a state for evaluation with external promise
+    void evaluateStateAsync(std::shared_ptr<MCTSNode> node,
+                          std::unique_ptr<core::IGameState> state,
+                          std::shared_ptr<std::promise<NetworkOutput>> promise);
+    
     // Get metrics
     size_t getQueueSize() const;
     float getAverageBatchSize() const;
@@ -49,12 +54,16 @@ public:
     // Get direct access to the inference function (for serial mode)
     InferenceFunction getInferenceFunction() const { return inference_fn_; }
     
+    // Notify that a leaf is available in the external queue
+    void notifyLeafAvailable();
+    
     // Set external queues for direct batch processing
-    void setExternalQueues(void* batch_queue, void* result_queue) {
-        batch_queue_ptr_ = batch_queue;
+    void setExternalQueues(void* leaf_queue, void* result_queue, std::function<void()> result_notify_callback = nullptr) {
+        leaf_queue_ptr_ = leaf_queue;
         result_queue_ptr_ = result_queue;
+        result_notify_callback_ = result_notify_callback;
         use_external_queues_ = true;
-        std::cout << "[EVALUATOR] External queues set. use_external_queues_ is now " << use_external_queues_ << std::endl;
+        // External queues set
     }
     
 private:
@@ -79,6 +88,7 @@ private:
     
     // Batch processing parameters
     size_t batch_size_;
+    size_t original_batch_size_;  // Store original for adaptation
     std::chrono::milliseconds timeout_;
     
     // Queue for collecting evaluation requests
@@ -113,8 +123,9 @@ private:
     std::atomic<size_t> last_queue_size_{0};
     
     // External queue integration
-    void* batch_queue_ptr_{nullptr};
+    void* leaf_queue_ptr_{nullptr};
     void* result_queue_ptr_{nullptr};
+    std::function<void()> result_notify_callback_;
     bool use_external_queues_{false};
     
     // Queue mutex for synchronization

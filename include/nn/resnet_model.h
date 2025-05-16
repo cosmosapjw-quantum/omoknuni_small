@@ -93,6 +93,11 @@ public:
      */
     int64_t getPolicySize() const override;
     
+    /**
+     * @brief Clean up tensor pool to free memory
+     */
+    void cleanupTensorPool();
+    
 private:
     int64_t input_channels_;
     int64_t board_size_;
@@ -117,6 +122,22 @@ private:
     torch::Tensor prepareInputTensor(const std::vector<std::unique_ptr<core::IGameState>>& states);
     // Tensor preparation - overloaded signature with target device
     torch::Tensor prepareInputTensor(const std::vector<std::unique_ptr<core::IGameState>>& states, torch::Device target_device);
+    
+    // Tensor pool for pre-allocated GPU tensors
+    struct TensorPool {
+        std::vector<torch::Tensor> cpu_tensors;
+        std::vector<torch::Tensor> gpu_tensors;
+        std::atomic<size_t> current_idx{0};
+        size_t pool_size{4};
+        bool initialized{false};
+        
+        void init(int64_t batch_size, int64_t channels, int64_t height, int64_t width, torch::Device device);
+        torch::Tensor getCPUTensor(size_t batch_size);
+        torch::Tensor getGPUTensor(size_t batch_size);
+        void cleanup();  // Add cleanup method
+    };
+    
+    TensorPool tensor_pool_;
 };
 
 } // namespace nn

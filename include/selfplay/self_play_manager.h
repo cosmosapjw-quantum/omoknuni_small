@@ -89,6 +89,11 @@ public:
                    const SelfPlaySettings& settings = SelfPlaySettings());
     
     /**
+     * @brief Destructor
+     */
+    ~SelfPlayManager();
+    
+    /**
      * @brief Generate self-play games
      * 
      * @param game_type Game type

@@ -1201,6 +1201,54 @@ src/mcts/mcts_node.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.s
 .PHONY : src/mcts/mcts_node.cpp.s
 
+src/mcts/mcts_node_pending_eval.o: src/mcts/mcts_node_pending_eval.cpp.o
+.PHONY : src/mcts/mcts_node_pending_eval.o
+
+# target to build an object file
+src/mcts/mcts_node_pending_eval.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o
+.PHONY : src/mcts/mcts_node_pending_eval.cpp.o
+
+src/mcts/mcts_node_pending_eval.i: src/mcts/mcts_node_pending_eval.cpp.i
+.PHONY : src/mcts/mcts_node_pending_eval.i
+
+# target to preprocess a source file
+src/mcts/mcts_node_pending_eval.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.i
+.PHONY : src/mcts/mcts_node_pending_eval.cpp.i
+
+src/mcts/mcts_node_pending_eval.s: src/mcts/mcts_node_pending_eval.cpp.s
+.PHONY : src/mcts/mcts_node_pending_eval.s
+
+# target to generate assembly for a file
+src/mcts/mcts_node_pending_eval.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.s
+.PHONY : src/mcts/mcts_node_pending_eval.cpp.s
+
+src/mcts/node_tracker.o: src/mcts/node_tracker.cpp.o
+.PHONY : src/mcts/node_tracker.o
+
+# target to build an object file
+src/mcts/node_tracker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o
+.PHONY : src/mcts/node_tracker.cpp.o
+
+src/mcts/node_tracker.i: src/mcts/node_tracker.cpp.i
+.PHONY : src/mcts/node_tracker.i
+
+# target to preprocess a source file
+src/mcts/node_tracker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.i
+.PHONY : src/mcts/node_tracker.cpp.i
+
+src/mcts/node_tracker.s: src/mcts/node_tracker.cpp.s
+.PHONY : src/mcts/node_tracker.s
+
+# target to generate assembly for a file
+src/mcts/node_tracker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.s
+.PHONY : src/mcts/node_tracker.cpp.s
+
 src/mcts/transposition_table.o: src/mcts/transposition_table.cpp.o
 .PHONY : src/mcts/transposition_table.o
 
@@ -1489,6 +1537,30 @@ src/utils/debug_monitor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.s
 .PHONY : src/utils/debug_monitor.cpp.s
 
+src/utils/gamestate_pool.o: src/utils/gamestate_pool.cpp.o
+.PHONY : src/utils/gamestate_pool.o
+
+# target to build an object file
+src/utils/gamestate_pool.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gamestate_pool.cpp.o
+.PHONY : src/utils/gamestate_pool.cpp.o
+
+src/utils/gamestate_pool.i: src/utils/gamestate_pool.cpp.i
+.PHONY : src/utils/gamestate_pool.i
+
+# target to preprocess a source file
+src/utils/gamestate_pool.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gamestate_pool.cpp.i
+.PHONY : src/utils/gamestate_pool.cpp.i
+
+src/utils/gamestate_pool.s: src/utils/gamestate_pool.cpp.s
+.PHONY : src/utils/gamestate_pool.s
+
+# target to generate assembly for a file
+src/utils/gamestate_pool.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gamestate_pool.cpp.s
+.PHONY : src/utils/gamestate_pool.cpp.s
+
 src/utils/hash_specializations.o: src/utils/hash_specializations.cpp.o
 .PHONY : src/utils/hash_specializations.o
 
@@ -1512,6 +1584,30 @@ src/utils/hash_specializations.s: src/utils/hash_specializations.cpp.s
 src/utils/hash_specializations.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.s
 .PHONY : src/utils/hash_specializations.cpp.s
+
+src/utils/memory_tracker.o: src/utils/memory_tracker.cpp.o
+.PHONY : src/utils/memory_tracker.o
+
+# target to build an object file
+src/utils/memory_tracker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.o
+.PHONY : src/utils/memory_tracker.cpp.o
+
+src/utils/memory_tracker.i: src/utils/memory_tracker.cpp.i
+.PHONY : src/utils/memory_tracker.i
+
+# target to preprocess a source file
+src/utils/memory_tracker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.i
+.PHONY : src/utils/memory_tracker.cpp.i
+
+src/utils/memory_tracker.s: src/utils/memory_tracker.cpp.s
+.PHONY : src/utils/memory_tracker.s
+
+# target to generate assembly for a file
+src/utils/memory_tracker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.s
+.PHONY : src/utils/memory_tracker.cpp.s
 
 src/utils/zobrist_hash.o: src/utils/zobrist_hash.cpp.o
 .PHONY : src/utils/zobrist_hash.o
@@ -2130,6 +2226,12 @@ help:
 	@echo "... src/mcts/mcts_node.o"
 	@echo "... src/mcts/mcts_node.i"
 	@echo "... src/mcts/mcts_node.s"
+	@echo "... src/mcts/mcts_node_pending_eval.o"
+	@echo "... src/mcts/mcts_node_pending_eval.i"
+	@echo "... src/mcts/mcts_node_pending_eval.s"
+	@echo "... src/mcts/node_tracker.o"
+	@echo "... src/mcts/node_tracker.i"
+	@echo "... src/mcts/node_tracker.s"
 	@echo "... src/mcts/transposition_table.o"
 	@echo "... src/mcts/transposition_table.i"
 	@echo "... src/mcts/transposition_table.s"
@@ -2166,9 +2268,15 @@ help:
 	@echo "... src/utils/debug_monitor.o"
 	@echo "... src/utils/debug_monitor.i"
 	@echo "... src/utils/debug_monitor.s"
+	@echo "... src/utils/gamestate_pool.o"
+	@echo "... src/utils/gamestate_pool.i"
+	@echo "... src/utils/gamestate_pool.s"
 	@echo "... src/utils/hash_specializations.o"
 	@echo "... src/utils/hash_specializations.i"
 	@echo "... src/utils/hash_specializations.s"
+	@echo "... src/utils/memory_tracker.o"
+	@echo "... src/utils/memory_tracker.i"
+	@echo "... src/utils/memory_tracker.s"
 	@echo "... src/utils/zobrist_hash.o"
 	@echo "... src/utils/zobrist_hash.i"
 	@echo "... src/utils/zobrist_hash.s"

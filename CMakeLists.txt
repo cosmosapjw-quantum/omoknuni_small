@@ -707,7 +707,7 @@ set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp)
 set(CHESS_SOURCES     src/games/chess/chess_state.cpp src/games/chess/chess_rules.cpp src/games/chess/chess960.cpp)
 set(GO_SOURCES        src/games/go/go_state.cpp   src/games/go/go_rules.cpp)
 set(GOMOKU_SOURCES    src/games/gomoku/gomoku_state.cpp src/games/gomoku/gomoku_rules.cpp)
-set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp)
+set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp)
 
 # Conditionally define NN_SOURCES based on WITH_TORCH
 set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
@@ -721,10 +721,12 @@ endif()
 
 set(MCTS_SOURCES
     src/mcts/mcts_node.cpp
+    src/mcts/mcts_node_pending_eval.cpp
     src/mcts/evaluation_types.cpp
     src/mcts/mcts_evaluator.cpp
     src/mcts/mcts_engine.cpp
     src/mcts/transposition_table.cpp
+    src/mcts/node_tracker.cpp
 )
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp

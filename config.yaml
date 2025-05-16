@@ -32,7 +32,7 @@ mcts_num_threads: 12  # Reduced thread count to ensure stable batching
 mcts_batch_size: 128  # Larger batch size for better GPU throughput
 mcts_transposition_table_size_mb: 32  # Reduce from 128MB to 32MB per engine
 mcts_use_transposition_table: true
-mcts_batch_timeout_ms: 100  # Increased timeout to accumulate larger batches
+mcts_batch_timeout_ms: 10  # Balanced timeout for better batching
 mcts_exploration_constant: 1.5
 mcts_temperature: 1.0
 mcts_add_dirichlet_noise: true

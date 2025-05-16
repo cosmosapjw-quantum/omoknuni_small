@@ -6,8 +6,11 @@
 #include <atomic>
 #include <mutex>
 #include <memory>
+#include <future>
 #include "core/igamestate.h"
 #include "core/export_macros.h"
+#include "mcts/evaluation_types.h"
+#include "utils/gamestate_pool.h"
 
 namespace alphazero {
 namespace mcts {
@@ -42,6 +45,11 @@ public:
 
     // Backpropagation
     void update(float value);
+    
+    // Evaluation state - using atomic_flag for lock-free checking
+    bool tryMarkForEvaluation(); // Returns true if successfully marked
+    void clearEvaluationFlag();
+    bool isBeingEvaluated() const;
 
     // Getters
     const core::IGameState& getState() const;
@@ -62,6 +70,18 @@ public:
     // Direct parent access for expansion (to avoid circular reference)
     void setParentDirectly(std::weak_ptr<MCTSNode> parent) { parent_ = parent; }
 
+    // Update a child reference if a transposition is found
+    bool updateChildReference(const std::shared_ptr<MCTSNode>& old_child, const std::shared_ptr<MCTSNode>& new_child);
+    
+    // Virtual loss management
+    void applyVirtualLoss(int amount = 1);
+    int getVirtualLoss() const;
+    
+    // Pending evaluation management - simplified for lock-free operations
+    bool hasPendingEvaluation() const;
+    void markEvaluationPending();
+    void clearPendingEvaluation();
+
 private:
     // Game state
     std::unique_ptr<core::IGameState> state_;
@@ -80,6 +100,15 @@ private:
     // Prior probabilities from neural network
     std::vector<float> prior_probabilities_;
     float prior_probability_;
+    
+    // Flag to indicate if neural network evaluation is in progress
+    std::atomic<bool> evaluation_in_progress_{false};
+    
+    // Pending evaluation tracking - using atomic_flag for lock-free operations
+    mutable std::atomic_flag pending_evaluation_ = ATOMIC_FLAG_INIT;
+    
+    // Remove mutex as we use lock-free atomic operations
+    // std::mutex evaluation_mutex_;
     
     // Thread safety
     std::mutex expansion_mutex_;

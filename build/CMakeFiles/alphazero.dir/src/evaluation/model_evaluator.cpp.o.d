@@ -239,6 +239,9 @@ CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.o: \
  /usr/include/c++/11/bits/algorithmfwd.h \
  /usr/include/c++/11/bits/stl_heap.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
+ /usr/include/c++/11/deque /usr/include/c++/11/bits/stl_deque.h \
+ /usr/include/c++/11/bits/deque.tcc \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
  /usr/include/c++/11/iostream \
  /home/cosmos/omoknuni_small/include/mcts/../third_party/concurrentqueue.h \
@@ -268,6 +271,7 @@ CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
  /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
  /usr/include/c++/11/shared_mutex \
+ /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/include/games/chess/chess_state.h \
  /usr/include/c++/11/map /usr/include/c++/11/bits/stl_tree.h \
  /usr/include/c++/11/bits/stl_map.h \

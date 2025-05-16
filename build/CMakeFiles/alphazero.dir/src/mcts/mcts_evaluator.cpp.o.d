@@ -216,6 +216,9 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
+ /usr/include/c++/11/deque /usr/include/c++/11/bits/stl_deque.h \
+ /usr/include/c++/11/bits/deque.tcc \
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
  /usr/include/c++/11/random /usr/include/c++/11/cmath /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
@@ -265,6 +268,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/tmmintrin.h \
  /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
  /usr/include/c++/11/shared_mutex \
+ /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
  /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
  /usr/include/c++/11/fstream /usr/include/c++/11/bits/codecvt.h \
@@ -280,6 +284,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: \
  /usr/include/c++/11/bits/quoted_string.h /usr/include/c++/11/map \
  /usr/include/c++/11/bits/stl_tree.h /usr/include/c++/11/bits/stl_map.h \
  /usr/include/c++/11/bits/stl_multimap.h \
+ /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h \
@@ -398,8 +403,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypePropertiesRegistry.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypeProperties.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/Generator.h \
- /usr/include/c++/11/deque /usr/include/c++/11/bits/stl_deque.h \
- /usr/include/c++/11/bits/deque.tcc \
  /opt/libtorch-2.7.0-cu128/include/c10/core/GeneratorImpl.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/NamedTensor.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/Dimname.h \
