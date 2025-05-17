@@ -240,6 +240,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o: \
  /usr/include/c++/11/algorithm \
  /usr/include/c++/11/pstl/glue_algorithm_defs.h \
  /usr/include/c++/11/iostream \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/omp.h \
  /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
  /usr/include/c++/11/thread /usr/include/c++/11/bits/this_thread_sleep.h \
  /usr/include/c++/11/fstream /usr/include/c++/11/bits/codecvt.h \

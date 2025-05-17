@@ -102,13 +102,13 @@ bin/Release/neural_network_test: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.7.0
 bin/Release/neural_network_test: /opt/libtorch-2.7.0-cu128/lib/libtorch.so
 bin/Release/neural_network_test: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
 bin/Release/neural_network_test: /opt/libtorch-2.7.0-cu128/lib/libc10.so
-bin/Release/neural_network_test: /usr/local/cuda-12.8/lib64/libcudart.so
+bin/Release/neural_network_test: /usr/local/cuda/lib64/libcudart.so
 bin/Release/neural_network_test: /opt/libtorch-2.7.0-cu128/lib/libc10.so
 bin/Release/neural_network_test: /opt/libtorch-2.7.0-cu128/lib/libkineto.a
-bin/Release/neural_network_test: /usr/local/cuda-12.8/lib64/libnvrtc.so
+bin/Release/neural_network_test: /usr/local/cuda/lib64/libnvrtc.so
 bin/Release/neural_network_test: /usr/local/cuda/lib64/libnvToolsExt.so
 bin/Release/neural_network_test: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
-bin/Release/neural_network_test: /usr/local/cuda-12.8/lib64/libcudart.so
+bin/Release/neural_network_test: /usr/local/cuda/lib64/libcudart.so
 bin/Release/neural_network_test: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
 bin/Release/neural_network_test: /usr/lib/x86_64-linux-gnu/libgtest.a
 bin/Release/neural_network_test: CMakeFiles/neural_network_test.dir/link.txt

@@ -608,16 +608,16 @@ lib/Release/libalphazero.so: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.7.0
 lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libtorch.so
 lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10.so
 lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libkineto.a
-lib/Release/libalphazero.so: /usr/local/cuda-12.8/lib64/libnvrtc.so
+lib/Release/libalphazero.so: /usr/local/cuda/lib64/libnvrtc.so
 lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
-lib/Release/libalphazero.so: /usr/local/cuda-12.8/lib64/libcudart.so
+lib/Release/libalphazero.so: /usr/local/cuda/lib64/libcudart.so
 lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
-lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
-lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10.so
-lib/Release/libalphazero.so: /usr/local/cuda-12.8/lib64/libcudart.so
-lib/Release/libalphazero.so: /usr/local/cuda/lib64/libnvToolsExt.so
 lib/Release/libalphazero.so: /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so
 lib/Release/libalphazero.so: /usr/lib/x86_64-linux-gnu/libpthread.a
+lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
+lib/Release/libalphazero.so: /opt/libtorch-2.7.0-cu128/lib/libc10.so
+lib/Release/libalphazero.so: /usr/local/cuda/lib64/libcudart.so
+lib/Release/libalphazero.so: /usr/local/cuda/lib64/libnvToolsExt.so
 lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Linking CXX shared library lib/Release/libalphazero.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/alphazero.dir/link.txt --verbose=$(VERBOSE)

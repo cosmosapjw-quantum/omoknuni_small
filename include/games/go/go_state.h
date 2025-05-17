@@ -63,6 +63,7 @@ public:
     std::vector<std::vector<std::vector<float>>> getEnhancedTensorRepresentation() const override;
     uint64_t getHash() const override;
     std::unique_ptr<core::IGameState> clone() const override;
+    void copyFrom(const core::IGameState& source) override;
     std::string actionToString(int action) const override;
     std::optional<int> stringToAction(const std::string& moveStr) const override;
     std::string toString() const override;

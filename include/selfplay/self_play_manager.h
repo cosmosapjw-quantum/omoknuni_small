@@ -6,8 +6,6 @@
 #include <memory>
 #include <string>
 #include <random>
-#include <future>
-#include <atomic>
 #include "core/igamestate.h"
 #include "mcts/mcts_engine.h"
 #include "nn/neural_network.h"
@@ -43,14 +41,32 @@ struct ALPHAZERO_API GameData {
 };
 
 /**
+ * @brief Game-specific configuration structure
+ */
+struct ALPHAZERO_API GameConfig {
+    // Gomoku settings
+    bool gomoku_use_renju = true;
+    bool gomoku_use_omok = false;
+    bool gomoku_use_pro_long_opening = true;
+    
+    // Chess settings
+    bool chess_use_chess960 = false;
+    
+    // Go settings
+    float go_komi = 7.5f;
+    bool go_chinese_rules = true;
+    bool go_enforce_superko = true;
+};
+
+/**
  * @brief Settings for self-play
  */
 struct ALPHAZERO_API SelfPlaySettings {
     // MCTS settings
     mcts::MCTSSettings mcts_settings;
     
-    // Number of games to play in parallel
-    int num_parallel_games = 1;
+    // Reserved for future use (previously num_parallel_games)
+    int reserved_parallel = 1;
     
     // Maximum number of moves before forcing a draw
     int max_moves = 0;
@@ -72,6 +88,9 @@ struct ALPHAZERO_API SelfPlaySettings {
     
     // Random seed (-1 for time-based)
     int64_t random_seed = -1;
+    
+    // Game-specific configuration
+    GameConfig game_config;
 };
 
 /**
@@ -163,16 +182,7 @@ private:
      */
     GameData generateGame(core::GameType game_type, int board_size, const std::string& game_id, int engine_id = -1);
     
-    /**
-     * @brief Worker function for parallel game generation
-     * 
-     * @param game_type Game type
-     * @param board_size Board size
-     * @param game_id Game ID
-     * @param result Pointer to store the result
-     */
-    void gameWorker(core::GameType game_type, int board_size, 
-                   const std::string& game_id, GameData* result);
+    // Removed parallel gameWorker - Now using sequential generation only
     
     /**
      * @brief Create a game state
@@ -198,8 +208,8 @@ private:
     // Random number generator
     std::mt19937 rng_;
     
-    // Current number of active games
-    std::atomic<int> active_games_;
+    // Sequential game counter (no longer using atomic for parallel operations)
+    int game_counter_;
 };
 
 } // namespace selfplay

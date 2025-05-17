@@ -5,6 +5,19 @@ game_type: gomoku
 board_size: 15
 policy_size: 0
 
+# Gomoku-specific settings
+gomoku_use_renju: true          # Use Renju rules (restricts Black)
+gomoku_use_omok: false          # Use Omok rules (typically exclusive with Renju)
+gomoku_use_pro_long_opening: true  # Use pro-long opening restrictions
+
+# Chess-specific settings (when game_type is chess)
+chess_use_chess960: false       # Enable Chess960 variant
+
+# Go-specific settings (when game_type is go)
+go_komi: 7.5                   # Komi value (compensation for White)
+go_chinese_rules: true         # Use Chinese rules (area scoring)
+go_enforce_superko: true       # Enforce superko rule (prevent board repetition)
+
 # Directory settings
 model_dir: models
 data_dir: data
@@ -20,7 +33,7 @@ input_channels: 17  # Match Gomoku's enhanced tensor representation (17 planes)
 
 # Self-play settings
 self_play_num_games: 400
-self_play_num_parallel_games: 8
+self_play_num_parallel_games: 1
 self_play_max_moves: 0
 self_play_temperature_threshold: 30
 self_play_high_temperature: 1.0
@@ -28,16 +41,26 @@ self_play_low_temperature: 0.1
 
 # MCTS settings
 mcts_num_simulations: 400  # Increased from 8 to achieve better play (we fixed the performance issues)
-mcts_num_threads: 12  # Reduced thread count to ensure stable batching
-mcts_batch_size: 128  # Larger batch size for better GPU throughput
+mcts_num_threads: 20  # Reduced thread count to ensure stable batching
+mcts_batch_size: 64  # Larger batch size for better GPU throughput
 mcts_transposition_table_size_mb: 32  # Reduce from 128MB to 32MB per engine
 mcts_use_transposition_table: true
-mcts_batch_timeout_ms: 10  # Balanced timeout for better batching
+mcts_batch_timeout_ms: 50  # Balanced timeout for better batching
 mcts_exploration_constant: 1.5
 mcts_temperature: 1.0
+mcts_virtual_loss: 1  # Reduced from default of 3 to allow more thread overlap
 mcts_add_dirichlet_noise: true
 mcts_dirichlet_alpha: 0.3
 mcts_dirichlet_epsilon: 0.25
+
+# Progressive widening settings
+mcts_use_progressive_widening: true
+mcts_progressive_widening_c: 5.0  # Expand more children initially
+mcts_progressive_widening_k: 0.5  # Growth rate based on visit count
+
+# Root parallelization settings
+mcts_use_root_parallelization: true
+mcts_num_root_workers: 4  # Number of parallel MCTS trees (threads will be divided among them)
 
 # Training settings
 train_epochs: 10

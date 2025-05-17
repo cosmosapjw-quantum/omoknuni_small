@@ -70,6 +70,13 @@ public:
     }
     std::vector<int> getMoveHistory() const override { return moves_; }
     bool validate() const override { return true; }
+    void copyFrom(const alphazero::core::IGameState& source) override {
+        const MockGame* mock_source = dynamic_cast<const MockGame*>(&source);
+        if (!mock_source) {
+            throw std::invalid_argument("Cannot copy from non-MockGame");
+        }
+        moves_ = mock_source->moves_;
+    }
     
 private:
     std::vector<int> moves_;

@@ -266,6 +266,19 @@ int main(int argc, char** argv) {
                     bool use_transposition_table = getBoolConfigValue(config, "mcts_use_transposition_table", true);
                     int transposition_table_size_mb = getIntConfigValue(config, "mcts_transposition_table_size_mb", 128);
                     
+                    // Progressive widening settings
+                    bool use_progressive_widening = getBoolConfigValue(config, "mcts_use_progressive_widening", true);
+                    float progressive_widening_c = getFloatConfigValue(config, "mcts_progressive_widening_c", 1.0f);
+                    float progressive_widening_k = getFloatConfigValue(config, "mcts_progressive_widening_k", 0.5f);
+                    
+                    // Root parallelization settings
+                    bool use_root_parallelization = getBoolConfigValue(config, "mcts_use_root_parallelization", true);
+                    int num_root_workers = getIntConfigValue(config, "mcts_num_root_workers", 4);
+                    
+                    // RAVE settings
+                    bool use_rave = getBoolConfigValue(config, "mcts_use_rave", true);
+                    float rave_constant = getFloatConfigValue(config, "mcts_rave_constant", 3000.0f);
+                    
                     // Neural network configuration
                     int num_res_blocks = getIntConfigValue(config, "num_res_blocks", 10);
                     int num_filters = getIntConfigValue(config, "num_filters", 64);
@@ -278,6 +291,20 @@ int main(int argc, char** argv) {
                     float low_temperature = getFloatConfigValue(config, "self_play_low_temperature", 0.1f);
                     std::string output_dir = getStringConfigValue(config, "self_play_output_dir", "data/self_play_games");
                     std::string output_format = getStringConfigValue(config, "self_play_output_format", "json");
+                    
+                    // Game-specific settings
+                    // Gomoku settings
+                    bool gomoku_use_renju = getBoolConfigValue(config, "gomoku_use_renju", true);
+                    bool gomoku_use_omok = getBoolConfigValue(config, "gomoku_use_omok", false);
+                    bool gomoku_use_pro_long_opening = getBoolConfigValue(config, "gomoku_use_pro_long_opening", true);
+                    
+                    // Chess settings
+                    bool chess_use_chess960 = getBoolConfigValue(config, "chess_use_chess960", false);
+                    
+                    // Go settings
+                    float go_komi = getFloatConfigValue(config, "go_komi", 7.5f);
+                    bool go_chinese_rules = getBoolConfigValue(config, "go_chinese_rules", true);
+                    bool go_enforce_superko = getBoolConfigValue(config, "go_enforce_superko", true);
                     
                     // Convert game type string to enum
                     alphazero::core::GameType game_type;
@@ -309,15 +336,31 @@ int main(int argc, char** argv) {
                     mcts_settings.temperature = temperature;
                     mcts_settings.use_transposition_table = use_transposition_table;
                     mcts_settings.transposition_table_size_mb = transposition_table_size_mb;
+                    mcts_settings.use_progressive_widening = use_progressive_widening;
+                    mcts_settings.progressive_widening_c = progressive_widening_c;
+                    mcts_settings.progressive_widening_k = progressive_widening_k;
+                    mcts_settings.use_root_parallelization = use_root_parallelization;
+                    mcts_settings.num_root_workers = num_root_workers;
+                    mcts_settings.use_rave = use_rave;
+                    mcts_settings.rave_constant = rave_constant;
                     
                     // Setup self-play settings
                     alphazero::selfplay::SelfPlaySettings self_play_settings;
                     self_play_settings.mcts_settings = mcts_settings;
-                    self_play_settings.num_parallel_games = num_parallel_games;
+                    self_play_settings.reserved_parallel = num_parallel_games;
                     self_play_settings.max_moves = max_moves;
                     self_play_settings.temperature_threshold = temperature_threshold;
                     self_play_settings.high_temperature = high_temperature;
                     self_play_settings.low_temperature = low_temperature;
+                    
+                    // Set game-specific config
+                    self_play_settings.game_config.gomoku_use_renju = gomoku_use_renju;
+                    self_play_settings.game_config.gomoku_use_omok = gomoku_use_omok;
+                    self_play_settings.game_config.gomoku_use_pro_long_opening = gomoku_use_pro_long_opening;
+                    self_play_settings.game_config.chess_use_chess960 = chess_use_chess960;
+                    self_play_settings.game_config.go_komi = go_komi;
+                    self_play_settings.game_config.go_chinese_rules = go_chinese_rules;
+                    self_play_settings.game_config.go_enforce_superko = go_enforce_superko;
                     
                     // Print configuration summary
                     std::cout << "Configuration summary:" << std::endl;
@@ -901,7 +944,7 @@ int main(int argc, char** argv) {
                     // Set up self-play settings for evaluation
                     alphazero::selfplay::SelfPlaySettings self_play_settings;
                     self_play_settings.mcts_settings = mcts_settings;
-                    self_play_settings.num_parallel_games = num_parallel_eval_games;
+                    self_play_settings.reserved_parallel = num_parallel_eval_games;
                     self_play_settings.max_moves = max_moves_eval;
                     
                     // Run evaluation

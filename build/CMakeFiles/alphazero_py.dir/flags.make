@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/g++
 CXX_DEFINES = -DENABLE_CUDA_FALLBACK=1 -DJSON_DIAGNOSTICS=0 -DJSON_USE_IMPLICIT_CONVERSIONS=1 -DTORCH_USE_CUDA=1 -DUSE_C10D_GLOO -DUSE_C10D_NCCL -DUSE_CUDNN=1 -DUSE_DISTRIBUTED -DUSE_OPENMP -DUSE_RPC -DUSE_TENSORPIPE -DWITH_TORCH -D_GLIBCXX_USE_CXX11_ABI=1 -Dalphazero_py_EXPORTS
 
-CXX_INCLUDES = -I/home/cosmos/omoknuni_small/include -isystem /home/cosmos/omoknuni_small/build/_deps/phmap-src -isystem /usr/include/python3.10 -isystem /opt/libtorch-2.7.0-cu128/include -isystem /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include -isystem /usr/local/cuda-12.8/include -isystem /usr/local/cuda/include
+CXX_INCLUDES = -I/home/cosmos/omoknuni_small/include -isystem /usr/include/python3.10 -isystem /opt/libtorch-2.7.0-cu128/include -isystem /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include -isystem /usr/local/cuda-12.8/include -isystem /usr/local/cuda/include -isystem /home/cosmos/omoknuni_small/build/_deps/phmap-src -isystem /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper
 
-CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -fPIC -fvisibility=hidden -Wall -Wextra -mavx2 -O3 -flto -fno-fat-lto-objects -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -std=gnu++17
+CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -fPIC -fvisibility=hidden -Wall -Wextra -mavx2 -O3 -flto -fno-fat-lto-objects -fopenmp -D_GLIBCXX_USE_CXX11_ABI=1 -std=gnu++17
 

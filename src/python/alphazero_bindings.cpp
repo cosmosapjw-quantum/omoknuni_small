@@ -268,7 +268,7 @@ public:
         settings.mcts_settings.batch_size = config_.mcts_batch_size;
         settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
         
-        settings.num_parallel_games = config_.self_play_num_parallel_games;
+        settings.reserved_parallel = config_.self_play_num_parallel_games;
         settings.max_moves = config_.self_play_max_moves > 0 ? 
                              config_.self_play_max_moves : 
                              config_.board_size * config_.board_size * 2; // Default max moves
@@ -408,7 +408,7 @@ public:
         arena_settings.mcts_settings.batch_size = config_.mcts_batch_size;
         arena_settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
         
-        arena_settings.num_parallel_games = config_.arena_num_parallel_games;
+        arena_settings.reserved_parallel = config_.arena_num_parallel_games;
         arena_settings.max_moves = config_.self_play_max_moves > 0 ? 
                                   config_.self_play_max_moves : 
                                   config_.board_size * config_.board_size * 2;

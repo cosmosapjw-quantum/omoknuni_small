@@ -21,7 +21,7 @@ set_property(GLOBAL PROPERTY _CMAKE_FindGit_GIT_EXECUTABLE_VERSION
 
 include(ExternalProject)
 ExternalProject_Add(phmap-populate
-                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/greg7mdp/parallel-hashmap.git" "GIT_TAG" "v1.3.8"
+                     "UPDATE_DISCONNECTED" "False" "GIT_REPOSITORY" "https://github.com/greg7mdp/parallel-hashmap.git" "GIT_TAG" "v1.3.8" "GIT_SHALLOW" "TRUE"
                     SOURCE_DIR          "/home/cosmos/omoknuni_small/build/_deps/phmap-src"
                     BINARY_DIR          "/home/cosmos/omoknuni_small/build/_deps/phmap-build"
                     CONFIGURE_COMMAND   ""

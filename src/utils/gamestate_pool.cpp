@@ -65,8 +65,26 @@ void GameStatePool::release(std::unique_ptr<core::IGameState> state) {
 }
 
 std::unique_ptr<core::IGameState> GameStatePool::clone(const core::IGameState& source) {
-    // For now, just use regular cloning since we can't safely reuse objects
-    // without a proper assignment operator or copyFrom method
+    // Try to get a state from the pool and copy into it for efficiency
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    if (!pool_.empty()) {
+        auto state = std::move(pool_.front());
+        pool_.pop_front();
+        pool_hits_.fetch_add(1);
+        
+        try {
+            // Use copyFrom to efficiently reuse the pooled object
+            state->copyFrom(source);
+            return state;
+        } catch (...) {
+            // If copyFrom fails, fall back to regular cloning
+            // and don't put the failed state back in the pool
+        }
+    }
+    
+    // Pool is empty or copyFrom failed, use regular cloning
+    pool_misses_.fetch_add(1);
     return source.clone();
 }
 

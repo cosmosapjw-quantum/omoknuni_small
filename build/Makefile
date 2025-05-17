@@ -65,6 +65,26 @@ CMAKE_BINARY_DIR = /home/cosmos/omoknuni_small/build
 #=============================================================================
 # Targets provided globally by CMake.
 
+# Special rule for the target package
+package: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Run CPack packaging tool..."
+	/usr/bin/cpack --config ./CPackConfig.cmake
+.PHONY : package
+
+# Special rule for the target package
+package/fast: package
+.PHONY : package/fast
+
+# Special rule for the target package_source
+package_source:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Run CPack packaging tool for source..."
+	/usr/bin/cpack --config ./CPackSourceConfig.cmake /home/cosmos/omoknuni_small/build/CPackSourceConfig.cmake
+.PHONY : package_source
+
+# Special rule for the target package_source
+package_source/fast: package_source
+.PHONY : package_source/fast
+
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
@@ -97,7 +117,7 @@ rebuild_cache/fast: rebuild_cache
 
 # Special rule for the target list_install_components
 list_install_components:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Devel\" \"Unspecified\""
 .PHONY : list_install_components
 
 # Special rule for the target list_install_components
@@ -768,6 +788,19 @@ all_tests: cmake_check_build_system
 all_tests/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/build
 .PHONY : all_tests/fast
+
+#=============================================================================
+# Target rules for targets named mcts_openmp_benchmark
+
+# Build rule for target.
+mcts_openmp_benchmark: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mcts_openmp_benchmark
+.PHONY : mcts_openmp_benchmark
+
+# fast build rule for target.
+mcts_openmp_benchmark/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_openmp_benchmark.dir/build.make CMakeFiles/mcts_openmp_benchmark.dir/build
+.PHONY : mcts_openmp_benchmark/fast
 
 src/cli/alphazero_cli_pipeline.o: src/cli/alphazero_cli_pipeline.cpp.o
 .PHONY : src/cli/alphazero_cli_pipeline.o
@@ -1993,6 +2026,57 @@ tests/mcts/mcts_node_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.s
 .PHONY : tests/mcts/mcts_node_test.cpp.s
 
+tests/mcts/mcts_openmp_benchmark.o: tests/mcts/mcts_openmp_benchmark.cpp.o
+.PHONY : tests/mcts/mcts_openmp_benchmark.o
+
+# target to build an object file
+tests/mcts/mcts_openmp_benchmark.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_openmp_benchmark.dir/build.make CMakeFiles/mcts_openmp_benchmark.dir/tests/mcts/mcts_openmp_benchmark.cpp.o
+.PHONY : tests/mcts/mcts_openmp_benchmark.cpp.o
+
+tests/mcts/mcts_openmp_benchmark.i: tests/mcts/mcts_openmp_benchmark.cpp.i
+.PHONY : tests/mcts/mcts_openmp_benchmark.i
+
+# target to preprocess a source file
+tests/mcts/mcts_openmp_benchmark.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_openmp_benchmark.dir/build.make CMakeFiles/mcts_openmp_benchmark.dir/tests/mcts/mcts_openmp_benchmark.cpp.i
+.PHONY : tests/mcts/mcts_openmp_benchmark.cpp.i
+
+tests/mcts/mcts_openmp_benchmark.s: tests/mcts/mcts_openmp_benchmark.cpp.s
+.PHONY : tests/mcts/mcts_openmp_benchmark.s
+
+# target to generate assembly for a file
+tests/mcts/mcts_openmp_benchmark.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_openmp_benchmark.dir/build.make CMakeFiles/mcts_openmp_benchmark.dir/tests/mcts/mcts_openmp_benchmark.cpp.s
+.PHONY : tests/mcts/mcts_openmp_benchmark.cpp.s
+
+tests/mcts/mcts_openmp_test.o: tests/mcts/mcts_openmp_test.cpp.o
+.PHONY : tests/mcts/mcts_openmp_test.o
+
+# target to build an object file
+tests/mcts/mcts_openmp_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o
+.PHONY : tests/mcts/mcts_openmp_test.cpp.o
+
+tests/mcts/mcts_openmp_test.i: tests/mcts/mcts_openmp_test.cpp.i
+.PHONY : tests/mcts/mcts_openmp_test.i
+
+# target to preprocess a source file
+tests/mcts/mcts_openmp_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.i
+.PHONY : tests/mcts/mcts_openmp_test.cpp.i
+
+tests/mcts/mcts_openmp_test.s: tests/mcts/mcts_openmp_test.cpp.s
+.PHONY : tests/mcts/mcts_openmp_test.s
+
+# target to generate assembly for a file
+tests/mcts/mcts_openmp_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.s
+.PHONY : tests/mcts/mcts_openmp_test.cpp.s
+
 tests/mcts/transposition_integration_test.o: tests/mcts/transposition_integration_test.cpp.o
 .PHONY : tests/mcts/transposition_integration_test.o
 
@@ -2124,6 +2208,8 @@ help:
 	@echo "... install/local"
 	@echo "... install/strip"
 	@echo "... list_install_components"
+	@echo "... package"
+	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... Continuous"
@@ -2162,6 +2248,7 @@ help:
 	@echo "... core_tests"
 	@echo "... go_tests"
 	@echo "... gomoku_tests"
+	@echo "... mcts_openmp_benchmark"
 	@echo "... mcts_tests"
 	@echo "... mcts_with_nn_test"
 	@echo "... model_evaluator_test"
@@ -2322,6 +2409,12 @@ help:
 	@echo "... tests/mcts/mcts_node_test.o"
 	@echo "... tests/mcts/mcts_node_test.i"
 	@echo "... tests/mcts/mcts_node_test.s"
+	@echo "... tests/mcts/mcts_openmp_benchmark.o"
+	@echo "... tests/mcts/mcts_openmp_benchmark.i"
+	@echo "... tests/mcts/mcts_openmp_benchmark.s"
+	@echo "... tests/mcts/mcts_openmp_test.o"
+	@echo "... tests/mcts/mcts_openmp_test.i"
+	@echo "... tests/mcts/mcts_openmp_test.s"
 	@echo "... tests/mcts/transposition_integration_test.o"
 	@echo "... tests/mcts/transposition_integration_test.i"
 	@echo "... tests/mcts/transposition_integration_test.s"

@@ -7,7 +7,7 @@
 #include <optional>
 #include <chrono>
 #include "parallel_hashmap/phmap.h"
-#include "third_party/concurrentqueue.h"
+#include <moodycamel/concurrentqueue.h>
 #include "mcts/evaluation_types.h"
 
 namespace alphazero {

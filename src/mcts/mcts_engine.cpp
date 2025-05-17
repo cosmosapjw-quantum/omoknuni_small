@@ -11,6 +11,7 @@
 #include <random>
 #include <iomanip>
 #include <queue>
+#include <omp.h>
 
 // Configurable debug level
 #define MCTS_DEBUG 1
@@ -213,9 +214,9 @@ MCTSEngine::MCTSEngine(MCTSEngine&& other) noexcept
       leaf_queue_(std::move(other.leaf_queue_)),
       batch_queue_(std::move(other.batch_queue_)),
       result_queue_(std::move(other.result_queue_)),
-      batch_accumulator_worker_(std::move(other.batch_accumulator_worker_)),
+      // batch_accumulator_worker_(std::move(other.batch_accumulator_worker_)),
       result_distributor_worker_(std::move(other.result_distributor_worker_)),
-      tree_traversal_workers_(std::move(other.tree_traversal_workers_)),
+      // tree_traversal_workers_(std::move(other.tree_traversal_workers_)),
       workers_active_(other.workers_active_.load()) {
     
     // Validate the moved evaluator
@@ -226,25 +227,28 @@ MCTSEngine::MCTSEngine(MCTSEngine&& other) noexcept
     // Properly clean up other's threads before clearing
     other.shutdown_ = true;
     other.workers_active_ = false;
-    other.cv_.notify_all();
-    other.batch_cv_.notify_all();
-    other.result_cv_.notify_all();
+    // Commented out - not used in OpenMP version
+    // other.cv_.notify_all();
+    // other.batch_cv_.notify_all();
+    // other.result_cv_.notify_all();
     
     // Join other's threads before clearing
-    for (auto& thread : other.tree_traversal_workers_) {
-        if (thread.joinable()) {
-            thread.join();
-        }
-    }
-    if (other.batch_accumulator_worker_.joinable()) {
-        other.batch_accumulator_worker_.join();
-    }
+    // Commented out - replaced with OpenMP
+    // for (auto& thread : other.tree_traversal_workers_) {
+    //     if (thread.joinable()) {
+    //         thread.join();
+    //     }
+    // }
+    // Commented out - not used in OpenMP version
+    // if (other.batch_accumulator_worker_.joinable()) {
+    //     other.batch_accumulator_worker_.join();
+    // }
     if (other.result_distributor_worker_.joinable()) {
         other.result_distributor_worker_.join();
     }
     
     // Now safe to clear
-    other.tree_traversal_workers_.clear();
+    // other.tree_traversal_workers_.clear();
     other.search_running_ = false;
     other.active_simulations_ = 0;
     other.evaluator_started_ = false;
@@ -255,22 +259,25 @@ MCTSEngine& MCTSEngine::operator=(MCTSEngine&& other) noexcept {
         // Clean up current resources
         shutdown_ = true;
         workers_active_ = false;
-        cv_.notify_all();
-        batch_cv_.notify_all();
-        result_cv_.notify_all();
+        // Commented out - not used in OpenMP version
+        // cv_.notify_all();
+        // batch_cv_.notify_all();
+        // result_cv_.notify_all();
         
         // Join specialized workers
-        if (batch_accumulator_worker_.joinable()) {
-            batch_accumulator_worker_.join();
-        }
+        // Commented out - not used in OpenMP version
+        // if (batch_accumulator_worker_.joinable()) {
+        //     batch_accumulator_worker_.join();
+        // }
         if (result_distributor_worker_.joinable()) {
             result_distributor_worker_.join();
         }
-        for (auto& thread : tree_traversal_workers_) {
-            if (thread.joinable()) {
-                thread.join();
-            }
-        }
+        // Commented out - replaced with OpenMP
+        // for (auto& thread : tree_traversal_workers_) {
+        //     if (thread.joinable()) {
+        //         thread.join();
+        //     }
+        // }
         
         safelyStopEvaluator();
         
@@ -293,9 +300,9 @@ MCTSEngine& MCTSEngine::operator=(MCTSEngine&& other) noexcept {
         leaf_queue_ = std::move(other.leaf_queue_);
         batch_queue_ = std::move(other.batch_queue_);
         result_queue_ = std::move(other.result_queue_);
-        batch_accumulator_worker_ = std::move(other.batch_accumulator_worker_);
+        // batch_accumulator_worker_ = std::move(other.batch_accumulator_worker_);
         result_distributor_worker_ = std::move(other.result_distributor_worker_);
-        tree_traversal_workers_ = std::move(other.tree_traversal_workers_);
+        // tree_traversal_workers_ = std::move(other.tree_traversal_workers_);
         workers_active_ = other.workers_active_.load();
         
         // Validate the moved evaluator
@@ -306,25 +313,28 @@ MCTSEngine& MCTSEngine::operator=(MCTSEngine&& other) noexcept {
         // Properly clean up other's threads before clearing
         other.shutdown_ = true;
         other.workers_active_ = false;
-        other.cv_.notify_all();
-        other.batch_cv_.notify_all();
-        other.result_cv_.notify_all();
+        // Commented out - not used in OpenMP version
+        // other.cv_.notify_all();
+        // other.batch_cv_.notify_all();
+        // other.result_cv_.notify_all();
         
+        // Commented out - replaced with OpenMP
         // Join other's threads before clearing
-        for (auto& thread : other.tree_traversal_workers_) {
-            if (thread.joinable()) {
-                thread.join();
-            }
-        }
-        if (other.batch_accumulator_worker_.joinable()) {
-            other.batch_accumulator_worker_.join();
-        }
+        // for (auto& thread : other.tree_traversal_workers_) {
+        //     if (thread.joinable()) {
+        //         thread.join();
+        //     }
+        // }
+        // Commented out - not used in OpenMP version
+        // if (other.batch_accumulator_worker_.joinable()) {
+        //     other.batch_accumulator_worker_.join();
+        // }
         if (other.result_distributor_worker_.joinable()) {
             other.result_distributor_worker_.join();
         }
         
         // Now safe to clear
-        other.tree_traversal_workers_.clear();
+        // other.tree_traversal_workers_.clear();
         other.search_running_ = false;
         other.active_simulations_ = 0;
         other.evaluator_started_ = false;
@@ -342,10 +352,11 @@ MCTSEngine::~MCTSEngine() {
     active_simulations_.store(0, std::memory_order_release);
     pending_evaluations_.store(0, std::memory_order_release);
     
+    // Commented out - not used in OpenMP version
     // Mark mutexes as destroyed to prevent threads from acquiring them
-    cv_mutex_destroyed_.store(true, std::memory_order_release);
-    batch_mutex_destroyed_.store(true, std::memory_order_release);
-    result_mutex_destroyed_.store(true, std::memory_order_release);
+    // cv_mutex_destroyed_.store(true, std::memory_order_release);
+    // batch_mutex_destroyed_.store(true, std::memory_order_release);
+    // result_mutex_destroyed_.store(true, std::memory_order_release);
     
     // Phase 2: Stop the evaluator first (it's the source of new work)
     
@@ -353,9 +364,10 @@ MCTSEngine::~MCTSEngine() {
     
     // Phase 3: Force wake all threads immediately to check shutdown flag
     
-    cv_.notify_all();
-    batch_cv_.notify_all();
-    result_cv_.notify_all();
+    // Commented out - not used in OpenMP version
+    // cv_.notify_all();
+    // batch_cv_.notify_all();
+    // result_cv_.notify_all();
     
     // Phase 4: Clear all queues to prevent stuck threads
     
@@ -403,15 +415,13 @@ MCTSEngine::~MCTSEngine() {
         
     }
     
+    // Commented out - replaced with OpenMP
     // Join tree traversal workers
-    
-    for (size_t i = 0; i < tree_traversal_workers_.size(); ++i) {
-        if (tree_traversal_workers_[i].joinable()) {
-            
-            tree_traversal_workers_[i].join();
-            
-        }
-    }
+    // for (size_t i = 0; i < tree_traversal_workers_.size(); ++i) {
+    //     if (tree_traversal_workers_[i].joinable()) {
+    //         tree_traversal_workers_[i].join();
+    //     }
+    // }
     
     
     // Phase 6: Final cleanup - clear transposition table and root
@@ -698,35 +708,12 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         // MCTSEngine::runSearch - Waiting for worker threads to finish processing...
         // MCTSEngine::runSearch - Checking shutdown flag
                  
-        // First, set active_simulations to 0 to prevent new work from being taken
+        // OpenMP version - no manual thread management needed
+        // Just ensure no simulations are active from previous searches
         active_simulations_.store(0, std::memory_order_release);
-        cv_.notify_all();
         
-        // Use multiple short waits instead of one long wait for better responsiveness
-        std::unique_lock<std::mutex> lock(cv_mutex_);
-        bool workers_finished = false;
-        for (int attempts = 0; attempts < 10 && !workers_finished; ++attempts) {
-            workers_finished = cv_.wait_for(lock, std::chrono::milliseconds(100), [this]() {
-                // Simplified predicate: wait until workers are no longer active or shutdown is signaled.
-                // The workers_active_ flag should be set to false by the end of the previous search.
-                // And it's set to true at the beginning of a new search *after* this wait.
-                return !workers_active_.load(std::memory_order_acquire) || 
-                       shutdown_.load(std::memory_order_acquire);
-            });
-            
-            if (!workers_finished && attempts % 3 == 2) {
-                // Periodically re-signal workers
-                cv_.notify_all();
-            }
-        }
-        
-        if (!workers_finished && !shutdown_.load(std::memory_order_acquire)) {
-            // MCTSEngine::runSearch - WARNING: Workers still active after timeout
-            // Force reset for safety
-            // num_workers_actively_processing_.store(0, std::memory_order_release); // Removed
-        }
-        
-        // MCTSEngine::runSearch - Worker threads are now inactive, can proceed
+        // Small delay to ensure any OpenMP threads have finished
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     
     // If using the transposition table, it must be cleared BEFORE deleting the tree
@@ -882,59 +869,20 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
             
             // Provide a callback to notify when results are available
             auto result_notify_fn = [this]() {
-                result_cv_.notify_one();
+                // Notification mechanism replaced with lock-free polling in OpenMP
             };
             
             evaluator_->setExternalQueues(&leaf_queue_, &result_queue_, result_notify_fn);
         }
         
-        // Create specialized worker threads if they don't exist yet
-        if (tree_traversal_workers_.empty() && settings_.num_threads > 0) {
-            try {
-                // Start specialized workers
-                workers_active_.store(true, std::memory_order_release);
-                shutdown_.store(false, std::memory_order_release);
-                
-                // Start only the result distributor worker (evaluator handles batching now)
-                result_distributor_worker_ = std::thread(&MCTSEngine::resultDistributorWorker, this);
-                
-                // Create tree traversal workers
-                try {
-                    for (int i = 0; i < settings_.num_threads; ++i) {
-                        tree_traversal_workers_.emplace_back(&MCTSEngine::treeTraversalWorker, this, i);
-                    }
-                } catch (...) {
-                    // Clean up all created threads on failure
-                    workers_active_ = false;
-                    cv_.notify_all();
-                    
-                    // Join already created traversal threads
-                    for (auto& thread : tree_traversal_workers_) {
-                        if (thread.joinable()) {
-                            thread.join();
-                        }
-                    }
-                    
-                    // Join the result worker
-                    if (result_distributor_worker_.joinable()) {
-                        result_distributor_worker_.join();
-                    }
-                    
-                    throw;
-                }
-                
-                // [ENGINE] Created tree traversal workers
-            } catch (const std::exception& e) {
-                // Error creating worker threads
-                throw std::runtime_error(std::string("Failed to create worker threads: ") + e.what());
-            } catch (...) {
-                // Unknown error creating worker threads
-                throw std::runtime_error("Unknown error creating worker threads");
-            }
-        } else if (!tree_traversal_workers_.empty()) {
-            // Reactivate existing workers
+        // OpenMP implementation - use OpenMP threads instead of manual thread management
+        omp_set_num_threads(settings_.num_threads);
+        
+        // Start result distributor if not already running
+        if (!result_distributor_worker_.joinable()) {
             workers_active_.store(true, std::memory_order_release);
-            cv_.notify_all();
+            shutdown_.store(false, std::memory_order_release);
+            result_distributor_worker_ = std::thread(&MCTSEngine::resultDistributorWorker, this);
         }
 
         // Calculate the number of simulations to run
@@ -945,75 +893,125 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
 
         // Set all simulations at once for better batching
         active_simulations_.store(num_simulations, std::memory_order_release);
-        cv_.notify_all(); // Wake up all workers
+        // cv_.notify_all(); // Not needed in OpenMP version
 
-        // Start completion tracking for search
-        std::atomic<bool> search_complete(false);
+        // Create search roots based on parallelization strategy
+        std::vector<std::shared_ptr<MCTSNode>> search_roots;
         
-        // Wait for the search to complete using a more robust mechanism
-        auto search_thread = std::thread([this, num_simulations, &search_complete]() {
-            auto start_time = std::chrono::steady_clock::now();
-            const auto max_search_time = std::chrono::seconds(10); // Fail-safe timeout
-            
-            while (!shutdown_.load(std::memory_order_acquire)) {
-                int current_sims = active_simulations_.load(std::memory_order_acquire);
-                int pending_evals = pending_evaluations_.load(std::memory_order_acquire);
-                
-                // Debug output every second
-                static auto last_debug_time = std::chrono::steady_clock::now();
-                if (std::chrono::steady_clock::now() - last_debug_time > std::chrono::seconds(1)) {
-                    // [SEARCH] Status tracking
-                    int pending = pending_evaluations_.load(std::memory_order_acquire);
-                    int active = active_simulations_.load(std::memory_order_acquire);
-                    int leaf_size = leaf_queue_.size_approx();
-                    int result_size = result_queue_.size_approx();
-                    
-                    std::cout << "[SEARCH] Status: active_simulations=" << active
-                              << ", pending_evaluations=" << pending
-                              << ", leaf_queue=" << leaf_size
-                              << ", result_queue=" << result_size
-                              << std::endl;
-                    
-                    // Track memory periodically
-                    static int search_memory_check = 0;
-                    if (search_memory_check++ % 5 == 0) {
-                        alphazero::utils::trackMemory("During search iteration");
-                    }
-                    
-                    last_debug_time = std::chrono::steady_clock::now();
-                }
-                
-                // Process any completed evaluations
-                processPendingEvaluations(root_);
-                
-                // Check if search is complete
-                if (current_sims <= 0 && pending_evals <= 0) {
-                    // [SEARCH] Search appears complete
-                    search_complete.store(true);
-                    break;
-                }
-                
-                // Fail-safe timeout
-                if (std::chrono::steady_clock::now() - start_time > max_search_time) {
-                    // [SEARCH] ERROR: Search timed out
-                    search_complete.store(true);
-                    break;
-                }
-                
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (settings_.use_root_parallelization && settings_.num_root_workers > 1) {
+            // Root parallelization: create independent root copies for each worker
+            for (int i = 0; i < settings_.num_root_workers; i++) {
+                // Create a deep copy of the root for each worker
+                auto root_copy = MCTSNode::create(root_->getState().clone(), nullptr);
+                search_roots.push_back(root_copy);
             }
-        });
+            std::cout << "[MCTS] Created " << search_roots.size() << " independent root copies for parallel search" << std::endl;
+        } else {
+            // Single root (default)
+            search_roots.push_back(root_);
+        }
+
+        // OpenMP parallel search
+        std::atomic<int> completed_simulations(0);
         
-        // Wait for search thread to complete
-        search_thread.join();
+        #pragma omp parallel
+        {
+            // Each thread will process simulations
+            while (!shutdown_.load(std::memory_order_acquire)) {
+                // Try to claim work
+                int old_sims = active_simulations_.load(std::memory_order_acquire);
+                if (old_sims <= 0) break;
+                
+                // Try to claim some simulations
+                int to_claim = std::min(16, old_sims); // Process in batches
+                int claimed = 0;
+                
+                if (active_simulations_.compare_exchange_weak(old_sims, old_sims - to_claim,
+                                                              std::memory_order_acq_rel)) {
+                    claimed = to_claim;
+                }
+                
+                // Process claimed simulations
+                for (int i = 0; i < claimed; ++i) {
+                    try {
+                        // Select root based on thread ID
+                        int thread_id = omp_get_thread_num();
+                        int root_idx = thread_id % search_roots.size();
+                        traverseTree(search_roots[root_idx]);
+                        completed_simulations.fetch_add(1, std::memory_order_relaxed);
+                    } catch (const std::exception& e) {
+                        // Log error but continue
+                        #pragma omp critical
+                        std::cerr << "[OPENMP] Error during tree traversal: " << e.what() << std::endl;
+                    }
+                }
+            }
+        }
+        
+        // Wait for evaluations to complete
+        std::cout << "[OPENMP] Completed " << completed_simulations.load() << " simulations" << std::endl;
+        
+        // Wait for pending evaluations to complete
+        auto wait_start = std::chrono::steady_clock::now();
+        while (pending_evaluations_.load(std::memory_order_acquire) > 0) {
+            if (std::chrono::steady_clock::now() - wait_start > std::chrono::seconds(5)) {
+                std::cout << "[OPENMP] Timeout waiting for evaluations" << std::endl;
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        
+        // Aggregate results if using root parallelization
+        if (settings_.use_root_parallelization && settings_.num_root_workers > 1 && root_) {
+            std::cout << "[MCTS] Aggregating results from " << search_roots.size() << " independent trees" << std::endl;
+            
+            // First ensure root is expanded
+            if (root_->isLeaf() && !root_->isTerminal()) {
+                root_->expand(settings_.use_progressive_widening,
+                             settings_.progressive_widening_c,
+                             settings_.progressive_widening_k);
+            }
+            
+            // Aggregate statistics from all search roots
+            for (const auto& search_root : search_roots) {
+                if (!search_root || search_root == root_) continue;
+                
+                auto search_children = search_root->getChildren();
+                auto root_children = root_->getChildren();
+                
+                // Create a map for efficient action lookup
+                std::unordered_map<int, std::shared_ptr<MCTSNode>> root_action_map;
+                for (auto& child : root_children) {
+                    root_action_map[child->getAction()] = child;
+                }
+                
+                // Aggregate statistics from search tree children
+                for (const auto& search_child : search_children) {
+                    int action = search_child->getAction();
+                    auto it = root_action_map.find(action);
+                    
+                    if (it != root_action_map.end()) {
+                        // Aggregate visit counts and values
+                        int visits = search_child->getVisitCount();
+                        float average_value = search_child->getValue();
+                        
+                        // Update the main root's child with multiple update calls
+                        for (int i = 0; i < visits; i++) {
+                            it->second->update(average_value);
+                        }
+                    }
+                }
+            }
+        }
         
         // Log final status
         // [SEARCH] Final status after search completion
         
         // Signal workers to stop
         workers_active_.store(false, std::memory_order_release);
-        cv_.notify_all();
-        batch_cv_.notify_all();
+        // Commented out - not used in OpenMP version
+        // cv_.notify_all();
+        // batch_cv_.notify_all();
         
         // Record search statistics
         if (root_) {
@@ -1047,98 +1045,10 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
     }
 }
 
-void MCTSEngine::treeTraversalWorker(int worker_id) {
-    
-    
-    // Set thread name for debugging
-    std::string thread_name = "TreeWorker" + std::to_string(worker_id);
-    pthread_setname_np(pthread_self(), thread_name.c_str());
-    
-    try {
-        while (!shutdown_.load(std::memory_order_acquire)) {
-            // Check if there's work to do
-            int remaining_sims = active_simulations_.load(std::memory_order_acquire);
-            if (remaining_sims <= 0 || !root_ || !workers_active_.load(std::memory_order_acquire)) {
-                // Check shutdown before waiting
-                if (shutdown_.load(std::memory_order_acquire)) {
-                    break;
-                }
-                
-                // Use condition variable with safer pattern
-                // Use condition variable with safer pattern - wait without timeout
-                if (!cv_mutex_destroyed_) {
-                    try {
-                        std::unique_lock<std::mutex> lock(cv_mutex_);
-                        cv_.wait(lock, [this]() {
-                            return shutdown_.load(std::memory_order_acquire) || 
-                                   cv_mutex_destroyed_.load(std::memory_order_acquire) ||
-                                   (active_simulations_.load(std::memory_order_acquire) > 0 && 
-                                    root_ != nullptr && 
-                                    workers_active_.load(std::memory_order_acquire));
-                        });
-                    } catch (...) {
-                        // Ignore mutex/cv exceptions during shutdown
-                        if (shutdown_.load(std::memory_order_acquire)) {
-                            break;
-                        }
-                    }
-                } else {
-                    // Mutex destroyed, just check shutdown
-                    if (shutdown_.load(std::memory_order_acquire)) {
-                        break;
-                    }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }
-                
-                if (shutdown_.load(std::memory_order_acquire)) {
-                    break;
-                }
-                continue;
-            }
-            
-            // Claim a batch of simulations
-            int batch_size = std::min(64, std::max(16, remaining_sims / settings_.num_threads));
-            int claimed = 0;
-            
-            while (claimed < batch_size && !shutdown_.load(std::memory_order_acquire)) {
-                int old_value = active_simulations_.load(std::memory_order_acquire);
-                if (old_value <= 0) break;
-                
-                int to_claim = std::min(batch_size - claimed, old_value);
-                if (active_simulations_.compare_exchange_weak(old_value, old_value - to_claim,
-                                                              std::memory_order_acq_rel, 
-                                                              std::memory_order_acquire)) {
-                    claimed += to_claim;
-                }
-            }
-            
-            // Process claimed simulations
-            for (int i = 0; i < claimed && !shutdown_.load(std::memory_order_acquire); i++) {
-                try {
-                    traverseTree(root_);
-                } catch (const std::exception& e) {
-                    MCTS_LOG_ERROR("[WORKER " << worker_id << "] Exception during tree traversal: " << e.what());
-                } catch (...) {
-                    MCTS_LOG_ERROR("[WORKER " << worker_id << "] Unknown exception during tree traversal");
-                }
-                
-                // Check shutdown more frequently
-                if (i % 8 == 0) {
-                    if (shutdown_.load(std::memory_order_acquire)) {
-                        break;
-                    }
-                    std::this_thread::yield();
-                }
-            }
-        }
-    } catch (const std::exception& e) {
-        MCTS_LOG_ERROR("[WORKER " << worker_id << "] Fatal exception: " << e.what());
-    } catch (...) {
-        MCTS_LOG_ERROR("[WORKER " << worker_id << "] Fatal unknown exception");
-    }
-    
-    
-}
+// Commented out - replaced with OpenMP implementation
+// void MCTSEngine::treeTraversalWorker(int worker_id) {
+//     // Old implementation replaced with OpenMP parallel loops
+// }
 
 void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
     if (!root) return;
@@ -1289,19 +1199,8 @@ void MCTSEngine::resultDistributorWorker() {
                 total_results_processed_.fetch_add(1, std::memory_order_relaxed);
             }
             } else {
-                // Wait for results with condition variable (use wait_for for responsiveness)
-                if (!result_mutex_destroyed_.load(std::memory_order_acquire)) {
-                    try {
-                        std::unique_lock<std::mutex> lock(result_mutex_);
-                        result_cv_.wait_for(lock, std::chrono::milliseconds(100), [this]() {
-                            return shutdown_.load(std::memory_order_acquire) || 
-                                   result_mutex_destroyed_.load(std::memory_order_acquire) ||
-                                   result_queue_.size_approx() > 0;
-                        });
-                    } catch (...) {
-                        // Ignore exceptions during shutdown
-                    }
-                } else {
+                // Lock-free polling instead of condition variables in OpenMP version
+                if (result_queue_.size_approx() == 0) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 }
             }
@@ -1454,7 +1353,8 @@ std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> MCT
         std::shared_ptr<MCTSNode> parent_for_selection = current_node_in_traversal;
         parent_for_selection->addVirtualLoss();
 
-        std::shared_ptr<MCTSNode> selected_child = parent_for_selection->selectChild(settings_.exploration_constant);
+        std::shared_ptr<MCTSNode> selected_child = parent_for_selection->selectChild(
+            settings_.exploration_constant, settings_.use_rave, settings_.rave_constant);
         
         if (!selected_child) {
             // If no child is selected (e.g., all children are terminal or have issues),
@@ -1683,6 +1583,16 @@ void MCTSEngine::backPropagate(std::vector<std::shared_ptr<MCTSNode>>& path, flo
     // Value alternates sign as we move up the tree (perspective changes)
     bool invert = false;
     
+    // RAVE update preparation - collect all actions in the path
+    std::vector<int> path_actions;
+    if (settings_.use_rave) {
+        for (const auto& node : path) {
+            if (node->getAction() != -1) {
+                path_actions.push_back(node->getAction());
+            }
+        }
+    }
+    
     // Process nodes in reverse order (from leaf to root)
     for (auto it = path.rbegin(); it != path.rend(); ++it) {
         auto node = *it;
@@ -1691,6 +1601,23 @@ void MCTSEngine::backPropagate(std::vector<std::shared_ptr<MCTSNode>>& path, flo
         // Remove virtual loss and update node statistics
         node->removeVirtualLoss();
         node->update(update_value);
+        
+        // RAVE update - update all children that match actions in the path
+        if (settings_.use_rave && node->getChildren().size() > 0) {
+            for (auto& child : node->getChildren()) {
+                int child_action = child->getAction();
+                
+                // Check if this action appears later in the path (RAVE principle)
+                for (int path_action : path_actions) {
+                    if (child_action == path_action) {
+                        // Update RAVE value for this child
+                        float rave_value = invert ? -value : value;
+                        child->updateRAVE(rave_value);
+                        break; // Only update once per child
+                    }
+                }
+            }
+        }
         
         // Alternate perspective for next level
         invert = !invert;
@@ -1720,7 +1647,7 @@ void MCTSEngine::processPendingEvaluations(std::shared_ptr<MCTSNode> root) {
             
             // Decrement active simulations since this evaluation is complete
             active_simulations_.fetch_sub(1, std::memory_order_release);
-            cv_.notify_all();
+            // cv_.notify_all(); // Not needed in OpenMP version
         }
     }
 }
@@ -1931,6 +1858,7 @@ std::unique_ptr<core::IGameState> MCTSEngine::cloneGameState(const core::IGameSt
     // Fallback to regular cloning
     return state.clone();
 }
+
 
 } // namespace mcts
 } // namespace alphazero

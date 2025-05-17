@@ -543,6 +543,44 @@ std::unique_ptr<core::IGameState> GoState::clone() const {
     return std::make_unique<GoState>(*this);
 }
 
+void GoState::copyFrom(const core::IGameState& source) {
+    // Ensure source is a GoState
+    const GoState* go_source = dynamic_cast<const GoState*>(&source);
+    if (!go_source) {
+        throw std::runtime_error("Cannot copy from non-GoState: incompatible game types");
+    }
+    
+    // Copy all member variables
+    board_size_ = go_source->board_size_;
+    current_player_ = go_source->current_player_;
+    board_ = go_source->board_;
+    komi_ = go_source->komi_;
+    chinese_rules_ = go_source->chinese_rules_;
+    ko_point_ = go_source->ko_point_;
+    captured_stones_ = go_source->captured_stones_;
+    consecutive_passes_ = go_source->consecutive_passes_;
+    move_history_ = go_source->move_history_;
+    position_history_ = go_source->position_history_;
+    full_move_history_ = go_source->full_move_history_;
+    dead_stones_ = go_source->dead_stones_;
+    zobrist_ = go_source->zobrist_;
+    hash_ = go_source->hash_;
+    hash_dirty_ = go_source->hash_dirty_;
+    
+    // Re-create rules with proper configuration
+    rules_ = std::make_shared<GoRules>(board_size_, chinese_rules_, go_source->rules_->isSuperkoenforced());
+    
+    // Set up board accessor functions for rules
+    rules_->setBoardAccessor(
+        [this](int pos) { return this->getStone(pos); },
+        [this](int pos) { return this->isInBounds(pos); },
+        [this](int pos) { return this->getAdjacentPositions(pos); }
+    );
+    
+    // Ensure fresh cache
+    rules_->invalidateCache();
+}
+
 std::string GoState::actionToString(int action) const {
     if (action == -1) {
         return "pass";

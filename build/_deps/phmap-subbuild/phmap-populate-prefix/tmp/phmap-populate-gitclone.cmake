@@ -17,7 +17,7 @@ set(error_code 1)
 set(number_of_tries 0)
 while(error_code AND number_of_tries LESS 3)
   execute_process(
-    COMMAND "/usr/bin/git"  clone --no-checkout --config "advice.detachedHead=false" "https://github.com/greg7mdp/parallel-hashmap.git" "phmap-src"
+    COMMAND "/usr/bin/git"  clone --no-checkout --depth 1 --no-single-branch --config "advice.detachedHead=false" "https://github.com/greg7mdp/parallel-hashmap.git" "phmap-src"
     WORKING_DIRECTORY "/home/cosmos/omoknuni_small/build/_deps"
     RESULT_VARIABLE error_code
     )

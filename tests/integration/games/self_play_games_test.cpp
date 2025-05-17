@@ -71,7 +71,7 @@ bool test_self_play_for_game(core::GameType game_type, int num_games, int board_
         
         // Create self-play settings with minimal MCTS settings
         selfplay::SelfPlaySettings sp_settings;
-        sp_settings.num_parallel_games = 1;
+        sp_settings.reserved_parallel = 1;
         sp_settings.max_moves = board_size * board_size;  // Allow full games
         sp_settings.mcts_settings.num_simulations = 1;  // Minimal search
         sp_settings.mcts_settings.num_threads = 1;

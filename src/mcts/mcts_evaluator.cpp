@@ -9,6 +9,7 @@
 #include <c10/cuda/CUDAFunctions.h>
 #include <algorithm>
 #include <iostream>
+#include <omp.h>
 
 namespace alphazero {
 namespace mcts {
@@ -439,8 +440,36 @@ size_t MCTSEvaluator::getTotalEvaluations() const {
 }
 
 void MCTSEvaluator::notifyLeafAvailable() {
-    std::lock_guard<std::mutex> lock(cv_mutex_); // Ensure cv_ is protected
-    cv_.notify_one();
+    // Batch notifications to avoid excessive thread wake-ups
+    static std::atomic<int> notification_count{0};
+    static std::atomic<std::chrono::steady_clock::time_point> last_notify_time{std::chrono::steady_clock::now()};
+    
+    notification_count.fetch_add(1, std::memory_order_relaxed);
+    
+    // Only notify if we have accumulated enough notifications or enough time has passed
+    auto now = std::chrono::steady_clock::now();
+    auto last_time = last_notify_time.load(std::memory_order_relaxed);
+    auto time_since_last = std::chrono::duration_cast<std::chrono::microseconds>(now - last_time).count();
+    
+    int count = notification_count.load(std::memory_order_relaxed);
+    bool should_notify = false;
+    
+    // Get the configured batch size for better notification batching
+    size_t target_batch = batch_size_ / 2;  // Notify when we have half a batch
+    
+    // Notify if we have enough pending notifications or if enough time has passed
+    if (count >= static_cast<int>(target_batch) || time_since_last > 2000) { // Target batch size or 2ms
+        // Try to reset the counter
+        if (notification_count.compare_exchange_strong(count, 0, std::memory_order_relaxed)) {
+            last_notify_time.store(now, std::memory_order_relaxed);
+            should_notify = true;
+        }
+    }
+    
+    if (should_notify) {
+        std::lock_guard<std::mutex> lock(cv_mutex_);
+        cv_.notify_one();
+    }
 }
 
 void MCTSEvaluator::evaluationLoop() {
@@ -459,15 +488,30 @@ void MCTSEvaluator::evaluationLoop() {
             
             auto* external_leaf_queue = static_cast<moodycamel::ConcurrentQueue<MCTSEngine::PendingEvaluation>*>(leaf_queue_ptr_);
             
-            // Check if there are items available immediately
-            if (external_leaf_queue->size_approx() > 0) {
+            // Check if we have a reasonable number of items to process
+            size_t queue_size = external_leaf_queue->size_approx();
+            
+            // Only process if we have a good batch or have waited long enough
+            if (queue_size >= batch_size_ / 4) {
                 processBatch();
-            } else {
-                // Only wait briefly if no items
+            } else if (queue_size > 0) {
+                // Wait a bit for more items to accumulate
                 std::unique_lock<std::mutex> lock(cv_mutex_);
-                cv_.wait_for(lock, std::chrono::microseconds(500), [this, external_leaf_queue]() {
+                cv_.wait_for(lock, std::chrono::milliseconds(5), [this, external_leaf_queue]() {
                     return shutdown_flag_.load(std::memory_order_acquire) || 
-                           (external_leaf_queue && external_leaf_queue->size_approx() > 0);
+                           external_leaf_queue->size_approx() >= batch_size_ / 4;
+                });
+                
+                // Process whatever we have after waiting
+                if (external_leaf_queue->size_approx() > 0) {
+                    processBatch();
+                }
+            } else {
+                // Only wait briefly if no items at all
+                std::unique_lock<std::mutex> lock(cv_mutex_);
+                cv_.wait_for(lock, std::chrono::milliseconds(2), [this, external_leaf_queue]() {
+                    return shutdown_flag_.load(std::memory_order_acquire) || 
+                           external_leaf_queue->size_approx() > 0;
                 });
             }
             continue;
@@ -515,21 +559,77 @@ bool MCTSEvaluator::processBatch() {
         std::vector<PendingEvaluation> evaluations;
         PendingEvaluation pending_eval;
         
-        // Try to collect a full batch if items are available
+        // Improved batch collection strategy with adaptive waiting
         const auto start_time = std::chrono::steady_clock::now();
-        const auto max_wait_time = std::chrono::milliseconds(10); // Wait longer for full batch
+        const auto initial_wait_time = std::chrono::milliseconds(5);  // Start with longer wait
+        const auto max_wait_time = std::chrono::milliseconds(50);     // Longer maximum wait time
+        const size_t target_batch_size = batch_size_;
+        const size_t min_batch_for_processing = std::max<size_t>(batch_size_ / 4, 4); // At least 25% of target or 4 items
         
-        while (evaluations.size() < batch_size_ && 
-               std::chrono::steady_clock::now() - start_time < max_wait_time) {
-            if (external_leaf_queue->try_dequeue(pending_eval)) {
-                evaluations.push_back(std::move(pending_eval));
-            } else if (evaluations.empty()) {
-                // If no items yet, wait a bit longer
-                std::this_thread::sleep_for(std::chrono::microseconds(100));
-            } else {
-                // Have some items, don't wait too long
-                break;
+        // Phase 1: Quick bulk collection
+        if (external_leaf_queue->size_approx() > 0) {
+            size_t bulk_size = std::min(external_leaf_queue->size_approx(), batch_size_);
+            std::vector<PendingEvaluation> bulk_items(bulk_size);
+            size_t dequeued = external_leaf_queue->try_dequeue_bulk(bulk_items.data(), bulk_size);
+            for (size_t i = 0; i < dequeued; ++i) {
+                evaluations.push_back(std::move(bulk_items[i]));
             }
+        }
+        
+        // Phase 2: Adaptive waiting strategy for better batching
+        auto current_wait = initial_wait_time;
+        while (evaluations.size() < target_batch_size && 
+               std::chrono::steady_clock::now() - start_time < max_wait_time) {
+            
+            // Try bulk dequeue first if queue has items
+            size_t queue_size = external_leaf_queue->size_approx();
+            if (queue_size > 0 && evaluations.size() < target_batch_size) {
+                size_t to_dequeue = std::min(queue_size, target_batch_size - evaluations.size());
+                std::vector<PendingEvaluation> temp_items(to_dequeue);
+                size_t dequeued = external_leaf_queue->try_dequeue_bulk(temp_items.data(), to_dequeue);
+                for (size_t i = 0; i < dequeued; ++i) {
+                    evaluations.push_back(std::move(temp_items[i]));
+                }
+            }
+            
+            // If we have enough items for a reasonable batch, can stop
+            if (evaluations.size() >= min_batch_for_processing) {
+                // Check if we should wait a bit more for a fuller batch
+                auto elapsed = std::chrono::steady_clock::now() - start_time;
+                if (elapsed < initial_wait_time || evaluations.size() >= target_batch_size * 0.75) {
+                    break;  // We have enough items or waited enough
+                }
+            }
+            
+            // If queue is growing rapidly, wait a bit for more items
+            size_t current_queue_size = external_leaf_queue->size_approx();
+            if (current_queue_size > queue_size * 1.5) {
+                // Queue is growing fast, wait for more items to accumulate
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+                continue;
+            }
+            
+            // Adaptive sleep - increase wait time if queue is empty
+            if (evaluations.empty()) {
+                std::this_thread::sleep_for(current_wait);
+                current_wait = std::min(current_wait * 2, std::chrono::milliseconds(5));
+            } else {
+                std::this_thread::yield();  // Just yield if we have some items
+            }
+        }
+        
+        // Only process if we have a reasonable batch or waited long enough
+        if (evaluations.size() < min_batch_for_processing && 
+            !shutdown_flag_.load(std::memory_order_acquire)) {
+            auto elapsed = std::chrono::steady_clock::now() - start_time;
+            // If we haven't waited long enough and have very few items, put them back
+            if (elapsed < initial_wait_time && evaluations.size() < 2) {
+                for (auto& eval : evaluations) {
+                    external_leaf_queue->enqueue(std::move(eval));
+                }
+                return false;
+            }
+            // Otherwise process what we have to avoid deadlock
         }
         
         if (evaluations.empty()) {
@@ -538,7 +638,8 @@ bool MCTSEvaluator::processBatch() {
         
         // Report batch size
         std::cout << "[EVALUATOR] Processing batch of " << evaluations.size() 
-                  << " items (max: " << batch_size_ << ")" << std::endl;
+                  << " items (max: " << batch_size_ << ", total batches: " 
+                  << total_batches_.load() << ")" << std::endl;
         
         // Track memory periodically
         static int batch_count = 0;
@@ -552,8 +653,18 @@ bool MCTSEvaluator::processBatch() {
             std::vector<std::unique_ptr<core::IGameState>> states;
             states.reserve(evaluations.size());
             
-            for (auto& eval : evaluations) {
-                states.push_back(std::move(eval.state));
+            // Use OpenMP for parallel state extraction when beneficial
+            if (evaluations.size() > 64) {
+                std::vector<std::unique_ptr<core::IGameState>> temp_states(evaluations.size());
+                #pragma omp parallel for schedule(dynamic)
+                for (size_t i = 0; i < evaluations.size(); ++i) {
+                    temp_states[i] = std::move(evaluations[i].state);
+                }
+                states = std::move(temp_states);
+            } else {
+                for (auto& eval : evaluations) {
+                    states.push_back(std::move(eval.state));
+                }
             }
             
             // Perform inference
@@ -561,10 +672,27 @@ bool MCTSEvaluator::processBatch() {
             
             // Pair results with original evaluations and enqueue to result queue
             if (results.size() == evaluations.size()) {
-                for (size_t i = 0; i < results.size(); ++i) {
+                // Use bulk enqueue for better performance when possible
+                if (results.size() > 1) {
+                    std::vector<std::pair<NetworkOutput, PendingEvaluation>> result_pairs;
+                    result_pairs.reserve(results.size());
+                    
+                    for (size_t i = 0; i < results.size(); ++i) {
+                        result_pairs.emplace_back(
+                            std::move(results[i]), 
+                            std::move(evaluations[i])
+                        );
+                    }
+                    
+                    external_result_queue->enqueue_bulk(
+                        std::make_move_iterator(result_pairs.begin()),
+                        result_pairs.size()
+                    );
+                } else {
+                    // Single item, use regular enqueue
                     external_result_queue->enqueue(std::make_pair(
-                        std::move(results[i]), 
-                        std::move(evaluations[i])
+                        std::move(results[0]), 
+                        std::move(evaluations[0])
                     ));
                 }
                 
@@ -755,29 +883,44 @@ void MCTSEvaluator::processBatches() {
                     evaluations.reserve(batch_size_);
                     auto batch_start_collect = std::chrono::steady_clock::now();
                     
-                    // Try to collect a full batch if items are available
+                    // Aggressive batch collection - wait for larger batches
                     const auto start_time = std::chrono::steady_clock::now();
-                    const auto max_wait_time = std::chrono::milliseconds(10); // Wait longer for full batch
+                    const auto max_wait_time = std::chrono::milliseconds(50); // Increased timeout for better batching
+                    const size_t min_batch_for_processing = std::max<size_t>(16, batch_size_ / 4); // At least 25% of target
                     
+                    // Phase 1: Quick bulk collection
+                    if (external_leaf_queue->size_approx() > 0) {
+                        size_t bulk_size = std::min(external_leaf_queue->size_approx(), batch_size_);
+                        std::vector<PendingEvaluation> bulk_items(bulk_size);
+                        size_t dequeued = external_leaf_queue->try_dequeue_bulk(bulk_items.data(), bulk_size);
+                        for (size_t i = 0; i < dequeued; ++i) {
+                            evaluations.push_back(std::move(bulk_items[i]));
+                        }
+                    }
+                    
+                    // Phase 2: Wait for more items if batch is small
                     while (evaluations.size() < batch_size_ && 
                            std::chrono::steady_clock::now() - start_time < max_wait_time) {
                         PendingEvaluation eval;
                         if (external_leaf_queue->try_dequeue(eval)) {
                             evaluations.push_back(std::move(eval));
-                        } else if (evaluations.empty()) {
-                            // If no items yet, wait a bit longer
-                            std::this_thread::sleep_for(std::chrono::microseconds(100));
-                        } else if (evaluations.size() >= batch_size_ / 4) {
-                            // Have 25% of batch, can break if no more items
-                            std::this_thread::yield();
-                            if (!external_leaf_queue->try_dequeue(eval)) {
-                                break;
-                            }
-                            evaluations.push_back(std::move(eval));
+                        } else if (evaluations.size() < min_batch_for_processing) {
+                            // If we don't have minimum batch size, wait longer
+                            std::this_thread::sleep_for(std::chrono::milliseconds(5));
                         } else {
-                            // Have some items but not many, wait a bit more
-                            std::this_thread::sleep_for(std::chrono::microseconds(50));
+                            // Have enough for a reasonable batch, can stop collecting
+                            break;
                         }
+                    }
+                    
+                    // Don't process very small batches unless we're shutting down
+                    if (evaluations.size() < min_batch_for_processing && 
+                        !shutdown_flag_.load(std::memory_order_acquire)) {
+                        // Put items back for later processing to avoid tiny batches
+                        for (auto& eval : evaluations) {
+                            external_leaf_queue->enqueue(std::move(eval));
+                        }
+                        evaluations.clear();
                     }
                     
                     if (evaluations.empty()) {

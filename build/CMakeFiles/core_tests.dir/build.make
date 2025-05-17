@@ -133,13 +133,13 @@ bin/Release/core_tests: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.7.0
 bin/Release/core_tests: /opt/libtorch-2.7.0-cu128/lib/libtorch.so
 bin/Release/core_tests: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
 bin/Release/core_tests: /opt/libtorch-2.7.0-cu128/lib/libc10.so
-bin/Release/core_tests: /usr/local/cuda-12.8/lib64/libcudart.so
+bin/Release/core_tests: /usr/local/cuda/lib64/libcudart.so
 bin/Release/core_tests: /opt/libtorch-2.7.0-cu128/lib/libc10.so
 bin/Release/core_tests: /opt/libtorch-2.7.0-cu128/lib/libkineto.a
-bin/Release/core_tests: /usr/local/cuda-12.8/lib64/libnvrtc.so
+bin/Release/core_tests: /usr/local/cuda/lib64/libnvrtc.so
 bin/Release/core_tests: /usr/local/cuda/lib64/libnvToolsExt.so
 bin/Release/core_tests: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
-bin/Release/core_tests: /usr/local/cuda-12.8/lib64/libcudart.so
+bin/Release/core_tests: /usr/local/cuda/lib64/libcudart.so
 bin/Release/core_tests: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
 bin/Release/core_tests: CMakeFiles/core_tests.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable bin/Release/core_tests"

@@ -50,6 +50,13 @@ public:
     bool equals(const IGameState& other) const override { return false; }
     std::vector<int> getMoveHistory() const override { return {}; }
     bool validate() const override { return true; }
+    void copyFrom(const IGameState& source) override {
+        const MockGameState* mock_source = dynamic_cast<const MockGameState*>(&source);
+        if (!mock_source) {
+            throw std::invalid_argument("Cannot copy from non-MockGameState");
+        }
+        terminal_ = mock_source->terminal_;
+    }
 private:
     bool terminal_;
 };

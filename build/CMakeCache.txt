@@ -52,7 +52,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_BUILD_TYPE:STRING=
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -90,7 +90,7 @@ CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-11
 CMAKE_CXX_FLAGS:STRING=
 
 //Flags used by the CXX compiler during DEBUG builds.
-CMAKE_CXX_FLAGS_DEBUG:STRING=-g -O0
+CMAKE_CXX_FLAGS_DEBUG:STRING=-g
 
 //Flags used by the CXX compiler during MINSIZEREL builds.
 CMAKE_CXX_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
@@ -100,6 +100,29 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 
 //Flags used by the CXX compiler during RELWITHDEBINFO builds.
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
+
+//A wrapper around 'ar' adding the appropriate '--plugin' option
+// for the GCC compiler
+CMAKE_C_COMPILER_AR:FILEPATH=/usr/bin/gcc-ar-11
+
+//A wrapper around 'ranlib' adding the appropriate '--plugin' option
+// for the GCC compiler
+CMAKE_C_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-11
+
+//Flags used by the C compiler during all build types.
+CMAKE_C_FLAGS:STRING=
+
+//Flags used by the C compiler during DEBUG builds.
+CMAKE_C_FLAGS_DEBUG:STRING=-g
+
+//Flags used by the C compiler during MINSIZEREL builds.
+CMAKE_C_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
+
+//Flags used by the C compiler during RELEASE builds.
+CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
+
+//Flags used by the C compiler during RELWITHDEBINFO builds.
+CMAKE_C_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
 //Path to a program.
 CMAKE_DLLTOOL:FILEPATH=CMAKE_DLLTOOL-NOTFOUND
@@ -294,12 +317,33 @@ CMAKE_STRIP:FILEPATH=/usr/bin/strip
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//Path to a file.
+CONCURRENTQUEUE_INCLUDE_DIR:PATH=CONCURRENTQUEUE_INCLUDE_DIR-NOTFOUND
+
 //Path to the coverage program that CTest uses for performing coverage
 // inspection
 COVERAGE_COMMAND:FILEPATH=/usr/bin/gcov
 
 //Extra command line flags to pass to the coverage tool
 COVERAGE_EXTRA_FLAGS:STRING=-l
+
+//Enable to build RPM source packages
+CPACK_SOURCE_RPM:BOOL=OFF
+
+//Enable to build TBZ2 source packages
+CPACK_SOURCE_TBZ2:BOOL=ON
+
+//Enable to build TGZ source packages
+CPACK_SOURCE_TGZ:BOOL=ON
+
+//Enable to build TXZ source packages
+CPACK_SOURCE_TXZ:BOOL=ON
+
+//Enable to build TZ source packages
+CPACK_SOURCE_TZ:BOOL=ON
+
+//Enable to build ZIP source packages
+CPACK_SOURCE_ZIP:BOOL=OFF
 
 //How many times to retry timed-out CTest submissions.
 CTEST_SUBMIT_RETRY_COUNT:STRING=3
@@ -330,10 +374,10 @@ CUDA_BUILD_CUBIN:BOOL=OFF
 CUDA_BUILD_EMULATION:BOOL=OFF
 
 //Path to a library.
-CUDA_CUDART:FILEPATH=/usr/local/cuda-12.8/lib64/libcudart.so
+CUDA_CUDART:FILEPATH=/usr/local/cuda/lib64/libcudart.so
 
 //"cudart" library
-CUDA_CUDART_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcudart.so
+CUDA_CUDART_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcudart.so
 
 //"cuda" library (older versions only).
 CUDA_CUDA_LIBRARY:FILEPATH=/usr/lib/wsl/lib/libcuda.so
@@ -349,7 +393,7 @@ CUDA_HOST_COMPILATION_CPP:BOOL=ON
 CUDA_HOST_COMPILER:FILEPATH=/usr/bin/gcc
 
 //Path to a program.
-CUDA_NVCC_EXECUTABLE:FILEPATH=/usr/local/cuda-12.8/bin/nvcc
+CUDA_NVCC_EXECUTABLE:FILEPATH=/usr/local/cuda/bin/nvcc
 
 //Semi-colon delimit multiple arguments. during all build types.
 CUDA_NVCC_FLAGS:STRING=
@@ -367,10 +411,10 @@ CUDA_NVCC_FLAGS_RELEASE:STRING=
 // builds.
 CUDA_NVCC_FLAGS_RELWITHDEBINFO:STRING=
 
-CUDA_NVRTC_LIB:FILEPATH=/usr/local/cuda-12.8/lib64/libnvrtc.so
+CUDA_NVRTC_LIB:FILEPATH=/usr/local/cuda/lib64/libnvrtc.so
 
 //"OpenCL" library
-CUDA_OpenCL_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libOpenCL.so
+CUDA_OpenCL_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libOpenCL.so
 
 //Propagate C/CXX_FLAGS and friends to the host compiler via -Xcompile
 CUDA_PROPAGATE_HOST_FLAGS:BOOL=ON
@@ -386,10 +430,10 @@ CUDA_SDK_ROOT_DIR:PATH=CUDA_SDK_ROOT_DIR-NOTFOUND
 CUDA_SEPARABLE_COMPILATION:BOOL=OFF
 
 //Path to a file.
-CUDA_TOOLKIT_INCLUDE:PATH=/usr/local/cuda-12.8/include
+CUDA_TOOLKIT_INCLUDE:PATH=/usr/local/cuda/include
 
 //Toolkit location.
-CUDA_TOOLKIT_ROOT_DIR:PATH=/usr/local/cuda-12.8
+CUDA_TOOLKIT_ROOT_DIR:PATH=/usr/local/cuda
 
 //Print out the commands run while compiling the CUDA source file.
 //  With the Makefile generator this defaults to VERBOSE variable
@@ -401,106 +445,106 @@ CUDA_VERBOSE_BUILD:BOOL=OFF
 CUDA_VERSION:STRING=12.8
 
 //Path to a library.
-CUDA_cuFile_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcufile.so
+CUDA_cuFile_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufile.so
 
 //Path to a library.
-CUDA_cuFile_rdma_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcufile_rdma.so
+CUDA_cuFile_rdma_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufile_rdma.so
 
 //Path to a library.
-CUDA_cuFile_rdma_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcufile_rdma_static.a
+CUDA_cuFile_rdma_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufile_rdma_static.a
 
 //Path to a library.
-CUDA_cuFile_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcufile_static.a
+CUDA_cuFile_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufile_static.a
 
 //"cublasLt" library
-CUDA_cublasLt_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcublasLt.so
+CUDA_cublasLt_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcublasLt.so
 
 //Path to a library.
-CUDA_cublasLt_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcublasLt_static.a
+CUDA_cublasLt_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcublasLt_static.a
 
 //"cublas" library
-CUDA_cublas_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcublas.so
+CUDA_cublas_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcublas.so
 
 //Path to a library.
-CUDA_cublas_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcublas_static.a
+CUDA_cublas_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcublas_static.a
 
 //Path to a library.
 CUDA_cuda_driver_LIBRARY:FILEPATH=/usr/lib/wsl/lib/libcuda.so
 
 //"cudadevrt" library
-CUDA_cudadevrt_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcudadevrt.a
+CUDA_cudadevrt_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcudadevrt.a
 
 //Path to a library.
-CUDA_cudart_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcudart.so
+CUDA_cudart_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcudart.so
 
 //static CUDA runtime library
-CUDA_cudart_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcudart_static.a
+CUDA_cudart_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcudart_static.a
 
 //"cufft" library
-CUDA_cufft_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcufft.so
+CUDA_cufft_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufft.so
 
 //Path to a library.
-CUDA_cufft_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcufft_static.a
+CUDA_cufft_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufft_static.a
 
 //Path to a library.
-CUDA_cufft_static_nocallback_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcufft_static_nocallback.a
+CUDA_cufft_static_nocallback_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufft_static_nocallback.a
 
 //Path to a library.
-CUDA_cufftw_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcufftw.so
+CUDA_cufftw_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufftw.so
 
 //Path to a library.
-CUDA_cufftw_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcufftw_static.a
+CUDA_cufftw_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufftw_static.a
 
 //Path to a library.
-CUDA_culibos_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libculibos.a
+CUDA_culibos_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libculibos.a
 
 //"cupti" library
-CUDA_cupti_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcupti.so
+CUDA_cupti_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcupti.so
 
 //Path to a library.
-CUDA_cupti_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcupti_static.a
+CUDA_cupti_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcupti_static.a
 
 //"curand" library
-CUDA_curand_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcurand.so
+CUDA_curand_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcurand.so
 
 //Path to a library.
-CUDA_curand_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcurand_static.a
+CUDA_curand_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcurand_static.a
 
 //"cusolver" library
-CUDA_cusolver_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcusolver.so
+CUDA_cusolver_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcusolver.so
 
 //Path to a library.
-CUDA_cusolver_lapack_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcusolver_lapack_static.a
+CUDA_cusolver_lapack_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcusolver_lapack_static.a
 
 //Path to a library.
-CUDA_cusolver_metis_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcusolver_metis_static.a
+CUDA_cusolver_metis_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcusolver_metis_static.a
 
 //Path to a library.
-CUDA_cusolver_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcusolver_static.a
+CUDA_cusolver_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcusolver_static.a
 
 //"cusparse" library
-CUDA_cusparse_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcusparse.so
+CUDA_cusparse_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcusparse.so
 
 //Path to a library.
-CUDA_cusparse_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libcusparse_static.a
+CUDA_cusparse_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcusparse_static.a
 
 //"nppc" library
-CUDA_nppc_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppc.so
+CUDA_nppc_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppc.so
 
 //Path to a library.
-CUDA_nppc_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppc_static.a
+CUDA_nppc_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppc_static.a
 
 //"nppial" library
-CUDA_nppial_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppial.so
+CUDA_nppial_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppial.so
 
 //Path to a library.
-CUDA_nppial_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppial_static.a
+CUDA_nppial_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppial_static.a
 
 //"nppicc" library
-CUDA_nppicc_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppicc.so
+CUDA_nppicc_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppicc.so
 
 //Path to a library.
-CUDA_nppicc_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppicc_static.a
+CUDA_nppicc_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppicc_static.a
 
 //"nppicom" library
 CUDA_nppicom_LIBRARY:FILEPATH=CUDA_nppicom_LIBRARY-NOTFOUND
@@ -509,55 +553,55 @@ CUDA_nppicom_LIBRARY:FILEPATH=CUDA_nppicom_LIBRARY-NOTFOUND
 CUDA_nppicom_static_LIBRARY:FILEPATH=CUDA_nppicom_static_LIBRARY-NOTFOUND
 
 //"nppidei" library
-CUDA_nppidei_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppidei.so
+CUDA_nppidei_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppidei.so
 
 //Path to a library.
-CUDA_nppidei_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppidei_static.a
+CUDA_nppidei_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppidei_static.a
 
 //"nppif" library
-CUDA_nppif_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppif.so
+CUDA_nppif_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppif.so
 
 //Path to a library.
-CUDA_nppif_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppif_static.a
+CUDA_nppif_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppif_static.a
 
 //"nppig" library
-CUDA_nppig_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppig.so
+CUDA_nppig_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppig.so
 
 //Path to a library.
-CUDA_nppig_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppig_static.a
+CUDA_nppig_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppig_static.a
 
 //"nppim" library
-CUDA_nppim_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppim.so
+CUDA_nppim_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppim.so
 
 //Path to a library.
-CUDA_nppim_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppim_static.a
+CUDA_nppim_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppim_static.a
 
 //"nppist" library
-CUDA_nppist_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppist.so
+CUDA_nppist_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppist.so
 
 //Path to a library.
-CUDA_nppist_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppist_static.a
+CUDA_nppist_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppist_static.a
 
 //"nppisu" library
-CUDA_nppisu_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppisu.so
+CUDA_nppisu_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppisu.so
 
 //Path to a library.
-CUDA_nppisu_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppisu_static.a
+CUDA_nppisu_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppisu_static.a
 
 //"nppitc" library
-CUDA_nppitc_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppitc.so
+CUDA_nppitc_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppitc.so
 
 //Path to a library.
-CUDA_nppitc_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnppitc_static.a
+CUDA_nppitc_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnppitc_static.a
 
 //"npps" library
-CUDA_npps_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnpps.so
+CUDA_npps_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnpps.so
 
 //Path to a library.
-CUDA_npps_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnpps_static.a
+CUDA_npps_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnpps_static.a
 
 //"nvToolsExt" library
-CUDA_nvToolsExt_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnvToolsExt.so
+CUDA_nvToolsExt_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvToolsExt.so
 
 //Path to a library.
 CUDA_nvgraph_LIBRARY:FILEPATH=CUDA_nvgraph_LIBRARY-NOTFOUND
@@ -566,16 +610,16 @@ CUDA_nvgraph_LIBRARY:FILEPATH=CUDA_nvgraph_LIBRARY-NOTFOUND
 CUDA_nvgraph_static_LIBRARY:FILEPATH=CUDA_nvgraph_static_LIBRARY-NOTFOUND
 
 //Path to a library.
-CUDA_nvjpeg_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnvjpeg.so
+CUDA_nvjpeg_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvjpeg.so
 
 //Path to a library.
-CUDA_nvjpeg_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnvjpeg_static.a
+CUDA_nvjpeg_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvjpeg_static.a
 
 //Path to a library.
 CUDA_nvml_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so
 
 //Path to a library.
-CUDA_nvrtc_LIBRARY:FILEPATH=/usr/local/cuda-12.8/lib64/libnvrtc.so
+CUDA_nvrtc_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvrtc.so
 
 //Path to a library.
 CUDA_rt_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/librt.a
@@ -624,11 +668,18 @@ FETCHCONTENT_FULLY_DISCONNECTED:BOOL=OFF
 FETCHCONTENT_QUIET:BOOL=ON
 
 //When not empty, overrides where to find pre-populated content
+// for concurrentqueue
+FETCHCONTENT_SOURCE_DIR_CONCURRENTQUEUE:PATH=
+
+//When not empty, overrides where to find pre-populated content
 // for phmap
 FETCHCONTENT_SOURCE_DIR_PHMAP:PATH=
 
 //Enables UPDATE_DISCONNECTED behavior for all content population
 FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
+
+//Enables UPDATE_DISCONNECTED behavior just for population of concurrentqueue
+FETCHCONTENT_UPDATES_DISCONNECTED_CONCURRENTQUEUE:BOOL=OFF
 
 //Enables UPDATE_DISCONNECTED behavior just for population of phmap
 FETCHCONTENT_UPDATES_DISCONNECTED_PHMAP:BOOL=OFF
@@ -699,14 +750,23 @@ Torch_DIR:PATH=/opt/libtorch-2.7.0-cu128/share/cmake/Torch
 //Enable cuDNN usage
 USE_CUDNN:BOOL=1
 
-//No help, variable specified on the command line.
-WITH_CUDNN:UNINITIALIZED=ON
-
 //Build with PyTorch
 WITH_TORCH:BOOL=ON
 
 //Path to a library.
 c10_LIBRARY:FILEPATH=/opt/libtorch-2.7.0-cu128/lib/libc10.so
+
+//Value Computed by CMake
+concurrentqueue_BINARY_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/concurrentqueue-build
+
+//The directory containing a CMake configuration file for concurrentqueue.
+concurrentqueue_DIR:PATH=concurrentqueue_DIR-NOTFOUND
+
+//Value Computed by CMake
+concurrentqueue_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+concurrentqueue_SOURCE_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/concurrentqueue-src
 
 //Path to a library.
 kineto_LIBRARY:FILEPATH=/opt/libtorch-2.7.0-cu128/lib/libkineto.a
@@ -788,6 +848,20 @@ CMAKE_CXX_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
 CMAKE_CXX_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_CXX_FLAGS_RELWITHDEBINFO
 CMAKE_CXX_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_COMPILER_AR
+CMAKE_C_COMPILER_AR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_COMPILER_RANLIB
+CMAKE_C_COMPILER_RANLIB-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS
+CMAKE_C_FLAGS-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS_DEBUG
+CMAKE_C_FLAGS_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS_MINSIZEREL
+CMAKE_C_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS_RELEASE
+CMAKE_C_FLAGS_RELEASE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS_RELWITHDEBINFO
+CMAKE_C_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_DLLTOOL
 CMAKE_DLLTOOL-ADVANCED:INTERNAL=1
 //Executable file format
@@ -872,7 +946,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=2
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=3
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -919,6 +993,18 @@ CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 COVERAGE_COMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: COVERAGE_EXTRA_FLAGS
 COVERAGE_EXTRA_FLAGS-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CPACK_SOURCE_RPM
+CPACK_SOURCE_RPM-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CPACK_SOURCE_TBZ2
+CPACK_SOURCE_TBZ2-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CPACK_SOURCE_TGZ
+CPACK_SOURCE_TGZ-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CPACK_SOURCE_TXZ
+CPACK_SOURCE_TXZ-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CPACK_SOURCE_TZ
+CPACK_SOURCE_TZ-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CPACK_SOURCE_ZIP
+CPACK_SOURCE_ZIP-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CTEST_SUBMIT_RETRY_COUNT
 CTEST_SUBMIT_RETRY_COUNT-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CTEST_SUBMIT_RETRY_DELAY
@@ -974,10 +1060,10 @@ CUDA_SEPARABLE_COMPILATION-ADVANCED:INTERNAL=1
 CUDA_TOOLKIT_INCLUDE-ADVANCED:INTERNAL=1
 //This is the value of the last time CUDA_TOOLKIT_ROOT_DIR was
 // set successfully.
-CUDA_TOOLKIT_ROOT_DIR_INTERNAL:INTERNAL=/usr/local/cuda-12.8
+CUDA_TOOLKIT_ROOT_DIR_INTERNAL:INTERNAL=/usr/local/cuda
 //This is the value of the last time CUDA_TOOLKIT_TARGET_DIR was
 // set successfully.
-CUDA_TOOLKIT_TARGET_DIR_INTERNAL:INTERNAL=/usr/local/cuda-12.8
+CUDA_TOOLKIT_TARGET_DIR_INTERNAL:INTERNAL=/usr/local/cuda
 //Use the static version of the CUDA runtime library if available
 CUDA_USE_STATIC_CUDA_RUNTIME:INTERNAL=OFF
 //ADVANCED property for variable: CUDA_VERBOSE_BUILD
@@ -1117,13 +1203,17 @@ CUDNN_ROOT-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: DART_TESTING_TIMEOUT
 DART_TESTING_TIMEOUT-ADVANCED:INTERNAL=1
 //Details about finding CUDA
-FIND_PACKAGE_MESSAGE_DETAILS_CUDA:INTERNAL=[/usr/local/cuda-12.8][/usr/local/cuda-12.8/bin/nvcc][/usr/local/cuda-12.8/include][/usr/local/cuda-12.8/lib64/libcudart.so][v12.8()]
+FIND_PACKAGE_MESSAGE_DETAILS_CUDA:INTERNAL=[/usr/local/cuda][/usr/local/cuda/bin/nvcc][/usr/local/cuda/include][/usr/local/cuda/lib64/libcudart.so][v12.8()]
 //Details about finding CUDAToolkit
-FIND_PACKAGE_MESSAGE_DETAILS_CUDAToolkit:INTERNAL=[/usr/local/cuda-12.8/include][12.8.93][/usr/local/cuda-12.8/lib64/libcudart.so][/usr/local/cuda-12.8/bin][v12.8.93()]
+FIND_PACKAGE_MESSAGE_DETAILS_CUDAToolkit:INTERNAL=[/usr/local/cuda-12.8/include][12.8.93][/usr/local/cuda/lib64/libcudart.so][/usr/local/cuda-12.8/bin][v12.8.93()]
 //Details about finding CUDNN
 FIND_PACKAGE_MESSAGE_DETAILS_CUDNN:INTERNAL=[/opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9][/usr/include/x86_64-linux-gnu][v()]
 //Details about finding GTest
 FIND_PACKAGE_MESSAGE_DETAILS_GTest:INTERNAL=[/usr/lib/x86_64-linux-gnu/cmake/GTest/GTestConfig.cmake][c ][v1.11.0()]
+//Details about finding OpenMP
+FIND_PACKAGE_MESSAGE_DETAILS_OpenMP:INTERNAL=[TRUE][c ][v4.5()]
+//Details about finding OpenMP_CXX
+FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_CXX:INTERNAL=[-fopenmp][/usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so][/usr/lib/x86_64-linux-gnu/libpthread.a][v4.5()]
 //Details about finding Python
 FIND_PACKAGE_MESSAGE_DETAILS_Python:INTERNAL=[/usr/bin/python3.10][cfound components: Interpreter ][v3.10.12()]
 //Details about finding Threads

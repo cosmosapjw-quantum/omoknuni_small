@@ -102,13 +102,13 @@ bin/Release/transposition_table_test: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0
 bin/Release/transposition_table_test: /opt/libtorch-2.7.0-cu128/lib/libtorch.so
 bin/Release/transposition_table_test: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
 bin/Release/transposition_table_test: /opt/libtorch-2.7.0-cu128/lib/libc10.so
-bin/Release/transposition_table_test: /usr/local/cuda-12.8/lib64/libcudart.so
+bin/Release/transposition_table_test: /usr/local/cuda/lib64/libcudart.so
 bin/Release/transposition_table_test: /opt/libtorch-2.7.0-cu128/lib/libc10.so
 bin/Release/transposition_table_test: /opt/libtorch-2.7.0-cu128/lib/libkineto.a
-bin/Release/transposition_table_test: /usr/local/cuda-12.8/lib64/libnvrtc.so
+bin/Release/transposition_table_test: /usr/local/cuda/lib64/libnvrtc.so
 bin/Release/transposition_table_test: /usr/local/cuda/lib64/libnvToolsExt.so
 bin/Release/transposition_table_test: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
-bin/Release/transposition_table_test: /usr/local/cuda-12.8/lib64/libcudart.so
+bin/Release/transposition_table_test: /usr/local/cuda/lib64/libcudart.so
 bin/Release/transposition_table_test: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
 bin/Release/transposition_table_test: /usr/lib/x86_64-linux-gnu/libgtest.a
 bin/Release/transposition_table_test: CMakeFiles/transposition_table_test.dir/link.txt

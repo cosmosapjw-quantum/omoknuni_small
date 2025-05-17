@@ -31,13 +31,14 @@ public:
     ~MCTSNode();
 
     // Node selection using PUCT formula with virtual loss
-    std::shared_ptr<MCTSNode> selectChild(float exploration_factor);
+    std::shared_ptr<MCTSNode> selectChild(float exploration_factor, bool use_rave = false, float rave_constant = 3000.0f);
 
-    // Expansion
-    void expand();
+    // Expansion with progressive widening
+    void expand(bool use_progressive_widening = false, float cpw = 1.0f, float kpw = 10.0f);
     bool isFullyExpanded() const;
     bool isLeaf() const;
     bool isTerminal() const;
+    int getNumExpandedChildren() const;
 
     // Virtual loss
     void addVirtualLoss();
@@ -45,6 +46,14 @@ public:
 
     // Backpropagation
     void update(float value);
+    
+    // RAVE updates
+    void updateRAVE(float value);
+    float getRAVEValue() const;
+    int getRAVECount() const;
+    
+    // Combined value with RAVE
+    float getCombinedValue(float rave_constant) const;
     
     // Evaluation state - using atomic_flag for lock-free checking
     bool tryMarkForEvaluation(); // Returns true if successfully marked
@@ -97,6 +106,10 @@ private:
     std::atomic<float> value_sum_;
     std::atomic<int> virtual_loss_count_;
     
+    // RAVE statistics
+    std::atomic<int> rave_count_;
+    std::atomic<float> rave_value_sum_;
+    
     // Prior probabilities from neural network
     std::vector<float> prior_probabilities_;
     float prior_probability_;
@@ -110,8 +123,8 @@ private:
     // Remove mutex as we use lock-free atomic operations
     // std::mutex evaluation_mutex_;
     
-    // Thread safety
-    std::mutex expansion_mutex_;
+    // Thread safety - atomic flag for expansion status (lock-free)
+    std::atomic<bool> is_expanded_{false};
 };
 
 } // namespace mcts

@@ -6,6 +6,7 @@
 #include <c10/cuda/CUDACachingAllocator.h>
 #include <chrono> // For timing
 #include <iostream> // For logging
+#include <omp.h> // For OpenMP parallelization
 
 namespace alphazero {
 namespace nn {
@@ -256,10 +257,16 @@ torch::Tensor ResNetModel::prepareInputTensor(
     auto accessor = batch_tensor_cpu.accessor<float, 4>();
 
     auto data_retrieval_loop_start_time = std::chrono::high_resolution_clock::now();
+    
+    // Use OpenMP to parallelize tensor conversion across states
+    #pragma omp parallel for schedule(dynamic)
     for (size_t i = 0; i < states.size(); ++i) {
         if (!states[i]) {
             // std::cerr << "WARNING: Null state at index " << i << " in prepareInputTensor. Filling with zeros." << std::endl;
-            for(int64_t c = 0; c < actual_data_channels; ++c) for(int64_t h = 0; h < height; ++h) for(int64_t w = 0; w < width; ++w) accessor[i][c][h][w] = 0.0f;
+            for(int64_t c = 0; c < actual_data_channels; ++c) 
+                for(int64_t h = 0; h < height; ++h) 
+                    for(int64_t w = 0; w < width; ++w) 
+                        accessor[i][c][h][w] = 0.0f;
             continue;
         }
         const auto& current_state_ptr = states[i];
@@ -269,8 +276,14 @@ torch::Tensor ResNetModel::prepareInputTensor(
                 current_state_ptr->getTensorRepresentation() : 
                 current_state_ptr->getEnhancedTensorRepresentation();
         } catch (const std::exception& e) {
-            std::cerr << "ERROR: Exception getting tensor representation from state " << i << ": " << e.what() << ". Filling with zeros." << std::endl;
-            for(int64_t c = 0; c < actual_data_channels; ++c) for(int64_t h = 0; h < height; ++h) for(int64_t w = 0; w < width; ++w) accessor[i][c][h][w] = 0.0f;
+            #pragma omp critical
+            {
+                std::cerr << "ERROR: Exception getting tensor representation from state " << i << ": " << e.what() << ". Filling with zeros." << std::endl;
+            }
+            for(int64_t c = 0; c < actual_data_channels; ++c) 
+                for(int64_t h = 0; h < height; ++h) 
+                    for(int64_t w = 0; w < width; ++w) 
+                        accessor[i][c][h][w] = 0.0f;
             continue;
         }
 
@@ -279,10 +292,14 @@ torch::Tensor ResNetModel::prepareInputTensor(
             (actual_data_channels > 0 && tensor_data[0].size() != static_cast<size_t>(height)) ||
             (actual_data_channels > 0 && height > 0 && tensor_data[0][0].size() != static_cast<size_t>(width))) {
             // std::cerr << "WARNING: Tensor dimension mismatch for state " << i << ". Filling with zeros." << std::endl;
-            for(int64_t c = 0; c < actual_data_channels; ++c) for(int64_t h = 0; h < height; ++h) for(int64_t w = 0; w < width; ++w) accessor[i][c][h][w] = 0.0f;
+            for(int64_t c = 0; c < actual_data_channels; ++c) 
+                for(int64_t h = 0; h < height; ++h) 
+                    for(int64_t w = 0; w < width; ++w) 
+                        accessor[i][c][h][w] = 0.0f;
             continue;
         }
         
+        // Copy tensor data - innermost loops can remain serial as they're cache-friendly
         for (int64_t c = 0; c < actual_data_channels; ++c) {
             for (int64_t h = 0; h < height; ++h) {
                 for (int64_t w = 0; w < width; ++w) {

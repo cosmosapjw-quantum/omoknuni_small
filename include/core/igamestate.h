@@ -167,6 +167,18 @@ public:
      * @return Unique pointer to a new copy
      */
     virtual std::unique_ptr<IGameState> clone() const = 0;
+    
+    /**
+     * @brief Copy the state from another game state instance
+     * 
+     * Copies all relevant fields from the source state to this state.
+     * This allows reusing existing state objects from a pool rather than
+     * allocating new ones. The source and destination must be the same game type.
+     * 
+     * @param source The source state to copy from
+     * @throws std::runtime_error if the game types don't match
+     */
+    virtual void copyFrom(const IGameState& source) = 0;
 
     /**
      * @brief Convert action to string representation

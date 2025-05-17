@@ -5,6 +5,7 @@
 #include <limits>
 #include <algorithm>
 #include <iostream>
+#include <omp.h>
 #include "utils/debug_monitor.h"
 
 namespace alphazero {
@@ -17,7 +18,9 @@ MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state_param, std::weak_ptr<
       visit_count_(0),
       value_sum_(0.0f),
       virtual_loss_count_(0),
-      prior_probability_(0.0f) {
+      prior_probability_(0.0f),
+      rave_count_(0),
+      rave_value_sum_(0.0f) {
 
     // Safety check - ensure we have a valid state
     if (!state_) {
@@ -64,56 +67,105 @@ MCTSNode::~MCTSNode() {
     // No need for manual deletion
 }
 
-std::shared_ptr<MCTSNode> MCTSNode::selectChild(float exploration_factor) {
+std::shared_ptr<MCTSNode> MCTSNode::selectChild(float exploration_factor, bool use_rave, float rave_constant) {
     float best_score = -std::numeric_limits<float>::infinity();
     std::shared_ptr<MCTSNode> best_child = nullptr;
     
     float exploration_param = exploration_factor * 
         std::sqrt(static_cast<float>(visit_count_.load(std::memory_order_relaxed)));
     
-    for (size_t i = 0; i < children_.size(); ++i) {
-        auto& child = children_[i];
+    const size_t num_children = children_.size();
+    
+    // For many children, use OpenMP parallelization
+    if (num_children > 32) {
+        std::vector<float> scores(num_children);
         
-        // Get stats (thread-safe reads)
-        int child_visits = child->visit_count_.load(std::memory_order_relaxed);
-        int virtual_losses = child->virtual_loss_count_.load(std::memory_order_acquire);
-        float child_value = child->value_sum_.load(std::memory_order_relaxed);
+        #pragma omp parallel for schedule(static)
+        for (size_t i = 0; i < num_children; ++i) {
+            auto& child = children_[i];
+            
+            // Get stats (thread-safe reads)
+            int child_visits = child->visit_count_.load(std::memory_order_relaxed);
+            int virtual_losses = child->virtual_loss_count_.load(std::memory_order_acquire);
+            float child_value = child->value_sum_.load(std::memory_order_relaxed);
+            
+            // Apply virtual loss penalty
+            int effective_visits = child_visits + virtual_losses;
+            float effective_value = child_value - virtual_losses;
+            
+            // Calculate exploitation value using RAVE if enabled
+            float exploitation;
+            if (use_rave) {
+                exploitation = child->getCombinedValue(rave_constant);
+            } else {
+                exploitation = effective_visits > 0 ? 
+                    effective_value / effective_visits : 0.0f;
+            }
+            
+            float exploration = child->prior_probability_ * exploration_param / 
+                (1 + effective_visits);
+            
+            scores[i] = exploitation + exploration;
+        }
         
-        // Apply virtual loss penalty
-        int effective_visits = child_visits + virtual_losses;
-        float effective_value = child_value - virtual_losses;
-        
-        // PUCT formula (AlphaZero-style)
-        float exploitation = effective_visits > 0 ? 
-            effective_value / effective_visits : 0.0f;
-        float exploration = child->prior_probability_ * exploration_param / 
-            (1 + effective_visits);
-        
-        float score = exploitation + exploration;
-        
-        if (score > best_score) {
-            best_score = score;
-            best_child = child;
+        // Find best child sequentially
+        for (size_t i = 0; i < num_children; ++i) {
+            if (scores[i] > best_score) {
+                best_score = scores[i];
+                best_child = children_[i];
+            }
+        }
+    } else {
+        // For few children, use sequential processing
+        for (size_t i = 0; i < num_children; ++i) {
+            auto& child = children_[i];
+            
+            // Get stats (thread-safe reads)
+            int child_visits = child->visit_count_.load(std::memory_order_relaxed);
+            int virtual_losses = child->virtual_loss_count_.load(std::memory_order_acquire);
+            float child_value = child->value_sum_.load(std::memory_order_relaxed);
+            
+            // Apply virtual loss penalty
+            int effective_visits = child_visits + virtual_losses;
+            float effective_value = child_value - virtual_losses;
+            
+            // Calculate exploitation value using RAVE if enabled
+            float exploitation;
+            if (use_rave) {
+                exploitation = child->getCombinedValue(rave_constant);
+            } else {
+                exploitation = effective_visits > 0 ? 
+                    effective_value / effective_visits : 0.0f;
+            }
+            
+            float exploration = child->prior_probability_ * exploration_param / 
+                (1 + effective_visits);
+            
+            float score = exploitation + exploration;
+            
+            if (score > best_score) {
+                best_score = score;
+                best_child = child;
+            }
         }
     }
     
     return best_child;
 }
 
-void MCTSNode::expand() {
+void MCTSNode::expand(bool use_progressive_widening, float cpw, float kpw) {
     // First check if we have a valid state to prevent segfaults
     if (!state_) {
-        // MCTSNode::expand - state_ is NULL! Cannot expand.
         return;
     }
     
-    // Use a lock to prevent concurrent expansion
-    std::lock_guard<std::mutex> lock(expansion_mutex_);
-    
-    // Check again after acquiring the lock to avoid race conditions
-    if (!children_.empty()) {
-        return; // Already expanded
+    // Lock-free expansion check - use compare_exchange for atomicity
+    bool expected = false;
+    if (!is_expanded_.compare_exchange_strong(expected, true, std::memory_order_acq_rel)) {
+        return; // Already expanded by another thread
     }
+    
+    // At this point, we have exclusive access to expand this node
     
     if (state_->isTerminal()) {
         return; // Terminal nodes don't expand
@@ -124,26 +176,42 @@ void MCTSNode::expand() {
     try {
         legal_moves = state_->getLegalMoves();
     } catch (const std::exception& e) {
-        // MCTSNode::expand - Error getting legal moves
+        // On error, roll back the expanded flag
+        is_expanded_.store(false, std::memory_order_release);
         return;
     }
     
     if (legal_moves.empty()) {
-        // MCTSNode::expand - Warning: No legal moves found in state
         return; // Early return if no legal moves
     }
     
     // Safety check for unreasonable number of legal moves
-    const size_t max_reasonable_moves = 1000; // Arbitrary limit that should be safe
+    const size_t max_reasonable_moves = 1000;
     if (legal_moves.size() > max_reasonable_moves) {
         // MCTSNode::expand - Excessive number of legal moves, limiting to maximum
         legal_moves.resize(max_reasonable_moves);
     }
     
+    // Determine how many children to expand based on progressive widening
+    size_t num_children_to_expand = legal_moves.size();
+    
+    if (use_progressive_widening && visit_count_ > 0) {
+        // Progressive widening formula: num_children = cpw * N^kpw
+        // where N is the parent's visit count
+        int parent_visits = visit_count_.load();
+        num_children_to_expand = std::min(
+            legal_moves.size(),
+            static_cast<size_t>(cpw * std::pow(parent_visits, kpw))
+        );
+        
+        // Ensure we expand at least one child
+        num_children_to_expand = std::max(num_children_to_expand, static_cast<size_t>(1));
+    }
+    
     // Reserve space for efficiency
     try {
-        children_.reserve(legal_moves.size());
-        actions_.reserve(legal_moves.size());
+        children_.reserve(num_children_to_expand);
+        actions_.reserve(num_children_to_expand);
     } 
     catch (const std::exception& e) {
         // MCTSNode::expand - Memory allocation error
@@ -157,10 +225,12 @@ void MCTSNode::expand() {
         local_rng.seed(rd());
     }
     
+    // Shuffle legal moves to ensure random selection
     std::shuffle(legal_moves.begin(), legal_moves.end(), local_rng);
     
     // Create children with proper exception handling
-    for (int move : legal_moves) {
+    for (size_t i = 0; i < num_children_to_expand && i < legal_moves.size(); ++i) {
+        int move = legal_moves[i];
         try {
             // Clone the state using memory pool
             auto new_state = utils::GameStatePoolManager::getInstance().cloneState(*state_);
@@ -196,16 +266,19 @@ void MCTSNode::expand() {
         child->setPriorProbability(uniform_prior);
     }
     
+    // Mark as expanded after successful expansion
+    is_expanded_.store(true, std::memory_order_release);
+    
     // Log completion with reduced output
     // MCTS node expansion complete
 }
 
 bool MCTSNode::isFullyExpanded() const {
-    return !isLeaf();
+    return is_expanded_.load(std::memory_order_acquire);
 }
 
 bool MCTSNode::isLeaf() const {
-    return children_.empty();
+    return !is_expanded_.load(std::memory_order_acquire);
 }
 
 bool MCTSNode::isTerminal() const {
@@ -215,6 +288,10 @@ bool MCTSNode::isTerminal() const {
     }
 
     return state_->isTerminal();
+}
+
+int MCTSNode::getNumExpandedChildren() const {
+    return children_.size();
 }
 
 void MCTSNode::addVirtualLoss() {
@@ -289,8 +366,10 @@ void MCTSNode::setPriorProbability(float prior) {
 }
 
 void MCTSNode::setPriorProbabilities(const std::vector<float>& policy_vector) {
-    // Thread safety for the entire operation
-    std::lock_guard<std::mutex> lock(expansion_mutex_);
+    // Thread safety - check if already expanded
+    if (!is_expanded_.load(std::memory_order_acquire)) {
+        return; // Don't set priors on unexpanded nodes
+    }
     
     try {
         // Store the full policy vector for this node's state (optional, but can be useful for debugging/analysis)
@@ -393,8 +472,13 @@ void MCTSNode::clearEvaluationFlag() {
     evaluation_in_progress_.store(false, std::memory_order_release);
 }
 
+bool MCTSNode::isBeingEvaluated() const {
+    return evaluation_in_progress_.load(std::memory_order_acquire);
+}
+
 bool MCTSNode::updateChildReference(const std::shared_ptr<MCTSNode>& old_child, const std::shared_ptr<MCTSNode>& new_child) {
-    std::lock_guard<std::mutex> lock(expansion_mutex_);
+    // This operation should be done atomically but is rarely used
+    // For now, we rely on external synchronization when using transposition tables
     for (size_t i = 0; i < children_.size(); ++i) {
         if (children_[i] == old_child) {
             children_[i] = new_child;
@@ -404,6 +488,55 @@ bool MCTSNode::updateChildReference(const std::shared_ptr<MCTSNode>& old_child, 
         }
     }
     return false; // old_child not found
+}
+
+void MCTSNode::updateRAVE(float value) {
+    // Atomic increment of RAVE visit count
+    rave_count_.fetch_add(1, std::memory_order_relaxed);
+    
+    // Atomic update of RAVE value sum
+    float current = rave_value_sum_.load(std::memory_order_acquire);
+    float desired;
+    do {
+        desired = current + value;
+    } while (!rave_value_sum_.compare_exchange_strong(current, desired,
+                                                      std::memory_order_acq_rel,
+                                                      std::memory_order_acquire));
+}
+
+float MCTSNode::getRAVEValue() const {
+    int rave_visits = rave_count_.load(std::memory_order_relaxed);
+    if (rave_visits == 0) {
+        return 0.0f;
+    }
+    return rave_value_sum_.load(std::memory_order_relaxed) / rave_visits;
+}
+
+int MCTSNode::getRAVECount() const {
+    return rave_count_.load(std::memory_order_relaxed);
+}
+
+float MCTSNode::getCombinedValue(float rave_constant) const {
+    int visits = visit_count_.load(std::memory_order_relaxed);
+    int rave_visits = rave_count_.load(std::memory_order_relaxed);
+    
+    if (visits == 0 && rave_visits == 0) {
+        return 0.0f;
+    }
+    
+    // Calculate regular MCTS value
+    float mcts_value = visits > 0 ? 
+        value_sum_.load(std::memory_order_relaxed) / visits : 0.0f;
+    
+    // Calculate RAVE value
+    float rave_value = rave_visits > 0 ? 
+        rave_value_sum_.load(std::memory_order_relaxed) / rave_visits : 0.0f;
+    
+    // Calculate weight for RAVE (decreases as visit count increases)
+    float beta = std::sqrt(rave_constant / (3 * visits + rave_constant));
+    
+    // Return weighted combination
+    return (1.0f - beta) * mcts_value + beta * rave_value;
 }
 
 } // namespace mcts

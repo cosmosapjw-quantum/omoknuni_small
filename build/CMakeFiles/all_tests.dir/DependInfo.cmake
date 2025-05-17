@@ -18,6 +18,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/tests/mcts/mcts_engine_test.cpp" "CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.o" "gcc" "CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.o.d"
   "/home/cosmos/omoknuni_small/tests/mcts/mcts_evaluator_test.cpp" "CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o" "gcc" "CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o.d"
   "/home/cosmos/omoknuni_small/tests/mcts/mcts_node_test.cpp" "CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o" "gcc" "CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o.d"
+  "/home/cosmos/omoknuni_small/tests/mcts/mcts_openmp_test.cpp" "CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o" "gcc" "CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o.d"
   )
 
 # Targets to which this target links.

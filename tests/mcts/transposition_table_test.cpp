@@ -182,6 +182,18 @@ public:
         return true;
     }
     
+    void copyFrom(const IGameState& source) override {
+        const TranspositionGameState* trans_source = dynamic_cast<const TranspositionGameState*>(&source);
+        if (!trans_source) {
+            throw std::invalid_argument("Cannot copy from non-TranspositionGameState");
+        }
+        depth_ = trans_source->depth_;
+        branch_ = trans_source->branch_;
+        max_depth_ = trans_source->max_depth_;
+        create_transpositions_ = trans_source->create_transpositions_;
+        move_history_ = trans_source->move_history_;
+    }
+    
     // Helper to check if a position is a transposition
     bool isTranspositionPosition() const {
         if (!create_transpositions_ || move_history_.size() < 2) {

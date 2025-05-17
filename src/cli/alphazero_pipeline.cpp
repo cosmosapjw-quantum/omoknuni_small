@@ -236,7 +236,7 @@ std::vector<selfplay::GameData> AlphaZeroPipeline::runSelfPlay(const std::string
         settings.mcts_settings.batch_size = config_.mcts_batch_size;
         settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
         
-        settings.num_parallel_games = config_.self_play_num_parallel_games;
+        settings.reserved_parallel = config_.self_play_num_parallel_games;
         settings.max_moves = config_.self_play_max_moves;
         settings.temperature_threshold = config_.self_play_temperature_threshold;
         settings.high_temperature = config_.self_play_high_temperature;
@@ -819,7 +819,7 @@ bool AlphaZeroPipeline::evaluateNewModel(const std::string& iteration_dir) {
         arena_settings.mcts_settings.batch_size = config_.mcts_batch_size;
         arena_settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
         
-        arena_settings.num_parallel_games = config_.arena_num_parallel_games;
+        arena_settings.reserved_parallel = config_.arena_num_parallel_games;
         arena_settings.max_moves = config_.self_play_max_moves; // Same as self-play
         arena_settings.temperature_threshold = 0; // No high temperature period
         arena_settings.high_temperature = 0.0f;

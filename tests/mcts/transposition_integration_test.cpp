@@ -179,6 +179,17 @@ public:
         return true;
     }
     
+    void copyFrom(const IGameState& source) override {
+        const TranspositionGameState* trans_source = dynamic_cast<const TranspositionGameState*>(&source);
+        if (!trans_source) {
+            throw std::invalid_argument("Cannot copy from non-TranspositionGameState");
+        }
+        depth_ = trans_source->depth_;
+        branch_ = trans_source->branch_;
+        max_depth_ = trans_source->max_depth_;
+        move_history_ = trans_source->move_history_;
+    }
+    
 private:
     int depth_;
     int branch_;

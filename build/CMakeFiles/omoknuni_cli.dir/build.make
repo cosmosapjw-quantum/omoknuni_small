@@ -96,17 +96,17 @@ bin/Release/omoknuni_cli: lib/Release/libalphazero.so
 bin/Release/omoknuni_cli: /opt/libtorch-2.7.0-cu128/lib/libtorch.so
 bin/Release/omoknuni_cli: /opt/libtorch-2.7.0-cu128/lib/libc10.so
 bin/Release/omoknuni_cli: /opt/libtorch-2.7.0-cu128/lib/libkineto.a
-bin/Release/omoknuni_cli: /usr/local/cuda-12.8/lib64/libnvrtc.so
+bin/Release/omoknuni_cli: /usr/local/cuda/lib64/libnvrtc.so
 bin/Release/omoknuni_cli: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
 bin/Release/omoknuni_cli: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.7.0
 bin/Release/omoknuni_cli: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
 bin/Release/omoknuni_cli: /opt/libtorch-2.7.0-cu128/lib/libc10.so
-bin/Release/omoknuni_cli: /usr/local/cuda-12.8/lib64/libcudart.so
+bin/Release/omoknuni_cli: /usr/local/cuda/lib64/libcudart.so
 bin/Release/omoknuni_cli: /usr/local/cuda/lib64/libnvToolsExt.so
-bin/Release/omoknuni_cli: /usr/local/cuda-12.8/lib64/libcudart.so
-bin/Release/omoknuni_cli: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
 bin/Release/omoknuni_cli: /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so
 bin/Release/omoknuni_cli: /usr/lib/x86_64-linux-gnu/libpthread.a
+bin/Release/omoknuni_cli: /usr/local/cuda/lib64/libcudart.so
+bin/Release/omoknuni_cli: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
 bin/Release/omoknuni_cli: CMakeFiles/omoknuni_cli.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable bin/Release/omoknuni_cli"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/omoknuni_cli.dir/link.txt --verbose=$(VERBOSE)

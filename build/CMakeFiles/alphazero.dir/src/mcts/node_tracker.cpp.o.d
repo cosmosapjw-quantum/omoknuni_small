@@ -232,7 +232,7 @@ CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o: \
  /home/cosmos/omoknuni_small/build/_deps/phmap-src/parallel_hashmap/phmap_base.h \
  /usr/include/c++/11/mutex /usr/include/c++/11/bits/std_mutex.h \
  /usr/include/c++/11/bits/unique_lock.h /usr/include/c++/11/shared_mutex \
- /home/cosmos/omoknuni_small/include/third_party/concurrentqueue.h \
+ /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
  /usr/include/c++/11/climits /usr/include/c++/11/thread \
  /usr/include/c++/11/bits/std_thread.h \
  /usr/include/c++/11/bits/this_thread_sleep.h \

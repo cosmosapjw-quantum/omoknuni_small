@@ -14,7 +14,7 @@
 #include "mcts/evaluation_types.h"
 #include "core/export_macros.h"
 
-#include "../third_party/concurrentqueue.h"
+#include <moodycamel/concurrentqueue.h>
 
 namespace alphazero {
 namespace mcts {

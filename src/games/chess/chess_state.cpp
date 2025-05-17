@@ -17,19 +17,19 @@ namespace chess {
 // ChessState constructor
 ChessState::ChessState(bool chess960, const std::string& fen, int position_number)
     : IGameState(core::GameType::CHESS),
-      chess960_(chess960),
       current_player_(PieceColor::WHITE),
       en_passant_square_(-1),
       halfmove_clock_(0),
       fullmove_number_(1),
+      chess960_(chess960),
       white_kingside_rook_file_(7),    // Default A/H files for standard chess
       white_queenside_rook_file_(0),
       black_kingside_rook_file_(7),
       black_queenside_rook_file_(0),
       legal_moves_dirty_(true),
+      zobrist_(8, 12, 2),  // boardSize=8, numPieceTypes=12, numPlayers=2
       hash_dirty_(true),
-      terminal_check_dirty_(true),
-      zobrist_(8, 12, 2)  // boardSize=8, numPieceTypes=12, numPlayers=2
+      terminal_check_dirty_(true)
 {
     // Initialize with empty board first
     initializeEmpty();
@@ -826,6 +826,42 @@ std::unique_ptr<core::IGameState> ChessState::clone() const {
     return std::make_unique<ChessState>(*this);
 }
 
+void ChessState::copyFrom(const core::IGameState& source) {
+    // Ensure source is a ChessState
+    const ChessState* chess_source = dynamic_cast<const ChessState*>(&source);
+    if (!chess_source) {
+        throw std::runtime_error("Cannot copy from non-ChessState: incompatible game types");
+    }
+    
+    // Copy all member variables
+    board_ = chess_source->board_;
+    current_player_ = chess_source->current_player_;
+    castling_rights_ = chess_source->castling_rights_;
+    en_passant_square_ = chess_source->en_passant_square_;
+    halfmove_clock_ = chess_source->halfmove_clock_;
+    fullmove_number_ = chess_source->fullmove_number_;
+    move_history_ = chess_source->move_history_;
+    position_history_ = chess_source->position_history_;
+    zobrist_ = chess_source->zobrist_;
+    hash_ = chess_source->hash_;
+    chess960_ = chess_source->chess960_;
+    white_kingside_rook_file_ = chess_source->white_kingside_rook_file_;
+    white_queenside_rook_file_ = chess_source->white_queenside_rook_file_;
+    black_kingside_rook_file_ = chess_source->black_kingside_rook_file_;
+    black_queenside_rook_file_ = chess_source->black_queenside_rook_file_;
+    piece_cache_ = chess_source->piece_cache_;
+    
+    // Re-create rules with proper configuration
+    rules_ = std::make_shared<ChessRules>(chess960_);
+    
+    // Mark caches as dirty
+    hash_dirty_ = true;
+    terminal_check_dirty_ = true;
+    is_terminal_cached_ = false;
+    cached_legal_moves_.clear();
+    legal_moves_dirty_ = true;
+}
+
 std::string ChessState::actionToString(int action) const {
     ChessMove move = actionToChessMove(action);
     return moveToString(move);
@@ -1057,7 +1093,7 @@ void ChessState::makeMove(const ChessMove& move) {
         int fromRank = getRank(move.from_square);
         int toRank = getRank(move.to_square);
         int fromFile = getFile(move.from_square);
-        int toFile = getFile(move.to_square);
+        // int toFile = getFile(move.to_square); // Currently unused
         
         // Check for two-square pawn move (set en passant target)
         if (std::abs(fromRank - toRank) == 2) {

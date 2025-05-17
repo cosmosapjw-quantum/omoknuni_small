@@ -102,13 +102,13 @@ bin/Release/go_tests: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.7.0
 bin/Release/go_tests: /opt/libtorch-2.7.0-cu128/lib/libtorch.so
 bin/Release/go_tests: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
 bin/Release/go_tests: /opt/libtorch-2.7.0-cu128/lib/libc10.so
-bin/Release/go_tests: /usr/local/cuda-12.8/lib64/libcudart.so
+bin/Release/go_tests: /usr/local/cuda/lib64/libcudart.so
 bin/Release/go_tests: /opt/libtorch-2.7.0-cu128/lib/libc10.so
 bin/Release/go_tests: /opt/libtorch-2.7.0-cu128/lib/libkineto.a
-bin/Release/go_tests: /usr/local/cuda-12.8/lib64/libnvrtc.so
+bin/Release/go_tests: /usr/local/cuda/lib64/libnvrtc.so
 bin/Release/go_tests: /usr/local/cuda/lib64/libnvToolsExt.so
 bin/Release/go_tests: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
-bin/Release/go_tests: /usr/local/cuda-12.8/lib64/libcudart.so
+bin/Release/go_tests: /usr/local/cuda/lib64/libcudart.so
 bin/Release/go_tests: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
 bin/Release/go_tests: /usr/lib/x86_64-linux-gnu/libgtest.a
 bin/Release/go_tests: CMakeFiles/go_tests.dir/link.txt

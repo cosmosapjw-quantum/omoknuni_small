@@ -1,1056 +1,1595 @@
-# MCTS Implementation Optimization Analysis
+## MCTS Implementation Analysis and Optimization
 
-After reviewing the code, I have identified several areas for optimization and improvement in this AlphaZero-style MCTS implementation. Below is a comprehensive analysis and specific recommendations.
+Based on the provided codebase, documentation, and self-play logs, here's a comprehensive analysis and set of optimization suggestions for your MCTS implementation.
 
-<todo_list>
-1. **Batching Mechanism Overhaul**
-   - Fix potential deadlock in batch accumulator worker when waiting for minimum batch size
-   - Implement adaptive batch sizing based on inference latency and request queue depth
-   - Optimize memory layout for tensor batching to reduce CPU→GPU transfer overhead
+### \<todo\_list\>
 
-2. **Thread Coordination Improvements**
-   - Redesign synchronization between tree traversal, batch accumulation, and result distribution
-   - Implement work stealing for better load balancing between worker threads
-   - Add backpressure mechanism to prevent memory explosion with too many pending evaluations
+**Critical Issues & Bugs:**
 
-3. **Transposition Table Optimizations**
-   - Improve sharding strategy to reduce lock contention
-   - Implement a more sophisticated replacement policy based on node quality and search depth
-   - Add entry age tracking to prioritize nodes from more recent searches
+1.  **Fix Memory Leaks (P1 - Critical):**
+      * Investigate why `MCTSEngine::root_.reset()` is not freeing all memory from the previous search tree. The primary suspects are lingering `std::shared_ptr<MCTSNode>` instances, potentially held by:
+          * `PendingEvaluation::path` objects in `MCTSEngine::leaf_queue_` or `MCTSEngine::result_queue_` if not fully processed or cleared.
+          * `NodeTracker::EvaluationResult::path` objects if `NodeTracker`'s result queue isn't properly managed.
+          * `IGameState` objects if `utils::GameStatePoolManager` has leaks or is disabled and manual cloning/deletion is flawed.
+      * Use memory profiling tools (e.g., Valgrind, AddressSanitizer, HeapTrack) to pinpoint exact allocation sites and unreleased objects.
+      * Review all `std::shared_ptr` usage related to `MCTSNode` and `IGameState` for unexpected long-lived references.
+2.  **Resolve Low GPU Batch Size (P1 - Critical Performance):**
+      * Modify `MCTSEvaluator::processBatch` (external queue path) to ensure it waits until `batch_size_` items are collected or `max_wait_time` elapses, instead of processing a batch prematurely if the queue temporarily becomes empty.
+      * Make `MCTSEvaluator`'s batch collection timeout (`max_wait_time`) more configurable and tune it based on MCTS worker throughput and desired latency. The current 10ms hard cap might be too aggressive.
+      * Increase `MCTSEvaluator::min_batch_size_` (currently 1 for external queues via direct dequeue logic) to encourage larger batches.
 
-4. **Node Memory Management**
-   - Implement node recycling to reduce allocation overhead
-   - Add regular tree pruning to limit memory usage for long-running searches
-   - Optimize MCTSNode memory layout to reduce per-node memory footprint
+**Performance Optimizations & Refactoring:**
 
-5. **Race Condition & Safety Fixes**
-   - Fix potential race condition in node selection when multiple threads select the same node
-   - Address possible use-after-move issue in PendingEvaluation handling
-   - Ensure proper cleanup of promises during shutdown
-   - Fix thread termination sequence in MCTSEngine destructor
+3.  **Improve `MCTSEngine::runSearch` Waiting Logic (P2 - Performance):**
+      * Replace the `std::this_thread::sleep_for` loop with `std::condition_variable` waits for `active_simulations_` and `pending_evaluations_` to reach zero, reducing CPU usage during waits.
+4.  **Integrate Modern Memory Allocator (P2 - Performance/Stability):**
+      * Adopt `mimalloc` or `jemalloc` application-wide (e.g., via `LD_PRELOAD` or by linking) to improve multi-threaded allocation speed and reduce memory fragmentation.
+5.  **Implement MCTSNode Memory Pooling (P2 - Performance/Memory):**
+      * Create a custom memory pool allocator specifically for `MCTSNode` objects to decrease allocation overhead and improve cache locality.
+6.  **Advanced Task Scheduling (P2 - Performance/Maintainability):**
+      * Refactor `MCTSEngine`'s manual thread management (`std::thread`) to use a dedicated task scheduling library like Cpp-Taskflow for better load balancing (work-stealing) of MCTS simulations and simpler CPU-GPU orchestration.
+7.  **Refine Logging (P3 - Debuggability/Maintainability):**
+      * Replace all `std::cout` logging with a robust logging library like `spdlog`, as planned in the PRD. Implement structured and configurable logging.
+8.  **Integrate Profiling Tools (P3 - Diagnosability):**
+      * Instrument the code with `Tracy Profiler` macros to enable detailed performance analysis of CPU, GPU, memory, and lock contention.
+9.  **Clarify/Simplify `NodeTracker` Role (P3 - Maintainability):**
+      * Investigate the necessity and interaction of `NodeTracker` with the primary evaluation path through `MCTSEvaluator`. If redundant or overly complex, simplify or remove it to improve code clarity.
+10. **GameState Management Review (P3 - Performance/Memory):**
+      * Thoroughly review `utils::GameStatePoolManager` for correctness and efficiency. Ensure states are properly acquired, released, and reset.
 
-6. **Performance Instrumentation**
-   - Add detailed performance metrics for batch sizes, inference latency, and thread utilization
-   - Implement adaptive timeout mechanism based on queue saturation and batch statistics
-   - Create profiling hooks to identify bottlenecks in the search process
+\</todo\_list\>
+
+### \<optimization\_scheme\>
+
+The optimization scheme focuses on addressing critical stability and performance issues first, then enhancing the architecture for better scalability and maintainability.
+
+**Phase 1: Stability and Core Performance (Fixes for P1 Issues)**
+
+1.  **Memory Leak Resolution:**
+      * **Action:** Prioritize identifying and fixing the memory leak. Utilize memory debuggers and profilers. Review `shared_ptr` lifecycles, especially concerning `MCTSNode`, `IGameState`, and any objects held in queues or tracking structures (`PendingEvaluation`, `NodeTracker::EvaluationResult`).
+      * **Verification:** Observe memory usage in self-play logs returning to a baseline after each search or growing minimally and predictably.
+2.  **GPU Batch Size Correction:**
+      * **Action:** Modify `MCTSEvaluator::processBatch` to implement a more patient batch collection strategy. The evaluator should wait until the configured `batch_size_` is met or a configurable `timeout_` (e.g., 5-20ms, tunable) expires.
+        ```cpp
+        // Suggested logic for MCTSEvaluator::processBatch's collection loop (external queue)
+        // auto deadline = std::chrono::steady_clock::now() + configured_timeout;
+        // while (evaluations.size() < batch_size_ && std::chrono::steady_clock::now() < deadline) {
+        //     if (external_leaf_queue->try_dequeue(pending_eval)) {
+        //         evaluations.push_back(std::move(pending_eval));
+        //     } else if (evaluations.size() < min_effective_batch_size) { // min_effective_batch_size could be e.g. batch_size / 4 or a fixed number
+        //         std::this_thread::sleep_for(std::chrono::microseconds(100)); // Wait briefly if queue is empty and batch too small
+        //     } else if (!evaluations.empty()) {
+        //          // Have some items, but not a full batch, and queue is currently empty.
+        //          // Decide based on how close to deadline or if a smaller batch is acceptable after some waiting.
+        //          // For now, could just sleep briefly and let outer loop check deadline.
+        //          std::this_thread::sleep_for(std::chrono::microseconds(100));
+        //     }
+        // }
+        // If evaluations.empty() after loop, it means timeout with no items.
+        ```
+      * **Verification:** Self-play logs should show `[EVALUATOR] Processing batch of X items` where X is consistently close to `batch_size_` (e.g., 32, 64, or 128) or reflects batches formed due to timeout. GPU utilization should increase significantly.
+
+**Phase 2: Performance Enhancements & Architectural Improvements (P2 Issues)**
+
+3.  **Efficient Waiting & System Allocator:**
+      * **Action:** Replace busy-waits in `MCTSEngine::runSearch` with condition variables. Integrate `mimalloc` (recommended for performance and ease of use) or `jemalloc` application-wide.
+      * **Benefit:** Reduced CPU idle cycles, faster and more consistent memory allocation/deallocation, potentially mitigating fragmentation.
+4.  **Specialized Node Allocator & Task Scheduling:**
+      * **Action:** Implement a memory pool for `MCTSNode`. Refactor thread management in `MCTSEngine` to use Cpp-Taskflow.
+      * **Benefit:** Faster node creation/deletion, improved CPU utilization through work-stealing, and a more robust framework for managing parallel MCTS tasks and CPU-GPU interaction.
+
+**Phase 3: Observability and Refinement (P3 Issues)**
+
+5.  **Enhanced Logging & Profiling:**
+      * **Action:** Systematically replace `std::cout` with `spdlog`. Instrument critical code paths (MCTS stages, NN calls, queue operations) with `Tracy Profiler` macros.
+      * **Benefit:** Greatly improved ability to debug issues, understand performance characteristics, and guide further optimizations.
+6.  **Code Clarity & Game State Management:**
+      * **Action:** Simplify the evaluation path by clarifying or removing the `NodeTracker` if it's redundant. Conduct a detailed review of `GameStatePoolManager` to ensure its correctness and efficiency in state reuse and preventing leaks.
+      * **Benefit:** Improved code maintainability and reduced risk of bugs.
+
+### \<parallelization\_improvements\>
+
+The current leaf parallelization model uses `std::thread` for MCTS workers and `moodycamel::ConcurrentQueue` for communication with the `MCTSEvaluator`. While functional, it can be improved:
+
+  * **Synchronization:**
+
+      * **Current:** `std::mutex` (e.g., `MCTSNode::expansion_mutex_`), `std::atomic` (for node stats), `std::condition_variable` (in `MCTSEngine`).
+      * **Improvements:**
+          * **Reduce Lock Granularity/Frequency:** Analyze critical sections protected by mutexes. For `MCTSNode::expansion_mutex_`, it's likely necessary. However, if other shared data structures are heavily contended, consider more fine-grained locking or lock-free alternatives if feasible (though this adds complexity).
+          * **Cpp-Taskflow:** Adopting a task scheduler like Cpp-Taskflow can abstract away much of the manual synchronization for task distribution and dependencies, potentially reducing complexity and custom lock/CV usage.
+
+  * **Deadlocks:**
+
+      * **Risk:** Complex interactions between multiple mutexes and condition variables (especially in `MCTSEngine`'s shutdown logic or if `NodeTracker` introduces its own locking that interacts with `MCTSEngine` or `MCTSEvaluator`) can lead to deadlocks.
+      * **Mitigation:**
+          * **Lock Ordering:** Strictly enforce a global lock acquisition order if multiple mutexes must be held.
+          * **Simplify Synchronization Logic:** Refactoring to Cpp-Taskflow could reduce custom synchronization points.
+          * **Scoped Locks:** Consistently use `std::lock_guard` or `std::unique_lock` to ensure mutexes are always released.
+          * **Avoid Waiting on CVs While Holding Unnecessary Locks:** Ensure locks are released before potentially long waits or blocking operations not related to the CV's predicate.
+
+  * **Lock Contention:**
+
+      * **Potential Hotspots:** `MCTSNode::expansion_mutex_` if many threads try to expand children of the same parent simultaneously (less likely with virtual loss guiding threads apart). Transposition Table access if its internal concurrency mechanisms are insufficient for the load (though `parallel-hashmap` is designed for this).
+      * **Mitigation:**
+          * Virtual loss helps reduce contention on popular tree paths.
+          * `parallel-hashmap`'s internal sharding should minimize TT contention. Monitor with profiling (e.g., Tracy can show lock contention).
+          * If specific node statistics updates become bottlenecks even with atomics (unlikely for simple counters/sums), more advanced techniques might be needed, but atomics are usually sufficient.
+
+  * **Race Conditions:**
+
+      * **Current:** The PRD mentions protecting N/Q stats with atomics, which is done.
+      * **Verification:** Use thread sanitizers (e.g., TSan with GCC/Clang) during development and testing to detect race conditions.
+      * **Review Shared Data Access:** Carefully review all shared data access, especially complex objects or data structures not inherently made thread-safe by atomics or single mutexes. `MCTSEngine` members accessed by multiple threads (e.g., `root_`, queues, state flags) are critical.
+
+  * **Memory Issues (related to Parallelization):**
+
+      * **Dangling Pointers/Use-after-free:** Addressed by `std::shared_ptr` and `std::weak_ptr` for tree nodes and TT. The main memory leak seems to be objects *not being deleted* rather than use-after-free.
+      * **Safe Memory Reclamation for Lock-Free Structures:** Not currently using custom complex lock-free data structures that would require explicit reclamation schemes like hazard pointers or EBR beyond what `moodycamel::ConcurrentQueue` and `parallel-hashmap` provide internally. If such structures are introduced, use libraries like Xenium as recommended.
+      * **Node Pool Allocator:** Implementing a thread-safe memory pool for `MCTSNode` objects can improve performance by reducing contention on global allocators and improving data locality.
+
+  * **Use of Atomic Variables:**
+
+      * **Current:** `MCTSNode::visit_count_`, `value_sum_`, `virtual_loss_count_`, `evaluation_in_progress_` are `std::atomic`. `MCTSEngine` uses atomics for `shutdown_`, `active_simulations_`, `search_running_`, `pending_evaluations_`, etc.
+      * **Benefit:** Minimizes lock-related problems for simple counters and flags.
+      * **Considerations:** Ensure correct memory ordering (e.g., `std::memory_order_acquire`, `std::memory_order_release`, `std::memory_order_acq_rel`) is used where necessary for visibility and synchronization. The current usage often employs default sequential consistency (`std::memory_order_seq_cst`), which is safest but potentially slower. Relaxed ordering can be used where appropriate if carefully analyzed, but stick to sequential consistency if unsure. For example, `active_simulations_` and `pending_evaluations_` are central to search termination logic and should have appropriate ordering to ensure visibility across threads.
+
+### \<gpu\_throughput\_scenario\>
+
+This scenario aims to significantly increase GPU throughput by addressing the current batch size of 1 and improving the data pipeline from CPU to GPU.
+
+**Scenario: Achieving Consistent Batches of 64+ for GPU Inference**
+
+1.  **Optimized Batch Collection in `MCTSEvaluator`:**
+
+      * The `MCTSEvaluator::processBatch` method (when using external queues from `MCTSEngine`) is modified.
+      * It will attempt to fill a batch of up to `batch_size_` (e.g., 128 as per config).
+      * It introduces a configurable `min_batch_size_for_immediate_processing` (e.g., 32 or 64).
+      * It waits for up to a configurable `dynamic_timeout_ms` (e.g., initially 10-15ms, adaptable).
+      * **Logic:**
+          * Continuously try to dequeue from `leaf_queue_ptr_`.
+          * If `evaluations.size() >= batch_size_`, process the batch immediately.
+          * If `evaluations.size() >= min_batch_size_for_immediate_processing` AND `leaf_queue_ptr_` is currently empty (or `try_dequeue` fails repeatedly for a very short duration), process the current partial batch to avoid GPU starvation if MCTS is slow.
+          * If `evaluations.size() < min_batch_size_for_immediate_processing`, continue dequeuing/waiting until `dynamic_timeout_ms` is reached. If timeout occurs and `evaluations.size() > 0`, process the collected (potentially small) batch. If timeout occurs and batch is empty, do nothing and try again.
+          * The `dynamic_timeout_ms` could be adjusted based on the rate of incoming requests or average batch fill times, becoming more patient if the queue fills quickly.
+
+2.  **Fast Tensor Collection from CPU (MCTS Workers & MCTSEngine):**
+
+      * MCTS worker threads (`MCTSEngine::treeTraversalWorker`) identify leaf nodes.
+      * The `IGameState::getNNInput()` method (or similar) should efficiently serialize the game state into the required tensor format (e.g., a flat `std::vector<float>` or directly into a pre-allocated buffer).
+      * **Pinned Host Memory:** For states being sent to the GPU, allocate their tensor representations in pinned (page-locked) host memory. This significantly speeds up `cudaMemcpyAsync` operations. LibTorch tensors can be created on pinned memory.
+        ```cpp
+        // Example concept (actual API depends on how game state is tensorized)
+        // In MCTSEngine::traverseTree, when creating PendingEvaluation:
+        // auto state_tensor_cpu = game_state_to_tensor(leaf->getState()); // Returns a CPU tensor
+        // auto pinned_tensor_cpu = state_tensor_cpu.pin_memory(); // If using libtorch tensors directly
+        // pending.state_tensor = pinned_tensor_cpu; // Store this in PendingEvaluation
+        ```
+        Alternatively, `MCTSEvaluator` can collect multiple `std::unique_ptr<core::IGameState>` and then, just before inference, convert them into a batch of tensors, potentially allocating the CPU-side batch tensor in pinned memory.
+
+3.  **Efficient Batch Transfer to GPU & High-Speed Inference:**
+
+      * **Batch Construction in `MCTSEvaluator`:**
+          * Once a batch of `PendingEvaluation` objects (containing game states or pre-converted pinned CPU tensors) is collected:
+          * Stack these individual CPU tensors into a single batch CPU tensor (e.g., `torch::stack` if they are already libtorch tensors, or manually fill a larger pre-allocated pinned tensor).
+      * **Asynchronous Transfer to GPU:**
+          * Use `batch_cpu_tensor.to(torch::kCUDA, /*non_blocking=*/true)` to transfer the entire batch to the GPU asynchronously. This requires the source CPU tensor to be in pinned memory for true asynchronicity.
+      * **CUDA Stream for Inference:** Perform the NN inference on a dedicated CUDA stream to overlap computation with data transfers of future/past batches if possible.
+        ```cpp
+        // In MCTSEvaluator::processBatch (after collecting 'evaluations' vector)
+        // std::vector<torch::Tensor> cpu_tensors;
+        // for (auto& eval_req : evaluations) { /* convert eval_req.state to tensor and add to cpu_tensors */ }
+        // torch::Tensor batch_cpu = torch::stack(cpu_tensors, 0).pin_memory(); // Stack and pin
+        //
+        // torch::Tensor batch_gpu = batch_cpu.to(torch::kCUDA, /*non_blocking=*/true);
+        // // Ensure synchronization if needed before inference, or use CUDA streams
+        // {
+        //   torch::cuda::CUDAStreamGuard stream_guard(inference_stream_); // Use a dedicated stream
+        //   batch_output_gpu = neural_net_module_->forward({batch_gpu}).toTensor();
+        // }
+        // // Transfer results back, also potentially async
+        // torch::Tensor results_cpu = batch_output_gpu.to(torch::kCPU, /*non_blocking=*/true);
+        // // Ensure synchronization (e.g. results_cpu.cpu().synchronize() or stream sync) before accessing data
+        ```
+      * **TensorRT/ONNX Runtime:** (Longer-term) For maximum inference speed, consider converting the PyTorch model to TensorRT or ONNX and using their respective runtimes. TensorRT can apply further optimizations like layer fusion and precision calibration (FP16/INT8) tailored to the RTX 3060 Ti.
+
+4.  **Result Processing:**
+
+      * Transfer policy and value results from GPU back to pinned CPU memory asynchronously.
+      * Once results are back on the CPU and synchronized, dispatch them to the corresponding `MCTSEngine::result_queue_`.
+
+**Expected Outcome:**
+
+  * The GPU receives larger, more consistent batches (e.g., 32-128 states).
+  * GPU utilization increases dramatically, reducing idle time.
+  * Overall MCTS search speed (nodes per second) improves significantly as NN evaluations, a common bottleneck, are processed more efficiently.
+  * The `[EVALUATOR] Processing batch of X items` log message will show X values much closer to the configured `batch_size`.
+  * The total time per self-play game should decrease.
+
+  ----------
+  ----------
+
+  <todo_list>
+1. **Fix Batch Aggregation for GPU Throughput**
+   - Implement aggressive batch formation mechanism
+   - Modify timeout logic to wait longer when evaluations are pending
+   - Prevent processing of underfilled batches (especially single items)
+   - Add dynamic batch size adjustment based on queue fill rate
+
+2. **Resolve Memory Leaks**
+   - Fix circular references between parent-child nodes
+   - Add shared_ptr cleanup in TranspositionTable::clear() method
+   - Implement periodic memory monitoring and cleanup
+   - Reduce GameStatePool maximum size
+
+3. **Improve Thread Synchronization**
+   - Fix deadlock in the worker threads and coordinator
+   - Reduce lock contention in critical paths
+   - Add timeouts for thread operations to prevent indefinite waits
+   - Implement better thread shutdown sequence
+
+4. **Optimize TranspositionTable Management**
+   - Implement more aggressive cleanup schedule
+   - Fix dangling weak_ptr references
+   - Add size-based cleanup triggers
+   - Improve hash collision handling
+
+5. **Enhance MCTSNode Management**
+   - Fix evaluation flag clearing on all error paths
+   - Improve virtual loss handling
+   - Add proper handling of orphaned nodes
+   - Optimize expansion with better threading model
 </todo_list>
 
 <optimization_scheme>
-## Core Architecture Optimization
+## Core Batching Optimization
 
-I recommend a revised architecture focusing on the following components:
+The fundamental issue is the GPU processing batches of size 1 instead of utilizing the configured batch size of 128. This drastically reduces inference throughput.
 
-### 1. Thread Pool with Task-Based Architecture
-Replace the current fixed threading model with a more flexible task-based system:
+### Implementation Plan:
 
+1. **Two-Phase Batch Collection**:
 ```cpp
-class TaskQueue {
-private:
-    moodycamel::ConcurrentQueue<std::function<void()>> tasks_;
-    std::atomic<bool> shutdown_{false};
+std::vector<EvaluationRequest> MCTSEvaluator::collectBatch(size_t target_batch_size) {
+    std::vector<EvaluationRequest> batch;
+    batch.reserve(target_batch_size);
     
-public:
-    // Submit tree traversal tasks when worker threads are available
-    void enqueueTraversalTask(std::shared_ptr<MCTSNode> root) {
-        tasks_.enqueue([this, root]() { traverseTree(root); });
+    // Phase 1: Fast collection of immediately available items
+    size_t initial_dequeue = std::min(request_queue_.size_approx(), target_batch_size);
+    if (initial_dequeue > 0) {
+        std::vector<EvaluationRequest> temp_batch(initial_dequeue);
+        size_t dequeued = request_queue_.try_dequeue_bulk(temp_batch.data(), initial_dequeue);
+        for (size_t i = 0; i < dequeued; ++i) {
+            batch.push_back(std::move(temp_batch[i]));
+        }
     }
-};
-```
-
-### 2. Two-Phase Batch Collection
-Implement a two-phase batch collection strategy to ensure efficient GPU utilization:
-
-```cpp
-std::vector<EvaluationRequest> collectBatch(size_t target_size) {
-    // Phase 1: Fast collection - grab immediately available requests
-    std::vector<EvaluationRequest> batch = collectImmediate(target_size);
     
-    // If batch is large enough, return immediately
-    if (batch.size() >= min_efficient_batch_size_) {
+    // Phase 2: If batch is small, wait longer to collect more items
+    if (batch.size() < target_batch_size / 4 && batch.size() < 32) {
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(20);
+        while (std::chrono::steady_clock::now() < deadline && 
+               batch.size() < target_batch_size && 
+               !shutdown_.load(std::memory_order_acquire)) {
+            EvaluationRequest req;
+            if (request_queue_.try_dequeue(req)) {
+                batch.push_back(std::move(req));
+            } else {
+                // Short sleep to reduce CPU usage
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
+        }
+    }
+    
+    // Never return empty batches if we have items
+    if (!batch.empty()) {
         return batch;
     }
     
-    // Phase 2: Wait with timeout for additional requests
-    auto deadline = std::chrono::steady_clock::now() + adaptive_timeout_;
-    while (std::chrono::steady_clock::now() < deadline && 
-           batch.size() < target_size &&
-           !shutdown_flag_) {
-        // Try to collect more with short polls
-        collectImmediate(target_size - batch.size(), batch);
-        
-        // If we have enough for efficient GPU utilization, break early
-        if (batch.size() >= min_efficient_batch_size_) {
-            break;
+    // If completely empty, wait for notification with timeout
+    std::unique_lock<std::mutex> lock(cv_mutex_);
+    bool has_items = cv_.wait_for(lock, std::chrono::milliseconds(timeout_),
+        [this]() { return shutdown_.load() || request_queue_.size_approx() > 0; });
+    
+    if (has_items && !shutdown_.load()) {
+        EvaluationRequest req;
+        if (request_queue_.try_dequeue(req)) {
+            batch.push_back(std::move(req));
         }
-        
-        // Brief yield to avoid spinning
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
     
     return batch;
 }
 ```
 
-### 3. Adaptive Batch Parameters
-Make batch parameters adaptive based on runtime conditions:
-
+2. **Adaptive Batch Size & Timeout**:
 ```cpp
-void updateBatchParameters() {
-    // Adjust based on recent batch statistics
-    float avg_time = getAverageBatchLatency().count();
-    float avg_size = getAverageBatchSize();
+void MCTSEvaluator::updateBatchParameters() {
+    static auto last_update = std::chrono::steady_clock::now();
+    auto now = std::chrono::steady_clock::now();
     
-    if (avg_size < target_batch_size_ * 0.5f && avg_time < timeout_.count() * 0.3f) {
-        // Batches are consistently small and fast, reduce timeout
-        timeout_ = std::max(std::chrono::milliseconds(1), 
-                          timeout_ - std::chrono::milliseconds(5));
-    } else if (avg_size >= target_batch_size_ * 0.9f) {
-        // Batches are filling well, slightly increase timeout for better filling
-        timeout_ += std::chrono::milliseconds(5);
-    }
-    
-    // Cap the timeout to reasonable bounds
-    timeout_ = std::min(timeout_, std::chrono::milliseconds(100));
-}
-```
-
-### 4. Memory-Efficient Node Design
-Optimize the MCTSNode class for memory efficiency:
-
-```cpp
-class MCTSNode {
-private:
-    // Replace individual atomic variables with a single statistics struct
-    struct alignas(64) NodeStats {  // Align to cache line
-        std::atomic<int> visit_count{0};
-        std::atomic<float> value_sum{0.0f};
-        std::atomic<int> virtual_loss{0};
-    };
-    NodeStats stats_;  // Single cache-aligned struct for better locality
-    
-    // Use a memory-efficient game state representation
-    std::unique_ptr<CompactGameState> state_;
-    
-    // Use vector with reserve to avoid frequent reallocations
-    std::vector<std::shared_ptr<MCTSNode>> children_;
-    std::vector<int> actions_;
-    
-    // Use weak_ptr for parent to avoid circular references
-    std::weak_ptr<MCTSNode> parent_;
-};
-```
-</optimization_scheme>
-
-<parallelization_improvements>
-## Enhanced Parallelization Strategy
-
-The current MCTS implementation has several thread-related issues that can be addressed:
-
-### 1. Leaf Parallelization Improvements
-
-Replace the current leaf parallelization with a more efficient design:
-
-```cpp
-void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
-    // Selection phase with virtual loss to avoid thread collisions
-    auto [leaf, path] = selectLeafNode(root);
-    
-    if (!leaf) return;
-    
-    // For terminal nodes, process immediately without queueing
-    if (leaf->isTerminal()) {
-        float value = getTerminalValue(leaf);
-        backPropagate(path, value);
+    // Update every 5 seconds
+    if (now - last_update < std::chrono::seconds(5)) {
         return;
     }
     
-    // For non-terminal leaf nodes, expand and queue for evaluation
-    if (leaf->isLeaf()) {
-        // Use an atomic check-and-set pattern to avoid duplicate expansion
-        bool expanded = false;
-        if (leaf->tryExpand(&expanded)) {
-            // Node was successfully expanded by this thread
-            queueForEvaluation(leaf, path);
-        } else if (expanded) {
-            // Node was already expanded by another thread
-            // Re-run selection to find a new leaf
-            traverseTree(root);
-        } else {
-            // Node couldn't be expanded (e.g., no legal moves)
-            // Treat as terminal with default value
-            backPropagate(path, 0.0f);
-        }
-    } else {
-        // Node is already expanded but not terminal - something is wrong
-        // Just backpropagate a default value
-        backPropagate(path, 0.0f);
+    last_update = now;
+    
+    // Calculate metrics
+    float avg_batch_size = getAverageBatchSize();
+    auto avg_latency = getAverageBatchLatency();
+    size_t queue_size = request_queue_.size_approx();
+    
+    // If batch size is consistently small, increase timeout
+    if (avg_batch_size < batch_size_ * 0.25 && queue_size < 10) {
+        timeout_ = std::min(timeout_ * 2, std::chrono::milliseconds(50));
+    }
+    // If queue is consistently large, decrease timeout
+    else if (queue_size > batch_size_ * 2) {
+        timeout_ = std::max(timeout_ / 2, std::chrono::milliseconds(5));
+    }
+    
+    // Adjust batch size based on GPU utilization
+    // (Could use CUDA utilities to measure GPU usage)
+    if (avg_latency < std::chrono::milliseconds(10) && avg_batch_size > batch_size_ * 0.8) {
+        batch_size_ = std::min(batch_size_ * 2, size_t(512));
+    }
+    else if (avg_latency > std::chrono::milliseconds(30)) {
+        batch_size_ = std::max(batch_size_ / 2, size_t(16));
     }
 }
 ```
 
-### 2. Addressing Lock Contention
-
-Minimize lock contention using atomic operations and lock-free data structures:
+3. **Memory Leak Fixes**:
 
 ```cpp
-// In MCTSNode::update
-void update(float value) {
-    // Lockless update using atomic operations
-    visit_count_.fetch_add(1, std::memory_order_acq_rel);
+// 1. Fix TranspositionTable::clear() to properly clean weak_ptr entries
+void TranspositionTable::clear() {
+    std::lock_guard<std::mutex> lock(clear_mutex_);
     
-    // Use atomic floating-point addition if available
-    #if defined(__cpp_lib_atomic_float)
-        value_sum_.fetch_add(value, std::memory_order_acq_rel);
-    #else
-        // Otherwise use compare-exchange loop with bounded retries
-        float current = value_sum_.load(std::memory_order_acquire);
-        float desired;
-        int attempts = 0;
-        constexpr int MAX_ATTEMPTS = 10;
+    // First, expire all weak_ptr references to prevent dangling pointers
+    for (auto& [hash, entry] : entries_) {
+        if (entry) {
+            entry->node.reset();  // Explicitly reset weak_ptr
+        }
+    }
+    
+    // Clear the hash map and reset statistics
+    entries_.clear();
+    resetStats();
+}
+
+// 2. Implement periodic memory monitoring in MCTSEngine
+void MCTSEngine::monitorMemoryUsage() {
+    static size_t last_cleanup_count = 0;
+    static auto last_cleanup_time = std::chrono::steady_clock::now();
+    
+    // Check memory every 1000 simulations or 30 seconds
+    if (total_simulations_ - last_cleanup_count < 1000 && 
+        std::chrono::steady_clock::now() - last_cleanup_time < std::chrono::seconds(30)) {
+        return;
+    }
+    
+    last_cleanup_count = total_simulations_;
+    last_cleanup_time = std::chrono::steady_clock::now();
+    
+    // Use platform-specific methods to get current memory usage
+    size_t current_memory = getCurrentMemoryUsage();
+    
+    // If memory usage is too high, force cleanup
+    if (current_memory > memory_limit_) {
+        forceCleanup();
+    }
+}
+
+// 3. Fix GameStatePool release method to be more aggressive
+void GameStatePool::release(std::unique_ptr<core::IGameState> state) {
+    if (!state) return;
+    
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    total_releases_.fetch_add(1);
+    
+    // Much more restrictive pool size limit
+    const size_t max_pool_size = initial_size_ * 2;  // Only allow up to 2x initial size
+    if (pool_.size() < max_pool_size) {
+        pool_.push_back(std::move(state));
+    }
+    // If pool is full, let the state be destroyed
+}
+```
+
+4. **Improved Parallel Leaf Collection**:
+
+```cpp
+void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
+    if (!root) return;
+    
+    try {
+        // Selection phase
+        auto [leaf, path] = selectLeafNode(root);
+        if (!leaf) return;
         
-        do {
-            desired = current + value;
-            if (++attempts > MAX_ATTEMPTS) {
-                // After max attempts, use a mutex as fallback
-                std::lock_guard<std::mutex> lock(update_mutex_);
-                value_sum_.store(value_sum_.load() + value, std::memory_order_release);
+        // Expansion phase - never block
+        if (!leaf->isTerminal() && leaf->isLeaf()) {
+            // Try to expand and mark for evaluation atomically
+            bool expand_success = false;
+            bool should_evaluate = false;
+            
+            // CRITICAL: Prevent race condition by checking and marking evaluation BEFORE expand
+            if (leaf->tryMarkForEvaluation()) {
+                // We got exclusive rights to evaluate this node
+                should_evaluate = true;
+                try {
+                    leaf->expand();
+                    expand_success = true;
+                } catch (...) {
+                    // If expansion fails, clear the evaluation flag
+                    leaf->clearEvaluationFlag();
+                    should_evaluate = false;
+                    return;
+                }
+            } else {
+                // Another thread is already evaluating this node - early return
                 return;
             }
-        } while (!value_sum_.compare_exchange_weak(current, desired,
-                                                  std::memory_order_acq_rel,
-                                                  std::memory_order_acquire));
-    #endif
-}
-```
-
-### 3. Non-Blocking Batch Accumulation
-
-Implement a non-blocking batch accumulation strategy to prevent worker starvation:
-
-```cpp
-void MCTSEvaluator::batchAccumulatorWorker() {
-    std::vector<EvaluationRequest> current_batch;
-    current_batch.reserve(max_batch_size_);
-    
-    while (!shutdown_) {
-        // Phase 1: Collect immediately available items without blocking
-        size_t initial_size = leaf_queue_.size_approx();
-        if (initial_size > 0) {
-            // Try to dequeue up to max_batch_size or what's available
-            size_t to_dequeue = std::min(initial_size, max_batch_size_ - current_batch.size());
             
-            EvaluationRequest temp;
-            for (size_t i = 0; i < to_dequeue; i++) {
-                if (leaf_queue_.try_dequeue(temp)) {
-                    current_batch.push_back(std::move(temp));
+            // Only queue for evaluation if we successfully marked and expanded
+            if (should_evaluate && expand_success) {
+                // Create evaluation request
+                auto state_clone = cloneGameState(leaf->getState());
+                if (state_clone) {
+                    PendingEvaluation pending;
+                    pending.node = leaf;
+                    pending.path = std::move(path);
+                    pending.state = std::move(state_clone);
+                    
+                    // Group batch ID by thread ID for better batching
+                    int thread_id = getThreadId();
+                    pending.batch_id = (batch_counter_.fetch_add(1, std::memory_order_relaxed) & 0xFFFFFF00) | (thread_id & 0xFF);
+                    pending.request_id = total_leaves_generated_.fetch_add(1, std::memory_order_relaxed);
+                    
+                    // Submit to leaf queue with proper move semantics
+                    if (leaf_queue_.enqueue(std::move(pending))) {
+                        // Increment pending evaluations count (FIX: only once per leaf)
+                        pending_evaluations_.fetch_add(1, std::memory_order_acq_rel);
+                        if (evaluator_) { 
+                            evaluator_->notifyLeafAvailable();
+                        }
+                    } else {
+                        // Clear the flag since we failed to enqueue
+                        leaf->clearEvaluationFlag();
+                    }
                 } else {
-                    break;
+                    // Clear the flag since we failed to clone the state
+                    leaf->clearEvaluationFlag();
                 }
             }
+        } else if (leaf->isTerminal()) {
+            // Handle terminal nodes immediately
+            float value = 0.0f;
+            auto result = leaf->getState().getGameResult();
+            int current_player = leaf->getState().getCurrentPlayer();
+            
+            if (result == core::GameResult::WIN_PLAYER1) {
+                value = current_player == 1 ? 1.0f : -1.0f;
+            } else if (result == core::GameResult::WIN_PLAYER2) {
+                value = current_player == 2 ? 1.0f : -1.0f;
+            }
+            
+            backPropagate(path, value);
         }
-        
-        // Phase 2: Determine if we should submit the batch
-        bool should_submit = false;
-        
-        // Submit if batch is full
-        if (current_batch.size() >= max_batch_size_) {
-            should_submit = true;
-        }
-        // Submit if batch meets minimum size and we've waited long enough
-        else if (current_batch.size() >= min_batch_size_ && 
-                (std::chrono::steady_clock::now() - last_submit_time_) > batch_timeout_) {
-            should_submit = true;
-        }
-        // Submit anything on shutdown
-        else if (shutdown_ && !current_batch.empty()) {
-            should_submit = true;
-        }
-        
-        if (should_submit) {
-            // Submit batch and track statistics
-            submitBatch(std::move(current_batch));
-            current_batch.clear();
-            current_batch.reserve(max_batch_size_);
-            last_submit_time_ = std::chrono::steady_clock::now();
-        } else if (current_batch.empty()) {
-            // If batch is empty, sleep briefly to avoid spinning
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        } else {
-            // If batch is partially filled, sleep for a shorter duration
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
-        }
+    } catch (const std::exception& e) {
+        // Log error and continue
     }
 }
 ```
 
-### 4. Thread-Safe Node Recycling
-
-Implement a thread-safe node recycling mechanism to reduce allocation overhead:
-
-```cpp
-class NodePool {
-private:
-    moodycamel::ConcurrentQueue<std::unique_ptr<MCTSNode>> recycled_nodes_;
-    std::atomic<size_t> created_nodes_{0};
-    std::atomic<size_t> recycled_count_{0};
-    
-public:
-    std::shared_ptr<MCTSNode> createNode(std::unique_ptr<core::IGameState> state) {
-        // Try to get a recycled node first
-        std::unique_ptr<MCTSNode> node;
-        if (recycled_nodes_.try_dequeue(node)) {
-            // Reset the recycled node with new state
-            node->reset(std::move(state));
-            recycled_count_.fetch_add(1, std::memory_order_relaxed);
-            return std::shared_ptr<MCTSNode>(node.release(), 
-                [this](MCTSNode* ptr) { recycleNode(std::unique_ptr<MCTSNode>(ptr)); });
-        }
-        
-        // If no recycled node available, create a new one
-        created_nodes_.fetch_add(1, std::memory_order_relaxed);
-        return std::shared_ptr<MCTSNode>(new MCTSNode(std::move(state)),
-            [this](MCTSNode* ptr) { recycleNode(std::unique_ptr<MCTSNode>(ptr)); });
-    }
-    
-private:
-    void recycleNode(std::unique_ptr<MCTSNode> node) {
-        // Clean up the node for recycling
-        node->cleanup();
-        
-        // Only keep a reasonable number of recycled nodes
-        if (recycled_nodes_.size_approx() < 1000) {
-            recycled_nodes_.enqueue(std::move(node));
-        }
-    }
-};
-```
-</parallelization_improvements>
-
-<gpu_throughput_scenario>
-## Maximizing GPU Throughput
-
-To maximize GPU throughput, I propose the following concrete scenario:
-
-### 1. Tensor Preallocation and Batch Compression
-
-```cpp
-class BatchProcessor {
-private:
-    // Preallocated tensors for different common batch sizes
-    std::map<size_t, torch::Tensor> preallocated_inputs_;
-    
-    // Actual processing function
-    std::function<std::vector<NetworkOutput>(torch::Tensor)> process_func_;
-    
-    // Track batch statistics for optimization
-    RunningAverage batch_size_stats_{100};
-    RunningAverage processing_time_stats_{100};
-    
-public:
-    BatchProcessor(int channels, int height, int width) {
-        // Preallocate tensors for common batch sizes
-        for (size_t batch_size : {16, 32, 64, 128, 256}) {
-            preallocated_inputs_[batch_size] = torch::zeros(
-                {static_cast<long>(batch_size), channels, height, width},
-                torch::TensorOptions().device(torch::kCUDA).requires_grad(false));
-        }
-    }
-    
-    std::vector<NetworkOutput> processBatch(const std::vector<std::unique_ptr<core::IGameState>>& states) {
-        auto start_time = std::chrono::high_resolution_clock::now();
-        
-        // Get batch size and find closest preallocated tensor
-        size_t batch_size = states.size();
-        size_t tensor_size = 0;
-        for (auto it = preallocated_inputs_.begin(); it != preallocated_inputs_.end(); ++it) {
-            if (it->first >= batch_size) {
-                tensor_size = it->first;
-                break;
-            }
-        }
-        
-        if (tensor_size == 0) {
-            // If no suitable preallocated tensor, use the largest one
-            tensor_size = preallocated_inputs_.rbegin()->first;
-        }
-        
-        // Get tensor reference without copying
-        torch::Tensor& input_tensor = preallocated_inputs_[tensor_size];
-        
-        // Use pinned memory for efficient CPU->GPU transfer if not already on GPU
-        torch::Tensor cpu_tensor;
-        if (input_tensor.device().is_cpu()) {
-            cpu_tensor = torch::zeros(
-                {static_cast<long>(batch_size), channels, height, width},
-                torch::TensorOptions().pinned_memory(true));
-        }
-        
-        // Fill the tensor with state data directly to avoid extra copies
-        #pragma omp parallel for
-        for (size_t i = 0; i < batch_size; i++) {
-            auto tensor_view = cpu_tensor.index({static_cast<long>(i)});
-            states[i]->fillTensor(tensor_view);
-        }
-        
-        // Transfer to GPU in one operation
-        if (input_tensor.device().is_cuda()) {
-            input_tensor.index({torch::indexing::Slice(0, batch_size)}).copy_(cpu_tensor);
-        }
-        
-        // Process the batch
-        std::vector<NetworkOutput> results = process_func_(
-            input_tensor.index({torch::indexing::Slice(0, batch_size)}));
-        
-        // Track statistics
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            end_time - start_time).count();
-            
-        batch_size_stats_.add(batch_size);
-        processing_time_stats_.add(duration_ms);
-        
-        // Periodically optimize preallocated tensor sizes
-        optimizePreallocatedSizes();
-        
-        return results;
-    }
-    
-private:
-    void optimizePreallocatedSizes() {
-        static int call_count = 0;
-        if (++call_count % 100 != 0) return;
-        
-        // Use statistics to adjust preallocated tensor sizes
-        float avg_batch_size = batch_size_stats_.average();
-        
-        // Update preallocated sizes based on observed patterns
-        std::vector<size_t> optimal_sizes = {
-            static_cast<size_t>(avg_batch_size * 0.5f),
-            static_cast<size_t>(avg_batch_size),
-            static_cast<size_t>(avg_batch_size * 1.5f),
-            static_cast<size_t>(avg_batch_size * 2.0f)
-        };
-        
-        // Keep sizes within reasonable bounds
-        for (auto& size : optimal_sizes) {
-            size = std::max(size_t(16), std::min(size_t(512), size));
-        }
-        
-        // Update preallocated tensors
-        for (size_t size : optimal_sizes) {
-            if (preallocated_inputs_.find(size) == preallocated_inputs_.end()) {
-                preallocated_inputs_[size] = torch::zeros(
-                    {static_cast<long>(size), channels, height, width},
-                    torch::TensorOptions().device(torch::kCUDA).requires_grad(false));
-            }
-        }
-    }
-};
-```
-
-### 2. Asynchronous GPU Pipeline
-
-Implement an asynchronous pipeline to overlap CPU and GPU operations:
-
-```cpp
-class AsyncGpuPipeline {
-private:
-    // Multiple streams for overlapping operations
-    std::vector<torch::cuda::CUDAStream> streams_;
-    
-    // Multiple buffers for double-buffering
-    std::vector<torch::Tensor> input_buffers_;
-    std::vector<torch::Tensor> output_buffers_;
-    
-    // Current buffer index
-    std::atomic<int> current_buffer_{0};
-    
-    // Neural network model
-    torch::jit::script::Module model_;
-    
-public:
-    AsyncGpuPipeline(int num_buffers, int batch_size, int channels, int height, int width) 
-        : streams_(num_buffers), input_buffers_(num_buffers), output_buffers_(num_buffers) {
-        
-        // Initialize streams and buffers
-        for (int i = 0; i < num_buffers; i++) {
-            streams_[i] = torch::cuda::getStreamFromPool();
-            
-            // Create pinned memory buffers for efficient transfer
-            input_buffers_[i] = torch::zeros(
-                {batch_size, channels, height, width},
-                torch::TensorOptions().pinned_memory(true));
-                
-            // Create GPU output buffers
-            output_buffers_[i] = torch::zeros(
-                {batch_size, output_size},
-                torch::TensorOptions().device(torch::kCUDA));
-        }
-    }
-    
-    std::vector<NetworkOutput> processBatchAsync(
-        const std::vector<std::unique_ptr<core::IGameState>>& states) {
-        
-        // Get current buffer index
-        int buffer_idx = current_buffer_.fetch_add(1, std::memory_order_relaxed) % input_buffers_.size();
-        
-        // Get references to current buffers and stream
-        torch::Tensor& input_buffer = input_buffers_[buffer_idx];
-        torch::Tensor& output_buffer = output_buffers_[buffer_idx];
-        torch::cuda::CUDAStream& stream = streams_[buffer_idx];
-        
-        // Fill input buffer with state data (CPU operation)
-        #pragma omp parallel for
-        for (size_t i = 0; i < states.size(); i++) {
-            auto tensor_view = input_buffer.index({static_cast<long>(i)});
-            states[i]->fillTensor(tensor_view);
-        }
-        
-        // Submit transfer and compute to the stream
-        torch::cuda::setCurrentStream(stream);
-        
-        // Transfer input to GPU
-        auto gpu_input = input_buffer.to(torch::kCUDA, true);
-        
-        // Run model in current stream
-        auto outputs = model_.forward({gpu_input}).toTensor();
-        
-        // Copy results to output buffer
-        output_buffer.copy_(outputs, true);
-        
-        // Synchronize the stream
-        stream.synchronize();
-        
-        // Extract results
-        std::vector<NetworkOutput> results;
-        results.reserve(states.size());
-        
-        for (size_t i = 0; i < states.size(); i++) {
-            NetworkOutput output;
-            // Extract policy and value from output tensor
-            auto tensor_view = output_buffer.index({static_cast<long>(i)});
-            
-            // First value is the scalar value
-            output.value = tensor_view[0].item<float>();
-            
-            // Rest is policy
-            output.policy.resize(tensor_view.size(0) - 1);
-            for (int j = 1; j < tensor_view.size(0); j++) {
-                output.policy[j-1] = tensor_view[j].item<float>();
-            }
-            
-            results.push_back(std::move(output));
-        }
-        
-        return results;
-    }
-};
-```
-
-### 3. Dynamic Batch Sizing Based on GPU Profiling
-
-```cpp
-class AdaptiveBatcher {
-private:
-    // Track GPU utilization and performance
-    struct BatchStats {
-        float throughput_states_per_second;
-        float gpu_utilization_percent;
-        std::chrono::milliseconds latency;
-    };
-    
-    std::map<size_t, BatchStats> batch_size_stats_;
-    size_t current_batch_size_ = 64;  // Start with reasonable default
-    
-public:
-    size_t getOptimalBatchSize() {
-        // Get current GPU utilization
-        float current_gpu_util = getGpuUtilization();
-        
-        if (current_gpu_util < 50.0f) {
-            // GPU underutilized, increase batch size
-            current_batch_size_ = std::min(current_batch_size_ * 2, 
-                                         size_t(512));  // Cap at reasonable maximum
-        } else if (current_gpu_util > 95.0f && 
-                  batch_size_stats_[current_batch_size_].latency.count() > 50) {
-            // GPU saturated with high latency, reduce batch size
-            current_batch_size_ = std::max(current_batch_size_ / 2, 
-                                         size_t(16));  // Maintain reasonable minimum
-        }
-        
-        return current_batch_size_;
-    }
-    
-    void updateBatchStats(size_t batch_size, std::chrono::milliseconds latency, 
-                        float states_per_second, float gpu_util) {
-        // Update statistics for this batch size
-        batch_size_stats_[batch_size].latency = 
-            (batch_size_stats_[batch_size].latency.count() * 0.9f + 
-             latency.count() * 0.1f);  // Exponential moving average
-             
-        batch_size_stats_[batch_size].throughput_states_per_second = 
-            batch_size_stats_[batch_size].throughput_states_per_second * 0.9f + 
-            states_per_second * 0.1f;
-            
-        batch_size_stats_[batch_size].gpu_utilization_percent = 
-            batch_size_stats_[batch_size].gpu_utilization_percent * 0.9f + 
-            gpu_util * 0.1f;
-    }
-    
-private:
-    float getGpuUtilization() {
-        // Use NVML or other GPU monitoring API to get current utilization
-        nvmlDevice_t device;
-        nvmlDeviceGetHandleByIndex(0, &device);
-        
-        nvmlUtilization_t utilization;
-        nvmlDeviceGetUtilizationRates(device, &utilization);
-        
-        return static_cast<float>(utilization.gpu);
-    }
-};
-```
-
-By implementing these optimizations, the MCTS engine will achieve significantly higher GPU throughput and more efficient parallelization. The system will adapt to runtime conditions, maintain optimal batch sizes, and minimize CPU-GPU transfer overhead, resulting in much faster and more efficient tree search.
-</gpu_throughput_scenario>
-
-----------
-----------
-
-# Monte Carlo Tree Search Implementation Overview
-
-The `omoknuni_small` repository implements a multi-threaded **Monte Carlo Tree Search (MCTS)** engine integrated with a neural network for policy/value evaluations. The MCTS code is primarily in `src/mcts` (with headers in `include/mcts`), and it follows an AlphaZero-style search with **leaf parallelization**, **virtual loss**, a **transposition table**, and a **batched neural network evaluator**. Below we dissect the main components, examine their functionality and potential issues, and then propose optimizations for speed, concurrency, and GPU utilization.
-
-## Main MCTS Components
-
-**MCTSEngine** – The central class orchestrating the search (see `MCTSEngine` in `mcts_engine.h`). It holds MCTS parameters (`MCTSSettings`), search statistics (`MCTSStats`), and manages the search tree and worker threads. Key fields include the root node (`root_`), a `TranspositionTable`, and several thread-synchronization primitives. It sets up **specialized worker threads** for different roles (tree traversal, batch accumulation, result distribution) and coordinates their interaction via lock-free queues and atomic flags. The engine’s `search()` method resets any previous search state, initializes the root node, ensures the evaluator thread is running, then spawns the worker threads to perform the specified number of simulations in parallel. The engine uses `active_simulations_` (an atomic counter) to track how many simulations remain and distributes work among threads accordingly.
-
-**MCTSNode** – Represents a node in the search tree, corresponding to a game state. Each node holds a game state (via `IGameState`), a list of child nodes and corresponding move actions, and statistics such as visit count, total value, prior probability, and virtual loss count. Many of these are atomic for thread-safe updates (e.g. `visit_count_`, `value_sum_`, `virtual_loss_count_`). The node provides methods for **selection** and **expansion**: `selectChild()` implements a PUCT formula (using visit counts, total value, and prior, adjusted by virtual loss) to choose the best child during selection, and `expand()` generates all children by applying each legal move to a cloned state. To prevent race conditions, expansion is guarded by a mutex so that only one thread can expand a leaf node at a time. If expansion succeeds, children are initialized with uniform prior probabilities (which will later be updated by the neural network). Each node also supports **backpropagation** via an `update(float value)` that increments the visit count and adds the outcome value to the value sum atomically, and **virtual loss** methods (`addVirtualLoss()`/`removeVirtualLoss()`) to adjust counters during concurrent simulations.
-
-**MCTSEvaluator** – Encapsulates the neural network inference pipeline (see `MCTSEvaluator` in `mcts_evaluator.h`). It manages a dedicated thread that performs batch evaluations on the GPU. The evaluator is constructed with a function handle to the network’s inference (which takes a vector of game states and returns policy and value outputs) and parameters for maximum batch size and waiting timeout. Internally, it maintains a lock-free queue of evaluation requests (each request bundling a node, a cloned game state, and a promise for the network result). When `start()` is called, the evaluator spawns a worker thread running an `evaluationLoop()`. In **normal mode** (single-threaded MCTS), this loop accumulates requests from the queue until reaching a batch size or timeout, then processes a batch in one GPU forward pass. In the current **multi-threaded integration**, the engine uses **external queues**: the evaluator can be pointed to the engine’s batch and result queues (via `setExternalQueues()`) so that it no longer uses its internal request queue. In this mode, the evaluator’s thread simply pulls ready batches from the external `batch_queue_`, runs the network on the collected states, and pushes the results to the `result_queue_`. This design cleanly decouples GPU inference from the MCTS threads: CPU workers produce batches of states, and the evaluator thread handles all GPU interactions, maximizing throughput by processing states in large batches (default max batch size = 64). The evaluator also tracks metrics like total evaluations, average batch size, and latency for performance monitoring.
-
-**TranspositionTable** – A thread-safe hash table that caches nodes by state hash to detect and reuse duplicate game states (transpositions). It stores entries with a **weak pointer to MCTSNode** (avoiding memory leaks by not owning the node) and associated stats (depth, visits). The table is sharded internally for concurrency (using the parallel-hashmap library). The engine queries the table during selection: after selecting a child node, it checks if the child’s state hash exists in the table. If a different node representing the same state is found, the engine can reuse it instead of exploring a redundant branch. This is meant to save effort in games with transpositions or symmetry. The table is cleared at the start of each new search to avoid using stale pointers.
-
-## Parallelization Scheme (Leaf Parallelization)
-
-The MCTS engine employs **leaf parallelization**, meaning multiple simulations (playouts) are run concurrently by different threads. Rather than one long simulation running at a time, threads collaborate on building the search tree. Key aspects of the parallel design:
-
-* **Thread Roles:** On starting a search, the engine spawns one **batch accumulator** thread, one **result distributor** thread, and N **tree traversal** threads (N = `num_threads` setting, default 4). The tree threads perform the Selection and Expansion phases of MCTS; the batch thread collects un-evaluated leaf nodes; the result thread processes neural network outputs and performs Backpropagation. This specialization avoids a general thread pool and instead dedicates threads to pipeline stages for efficiency.
-
-* **Work Distribution:** The engine uses an atomic counter `active_simulations_` to track how many playouts are left to perform. Initially, this is set to the total simulation count (e.g. 800 by default) and is decremented as threads claim work. Each tree traversal thread loops, checking if simulations remain and if workers are active. When work is available, a thread will **claim a batch of simulations** by atomically decrementing `active_simulations_` in chunks (it takes up to \~max(num\_remaining/num\_threads, 16) tasks, capped at 64). This strategy tries to balance load: threads grab simulations in moderately sized batches, reducing frequent contention on the counter while preventing one thread from taking all work at once. After claiming its batch, a thread repeatedly calls `traverseTree(root_)` for each simulation it took.
-
-* **Selection & Virtual Loss:** Within each `traverseTree()` call, a thread performs the selection phase from the root: following the PUCT formula via `selectChild()` until it reaches a leaf (an unexpanded node) or a terminal state. During this descent, **virtual losses** are used to avoid contention: each time a node is selected, the thread increments that node’s `virtual_loss_count_` (and similarly for the child). This temporarily reduces that node’s computed value in other threads’ selection calculations, discouraging others from selecting the same branch until the first thread finishes. Once a thread finishes a simulation (or abandons it), it will remove those virtual losses during backpropagation. Virtual loss thus acts as a lock-free synchronization mechanism ensuring threads explore diverse parts of the tree instead of dogpiling the current best path.
-
-* **Expansion & Evaluation Queueing:** When a thread reaches a leaf node that is non-terminal, it **expands** it (adding child nodes for all legal moves) and immediately **queues it for neural network evaluation** without waiting for the result. The thread clones the game state of the leaf and packages it into a `PendingEvaluation` object containing the state, the pointer to the leaf node, and the path of nodes from root to leaf. This package is pushed into a lock-free **leaf queue** (`leaf_queue_`). Importantly, the thread does *not* perform backpropagation at this time – since the leaf’s value is not yet known, it defers the backup until after the neural network computes the leaf evaluation. (For terminal leaf nodes, no network eval is needed; the thread computes the outcome value directly and calls `backPropagate` immediately in the same thread.)
-
-* **Batching and GPU Inference:** The **batch accumulator thread** continuously gathers pending evaluations from the leaf queue to form batches. It wakes up frequently and tries to dequeue as many `PendingEvaluation` items as possible up to the target batch size (e.g. 64). It uses adaptive heuristics to decide when to submit a batch to the neural network: for example, it will submit immediately if it has a full batch, but it may also submit smaller batches after short time intervals to avoid long delays (e.g. flush after 100ms if >=16 states, after 500ms if >=8, etc.). These time-based triggers ensure that even if the search is not generating states quickly, the GPU still receives work without stalling for too long. Once a batch is ready, the thread moves the collected states into a `BatchInfo` and pushes it into the `batch_queue_`, then notifies the evaluator thread. (The engine uses a `ConcurrentQueue<BatchInfo>` for this; the moodycamel queue is lock-free, but a condition variable `batch_cv_` is also signaled as a backup notification.)
-
-  The evaluator thread (running inside `MCTSEvaluator`) receives these batches. In “external queue” mode, its `processBatch()` function tries to pop one BatchInfo from the external batch queue each iteration. When a batch is obtained, it extracts all the game states, runs the neural network inference on the entire batch in one go (`inference_fn_` returns a vector of `NetworkOutput`), and then pairs each output with its corresponding `PendingEvaluation` to enqueue into the `result_queue_` for post-processing. This design achieves a high GPU throughput: many leaf states are evaluated simultaneously on the GPU, amortizing the overhead of a forward pass over a large batch. It also means CPU threads aren’t idly waiting for the GPU – they can continue selecting and expanding other parts of the tree while inference is in progress.
-
-* **Result Integration (Backpropagation):** The **result distributor thread** consumes completed evaluations from the `result_queue_` and integrates them back into the search tree. It dequeues results in batches (processing, say, up to 32 results at once). For each `(NetworkOutput, PendingEvaluation)` pair, it locates the associated node and path. It then **updates the tree**: the node’s children get their prior probabilities set from the neural network’s policy vector, and the value is backpropagated up the path. Specifically, it calls the node’s `setPriorProbabilities(policy)` to update all child nodes’ `prior_probability_` fields (protected by the node’s expansion mutex for thread safety), and then calls `backPropagate(path, value)` to propagate the value to each node in the path (alternating the sign of the value for each level since the perspective flips with each move). The backpropagation routine removes the virtual losses and updates visit counts and value sums atomically for each node in the path. Finally, the result thread decrements the global `pending_evaluations_` counter to signal that one more evaluation has completed. (This counter was incremented when the leaf was first queued and again when the batch was submitted, as discussed below.) With backprop now done, that simulation is fully complete.
-
-* **Thread Synchronization:** The threads coordinate using a combination of atomic flags and condition variables. The tree workers wait on a condition variable `cv_` when there are no simulations to process or when the engine temporarily deactivates workers. The engine sets an atomic flag `workers_active_` to false when the search is ending, which causes workers to break out of their loops after finishing current tasks. The batch and result threads run mostly in a loop checking their queues; they also break out when a shutdown flag is set and their queue empties. The overall search operation is monitored by a small thread in `MCTSEngine::runSearch()` that periodically checks if `active_simulations_` is zero *and* no pending evaluations remain; once both are true (meaning all simulations have been expanded and all network results processed), it marks the search as complete. This triggers the cleanup: `workers_active_` is set false and all condition variables are notified to unblock any waiting threads. The engine can then safely join the worker threads or reuse them for another search. (Indeed, the code is written to reuse threads across multiple `search()` calls – threads are only created once and then remain alive but idle between searches.)
-
-In summary, the parallel MCTS works as a pipeline: **Tree threads** produce un-evaluated leaf nodes, the **batch thread** aggregates them, the **GPU thread** evaluates them in batches, and the **result thread** updates the tree. This pipeline allows substantial concurrency while keeping each component focused, and the use of atomic counters and lock-free queues minimizes locking overhead in the hot loops.
-
-## Correctness and Performance Issues
-
-While the implementation is sophisticated, several issues and inefficiencies are present upon close inspection. These include potential correctness bugs (e.g. double-counting, race conditions), suboptimal resource usage (idle threads or GPU underutilization), and areas for improvement in thread synchronization. Below we enumerate the key findings:
-
-* **Pending Evaluation Counting and Throttling:** The `pending_evaluations_` atomic is meant to track how many leaf evaluations are in flight (to avoid memory explosion by limiting concurrent simulations to `max_concurrent_simulations`, default 512). However, the current usage is inconsistent and may **double-count**. When a leaf is first queued by a tree thread, `pending_evaluations_` is incremented. Later, when the batch accumulator actually submits a batch of those leaves to the neural net, it increments `pending_evaluations_` *again by the batch size*. Each result processed then decrements the counter by 1. This means each leaf evaluation effectively adds **2** to the counter but only subtracts 1 when done, causing `pending_evaluations_` to potentially remain overstated. For example, if 100 leaves were queued and all processed, the counter might end up 100 too high. This bug can skew the engine’s logic that checks `pending_evaluations_` against `max_concurrent_simulations`. In the batch thread, there is a loop `while (pending_evaluations_ >= settings_.max_concurrent_simulations) sleep` to throttle expansion. Because of double-counting, the engine might perceive more pending work than actually exists and unnecessarily stall the generation of new simulations. This reduces thread utilization and throughput (threads may pause even though the GPU could accept more work). **Correctness Impact:** The double-count doesn’t corrupt the search results per se, but it can harm performance by starving the pipeline. **Optimization:** To fix this, the counting scheme should be made one-to-one (increment once per leaf and decrement once per completed result). For instance, increment only when a leaf is first queued and **do not increment** again on batch submission (or decrement by batch size accordingly). Ensuring accurate counts will keep the throttling logic working as intended – pausing expansion only when the true number of outstanding evaluations hits the cap.
-
-* **Unutilized Worker Tracking:** Similarly, the engine defines an atomic `num_workers_actively_processing_` intended to track how many workers are busy. In `runSearch()` the code waits until this count becomes zero (meaning previous search’s workers finished) before proceeding. However, we find no code that ever increments or uses `num_workers_actively_processing_` in the worker loops – it stays at 0, causing the wait loop to exit immediately regardless of worker state. This appears to be a leftover from a prior design (“Thread pool (removed)”) and does not reflect actual activity. The result is mostly benign (the engine instead relies on the `active_simulations_` and `pending_evaluations_` checks to know when work is done), but it’s misleading and could mask synchronization issues. **Optimization:** Remove or properly implement `num_workers_actively_processing_`. A correct implementation could increment this when a worker picks up a simulation and decrement when it finishes, then allow `runSearch` to block until truly all threads are idle. However, given the current design, it may be simpler to remove it and trust the existing completion conditions.
-
-* **Transposition Table Integration:** The idea of reusing nodes from the transposition table is sound, but the current implementation can lead to **inconsistent tree structure**. When a transposition is found during selection, the code attempts to **swap in** the existing node: it removes the virtual loss from the newly selected child and assigns the `node` pointer to the transposition node (then adds a virtual loss to that). However, it does *not* update the parent’s child list to replace the new node with the transposition node. In other words, suppose thread A expanded node X and created child Y (with move m), but thread B through a different path found an existing node Z (transposition of Y’s state). Thread B will abandon Y and use Z for further selection, but node X’s `children_` still contains Y as the child for move m. Y becomes an orphaned node: it isn’t used in the search anymore, yet it remains in the tree structure (and will never be updated or backpropagated). This can waste memory and, worse, on future selections of move m from X, the engine might mistakenly consider Y again. If Y has no visits (because B never finished a playout on it) but remains in the children list, `selectChild()` might pick it again in another simulation, even though a superior transposition Z was available. This defeats the purpose of the transposition table and could cause duplicate effort. **Correctness Impact:** This is more of a performance bug than a fatal error – the search might simply explore the same state along two different node objects. But it does risk skewing visit counts and value estimates if one state’s statistics get split across two nodes. **Optimization:** To fix this, when a transposition is detected, the engine should *merge* the nodes properly. One approach is to replace the parent’s child pointer with the transposition node (and possibly delete the newly created node Y). However, care must be taken if multiple parents reference the same transposition (which is a complex scenario). Alternatively, the engine could avoid creating the new node in the first place: look up the transposition table *before* expansion and simply attach the existing node as a child. If attaching is problematic, a simpler workaround is to disable re-expansion of a node that was found as a transposition – i.e. if `transposition_table_->get(hash)` returns a node, do not create a duplicate child at all. The current code path is somewhat convoluted; refactoring the selection/transposition logic to cleanly handle node reuse will improve consistency.
-
-* **Duplicate Neural Evaluations (Race Condition):** There is a subtle race possible in the expansion logic. Multiple threads could arrive at the same leaf node concurrently and both decide to expand and evaluate it. The code locks `expand()` so only one actually creates children, but the other thread, upon finding the node no longer a leaf (children now exist), does not re-select a child. In `traverseTree()`, the check for expansion is `if (!leaf->isTerminal() && leaf->isLeaf())`. If Thread A expands the node and enqueues it for evaluation, Thread B might still pass this check before A’s expansion completes (seeing `isLeaf()==true`), then block on the expansion mutex. Once B acquires the lock, it sees children are now present (expansion already done) and returns from `expand()` immediately. At this point, Thread B continues as if expansion happened (because the code does not re-check `isLeaf` after expansion). It proceeds to clone the state and enqueue a `PendingEvaluation` for the *same node*. Now two evaluations for the same state are in the queue. Both will eventually be processed, and the result distributor will apply both, effectively **backpropagating the same node twice**. This double-counts one simulation’s result and also wastes GPU cycles on a redundant inference. The use of virtual loss doesn’t prevent this scenario because the virtual loss is only removed when backpropagating, and here both threads assumed a simulation was needed. **Correctness Impact:** Slight – the search tree will get an extra visit on that node with (likely) the same value, biasing visit counts. If the neural net is deterministic, both outputs are identical, so the net effect is roughly as if one simulation was counted twice. This could skew the tree statistics (e.g. making that node appear slightly more explored than it truly is). **Optimization:** Introduce a flag or mechanism to mark a node as “evaluation pending” so that only one evaluation is scheduled per leaf. For example, an atomic boolean in MCTSNode could indicate a network eval is in progress. The first thread to queue the node would set this flag; subsequent threads reaching the node would see the flag and *not* queue another eval (they could either skip that simulation or wait for the result). This ensures each node is expanded/evaluated exactly once per search. Combined with virtual loss (to penalize the node until the result comes), this prevents duplicate effort.
-
-* **Thread Utilization and Lock Overheads:** The current design already minimizes locking (using mostly atomic ops and lock-free queues), but there are a few areas to refine:
-
-  * The tree traversal threads use a condition variable `cv_` with a short timeout (10ms) to wait for work. Waking up every 10ms incurs some overhead, though in practice this is minor compared to simulation time. A more efficient approach is possible: use a condition variable *without* a timeout, and notify specific worker threads when work becomes available. For instance, after setting `active_simulations_` in `runSearch`, the engine already calls `cv_.notify_all()` to wake all workers. The additional periodic wake-ups might not be necessary. If spurious sleeps are an issue (observed CPU usage when idle), adjusting this waiting strategy could help: e.g. wait indefinitely on `cv_` until either `active_simulations_ > 0` or `shutdown_` becomes true, thereby eliminating the 10ms polling loop. This requires careful handling to avoid deadlock if a notify is missed, but since the code already signals on key events (work added or shutdown), it can be done.
-  * **Expansion Mutex:** Each node’s expansion uses a mutex which ensures thread safety, but it can become a bottleneck if many threads happen to expand nodes on the same branch in quick succession. The impact is usually low (different simulations typically expand different parts of the tree). Still, one could consider reducing this contention by using finer-grained atomic steps: e.g., an atomic flag for “expansion in progress” could prevent double expansion without a full lock. However, because expansion can involve creating many child objects, the mutex is a reasonable choice for simplicity and is held only briefly. There’s no strong evidence of lock contention here unless the game has very shallow depth causing many threads to bang on the root expansion at once (but the root is expanded once with all legal moves upfront, thereafter no contention).
-  * **Result Updating:** The result distributor locks each node’s expansion mutex when setting prior probabilities (via `MCTSNode::setPriorProbabilities`). This ensures children list and prior vector are consistent during update. This could serialize updates if many results come in at once for siblings of the same node, but typically network batches contain leaves from various parts of the tree. The critical section is small and unlikely to be a performance issue. We should keep this for correctness (to avoid a race if another thread tries to expand or read the same node concurrently).
-
-* **GPU Throughput and Batching Efficiency:** The batched inference mechanism is one of the strengths of this implementation; however, we should examine if it’s always utilized effectively:
-
-  * The default batch size is 64, but in many cases, the search may not generate 64 parallel leaf evaluations fast enough to fill the batch before the timeout. The code addresses this by using a relatively short batch timeout (50ms) and by flushing smaller batches (≥16 after 100ms, etc.). Still, if the CPU threads are slow (due to heavy game state logic or fewer threads), the GPU might be fed many suboptimal small batches (e.g. 4 or 8 states at a time). This can underutilize the GPU’s parallelism. **Potential Bottleneck:** If the GPU finishes inference much faster than the CPU can generate new states, the GPU will be underutilized (essentially idle waiting for work). One scenario: at game start, the root has many moves; expanding them yields a flurry of leaf evals that fill big batches. But later in the search, many simulations might hit already-expanded nodes (transpositions) or spend time backpropagating, slowing the rate of new leaf generation – the batch thread might then send smaller batches. The evaluator thread currently **polls** the batch queue in a tight 1ms loop, which ensures low latency, but also means it’s constantly spinning. This is somewhat wasteful – it could instead block on a condition variable signaled by `batch_accumulator_worker` when a batch is available (the code actually calls `batch_cv_.notify_one()` on enqueue, but the evaluator doesn’t explicitly wait on it, opting for the polling loop).
-  * **Centralized vs. Decentralized Batching:** The current architecture uses a separate batch accumulator thread. An alternative design could let the evaluator thread itself dequeue directly from `leaf_queue_` and form batches. This would remove one queue and thread from the pipeline, reducing context switches and data movement. As it stands, a `PendingEvaluation` goes from `leaf_queue_` -> `current_batch` (vector) -> `BatchInfo` object -> `batch_queue_` -> evaluator thread, then the states are moved again into a new vector for inference. That’s multiple moves/copies of pointers. While each move is not heavy (we’re moving pointers to game states), it’s extra complexity. A single thread could conceivably perform the dequeue and inference steps together. The advantage of the extra batch thread might be that it can continue accumulating the *next* batch while the current batch is being processed on GPU, partially overlapping CPU preparation with GPU compute. However, in practice, preparing a batch of at most 64 states is very fast relative to a GPU forward pass, so this overlap benefit is minimal. **Optimization:** Consider merging the batch accumulator’s functionality into the evaluator thread – i.e., let the evaluator thread pull directly from `leaf_queue_` until either a timeout or batch size is reached, then run the network and immediately process or dispatch results. This would simplify the pipeline (fewer queues, less risk of queue backlog) and potentially reduce latency. The code already has similar logic in non-external mode (using `collectBatch()` on its own request queue), which could be adapted for the external scenario.
-  * **Batch Size Adaptation:** The code sets a `min_batch_size_` to 75% of the max (e.g. 48 if max 64) to decide when to stop waiting for more requests. It might be beneficial to allow more dynamic adjustment. For instance, if the GPU is very fast (e.g. using a high-end card on a small model), one could use a larger batch size (128 or more) without hurting per-batch latency much, thus increasing throughput. Conversely, on a slower GPU or if latency is critical, one might prefer smaller batches for quicker responses. Currently, these values are constants or fixed settings. **Optimization:** Expose the batch size and timeout as tunable parameters (they already are in `MCTSSettings`), and potentially implement logic to adjust them on the fly. For example, measure actual average batch latency and if the GPU isn’t near saturated (small batches processed quickly), the engine could increase the batch size in subsequent searches or if pending evaluations consistently back up, it could shorten the timeout to push work out faster. This is a complex optimization, but noting it could guide performance tuning.
-
-* **Memory Usage and Leaks:** Thanks to smart pointers and careful design, outright memory leaks are not obvious in this code. The transposition table using weak\_ptr avoids preventing node cleanup, and the search resets the tree between runs. One area to watch is that large numbers of cloned states could consume memory if `max_concurrent_simulations` is high – but the setting (512) is meant to cap that. Each `PendingEvaluation` holds a unique\_ptr to a game state clone; if 512 are queued simultaneously, that’s 512 game states in memory plus the original tree states. If the game state is large, this is heavy. However, once a batch is processed, those states are moved into the local `states` vector for inference and then destroyed after inference completes. The result distributor no longer needs the state (just node and path), so memory is freed in a timely manner. **Potential leak:** The earlier-mentioned orphaned node in the transposition scenario (Y) would hold a state pointer and children, and if never used or freed until search end, that memory is stuck during the search. Since the entire tree is destroyed at search end, it’s not a permanent leak but could be a temporary waste. Reducing such orphan creation (via proper transposition handling) will also eliminate this minor memory waste.
-
-* **Logging Overhead:** The code is currently instrumented with many `std::cout` debug messages (guarded partially by `MCTS_DEBUG` macros). For example, every worker thread prints start/stop messages, and there are per-second status prints in the search monitor thread. In a performance setting, excessive I/O can slow things down. These should be compiled out or throttled in production builds (likely the intention with the debug macro). Ensuring that the debug logging level is configurable or disabled in release will avoid any unintended slowdowns.
-
-In summary, while the MCTS implementation is robust, addressing the above issues will improve its correctness and efficiency. The most critical are the double-counting of pending evaluations (which can throttle parallelism unnecessarily) and the race leading to duplicate evaluations of the same node. Fixing those will both speed up the search and ensure the statistics (visits, values) are accurate. The transposition integration needs refinement to truly reap the benefits of state reuse. Additionally, some architectural streamlining (merging threads or using proper blocking instead of active waiting) can reduce overhead.
-
-## Optimizations and Recommendations
-
-To enhance the MCTS engine’s performance and thread safety, we propose the following optimization strategies:
-
-**1. Fix Concurrency Bugs and Ensure One Evaluation per Leaf:** As a top priority, implement measures to prevent duplicate evaluations of the same node. Introduce an atomic “in-flight” flag in `MCTSNode` that is checked and set when a leaf is queued for evaluation. If a second thread reaches the same node before the first result returns, it will see the flag and skip queuing another evaluation (it could simply back out and try a different simulation). This change will eliminate the race condition causing double evaluation and double backpropagation for one node. It also implicitly reduces wasted GPU work and keeps the search tree statistics consistent (each simulation contributes exactly once). Alongside this, correct the `pending_evaluations_` accounting so that it truly reflects the number of outstanding evals. This likely means removing the increment before batch enqueue (or the initial increment) and only incrementing once per leaf, then decrementing once per result. With accurate counts, the batch thread’s throttle (`while (pending_evaluations_ >= max_concurrent)`) will function properly to avoid oversubscription without idling too early.
-
-**2. Improve Transposition Handling:** Refactor how the engine uses the transposition table during selection. A recommended approach is: **check the transposition table *before* creating a new child node.** In the expansion phase, for each legal move, look up the resulting state’s hash; if an existing node is found, use that instead of allocating a new `MCTSNode`. You can still create a new child entry in the parent’s children list, but point it to the existing node (and perhaps increase its reference count via shared\_ptr). If the existing node has already been expanded and has its own children, this effectively prunes the new branch and links the tree graphs together. This way, no “orphan” duplicate node is ever created. If modifying the children list like this is tricky, at least modify the current logic to remove the placeholder node when a transposition is found. For example, in `selectLeafNode`, after `node = transposition`, one could pop or mark the previously selected child from its parent’s vector to avoid keeping an unused node around. These adjustments will ensure that each game state in a search corresponds to at most one `MCTSNode`, concentrating visit counts and values correctly and saving memory/cycles.
-
-**3. Streamline Threading and Queues:** Consider collapsing the batch accumulator and evaluator threads into a single entity. The evaluator thread can handle accumulating leaf states into a batch (with the same logic currently in `batchAccumulatorWorker`) and then run the network. This simplifies synchronization – instead of passing data through `leaf_queue_ -> batch_queue_ -> result_queue_`, you would have `leaf_queue_ -> result_queue_` with one thread in between. The sequence could be: evaluator thread waits until either a timeout expires or the batch size is reached in `leaf_queue_`, grabs all available items up to the max, processes them, and directly pushes results to `result_queue_`. This removes one intermediate queue and one context switch. It also avoids the subtlety of double-incrementing pending counts when moving from leaf to batch queue. The code already polls `leaf_queue_` in small bursts (10ms loop); doing so in the evaluator thread is fine. If implementing this, ensure the evaluator thread also respects `max_concurrent_simulations` (i.e. if too many are pending, maybe it waits) – but with accurate pending counts and only one increment per leaf, that control might even be simpler (the evaluator can just limit how many it pulls).
-
-**4. Use Condition Variables for Idle Threads:** Reduce active spinning by leveraging condition variables more fully:
-
-* For the evaluator thread, rather than sleeping 1ms in a loop when no batch is available, use the `batch_cv_`. The batch accumulator (if kept) or tree threads can notify `batch_cv_` when they enqueue the first leaf into an empty queue. The evaluator thread then waits on `batch_cv_` with a timeout equal to the batch timeout. This way, if work arrives immediately, it wakes immediately; if not, it wakes at least at the timeout to process partial batch. This change cuts down unnecessary wake-ups.
-* Similarly, for result processing, you could have the evaluator thread signal a `result_cv_` when it enqueues results, and the result distributor thread waits on it instead of polling `result_queue_` continuously. Given the result thread already sleeps only 1ms when idle, the overhead is minor, but it’s an easy win to eliminate even that.
-* For tree traversal threads, as noted, you can potentially remove the 10ms periodic wake. They already do `cv_.wait_for(lock, 100ms, predicate)` in a loop. It might be better to use `cv_.wait(lock, predicate)` (no timeout) and rely on `notify_all` calls when new simulations are added or workers reactivated. The code does call `cv_.notify_all()` in all relevant places (`runSearch` when starting and stopping work, also periodically every \~300ms in the wait loop as a failsafe). If we ensure a notification is sent whenever `active_simulations_` transitions from 0 to >0 or `workers_active_` becomes true, then a pure wait (no timeout) is safe. This would eliminate needless wake-ups of sleeping threads.
-
-**5. Tune Batching Parameters:** To maximize GPU utilization, consider making the batch size and timeout adaptive or at least configurable for different hardware. For example, on a powerful GPU, using a batch size of 128 might significantly increase throughput. The current `MCTSSettings` allows setting `batch_size` and `batch_timeout` – ensure these truly propagate (they do in the evaluator construction). We might recommend experimentation with larger batch sizes if the CPU can support it. Another strategy is to increase `num_threads` for CPU if the GPU isn’t saturated – more CPU threads would generate more leaves concurrently, feeding bigger batches. However, raising CPU threads has diminishing returns due to tree contention. A better approach for throughput is to run multiple searches in parallel (e.g., self-play with multiple games at once sharing the same neural network thread). The current design could support that by having multiple MCTSEngine instances share a single evaluator thread/queue, but that would require refactoring (such as a global inference service). As an immediate improvement, focusing on one search at a time, we ensure we are at least hitting the 64 batch size frequently. Profiling could reveal if batches are often smaller than desired – if so, one could increase `max_concurrent_simulations` and `num_threads` to push more parallelism. **Atomic batch assembly:** if merging threads, ensure to still enforce a minimum batch size (the code uses `MIN_BATCH_SIZE = 16` to avoid too-small batches). This threshold could be made dynamic – e.g., if GPU utilization is low, increase MIN\_BATCH\_SIZE to wait for more states.
-
-**6. Efficient Game State Handling:** Cloning game states for every leaf is a cost. If profiling shows this to be a bottleneck, consider optimizing how states are passed to the neural network. If `IGameState` provides a method to extract features (like a tensor or array representation), the engine could maintain a pre-allocated buffer for state features and fill it without cloning the entire object. Cloning might be doing deep copies of game boards; this is memory-intensive. One idea: use a **move semantics** approach where the game state of a leaf node can be std::moved directly into the evaluation request (since after expansion, the leaf’s state won’t be needed until backprop, and even then only read). However, because the node still needs its state for potential future expansions, we can’t steal it entirely. A compromise is to have a lighter representation for the neural input. For example, have `IGameState` implement an interface `encodeTensor()` that writes the state into a tensor (or vector of floats). Then the evaluator can call this on the fly instead of requiring a full object clone. This would cut down memory allocations and possibly speed up state preparation. That said, this is a more involved change requiring modifications to the game state and network input pipeline, and the benefit depends on how heavy a state clone is. Given the current code, the simpler immediate fixes are in concurrency and synchronization; game state optimization is a secondary consideration.
-
-**7. Logging and Debug Controls:** Ensure that all the debug printing is disabled or minimized in performance runs. The numerous `std::cout` calls inside loops (e.g., printing status every second, or even per simulation in some debug modes) can severely degrade performance. Utilizing a proper logging library (the project mentions spdlog in comments) with log levels would be ideal. For now, wrapping these in `#ifdef MCTS_DEBUG` (which is on in the code by default with `#define MCTS_DEBUG 1` at top of `mcts_engine.cpp`) should be switched off (`0`) for normal operation. This will ensure the search threads and others aren’t spending time in I/O, which not only slows them but can also disturb timing (I/O calls release CPU and can affect thread scheduling).
-
-**8. Multi-Game Parallelism (Future Improvement):** While not in the original scope, one architectural recommendation for maximizing GPU usage is to allow the evaluator to batch evaluations from *multiple* MCTS searches at once. In self-play training scenarios, often many games are played in parallel to better utilize the GPU. The current design can be extended such that a single `MCTSEvaluator` serves multiple `MCTSEngine` instances: all their leaf evaluations go into one central queue and get batch-processed together. This would require making `leaf_queue_` a global concurrent queue and tagging requests with which engine they belong to, and then distributing results back. The benefit would be larger batches and higher GPU occupancy, especially when each game’s search might not have enough leaves to fill a batch by itself. This is a more complex change but worth noting for scalability: it’s essentially a *central inference server* idea. The given code already separates inference into its own module, which is a good starting point for this enhancement.
-
-**9. Backpropagation Optimization:** Currently, backpropagation is done in the result thread, sequentially for each result. This is usually fine (backprop is fast, just a few atomic adds per node up the path). However, if the latency of updating the tree becomes a concern (say, if policy vectors are very large or paths are long), one could parallelize backprop or offload some of it. For example, the result thread could push a task to a worker to do the actual backprop if needed. Given typical game depths, this is unlikely to be a bottleneck, so the simplicity of doing it directly is preferable. We mention this only for completeness.
-
-**10. Enhanced Thread Coordination:** Remove any unused synchronization constructs to avoid confusion. For example, if we decide to remove `num_workers_actively_processing_`, also remove its associated condition waits in `runSearch`. Likewise, if the `cv_mutex_destroyed_` flags (there to signal to threads that the engine is tearing down) aren’t needed with proper thread join logic, they can be removed to streamline the code. The engine’s destructor already attempts to join all threads cleanly, so with correct notifications and flags, threads should exit normally. Keeping the codebase clean of vestigial sync logic will make maintenance easier and reduce the chance of overlooked corner cases.
-
-## Prioritized TODO List
-
-1. **Resolve Pending Evaluation Count Bug:** Modify the increment/decrement logic for `pending_evaluations_` so that each evaluation is counted exactly once. Remove the double increment (at leaf queueing and batch submission) and ensure one decrement per completed result. This will fix the premature throttling of simulations and improve parallel utilization.
-
-2. **Prevent Duplicate Leaf Evaluations:** Implement a mechanism (e.g. an atomic flag in `MCTSNode` or a shared data structure) to mark nodes that have an evaluation in progress. Use this to prevent multiple threads from scheduling the same node for neural network inference. This addresses the race condition where two threads expand the same node concurrently and both enqueue it for evaluation. The first thread to mark it should proceed, others should skip or wait.
-
-3. **Improve Transposition Node Merging:** Refactor the selection logic to properly integrate transpositions. Before creating a new child node for a move, check the transposition table. If an existing node is found:
-
-   * Option A: Use it directly as the child (attach to the parent’s children list) instead of creating a new node.
-   * Option B: If a new node was already created, replace or remove it and use the existing one for the remainder of the simulation.
-   * Ensure that the parent and child pointers are consistent and no duplicate nodes for the same state remain in the tree. Test this on a scenario with known transpositions to verify that visits accumulate in one node.
-
-4. **Unify Batch Accumulation with Evaluation Thread:** Simplify the pipeline by merging the batch accumulator and evaluator roles. Let the evaluator thread fetch states from `leaf_queue_` and form batches internally. Eliminate the intermediate `batch_queue_` if possible. This change will remove one thread and associated context switches, and it naturally solves the double-count issue (since there’s no second queue to “submit” to). It will also make the code easier to follow.
-
-5. **Use Condition Variables to Eliminate Busy-Wait Loops:** Adjust thread waiting logic to be event-driven:
-
-   * Tree threads: rely on `cv_.notify_all()` and remove the fixed 10ms wake-up cycle. They should sleep until signaled that new simulations are available or a shutdown is issued.
-   * Evaluator thread: wait on `batch_cv_` when no batch is ready, instead of polling every 1ms. Wake it when batch queue (or leaf queue, if unified) transitions from empty to non-empty.
-   * Result thread: similar approach with a `result_cv_` or reuse `batch_cv_` (since results come shortly after batches). Or simply sleep a bit longer when idle, since 1ms polling is extremely frequent.
-     These changes reduce CPU usage when threads are idle and improve overall efficiency (important in self-play where many MCTSEngines might be running on one machine).
-
-6. **Tune and Expose Parallelism Parameters:** Re-evaluate `MCTSSettings.num_threads`, `batch_size`, and `batch_timeout` for your deployment scenario. For instance, if the GPU is underutilized, consider increasing `num_threads` (more CPU simulations in parallel) or increasing `batch_size` beyond 64. Monitor the `avg_batch_size` and `avg_batch_latency` stats (already tracked in `MCTSStats`) to guide this tuning. Make sure these settings are easily configurable (perhaps via a config file or CLI) so you can adjust without recompiling. The goal is to find a balance where the GPU is fed large batches consistently, but not so large that it introduces too much latency in the search.
-
-7. **Optimize GameState Cloning (if needed):** Profiling might show that `state->clone()` is consuming significant time (especially if the game state is complex). If so, consider optimizing this by implementing a more direct state-to-network input conversion. In the short term, one micro-optimization is to avoid cloning the state twice for the same node in different threads (which will be solved by item 2 above). In the longer term, one might redesign `NeuralNetwork::inference` to accept a lightweight representation of states (like already-serialized tensors). This is a more involved change but could yield improvements in environments where state cloning is expensive.
-
-8. **Clean Up Synchronization Artifacts:** Remove or fix any unused thread coordination variables. For example, if after the above changes `num_workers_actively_processing_` is still unused, eliminate it to avoid confusion. Similarly, the boolean flags `cv_mutex_destroyed_`, `batch_mutex_destroyed_`, etc., which are set on destructor to break out of waits, may not be needed if threads are correctly woken and joined. Ensure that all threads are properly joined or detached on engine destruction to avoid any potential hangs on program exit.
-
-9. **Logging Level Control:** Switch off the verbose logging in performance runs. Use the `MCTS_DEBUG` flag or a runtime log level to silence debug output. This will remove the overhead of I/O in the search loop and worker threads. If detailed profiling is needed, consider logging aggregated stats rather than per-iteration messages (for example, print one summary at the end of search with total nodes, batches, etc., which is already available in `last_stats_`).
-
-10. **Testing and Validation:** After making these changes, rigorously test the MCTS engine on known scenarios. Verify that search results (e.g., chosen moves and values) remain correct and that performance metrics improve (more simulations per second, larger average batch sizes, etc.). Pay attention to edge cases like game termination (ensure threads exit promptly when a terminal state is input to `search`) and search cancellation (not explicitly present now, but if a stop condition is introduced). Also test transposition-heavy games to ensure the reuse logic works without crashes or incorrect double counting.
-
-By addressing the above, the MCTS implementation will become more **efficient** (through better parallel work distribution and GPU utilization) and more **robust** (through elimination of race conditions and cleaner thread synchronization). The end result should be higher throughput of simulations, allowing deeper searches or more games in the same amount of time, and a stable, deadlock-free execution even under heavy parallel load. The architecture – with a centralized batch evaluator – will be well-suited for scaling, possibly even to multiple concurrent games or multiple GPUs in the future, if needed.
-
-----------
-----------
-
-## MCTS Implementation Analysis
-
-Below is a detailed breakdown focusing on correctness, potential improvements, parallelization, and GPU throughput.
-
-### \<todo\_list\>
-
-Here is a list of identified issues and tasks for improvement:
-
-  * **High Priority:**
-
-      * **Review and Simplify `MCTSEngine` Thread Management:**
-          * Thoroughly verify the complex shutdown logic in `~MCTSEngine()` for potential race conditions, deadlocks, or resource leaks. The multiple `notify_all()` calls and sleeps suggest potential fragility.
-          * Simplify the move constructor and move assignment operator for `MCTSEngine`. Joining threads from the `other` object during a move is complex and can be problematic. Consider alternative approaches for resource transfer if the engine is meant to be movable after being active.
-          * Ensure liveness of all worker threads (`treeTraversalWorker`, `batchAccumulatorWorker`, `resultDistributorWorker`) and the main search loop. Verify conditions that could lead to stuck threads, especially interactions involving `active_simulations_`, `pending_evaluations_`, `workers_active_`, and various condition variables.
-      * **Clarify `EvaluationRequest` Move Semantics:** Investigate the comment in the `EvaluationRequest` move constructor/assignment regarding not nullifying `other.node`. If `std::shared_ptr other.node` is still needed by other threads post-move from `other`, this indicates a potentially non-standard use of move semantics or a complex sharing model that needs to be robustly handled or clarified.
-      * **Ensure Robust Error Propagation:** Worker threads currently catch and log exceptions. Implement a mechanism for critical errors in worker threads to be propagated to the main `MCTSEngine` control flow to allow for more graceful handling or abortion of the search.
-
-  * **Medium Priority:**
-
-      * **`MCTSEvaluator` Queue Logic:**
-          * If `MCTSEvaluator` is primarily intended to be used with external queues provided by `MCTSEngine`, consider streamlining or removing its internal `request_queue_` and associated `collectBatch` logic to reduce complexity. The `evaluationLoop` seems to be an alternative or older loop compared to `processBatches`.
-      * **Transposition Table (`TT`) Locking and `get` Behavior:**
-          * Review the `std::mutex` within `TranspositionEntry`. Using `std::try_to_lock` in `TranspositionTable::get` and treating a failed lock attempt as a miss might increase the miss rate unnecessarily if contention is transient. Evaluate if a brief wait or a different locking strategy could be beneficial, or if `phmap`'s concurrency features can be leveraged more directly for entry updates.
-      * **State Cloning Overhead:** Profile the `IGameState::clone()` method. If it proves tobe a significant bottleneck, consider optimizations such as memory pooling for game state objects or copy-on-write semantics if applicable to the game state's structure. State cloning occurs in `MCTSEngine::runSearch` for the root and in `MCTSEngine::traverseTree` for leaf evaluation.
-      * **Root Node Initialization and TT Interaction:** The order of TT clearing and root reset in `MCTSEngine::search` and `MCTSEngine::runSearch` needs to be failsafe. Ensure that deleting the old tree (`root_.reset()`) doesn't invalidate `weak_ptr`s in the TT in a way that could cause issues before they are properly cleared or expire. The current approach of clearing TT then resetting the root seems generally correct.
-
-  * **Low Priority:**
-
-      * **`MCTSNode::expansion_mutex_` Scope:** Verify if the `expansion_mutex_` in `MCTSNode::setPriorProbabilities` is optimal. If children are guaranteed to exist and not be structurally modified when priors are set, this lock might be contendable if many threads update priors on recently expanded nodes.
-      * **TT `enforceCapacityLimit` Efficiency:** The current sampling and sorting mechanism in `TranspositionTable::enforceCapacityLimit` is reasonable but could be profiled. If it becomes a bottleneck, simpler eviction strategies (e.g., random eviction) could be considered.
-      * **Configuration of TT Shards:** The `num_shards_param` in `TranspositionTable` constructor is marked as unused, and `entries_.subcnt()` is removed. Confirm that reliance on `phmap`'s internal parallelism is sufficient and intended.
-
-### \<optimization\_scheme\>
-
-Here's a suggested optimization scheme and fixes for the current code:
-
-1.  **Simplify `MCTSEngine` Thread Lifecycle and State Management:**
-
-      * **Reduce Shutdown Complexity:** Refactor the `MCTSEngine` destructor and move operations. Aim for a clear, sequential shutdown:
-        1.  Signal all workers to stop (e.g., set `shutdown_` and `workers_active_` to false).
-        2.  Notify all condition variables to wake up any waiting threads.
-        3.  Stop the `MCTSEvaluator` first to prevent new work.
-        4.  Clear work queues (`leaf_queue_`, `batch_queue_`, `result_queue_`) to allow workers to exit loops dependent on queue contents. Ensure promises in `PendingEvaluation` (if any remain) are fulfilled to avoid client hangs.
-        5.  Join all worker threads (`tree_traversal_workers_`, `batch_accumulator_worker_`, `result_distributor_worker_`). Use `std::thread::join()` directly or the existing `join_with_timeout` with sufficient timeout.
-      * **Move Operations:** For `MCTSEngine` move constructor/assignment, if the engine is intended to be moved after threads have been active, ensure the `other` engine is fully stopped and its resources (especially threads) are properly released before moving members. A simpler approach might be to disallow moving an active engine or define move only for engines in a pre-start or fully stopped state.
-
-2.  **Refine `MCTSEvaluator` for Clarity:**
-
-      * **Primary External Queue Usage:** If the main operational mode involves `MCTSEngine` providing external queues to `MCTSEvaluator`, make this explicit. The `MCTSEvaluator::processBatches` method seems to correctly handle this path. The `evaluationLoop` and internal `collectBatch` / `processBatch(std::vector<EvaluationRequest>& batch)` might be legacy or for a different use case. If so, clearly document or separate this logic.
-      * **Adaptive Batching Centralization:** The `batchAccumulatorWorker` in `MCTSEngine` implements adaptive batching logic (batching based on size and timeout). Ensure this is the sole place for such sophisticated batch timing logic to avoid conflicts if `MCTSEvaluator::collectBatch` has similar goals.
-
-3.  **Strengthen `MCTSNode` Operations:**
-
-      * **`setPriorProbabilities`:** The `expansion_mutex_` is used here. If priors are updated after expansion is complete and children are stable, evaluate if a more fine-grained lock or even atomic updates (if policy structure allows) could reduce contention. However, safety is paramount.
-
-4.  **Transposition Table Enhancements:**
-
-      * **`get` Operation:** Instead of `std::try_to_lock` in `TranspositionTable::get` resulting in an immediate miss, consider a very brief spin/wait if the lock is contended, or profile to see if this is a real issue. The current approach prioritizes avoiding waits over maximizing hit rate under contention.
-      * **`store` Operation:** The logic to update existing entries or insert new ones if the existing one is invalid seems largely correct. Ensure that the `TranspositionEntry::mutex` correctly serializes updates to the `node`, `depth`, and `visits` fields.
-
-5.  **Memory and State Management:**
-
-      * **Game State Cloning:** If `IGameState::clone()` is expensive, investigate techniques like memory pools or optimized diff-based cloning if the game rules allow.
-      * **`EvaluationRequest` Move Semantics:** Correct the `EvaluationRequest` move constructor/assignment. After moving from `other`, `other.state` should be `nullptr` (as it is `std::unique_ptr`). For `other.node` (a `std::shared_ptr`), standard move behavior means `other.node` remains valid but its pointed-to object is now shared with the new request; `other.node` itself is not nullified by `std::move` but could be explicitly reset if the intent is to fully transfer unique responsibility in this context. The comment about not nullifying it because other threads might need it is confusing and needs review against actual usage patterns.
-
-### \<parallelization\_improvements\>
-
-The current implementation already employs leaf parallelization with dedicated threads for tree traversal, batch accumulation, and result distribution. Here are further recommendations:
-
-1.  **Lock Contention Minimization:**
-
-      * **`MCTSNode::expansion_mutex_`:** This is a key mutex. While necessary to protect the `children_` vector during its modification, high contention here would serialize node expansions. The impact depends on how often multiple threads attempt to expand the *exact same* `MCTSNode` instance simultaneously (after TT hits). If this is rare, it is less of an issue.
-      * **`TranspositionTable::TranspositionEntry::mutex`:** As discussed, the per-entry mutex is fine-grained. The main concern is the overhead if entries are numerous and small, and locks are frequently taken. `phmap` itself is designed for concurrent accesses, so the additional mutex should only protect the mutable fields of `TranspositionEntry` if `phmap`'s operations don't cover the required atomicity for multi-field updates.
-      * **`MCTSEngine` Condition Variables:** The engine uses several condition variables (`cv_`, `batch_cv_`, `result_cv_`). Ensure predicates are minimal and notifications are precise to avoid spurious wakeups or excessive contention on their associated mutexes.
-
-2.  **Task Granularity and Scheduling:**
-
-      * **`treeTraversalWorker`:** Each worker performs independent tree traversals. This is good. The claiming of a "batch" of simulations by each worker (`claimed = active_simulations_.compare_exchange_weak(...)`) seems to be an attempt to give a chunk of work to each thread, but then it iterates one by one. This is fine as traversals are independent.
-      * **`batchAccumulatorWorker`:** This worker plays a crucial role in preparing batches for the GPU. Its adaptive logic (waiting for `OPTIMAL_BATCH_SIZE` or for a timeout with `MIN_BATCH_SIZE`) is important for balancing latency and throughput. Ensure the timeout values are well-tuned.
-
-3.  **Memory Issues and False Sharing:**
-
-      * **`MCTSNode` Atomics:** Members like `visit_count_`, `value_sum_`, `virtual_loss_count_` are atomic. If multiple such atomics from different nodes frequently accessed by the same thread fall into the same cache line, false sharing could occur. This is less likely with `std::shared_ptr<MCTSNode>` allocations (nodes are separate heap objects) but worth keeping in mind for very high-performance scenarios. Padding might be an extreme solution if this becomes a proven issue.
-      * **`std::atomic<float>`:** While `std::atomic<float>` operations like `Workspace_add` might not be lock-free on all architectures (potentially falling back to internal locks), the `compare_exchange_strong` used for `value_sum_` in `MCTSNode::update` is a standard way to achieve atomic updates for types not directly supported by `Workspace_add`.
-
-4.  **Using Atomic Variables Effectively:**
-
-      * **Memory Ordering:** The code already uses various memory orders (`std::memory_order_acquire`, `std::memory_order_release`, `std::memory_order_acq_rel`, `std::memory_order_relaxed`). This demonstrates an understanding of the C++ memory model. It is crucial that these are correctly used:
-          * `release` operations ensure prior writes are visible to other threads doing an `acquire` on the same atomic.
-          * `acquire` operations ensure subsequent reads see writes from other threads that did a `release`.
-          * `acq_rel` combines both for operations like `Workspace_add` or `compare_exchange`.
-          * `relaxed` can be used for simple counters where synchronization is handled by other means, but must be used cautiously.
-      * **Minimize `seq_cst`:** Avoid the default `std::memory_order_seq_cst` for atomics where a weaker (but correct) ordering suffices, as `seq_cst` can be more expensive. The code seems to be explicit about orders, which is good.
-      * **Example - `MCTSNode::update`:**
-        ```cpp
-        // visit_count_ uses fetch_add with acq_rel, which is appropriate.
-        visit_count_.fetch_add(1, std::memory_order_acq_rel);
-
-        // value_sum_ uses compare_exchange_strong with acq_rel for success and acquire for failure.
-        // This ensures that the read (current) and the conditional write (desired) are properly synchronized.
-        float current = value_sum_.load(std::memory_order_acquire); // Acquire for the initial read
-        float desired;
-        do {
-            desired = current + value;
-        } while (!value_sum_.compare_exchange_strong(current, desired,
-                                                    std::memory_order_acq_rel, // If successful
-                                                    std::memory_order_acquire)); // If fails, current is updated, need acquire
-        ```
-        This pattern for `value_sum_` is robust.
-
-5.  **Deadlocks and Livelocks:**
-
-      * **Circular Waits:** Analyze dependencies between locks and condition variables. For example, ensure no path where Thread A holds Lock L1 and waits for CV1, while Thread B holds Lock L2 (associated with CV1) and tries to acquire L1.
-      * **Producer-Consumer Coordination:** The `leaf_queue_`, `batch_queue_`, and `result_queue_` are central.
-          * `treeTraversalWorker` produces for `leaf_queue_`.
-          * `batchAccumulatorWorker` consumes from `leaf_queue_` and produces for `batch_queue_`.
-          * `MCTSEvaluator` (via its thread running `processBatches` in external mode) consumes from `batch_queue_` and produces for `result_queue_`.
-          * `resultDistributorWorker` consumes from `result_queue_`.
-            Ensure that consumers are always eventually woken up if there's work, and producers do not block indefinitely if queues are momentarily full (though `moodycamel::ConcurrentQueue` handles dynamic sizing).
-      * **Shutdown Signal Propagation:** The `shutdown_` flag must reliably propagate to all loops and condition variable waits to ensure threads terminate. The current multi-notify and sleep approach in `~MCTSEngine` hints at the complexity of achieving this reliably.
-
-### \<gpu\_throughput\_scenario\>
-
-To increase GPU throughput for high-speed inference, focusing on fast tensor collection from CPU and efficient transfer to GPU:
-
-**Scenario: Centralized Batched Inference with Pinned Memory and CUDA Streams**
-
-1.  **Data Structures for Tensor Collection (CPU-side):**
-
-      * The `MCTSEngine::batchAccumulatorWorker` is responsible for collecting `PendingEvaluation` objects. Each contains a `std::unique_ptr<core::IGameState> state`.
-      * Instead of collecting `IGameState` objects directly into the batch sent to the `MCTSEvaluator`, the `batchAccumulatorWorker` (or a subsequent step before GPU transfer) should convert these game states into their tensor representations (e.g., a flat `std::vector<float>` or a more structured representation suitable for direct `memcpy` to GPU).
-      * **Pinned Memory:** Allocate large, reusable CPU buffers for these tensors using pinned (page-locked) memory (e.g., via `cudaHostAlloc` or PyTorch's equivalent for tensors like `tensor.pin_memory()`). This allows for faster DMA transfers to the GPU.
-
-2.  **Tensor Collection in `batchAccumulatorWorker`:**
-
-      * As `PendingEvaluation` items are dequeued from `leaf_queue_`, the worker extracts the `state`.
-      * It then calls a function `gameStateToFloatTensor(const core::IGameState& s, float* buffer_offset)` which converts the game state directly into a pre-allocated pinned memory buffer at a specific offset. This function needs to be highly optimized.
-      * The worker collects metadata alongside (e.g., pointers to the original `PendingEvaluation` items or their IDs) to associate results back.
-      * Once a batch of tensor data is ready in the pinned CPU buffer (either batch size met or timeout), this buffer (or a descriptor of it) is sent to the `MCTSEvaluator` via the `batch_queue_`.
-
-3.  **GPU Transfer and Inference (`MCTSEvaluator`'s Thread):**
-
-      * The `MCTSEvaluator`'s thread receives the batch of tensor data (residing in pinned CPU memory) and its size.
-      * **CUDA Streams:** Use multiple CUDA streams for overlapping data transfer and kernel execution.
-          * Create a CUDA tensor (e.g., `torch::Tensor`) directly mapping or copying from the pinned CPU buffer to a GPU tensor. If using PyTorch, creating a tensor from pinned memory and then calling `.to(device, non_blocking=true)` initiates an asynchronous transfer.
-          * `cudaMemcpyAsync` can be used to transfer data from pinned CPU memory to GPU memory asynchronously on a specific CUDA stream.
-          * Launch the neural network inference kernel(s) on the same CUDA stream, or a different one if there are multiple independent parts of the network.
-          * Asynchronously copy results (policy and value tensors) back from GPU to pinned CPU memory using `cudaMemcpyAsync` on another stream or the same one after kernel completion.
-      * **Double Buffering/Pipelining:**
-          * Use at least two sets of pinned CPU buffers and GPU buffers. While the GPU is processing batch N using GPU\_buffer\_N (copied from CPU\_buffer\_N), the `batchAccumulatorWorker` can be filling CPU\_buffer\_N+1, and results from batch N-1 can be copied back from GPU\_buffer\_N-1.
-          * The `MCTSEvaluator` would manage a small pool of these buffer sets.
-
-4.  **Result Handling (`MCTSEvaluator` and `resultDistributorWorker`):**
-
-      * Once results are copied back to pinned CPU memory, the `MCTSEvaluator`'s thread parses them.
-      * It then packages these results (e.g., `NetworkOutput`) with the corresponding `PendingEvaluation` metadata and sends them to the `result_queue_`.
-      * The `MCTSEngine::resultDistributorWorker` consumes these, updates the MCTS nodes, and performs backpropagation.
-
-**Example Flow Snippet (Conceptual):**
-
-  * **`batchAccumulatorWorker`:**
-
-    ```cpp
-    // Pseudo-code
-    pinned_cpu_tensor_buffer = get_empty_pinned_buffer();
-    current_offset = 0;
-    batch_metadata.clear();
-    while (collecting_batch) {
-        PendingEvaluation eval_request = leaf_queue_.dequeue();
-        convert_gamestate_to_tensor_inplace(eval_request.state, pinned_cpu_tensor_buffer + current_offset);
-        batch_metadata.add(eval_request.node, eval_request.path); // Store original request info
-        current_offset += tensor_size_for_one_state;
-    }
-    BatchInfo gpu_batch;
-    gpu_batch.tensor_data_ptr = pinned_cpu_tensor_buffer;
-    gpu_batch.num_states = ...;
-    gpu_batch.metadata = batch_metadata;
-    batch_queue_.enqueue(std::move(gpu_batch));
-    ```
-
-  * **`MCTSEvaluator`'s `processBatches` (External Queue Mode):**
-
-    ```cpp
-    // Pseudo-code
-    BatchInfo gpu_batch = external_batch_queue->dequeue();
-    torch::Tensor input_gpu_tensor = get_empty_gpu_tensor_for_stream(streamA);
-
-    // Async copy HtoD
-    copy_pinned_cpu_to_gpu_async(gpu_batch.tensor_data_ptr, input_gpu_tensor, streamA);
-
-    // Launch NN inference (kernels) on GPU using input_gpu_tensor
-    torch::Tensor policy_gpu_tensor, value_gpu_tensor;
-    run_nn_inference_async(input_gpu_tensor, policy_gpu_tensor, value_gpu_tensor, streamA);
-
-    // Async copy DtoH for results to another pinned CPU buffer
-    pinned_cpu_result_buffer = get_empty_pinned_result_buffer();
-    copy_gpu_to_pinned_cpu_async(policy_gpu_tensor, value_gpu_tensor, pinned_cpu_result_buffer, streamA);
-
-    // Synchronize on the stream to ensure DtoH copy is complete before processing results
-    synchronize_stream(streamA); 
-
-    // Process results from pinned_cpu_result_buffer
-    for (size_t i = 0; i < gpu_batch.num_states; ++i) {
-        NetworkOutput output = extract_output_from_buffer(pinned_cpu_result_buffer, i);
-        PendingEvaluation original_eval_info = gpu_batch.metadata.get_info(i);
-        external_result_queue->enqueue({std::move(output), std::move(original_eval_info)});
-    }
-    // Release/recycle buffers
-    ```
-
-This approach maximizes GPU utilization by keeping data transfers and kernel executions pipelined and asynchronous, using pinned memory to speed up CPU-GPU data movement. The key is to ensure the game state to tensor conversion on the CPU is also highly efficient.
-
-----------
-----------
-
-<todo_list>
-1. Fix potential race conditions during node expansion and backpropagation
-2. Optimize batch accumulation logic to maximize GPU utilization
-3. Reduce lock contention in transposition table through sharding
-4. Replace cout statements with lightweight logging in hot paths
-5. Implement proper thread shutdown synchronization in destructors
-6. Optimize atomic operations with memory ordering constraints
-7. Add batch size adaptation based on inference latency metrics
-8. Improve virtual loss implementation to reduce cache contention
-9. Validate node lifetime management during tree parallel traversal
-10. Implement tensor pre-allocation and asynchronous transfer for GPU inference
-</todo_list>
-
-<optimization_scheme>
-1. Node Management:
-- Implement hazard pointers for safe node access
-- Use read-write locks for node expansion
-- Add batch-friendly node prioritization in selection
-
-2. Batching System:
-- Introduce dynamic batch timeout adaptation
-- Implement pinned memory buffers for zero-copy GPU transfers
-- Add batch size prediction based on historical throughput
-
-3. Transposition Table:
-- Split into 64 shards using hash bits
-- Use atomic shared_ptr for entry updates
-- Implement LRU eviction policy with batch removal
-
-4. Virtual Loss:
-- Switch to thread-local virtual loss counters
-- Use atomic fetch_add with memory_order_relaxed
-- Implement deferred virtual loss recovery
-
-5. Memory Management:
-- Pre-allocate node pools with arena allocation
-- Use memory-mapped tensors for CPU-GPU transfers
-- Implement batch tensor reuse system
+This optimization scheme addresses the core issues of batch efficiency, memory leaks, and thread synchronization. The improved batching strategy should dramatically increase GPU throughput, while the memory management fixes will prevent the unbounded memory growth observed in the logs.
 </optimization_scheme>
 
 <parallelization_improvements>
-1. Thread Synchronization:
-- Replace mutexes with atomic_flag for hot paths
-- Implement work-stealing queues for tree workers
-- Use condition variables with predicate checks
+## Parallelization Enhancements
 
-2. Lock-Free Patterns:
-- Implement Michael-Scott queue for leaf nodes
-- Use atomic shared_ptr for node parent references
-- Adopt RCU pattern for transposition table reads
+The current implementation suffers from several thread-related issues including potential deadlocks, race conditions, and inefficient synchronization. Here are detailed improvements:
 
-3. Pipeline Optimization:
-- Separate inference and backpropagation pipelines
-- Implement double buffering for GPU transfers
-- Add priority-based batching for critical nodes
+### 1. Lock-Free Evaluation Queue
 
-4. Contention Reduction:
-- Use thread-local random generators
-- Implement per-thread transposition cache
-- Distribute statistics counters with padding
+Replace the current evaluation queue with a fully lock-free implementation:
 
-5. Fault Tolerance:
-- Add timeout detection for stalled workers
-- Implement batch cancellation mechanism
-- Add node validity checks during traversal
+```cpp
+class LockFreeEvaluationQueue {
+private:
+    moodycamel::ConcurrentQueue<EvaluationRequest> queue_;
+    std::atomic<size_t> size_{0};
+    
+public:
+    bool enqueue(EvaluationRequest&& request) {
+        bool success = queue_.enqueue(std::move(request));
+        if (success) {
+            size_.fetch_add(1, std::memory_order_release);
+        }
+        return success;
+    }
+    
+    bool try_dequeue(EvaluationRequest& request) {
+        bool success = queue_.try_dequeue(request);
+        if (success) {
+            size_.fetch_sub(1, std::memory_order_release);
+        }
+        return success;
+    }
+    
+    size_t try_dequeue_bulk(EvaluationRequest* items, size_t max) {
+        size_t dequeued = queue_.try_dequeue_bulk(items, max);
+        if (dequeued > 0) {
+            size_.fetch_sub(dequeued, std::memory_order_release);
+        }
+        return dequeued;
+    }
+    
+    size_t size() const {
+        return size_.load(std::memory_order_acquire);
+    }
+};
+```
+
+### 2. Improved Virtual Loss Handling
+
+Enhance the virtual loss mechanism to better handle thread contention:
+
+```cpp
+// In MCTSNode class
+void addVirtualLoss(int count = 1) {
+    // Add virtual loss with saturation to prevent overflow
+    int current = virtual_loss_count_.load(std::memory_order_relaxed);
+    // Cap at reasonable maximum to prevent integer overflow
+    int new_value = std::min(current + count, 1000);  
+    virtual_loss_count_.store(new_value, std::memory_order_release);
+}
+
+void removeVirtualLoss(int count = 1) {
+    // Remove virtual loss with floor at zero
+    int current = virtual_loss_count_.load(std::memory_order_relaxed);
+    int new_value = std::max(current - count, 0);
+    virtual_loss_count_.store(new_value, std::memory_order_release);
+}
+```
+
+### 3. Thread Coordination with Atomic Barriers
+
+Add atomic barriers for thread coordination during engine shutdown:
+
+```cpp
+class AtomicBarrier {
+private:
+    std::atomic<int> counter_;
+    int threshold_;
+    
+public:
+    AtomicBarrier(int threshold) : counter_(0), threshold_(threshold) {}
+    
+    void arrive() {
+        counter_.fetch_add(1, std::memory_order_release);
+    }
+    
+    bool try_wait(std::chrono::milliseconds timeout) {
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+        
+        while (std::chrono::steady_clock::now() < deadline) {
+            if (counter_.load(std::memory_order_acquire) >= threshold_) {
+                return true;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        
+        return false;
+    }
+    
+    void reset() {
+        counter_.store(0, std::memory_order_release);
+    }
+};
+```
+
+### 4. Thread-Safe Leaf Evaluation Strategy
+
+Implement a thread-safe leaf evaluation strategy that prevents race conditions:
+
+```cpp
+bool MCTSNode::tryMarkForEvaluation() {
+    // Try to set the evaluation flag from false to true atomically
+    bool expected = false;
+    return evaluation_in_progress_.compare_exchange_strong(
+        expected, true, std::memory_order_acq_rel);
+}
+
+void MCTSNode::clearEvaluationFlag() {
+    // Clear the evaluation flag atomically
+    evaluation_in_progress_.store(false, std::memory_order_release);
+}
+
+bool MCTSNode::isBeingEvaluated() const {
+    // Read the evaluation flag atomically
+    return evaluation_in_progress_.load(std::memory_order_acquire);
+}
+```
+
+### 5. Deadlock Prevention with Timed Mutex Operations
+
+Replace standard mutex operations with timed versions to prevent deadlocks:
+
+```cpp
+class TimedMutex {
+private:
+    std::mutex mutex_;
+    std::atomic<bool> is_locked_{false};
+    
+public:
+    bool try_lock_for(std::chrono::milliseconds timeout) {
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+        
+        while (std::chrono::steady_clock::now() < deadline) {
+            if (mutex_.try_lock()) {
+                is_locked_.store(true, std::memory_order_release);
+                return true;
+            }
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+        }
+        
+        return false;
+    }
+    
+    void unlock() {
+        is_locked_.store(false, std::memory_order_release);
+        mutex_.unlock();
+    }
+    
+    bool is_locked() const {
+        return is_locked_.load(std::memory_order_acquire);
+    }
+};
+```
+
+### 6. Thread Pool with Work-Stealing Queue
+
+Implement a work-stealing thread pool to better balance the tree traversal workload:
+
+```cpp
+class WorkStealingThreadPool {
+private:
+    std::vector<std::thread> threads_;
+    std::vector<std::deque<std::function<void()>>> local_queues_;
+    std::atomic<bool> shutdown_{false};
+    std::mutex queue_mutex_;
+    std::condition_variable cv_;
+    
+public:
+    WorkStealingThreadPool(size_t num_threads) {
+        local_queues_.resize(num_threads);
+        
+        for (size_t i = 0; i < num_threads; ++i) {
+            threads_.emplace_back([this, i]() {
+                workerLoop(i);
+            });
+        }
+    }
+    
+    ~WorkStealingThreadPool() {
+        shutdown_.store(true, std::memory_order_release);
+        cv_.notify_all();
+        
+        for (auto& thread : threads_) {
+            if (thread.joinable()) {
+                thread.join();
+            }
+        }
+    }
+    
+    void enqueue(std::function<void()> task, size_t preferred_thread = -1) {
+        size_t thread_idx = preferred_thread;
+        if (thread_idx >= local_queues_.size()) {
+            thread_idx = std::hash<std::thread::id>{}(std::this_thread::get_id()) % local_queues_.size();
+        }
+        
+        {
+            std::lock_guard<std::mutex> lock(queue_mutex_);
+            local_queues_[thread_idx].push_back(std::move(task));
+        }
+        
+        cv_.notify_one();
+    }
+    
+private:
+    void workerLoop(size_t thread_idx) {
+        while (!shutdown_.load(std::memory_order_acquire)) {
+            std::function<void()> task;
+            bool have_task = false;
+            
+            // Try to get a task from our own queue
+            {
+                std::lock_guard<std::mutex> lock(queue_mutex_);
+                if (!local_queues_[thread_idx].empty()) {
+                    task = std::move(local_queues_[thread_idx].front());
+                    local_queues_[thread_idx].pop_front();
+                    have_task = true;
+                }
+            }
+            
+            // If no task, try to steal from other queues
+            if (!have_task) {
+                for (size_t i = 0; i < local_queues_.size() && !have_task; ++i) {
+                    if (i == thread_idx) continue;
+                    
+                    std::lock_guard<std::mutex> lock(queue_mutex_);
+                    if (!local_queues_[i].empty()) {
+                        task = std::move(local_queues_[i].back());
+                        local_queues_[i].pop_back();
+                        have_task = true;
+                    }
+                }
+            }
+            
+            // If we have a task, execute it
+            if (have_task) {
+                task();
+            } else {
+                // Wait for a task to be available
+                std::unique_lock<std::mutex> lock(queue_mutex_);
+                cv_.wait_for(lock, std::chrono::milliseconds(10), [this]() {
+                    return shutdown_.load(std::memory_order_acquire) || 
+                           std::any_of(local_queues_.begin(), local_queues_.end(), 
+                                      [](const auto& q) { return !q.empty(); });
+                });
+            }
+        }
+    }
+};
+```
+
+### 7. Improved Shutdown Sequence
+
+Implement a robust shutdown sequence that prevents thread leaks:
+
+```cpp
+void MCTSEngine::stop() {
+    // Signal shutdown
+    shutdown_.store(true, std::memory_order_release);
+    workers_active_.store(false, std::memory_order_release);
+    
+    // Wake up all threads
+    cv_.notify_all();
+    batch_cv_.notify_all();
+    result_cv_.notify_all();
+    
+    // Stop the evaluator
+    if (evaluator_) {
+        evaluator_->stop();
+    }
+    
+    // Join worker threads with timeout
+    auto joinWithTimeout = [](std::thread& t, std::chrono::milliseconds timeout) {
+        if (!t.joinable()) return true;
+        
+        std::promise<bool> joined;
+        std::future<bool> joined_future = joined.get_future();
+        
+        std::thread joiner_thread([&]() {
+            t.join();
+            joined.set_value(true);
+        });
+        
+        auto status = joined_future.wait_for(timeout);
+        if (status == std::future_status::ready) {
+            joiner_thread.join();
+            return true;
+        }
+        
+        // Thread is stuck, detach it
+        joiner_thread.detach();
+        return false;
+    };
+    
+    // Join result distributor
+    joinWithTimeout(result_distributor_worker_, std::chrono::seconds(5));
+    
+    // Join tree traversal workers
+    for (auto& worker : tree_traversal_workers_) {
+        joinWithTimeout(worker, std::chrono::seconds(2));
+    }
+    
+    // Clear leftover requests
+    drainQueues();
+}
+```
+
+These parallelization improvements address the key thread-related issues in the current implementation. By using more lock-free data structures, timeout-based operations, work stealing, and atomic barriers, we can significantly reduce lock contention, prevent deadlocks, and improve overall throughput.
 </parallelization_improvements>
 
 <gpu_throughput_scenario>
-1. Tensor Pre-allocation:
-- Reserve contiguous pinned memory buffers for 4 batch sizes (64, 128, 256, 512)
-- Maintain circular buffer of pre-converted tensors in NHWC format
+## Optimal GPU Throughput Implementation
 
-2. Asynchronous Pipeline:
-- Dedicated collector thread packs states into pre-allocated buffers
-- CUDA stream copies completed buffers while next batch prepares
-- Inference overlaps with CPU-side batch assembly
+The current implementation processes batches of size 1, severely underutilizing the GPU. Here's a concrete implementation for maximizing GPU throughput:
 
-3. Batch Prioritization:
-- Implement priority queue with freshness scoring
-- Process high-value nodes first within batch limits
-- Use predictive pre-fetching for likely expansions
+### 1. Centralized Batch Collector
 
-4. Throughput Monitoring:
-- Track GPU utilization vs batch size curve
-- Dynamic batch size adaptation every 100ms
-- Fallback to CPU execution for small batches
+```cpp
+class BatchCollector {
+private:
+    moodycamel::ConcurrentQueue<EvaluationRequest>& request_queue_;
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    std::atomic<bool> shutdown_{false};
+    std::thread collector_thread_;
+    std::atomic<size_t> waiting_threads_{0};
+    std::atomic<int64_t> last_large_batch_time_{0};
+    size_t target_batch_size_;
+    
+public:
+    BatchCollector(moodycamel::ConcurrentQueue<EvaluationRequest>& queue, size_t batch_size)
+        : request_queue_(queue), target_batch_size_(batch_size) {
+        
+        collector_thread_ = std::thread([this]() {
+            collectorLoop();
+        });
+    }
+    
+    ~BatchCollector() {
+        shutdown_.store(true, std::memory_order_release);
+        cv_.notify_all();
+        
+        if (collector_thread_.joinable()) {
+            collector_thread_.join();
+        }
+    }
+    
+    void notifyItemAvailable() {
+        cv_.notify_one();
+    }
+    
+    void notifyThreadWaiting() {
+        waiting_threads_.fetch_add(1, std::memory_order_release);
+        cv_.notify_one();
+    }
+    
+    void notifyThreadDone() {
+        waiting_threads_.fetch_sub(1, std::memory_order_release);
+    }
+    
+private:
+    void collectorLoop() {
+        while (!shutdown_.load(std::memory_order_acquire)) {
+            // Vector to store collected batch
+            std::vector<EvaluationRequest> batch;
+            batch.reserve(target_batch_size_);
+            
+            // Phase 1: Quick collection of available items
+            size_t queue_size = request_queue_.size_approx();
+            if (queue_size > 0) {
+                std::vector<EvaluationRequest> temp_batch(std::min(queue_size, target_batch_size_));
+                size_t dequeued = request_queue_.try_dequeue_bulk(temp_batch.data(), temp_batch.size());
+                
+                for (size_t i = 0; i < dequeued; ++i) {
+                    batch.push_back(std::move(temp_batch[i]));
+                }
+            }
+            
+            // Phase 2: Wait for more items if batch is small
+            if (batch.size() < target_batch_size_ / 2) {
+                // Determine wait time based on batch size and waiting threads
+                int wait_time_ms = 5;  // Base wait time
+                
+                // If we have waiting threads or a partially filled batch, wait longer
+                if (waiting_threads_.load(std::memory_order_acquire) > 0 || batch.size() > 0) {
+                    wait_time_ms = std::min(50, 5 + static_cast<int>(batch.size() * 2));
+                }
+                
+                // If it's been a long time since a large batch, be more aggressive
+                int64_t current_time = getTimeMillis();
+                int64_t time_since_large_batch = current_time - last_large_batch_time_.load(std::memory_order_acquire);
+                if (time_since_large_batch > 1000) {  // More than 1 second
+                    wait_time_ms = std::min(100, wait_time_ms * 2);
+                }
+                
+                std::unique_lock<std::mutex> lock(mutex_);
+                auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(wait_time_ms);
+                
+                cv_.wait_until(lock, deadline, [this]() {
+                    return shutdown_.load(std::memory_order_acquire) || 
+                           request_queue_.size_approx() > 0;
+                });
+                
+                // Collect any additional items
+                queue_size = request_queue_.size_approx();
+                if (queue_size > 0) {
+                    size_t remaining = target_batch_size_ - batch.size();
+                    std::vector<EvaluationRequest> temp_batch(std::min(queue_size, remaining));
+                    size_t dequeued = request_queue_.try_dequeue_bulk(temp_batch.data(), temp_batch.size());
+                    
+                    for (size_t i = 0; i < dequeued; ++i) {
+                        batch.push_back(std::move(temp_batch[i]));
+                    }
+                }
+            }
+            
+            // Process the batch if it's not empty
+            if (!batch.empty()) {
+                processBatch(batch);
+                
+                // Update last large batch time if this was a good-sized batch
+                if (batch.size() >= target_batch_size_ / 2) {
+                    last_large_batch_time_.store(getTimeMillis(), std::memory_order_release);
+                }
+            }
+        }
+    }
+    
+    void processBatch(std::vector<EvaluationRequest>& batch) {
+        // Extract states from requests
+        std::vector<std::unique_ptr<core::IGameState>> states;
+        states.reserve(batch.size());
+        
+        for (auto& req : batch) {
+            states.push_back(std::move(req.state));
+        }
+        
+        // Create tensor batch
+        torch::Tensor batch_tensor = createBatchTensor(states);
+        
+        // Move tensor to GPU in a single transfer
+        batch_tensor = batch_tensor.to(torch::kCUDA);
+        
+        // Run inference on GPU
+        torch::Tensor policy_tensor, value_tensor;
+        {
+            torch::NoGradGuard no_grad;
+            auto output = neural_network_->forward(batch_tensor);
+            policy_tensor = output.first;
+            value_tensor = output.second;
+        }
+        
+        // Move results back to CPU
+        policy_tensor = policy_tensor.to(torch::kCPU);
+        value_tensor = value_tensor.to(torch::kCPU);
+        
+        // Process results
+        for (size_t i = 0; i < batch.size(); ++i) {
+            NetworkOutput output;
+            
+            // Extract policy
+            auto policy_accessor = policy_tensor.accessor<float, 2>();
+            output.policy.resize(policy_accessor.size(1));
+            for (int j = 0; j < policy_accessor.size(1); ++j) {
+                output.policy[j] = policy_accessor[i][j];
+            }
+            
+            // Extract value
+            output.value = value_tensor[i].item<float>();
+            
+            // Set result
+            batch[i].promise.set_value(std::move(output));
+        }
+    }
+    
+    int64_t getTimeMillis() {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
+    
+    torch::Tensor createBatchTensor(const std::vector<std::unique_ptr<core::IGameState>>& states) {
+        // Assuming all states have the same size and format
+        if (states.empty()) {
+            return torch::Tensor();
+        }
+        
+        // Get dimensions from the first state
+        const auto& first_state = states[0];
+        std::vector<float> features = first_state->getFeatures();
+        int num_channels = first_state->getNumChannels();
+        int board_size = first_state->getBoardSize();
+        
+        // Create batch tensor
+        auto options = torch::TensorOptions().dtype(torch::kFloat32);
+        torch::Tensor batch_tensor = torch::zeros({static_cast<long>(states.size()), 
+                                                   num_channels, 
+                                                   board_size, 
+                                                   board_size}, options);
+        
+        // Fill batch tensor
+        for (size_t i = 0; i < states.size(); ++i) {
+            std::vector<float> features = states[i]->getFeatures();
+            torch::Tensor state_tensor = torch::from_blob(features.data(), 
+                                                          {num_channels, board_size, board_size}, 
+                                                          options).clone();
+            batch_tensor[i] = state_tensor;
+        }
+        
+        return batch_tensor;
+    }
+};
+```
 
-5. Optimized Transfer:
-- Use cudaMemcpyAsync with separate stream
-- Batch multiple small tensors into single transfer
-- Implement tensor reuse pool with reference counting
+### 2. Integration with MCTSEvaluator
+
+```cpp
+class MCTSEvaluator {
+private:
+    // ... existing members ...
+    std::unique_ptr<BatchCollector> batch_collector_;
+    
+public:
+    MCTSEvaluator(InferenceFunction inference_fn, size_t batch_size, std::chrono::milliseconds timeout)
+        : inference_fn_(std::move(inference_fn)),
+          batch_size_(batch_size),
+          timeout_(timeout) {
+        
+        batch_collector_ = std::make_unique<BatchCollector>(request_queue_, batch_size_);
+    }
+    
+    void start() {
+        // ... existing code ...
+    }
+    
+    void stop() {
+        // ... existing code ...
+        batch_collector_.reset();
+    }
+    
+    std::future<NetworkOutput> evaluateState(std::shared_ptr<MCTSNode> node, std::unique_ptr<core::IGameState> state) {
+        // ... existing code ...
+        
+        // Notify batch collector
+        batch_collector_->notifyItemAvailable();
+        
+        return future;
+    }
+    
+    // ... other methods ...
+};
+```
+
+### 3. Worker Thread Synchronization for Better Batches
+
+```cpp
+void MCTSEngine::treeTraversalWorker(int worker_id) {
+    while (!shutdown_.load(std::memory_order_acquire)) {
+        // Check if there's work to do
+        int remaining_sims = active_simulations_.load(std::memory_order_acquire);
+        if (remaining_sims <= 0 || !root_ || !workers_active_.load(std::memory_order_acquire)) {
+            // ... existing code for waiting ...
+            continue;
+        }
+        
+        // Claim a batch of simulations
+        int batch_size = std::min(64, std::max(16, remaining_sims / settings_.num_threads));
+        int claimed = 0;
+        
+        while (claimed < batch_size && !shutdown_.load(std::memory_order_acquire)) {
+            int old_value = active_simulations_.load(std::memory_order_acquire);
+            if (old_value <= 0) break;
+            
+            int to_claim = std::min(batch_size - claimed, old_value);
+            if (active_simulations_.compare_exchange_weak(old_value, old_value - to_claim,
+                                                          std::memory_order_acq_rel, 
+                                                          std::memory_order_acquire)) {
+                claimed += to_claim;
+            }
+        }
+        
+        // Tell evaluator we're about to generate evaluation requests
+        if (evaluator_) {
+            evaluator_->notifyThreadWaiting();
+        }
+        
+        // Process claimed simulations
+        for (int i = 0; i < claimed && !shutdown_.load(std::memory_order_acquire); i++) {
+            try {
+                traverseTree(root_);
+            } catch (...) {
+                // ... error handling ...
+            }
+        }
+        
+        // Tell evaluator we're done generating evaluation requests
+        if (evaluator_) {
+            evaluator_->notifyThreadDone();
+        }
+    }
+}
+```
+
+### 4. Efficient GPU Tensor Creation
+
+```cpp
+torch::Tensor createBatchTensor(const std::vector<std::unique_ptr<core::IGameState>>& states) {
+    if (states.empty()) {
+        return torch::Tensor();
+    }
+    
+    // Get dimensions from the first state
+    const auto& first_state = states[0];
+    int num_channels = first_state->getNumChannels();
+    int board_size = first_state->getBoardSize();
+    
+    // Pre-allocate memory for all features
+    size_t total_features = states.size() * num_channels * board_size * board_size;
+    std::vector<float> all_features(total_features);
+    
+    // Fill features in a cache-friendly way
+    size_t offset = 0;
+    for (const auto& state : states) {
+        std::vector<float> features = state->getFeatures();
+        std::memcpy(all_features.data() + offset, features.data(), features.size() * sizeof(float));
+        offset += features.size();
+    }
+    
+    // Create tensor directly from all features
+    auto options = torch::TensorOptions().dtype(torch::kFloat32);
+    torch::Tensor batch_tensor = torch::from_blob(all_features.data(), 
+                                                 {static_cast<long>(states.size()), 
+                                                  num_channels, 
+                                                  board_size, 
+                                                  board_size}, 
+                                                 options).clone();
+    
+    // Move to GPU in one operation
+    return batch_tensor.to(torch::kCUDA);
+}
+```
+
+### 5. CPU-GPU Pipeline Optimization
+
+```cpp
+void processBatchWithOverlap(std::vector<EvaluationRequest>& batch, int max_pipeline_stages = 3) {
+    // Split the batch into smaller chunks for pipelining
+    size_t stage_size = (batch.size() + max_pipeline_stages - 1) / max_pipeline_stages;
+    std::vector<std::vector<EvaluationRequest>> stages;
+    
+    for (size_t i = 0; i < batch.size(); i += stage_size) {
+        size_t end = std::min(i + stage_size, batch.size());
+        stages.emplace_back(batch.begin() + i, batch.begin() + end);
+    }
+    
+    // Pipeline stages
+    std::vector<torch::Tensor> stage_tensors;
+    std::vector<std::future<std::pair<torch::Tensor, torch::Tensor>>> stage_futures;
+    
+    for (auto& stage : stages) {
+        // Extract states in the CPU thread
+        std::vector<std::unique_ptr<core::IGameState>> states;
+        states.reserve(stage.size());
+        
+        for (auto& req : stage) {
+            states.push_back(std::move(req.state));
+        }
+        
+        // Create tensor asynchronously
+        auto tensor_future = std::async(std::launch::async, [&states]() {
+            return createBatchTensor(states);
+        });
+        
+        // Transfer previous stage to GPU while preparing the next stage
+        if (!stage_tensors.empty()) {
+            auto& prev_tensor = stage_tensors.back();
+            prev_tensor = prev_tensor.to(torch::kCUDA, true);  // non-blocking transfer
+        }
+        
+        // Wait for tensor creation
+        stage_tensors.push_back(tensor_future.get());
+        
+        // Launch inference for the previous stage
+        if (stage_tensors.size() > 1) {
+            auto& prev_tensor = stage_tensors[stage_tensors.size() - 2];
+            stage_futures.push_back(std::async(std::launch::async, [prev_tensor, this]() {
+                torch::NoGradGuard no_grad;
+                return neural_network_->forward(prev_tensor);
+            }));
+        }
+    }
+    
+    // Process final stage
+    if (!stage_tensors.empty()) {
+        auto& last_tensor = stage_tensors.back();
+        last_tensor = last_tensor.to(torch::kCUDA, true);
+        
+        torch::NoGradGuard no_grad;
+        stage_futures.push_back(std::async(std::launch::async, [last_tensor, this]() {
+            return neural_network_->forward(last_tensor);
+        }));
+    }
+    
+    // Process results for each stage
+    size_t batch_offset = 0;
+    for (size_t i = 0; i < stage_futures.size(); ++i) {
+        auto [policy_tensor, value_tensor] = stage_futures[i].get();
+        
+        // Move results back to CPU
+        policy_tensor = policy_tensor.to(torch::kCPU);
+        value_tensor = value_tensor.to(torch::kCPU);
+        
+        // Get stage size
+        size_t current_stage_size = stages[i].size();
+        
+        // Process results
+        processResults(policy_tensor, value_tensor, batch, batch_offset, current_stage_size);
+        
+        batch_offset += current_stage_size;
+    }
+}
+```
+
+This implementation dramatically increases GPU throughput by:
+1. Aggressively batching evaluation requests, even waiting to form larger batches
+2. Using a dedicated batch collector thread to form batches while tree traversal continues
+3. Coordinating worker threads to generate evaluation requests in groups
+4. Creating efficient CPU tensors with minimal memory copies
+5. Using a pipelined approach to overlap CPU tensor preparation, GPU transfer, and GPU computation
+
+These optimizations address the critical bottleneck observed in the self-play log, where the system was processing batches of size 1 instead of utilizing the configured batch size of 128, severely underutilizing the GPU.
 </gpu_throughput_scenario>
+
+----------
+----------
+
+\<mcts\_algorithm\_analysis>
+
+## MCTS Core Components and Interactions
+
+**MCTSNode:** Each search node holds a game state and statistics for MCTS. It tracks visit count, cumulative value (for Q), prior probability, and uses atomic types for thread-safe updates. Child nodes are stored as shared pointers, and a weak pointer to the parent avoids reference cycles. Key methods include **`selectChild`** (PUCT selection), **`expand`** (adding child nodes for all legal moves), **virtual loss** management, and backpropagation update.
+
+* *Selection & PUCT:* The implementation uses an AlphaZero-style PUCT formula with **virtual loss**. For each child, it computes an exploitation term (average value) and an exploration term using the stored prior and parent visit count. Virtual losses are applied by temporarily inflating visit counts and subtracting from value sum so that if another thread is exploring the same node, its score is lowered. This discourages parallel threads from choosing the same path. The code correctly reads the child’s `visit_count_`, `value_sum_`, and `virtual_loss_count_` atomically and incorporates virtual loss into the selection score. A design tradeoff here is that **no locks** are used in selection – using atomics allows lock-free parallel selection, but the PUCT calculation might read slightly stale values (which is usually acceptable in MCTS).
+
+* *Expansion:* When a leaf node is expanded, all legal moves are generated and a new child node is created for each move. The game state for each child is cloned using a **GameStatePool** utility to reduce allocation overhead. (Currently, `cloneState` simply calls the state's own clone method, as true object reuse is not fully implemented.) Children are initialized with a **uniform prior** pending neural network evaluation. This is a straightforward expansion strategy – **progressive widening** (incremental expansion of children) is not explicitly implemented, despite being noted as a planned feature. The tradeoff is that expanding all moves at once is simpler and uses the network’s policy to guide all moves from the start, but it can waste effort on very large action spaces. The uniform prior assignment is quickly replaced when the network returns a policy, but until then all moves are treated equally.
+
+* *Virtual Loss and Backpropagation:* The node holds an atomic `virtual_loss_count_`. When a thread selects a node for expansion/evaluation, it adds a virtual loss (or multiple) to that node to simulate a provisional loss outcome. This is done via `applyVirtualLoss(amount)` – by default an amount of 3 is used for a more aggressive discouragement. In backpropagation, the code increments the visit count and updates the value sum using atomic operations. It also **removes one virtual loss** from each node on the path as it backs up the value. **Correctness note:** Removing only one unit of virtual loss per node, when 3 were added at the leaf, appears to be a bug – a leaf’s `virtual_loss_count_` is decremented by 1 instead of resetting the full amount. This means if the code applied 3 virtual losses, two of them would remain, skewing future selections from that node (it would permanently think the node is worse than it really is). A fix would be to remove the same amount that was added (e.g. call `removeVirtualLoss()` in a loop or use `applyVirtualLoss(-3)` if implemented). Despite this, the backprop implementation correctly alternates the sign of the value as it propagates up the tree (since the game is zero-sum, the parent's perspective is the negative of the child's), and it applies the value update atomically to each node. The use of atomics (with compare-exchange for floats) ensures thread-safety at the cost of some retry overhead on contention. This lock-free update strategy is a design choice to maximize parallel throughput at the expense of more complex code; it avoids a mutex at each node update.
+
+* *Transposition Table:* The engine uses a **transposition table (TT)** to avoid re-exploring the same state multiple times. Each expanded node’s state hash (using Zobrist keys) is stored in a global table mapping to the node pointer. If a new expansion generates a state that’s already in the table, the code **reuses the existing node** instead of creating a duplicate. This is done under a lock (internal to the TT’s parallel hash map) to ensure thread safety. The TT is bounded by a configured size (128 MB by default) and uses a parallel hash map (phmap) for efficiency. A design tradeoff here is that **storing weak pointers** is used (the TT stores `std::weak_ptr<MCTSNode>`) to avoid memory leaks – nodes can be freed if they fall out of the tree. The TT must be cleared at the start of each new search to drop pointers from the previous game, which the code does to prevent stale pointers. A potential improvement is to implement a replacement policy (e.g., LRU or based on depth/visits) when the TT is full, rather than clearing each search or letting it grow to capacity arbitrarily. Currently, every search begins by clearing the table, so the TT is used only within a single search instance (preventing long-term accumulation but also not retaining knowledge across moves). Within a search, however, it helps identify transpositions immediately after expansion, merging duplicate nodes. This **merging after expansion** (as implemented) can lead to subtle effects on counts: if a child node is replaced with an existing node that already has visits from another part of the tree, a parent might suddenly have a child with a non-zero visit count. The code doesn’t explicitly adjust the parent’s statistics in this case, but since the parent’s visit count was just incremented on expansion anyway, and the child’s stats carry over, it tends to be benign. The benefit is reduced memory and search effort by joining the subtrees, at the cost of some complexity in bookkeeping.
+
+**MCTSEngine:** This class orchestrates the search, handles threads, and interfaces with the neural network. It maintains global counters and coordinates the **worker threads** for tree traversal and the **evaluator thread** for neural network inference. Key components of MCTSEngine include:
+
+* **Search Coordination:** The engine uses an atomic counter `active_simulations_` to track how many simulations (playouts) remain to run. At the start of a search, `active_simulations_` is set to the total number of simulations (e.g. 800) to run. Worker threads pick simulations to execute by decrementing this counter in batches, rather than one by one, to reduce contention. For example, each thread might claim up to 64 simulations at a time (bounded by the remaining count and a minimum of 16) in a loop of compare-and-swap operations. This batch claiming is a performance optimization: it amortizes the cost of synchronization and better utilizes each thread’s cache locality by letting it perform several simulations in a row. The tradeoff is slightly more complex logic to ensure not to over-claim tasks, but the provided code handles this with a loop and CAS on `active_simulations_`. Once a thread has claimed some number of playouts, it runs them sequentially via `traverseTree(root_)` calls. Threads wait on a condition variable `cv_` when no simulations are pending or if the engine is paused. This design is effectively a custom thread-pool: it avoids the overhead of pushing tasks to a queue by having threads self-schedule using atomic counters. One design consideration is that if one thread finishes its batch while others still have large batches, there could be some load imbalance; but since batches are relatively small (max 64) and each simulation can vary in length, this is a reasonable compromise. The approach also ensures that **all CPU threads can work concurrently and even proceed to new simulations while earlier ones are waiting for neural net results**, enabling *leaf parallelization*.
+
+* **Leaf Parallelization & Neural Network Integration:** Perhaps the most crucial part of the engine is how it integrates with the neural network for position evaluations. When a worker thread reaches a leaf that needs evaluation, it calls `expandAndEvaluate(leaf, path)`. Inside this function, if the game state is terminal, it returns the terminal value directly. Otherwise, it expands the node (generating children) and then **queues it for neural network evaluation** instead of evaluating immediately. The engine uses a lock-free queue `leaf_queue_` (moodycamel ConcurrentQueue) to collect these pending evaluations. Each pending evaluation is a struct containing the node pointer, the path (from root to leaf), and a cloned state ready for the NN. The engine marks the node as "being evaluated" by setting an atomic flag via `tryMarkForEvaluation()` to ensure no other thread will queue the same node twice. It then clones the game state (`cloneGameState`) for that leaf and moves it into the pending evaluation struct. Cloning here is a deep copy of the game state – this is necessary because the worker thread cannot keep the state reference (the node’s state) while it continues simulations, and the evaluation may happen asynchronously on another thread. Cloning is moderately expensive (especially for large boards), but they attempted to mitigate this with the GameStatePool (which currently just does a fresh clone in absence of an efficient reuse mechanism). The pending eval is then enqueued in `leaf_queue_`. Immediately after queueing, the worker thread **applies a virtual loss** to that leaf node equal to the configured amount (3 by default). This ensures that other threads exploring the same position will see it as provisionally worse and avoid it until the evaluation completes. The thread then returns without a value (using a dummy value 0.0 for now) – the actual result will be handled later asynchronously. Notably, the worker does *not* wait for the network result; it simply moves on to the next simulation (if any remain claimed). This non-blocking design is what enables **leaf parallelization**: many leaves can be awaiting evaluation in parallel, and CPU threads keep exploring other parts of the tree instead of idling.
+
+* **Neural Network Evaluator Thread:** The engine launches a dedicated evaluator thread (`MCTSEvaluator`) to process the queued states in batches. In the current implementation, the engine opts to use **external queues** managed by MCTSEngine, integrated with MCTSEvaluator. Upon starting a search, the engine calls `evaluator_->setExternalQueues(&leaf_queue_, &result_queue_, callback)` to connect the evaluator to its internal queues. This means the evaluator thread will pull `PendingEvaluation` items from the engine’s `leaf_queue_` and push results into a `result_queue_`, rather than using its own internal request queue. The benefit of this design is that it avoids an extra copy of data and allows the engine to retain control over how requests are batched and distributed. The evaluator thread’s main loop (`evaluationLoop`) checks for new requests in the leaf queue and groups them into a batch up to a target batch size (configured via `MCTSSettings.batch_size`, e.g. 128). It uses a short timeout (in code, up to 10ms) to collect additional requests so that it can form larger batches instead of processing one request at a time. If no new items arrive within that window or the batch reaches the max size, it proceeds to inference. Each batch of `PendingEvaluation` is converted to a vector of game state pointers for the neural network: the code moves each `state` out of the struct into a `states` vector. These states are then passed to the network’s inference function in one call. The neural network (likely a PyTorch `libtorch` model under the hood) returns a vector of outputs, each containing a policy distribution and value. The evaluator pairs each output with the original node and path (still stored in the PendingEvaluation struct) and enqueues the result into the `result_queue_`. A callback then notifies the result handler thread that new results are available. This batching mechanism vastly improves GPU throughput when it works as intended – processing, say, 32 or 64 states at once is far more efficient on a GPU than sequentially evaluating one state at a time, due to parallelism and better amortized memory transfer costs.
+
+* **Result Distribution and Backpropagation:** The engine spawns a **result distributor thread** (`resultDistributorWorker`) whose job is to take completed network evaluations from `result_queue_` and apply them to the search tree. This thread continuously dequeues results (it can take multiple at once in a batch for efficiency). For each result, it retrieves the node and the computed policy/value pair. It then **sets the node’s prior probabilities** to the network’s policy vector for that state, replacing the placeholder uniform priors set during expansion. Next, it calls `backPropagate(path, value)` to update all nodes along the path from that leaf up to the root with the evaluated value. During backpropagation, as discussed, one virtual loss is removed from each node and the value and visit count are atomically updated. The code also clears the node’s “evaluation in progress” flag so it can be evaluated again in the future if needed. After processing each result, the engine decrements its `pending_evaluations_` count and increments a counter for processed results. Once a result is applied, the virtual losses that were added are effectively negated, and the updated Q values will reflect the network’s evaluation. One subtle point: the code currently calls `node->clearEvaluationFlag()` to mark the node as free, but it **does not explicitly call** `removeVirtualLoss(settings_.virtual_loss)` on that node in the result thread. It relies on the backPropagate function to remove one virtual loss per node in the path. As noted, if more than one loss was applied, two would remain. This appears to be an oversight – ideally the result distributor should fully reset the virtual loss count for the evaluated node (or the backprop should remove the same amount that was applied). Despite this, the net effect is that the node’s value estimates are now based on a real network evaluation, and its children have valid priors, so the search can continue down this path with much more accurate guidance.
+
+* **Concurrency and Thread Safety:** MCTSEngine carefully manages thread lifecycles. It uses flags like `shutdown_` and `workers_active_` to signal threads to stop when a search ends or the engine is destroyed. The destructor of MCTSEngine signals all threads to shut down, clears the queues (while resetting any evaluation flags on nodes that were never processed), and joins all threads to avoid detach or leaks. These measures are important to prevent memory leaks or crashes on program exit – e.g., they ensure no pending promise is left unfulfilled (the code in MCTSEvaluator’s destructor also tries to fulfill any leftover requests with default values to avoid broken promises). The design uses a combination of mutex/condition\_variable (for waiting when idle) and lock-free queues/atomics (for the hot paths of selection and evaluation). This hybrid approach is complex but aims at maximizing performance: critical sections like selecting a child or pushing to the eval queue are lock-free, whereas less frequent coordination points use locking. One noted issue is the **potential for race conditions** in certain scenarios – for example, two threads might select the same node to expand nearly simultaneously. The code locks a node’s expansion with `expansion_mutex_` to ensure only one actually expands the children. However, two threads could still both reach the leaf and one fails `tryMarkForEvaluation`, meaning it realizes another thread is evaluating that leaf. In the current implementation, that second thread simply returns without doing anything (effectively wasting that simulation). A more optimal approach would be to have the second thread continue searching a different leaf (for example, by restarting selection from the root) as suggested in the design docs, but that isn’t implemented yet – this is a tradeoff to keep the code simpler. It does not break correctness (other than losing a bit of search time) but indicates room for improvement in work allocation.
+
+**Neural Network & Batch System (src/nn):** The neural network portion (`nn::NeuralNetwork` and its implementations) interacts with MCTS via the inference calls. The integration is done by passing a lambda capturing the `neural_net` into MCTSEngine’s MCTSEvaluator. For example, `neural_net->inference(const std::vector<std::unique_ptr<IGameState>>& states)` is called to evaluate a batch. The network likely uses libtorch to run a ResNet forward pass on the batch of states (e.g., converting each game state into tensor input). From the MCTS side, one important aspect is how game state data is converted to NN input. Currently, the code simply hands `IGameState` objects to the neural net. Under the hood, these objects probably have a method to convert themselves to a tensor (perhaps via a function like `state->encodeTensor()` or similar). In the improvement suggestions, the developers have considered optimizing this by pre-allocating tensors and using parallel loops to fill them (see below on GPU throughput). The batch size and timeout are configurable (e.g., batch\_size=128, timeout=20ms by default). A known problem is that in practice the **batch size is often stuck at 1** – this was noted in the documentation as a likely issue. The cause is that the evaluator thread grabs available requests immediately, and if requests arrive infrequently or one-at-a-time, it might process them one by one. In the current code, when an item appears in the queue, the evaluator does `if (queue.size_approx() > 0) processBatch(); else wait 500µs`. Inside `processBatch`, it does wait up to 10ms for more items, but if the first item arrives alone and no second arrives within a very short window, it will proceed with a batch of size 1. In short, the thread is *immediately* awakened on every new leaf (due to the `notifyLeafAvailable()` call), and it almost always finds the queue non-empty and thus processes without waiting much. This leads to many tiny batches. The design tradeoff here is between **throughput** and **latency**: the current settings lean toward low latency (processing quickly so as not to stall MCTS waiting), but at the cost of GPU efficiency. We’ll discuss optimization ideas for this below.
+
+**Game Logic (src/core & games):** The MCTS implementation interacts with game-specific logic via the `core::IGameState` interface. This interface provides methods like `getLegalMoves()`, `makeMove(action)`, `isTerminal()`, `getGameResult()`, `getCurrentPlayer()`, and hashing. The engine is designed to be game-agnostic: Gomoku, Chess, and Go all implement IGameState, and the MCTS operates on those via polymorphism. A few utility components ensure efficiency here:
+
+* **Zobrist Hashing:** Each game state provides a hash (likely a 64-bit Zobrist hash) via `getHash()`, used in the transposition table. Zobrist hashing is fast and has a low collision rate for board games, making it suitable for TT keys.
+* **GameState Pool:** As noted, there is a `GameStatePoolManager` intended to reuse game state objects to reduce memory allocations. In practice, the current clone strategy does not actually reuse objects (it calls `state.clone()` which allocates a new object). The pool is initialized at the start of a search with a number of pre-allocated states (pool size = num\_simulations/4 by default). But the `cloneState()` method falls back to normal cloning because a safe in-place copy mechanism isn’t implemented. Thus, every expansion effectively does allocate a fresh state. This is a missed optimization opportunity; if each game’s state class had a method to copy data into an existing state (or a custom copy constructor), the pool could recycle objects. The impact is higher heap churn and GC pressure, but since all states are freed when the tree is cleared, this doesn’t cause a long-term leak – rather it’s a performance and memory-use concern. Additionally, the pool imposes a cap on stored objects (4x the initial size) and periodically purges if not used, to avoid unbounded growth. During MCTS, however, we might not actually release states back to the pool until the end of the search (the code doesn’t show explicit `release` calls after using a state for expansion or evaluation). The nodes keep their state unique\_ptr until the node is destroyed (at search end), at which time the state is deleted (and thus not returned to pool). One potential memory issue is that in long-running processes doing many searches, repeated new/delete of thousands of states could fragment memory or incur overhead. In summary, the game abstraction is clean and the MCTS code defensively validates state consistency at several points (e.g., checking `state.validate()` after cloning to catch any anomalies). Performance-wise, some improvements in how states are cloned and managed could yield benefits, as we’ll outline.
+
+## Identified Issues and Trade-offs
+
+1. **Batch Size often 1 (GPU Underutilization):** As mentioned, the current leaf parallelization sometimes fails to actually batch multiple evaluations. This was explicitly flagged in the requirements docs (batch size stuck at 1). The design prioritizes quick turnaround over waiting for a fuller batch. The trade-off is suboptimal GPU usage: the GPU may spend most of its time launching tiny inference jobs. This keeps MCTS threads from pausing, but the overall throughput suffers. Correctness isn’t affected, but performance is.
+
+2. **Virtual Loss Handling Bug:** The partial removal of virtual losses means the search tree can accumulate phantom losses. This will bias the search away from certain nodes more than intended. If a node’s `virtual_loss_count_` remains >0 even after the evaluation is completed, no other thread will fully trust that node’s value for a while. This is a correctness issue in terms of search accuracy (though eventually, as visit counts grow, the impact of an extra few losses diminishes). It’s also easily fixable without downside – it seems to be an oversight rather than a deliberate trade-off.
+
+3. **Thread Collision Waste:** The current approach to simultaneous expansion of the same node by two threads results in one thread doing useless work. This is a rare case but can happen, especially early in a search when many threads pick the root’s best move. The waste is minor (one simulation lost here or there), but it indicates that the parallel search could be more efficient. The trade-off was simplifying synchronization (only lock at expansion and evaluation, not at selection). Advanced approaches use **locking or atomic reference counts at each node during selection** to prevent any two threads from ever going down the exact same path. The code does not do that (except at the leaf eval step), likely for simplicity and performance. The impact is low on overall simulations per second, but it can slightly reduce the effective parallelism in those edge cases.
+
+4. **Progressive Widening Not Implemented:** Although planned, the code expands all moves on the first visit. In games like Go (361 moves possible), this can be memory-heavy – expanding a node yields 361 children immediately, each with allocated state, etc. AlphZero in literature actually *does* expand all moves at once and relies on the neural prior to focus the search, so this isn’t strictly wrong. The progressive widening concept (expanding a few moves first, and more as visits increase) could save memory and concentrate search efforts, but it complicates the expansion logic. The current design’s trade-off is using the simpler approach: it uses more memory upfront per new node but ensures no move is overlooked entirely by the network. This is likely acceptable given the hardware target (64 GB RAM noted in requirements) and was perhaps deprioritized since the neural network policy helps prune the search implicitly by low priors.
+
+5. **Memory Usage and Potential Leaks:** We did not find evidence of a classical memory leak (no continually growing memory footprint over many games, aside from expected caches). The engine carefully resets or frees structures each search. However, memory **usage** could be optimized:
+
+   * Nodes and states account for the bulk of memory during a search. Thousands of nodes (each with a few atomic variables and vectors) are allocated. The use of `shared_ptr` for nodes means each node allocates a control block (approximately 16 extra bytes) and uses atomic ref counts. That adds overhead. A pool allocator for nodes or a custom object pool could cut down on allocation overhead and fragmentation.
+   * The GameStatePool isn’t fully leveraged, as discussed. So we effectively allocate and destroy every state. Implementing state reuse (with proper deep copy) would reduce allocation churn. The trade-off here is the complexity of writing and maintaining a correct copy method for each game state (which can be error-prone if game state is complex). Given that the program targets long-running self-play sessions, reducing malloc/free cycles could improve performance and memory locality.
+   * There is also GPU memory usage: the network predictor likely loads the model once (which can be hundreds of MB for a ResNet). That’s expected and not a leak. The code calls `torch::cuda::CUDACachingAllocator::emptyCache()` on destruction of the evaluator, which frees unused GPU memory back to the system. This is a bit aggressive (normally you’d keep the model in memory between searches), but it’s probably intended for clean shutdown or to release memory when switching models. It’s something to watch – calling emptyCache every time might hurt performance if done frequently (since reallocation is expensive), but in practice the evaluator persists for the whole search.
+
+6. **NodeTracker vs. External Queue Duplication:** Initially, the design included `NodeTracker` for pending evaluations (with promises/futures), and a system where workers could potentially wait on futures for results. The current implementation shifted to using the external queue and a result thread, effectively bypassing `NodeTracker`. As a result, `NodeTracker` is now somewhat redundant (the engine registers nothing to it in the new flow). This doesn’t cause a bug, but it means there’s some dead code and slight memory overhead (e.g., the parallel hash map in NodeTracker reserved space for 10k entries on construction and never used it). The trade-off made was to switch to a simpler model (central result distribution) at the cost of leaving some unused code. Cleaning this up could free a bit of memory and reduce complexity.
+
+7. **Concurrency and Termination Safety:** The engine goes to lengths to ensure a clean termination of threads. The use of atomic flags to signal shutdown and joining threads is correct. One thing to note is that the result distributor waits on `result_cv_` with a timeout of 100ms to check for new results. This is fine, though it introduces a potential 0.1s delay in shutdown worst-case (not a big issue). The termination sequence in `~MCTSEngine` forcibly wakes all threads and drains the queues to avoid any threads stuck waiting. This is a robust design and we did not find race conditions in termination. A minor detail is ensuring that the condition variables are not waited upon after their associated mutex is marked destroyed – the code handles this by flags like `cv_mutex_destroyed_`. One could consider using more modern tools (like `std::stop_token` with jthread in C++20) to simplify cancellation, but given C++17, this approach is acceptable. The complexity is high, but necessary for a bug-free multithreading system.
+
+In summary, the MCTS implementation is feature-rich (transpositions, virtual loss, batched NN inference, multi-threading) and generally well-designed for performance. The main challenges observed are **tuning and correctness issues** in the parallelization: how to get larger batch sizes without stalling the search, how to manage memory for thousands of states/nodes efficiently, and fixing the small virtual loss bug. These form the basis of our optimization suggestions below, where we will prioritize solutions that yield the biggest improvement in throughput and memory usage.
+
+\</mcts\_algorithm\_analysis>
+
+\<todo\_list>
+
+1. **Fix Batch Accumulation Logic:** Adjust the evaluator’s batching mechanism so that multiple leaf evaluations are aggregated per batch more often (the current setup often processes batches of size 1). This may involve introducing a short delay or minimum batch threshold before running inference, to boost GPU utilization.
+
+2. **Implement Backpressure on Pending Evaluations:** Prevent the search from queuing excessive evaluations when the GPU is saturated. For example, pause or slow down tree expansion when the number of pending evaluations approaches a threshold (related to `max_concurrent_simulations` setting) to avoid memory bloat and ensure the batch sizes grow rather than endless single-state batches.
+
+3. **Correct Virtual Loss Removal:** Modify the backpropagation or result handling so that all virtual losses added to a node are fully removed once the evaluation completes. Currently only one loss is removed per node despite adding multiple, which can skew search probabilities. This is a small code change (e.g., call `removeVirtualLoss()` in a loop or use the `amount` parameter) but will improve search accuracy.
+
+4. **Optimize Node and State Memory Management:** Reduce overhead from frequent allocations:
+
+   * Use the `GameStatePool` to recycle state objects by implementing a `copyFrom()` method in game state classes and using pool acquisitions instead of `new` on expansion. This will cut down on malloc/free churn during expansions.
+   * Consider a custom allocator or object pool for `MCTSNode` allocations, or at least pre-reserve memory for large numbers of nodes. Recycling nodes between searches (if persistent engine) or using a memory arena could also help if feasible.
+   * Ensure that freed states (after game end) are actually returned to the pool for reuse. Currently, states are cloned and destroyed with nodes, bypassing the pool.
+
+5. **Simplify/Remove Unused NodeTracker Path:** Since the engine now uses its own queues and a result thread, the `NodeTracker` (with promises/futures) is no longer in active use. Removing this dead code will save some memory (e.g., 10k preallocated hash map entries) and eliminate confusion. If any functionality from NodeTracker is needed (e.g., easy retrieval of pending eval info), integrate it with the current system or ensure the external-queue path covers it.
+
+6. **Improve Multi-Threaded Search Efficiency:** Address the scenario where multiple threads select the same node:
+
+   * One approach is to add a check at selection time (before expansion) to mark a node as “in selection” or use an atomic flag to prevent a second thread from also selecting it. This, combined with the existing expansion lock, would fully eliminate wasted simulations. The downside is a bit more overhead in selection. We need to weigh if the added synchronization is worth it, since collisions are not extremely common. This is a lower priority than the issues above, but worth exploring for maximal efficiency.
+   * Additionally, tune the `virtual_loss` hyperparameter. If we fix the removal bug, we might consider using a smaller virtual loss (like 1 instead of 3) because a large virtual loss can overly penalize a node’s value in selection. The optimal value might depend on number of threads.
+
+7. **Transposition Table Enhancements:** The TT could be made more robust:
+
+   * Use the configured `transposition_table_size_mb` to actually limit entries. For example, implement a **replacement strategy** (evict least recently used or shallowest nodes when capacity is reached). Currently, the table is cleared each search, but within a long search it could grow large. Sharding is already implemented for parallelism; we could add an entry count cap per shard and evict on overflow.
+   * Track TT utilization and effectiveness (hit rate) during search and log it. This can inform if changes in policy (like storing only higher-value nodes or deeper nodes) might help.
+
+8. **Logging and Instrumentation:** Increase the observability of the MCTS to guide further tuning:
+
+   * The code already collects stats like average batch size and latency. Expose or log these per search or per time interval so we can verify if batch sizes improve after fixes.
+   * Add debug counters for how often threads collide on the same leaf (e.g., how often `tryMarkForEvaluation()` returns false) to quantify the collision issue.
+   * Monitor memory usage of nodes and states explicitly (perhaps extend `trackMemory` to include number of nodes in tree, etc.) to see the impact of pooling or other memory optimizations in real time.
+
+Each of these to-do items targets a specific problem observed in the current implementation. The first two (batching and backpressure) are top priority for boosting throughput. The memory and node management improvements will help with scalability and long-term stability during self-play. The others (virtual loss fix, multi-thread tweaks, TT policy) will improve search accuracy and efficiency incrementally. We will next outline a concrete plan to implement these changes and discuss their pros and cons.
+
+\</todo\_list>
+
+\<optimization\_scheme>
+
+## Core Architecture Optimization Plan
+
+To address the issues above, we propose a set of coordinated changes to the MCTS system. The goal is to **improve GPU utilization and throughput** without sacrificing the clever parallelism already in place. We will maintain the overall structure (multiple tree traversal threads, one eval thread, one result thread) but tweak the synchronization strategy.
+
+### 1. Smarter Batch Accumulation
+
+We need to adjust the evaluator’s waiting strategy to form larger batches. A recommended approach is to implement a **two-phase wait** for batch assembly:
+
+* **Phase 1:** When the first evaluation request arrives (leaf\_queue was empty and becomes non-empty), do **not** immediately dequeue it. Instead, start a short timer (for example, a few milliseconds). This can be implemented by having the evaluator thread, upon wakeup, know that it should wait a bit to allow more leaves to accumulate. Currently, `evaluationLoop` calls `processBatch()` as soon as it sees any item. We can change this to only call `processBatch()` if either a certain number of items are already in queue, or if a timeout since the first item has expired.
+* **Phase 2:** If the queue fills up to `batch_size` or the short timeout elapses, then proceed with processing.
+* Concretely, we could maintain an `int current_batch_count` and a timestamp for when the batch started accumulating. For example:
+
+  ```cpp
+  // Pseudocode for evaluator wait logic
+  if (external_leaf_queue->try_dequeue(pending_eval)) {
+      evaluations.push_back(std::move(pending_eval));
+      if (evaluations.size() == 1) {
+          batch_start_time = std::chrono::steady_clock::now();
+      }
+      // If batch not full, wait a bit for more
+      while (evaluations.size() < batch_size_) {
+          auto now = std::chrono::steady_clock::now();
+          if (external_leaf_queue->try_dequeue(next_eval)) {
+              evaluations.push_back(std::move(next_eval));
+              continue;
+          }
+          // If no new eval, check timeout
+          if (now - batch_start_time < std::chrono::microseconds(500)) {
+              // active wait or sleep a few microseconds
+              std::this_thread::sleep_for(std::chrono::microseconds(50));
+              continue;
+          }
+          break;
+      }
+  }
+  ```
+
+  The above logic would replace the tight loop at with one that ensures at least 500 µs (in this example) of waiting for additional requests. We can tune this wait (or use the `batch_timeout` setting already in MCTSSettings). This change will directly tackle the “batch size 1” problem by sacrificing at most a fraction of a millisecond of latency to gain possibly 5-10x throughput if multiple leaves pile up. We expect minimal impact on move decision latency, since 10ms is the configured upper bound anyway, and often threads will produce several leaves within a couple of milliseconds especially mid-search.
+* **Pros:** Greatly increases average batch size and GPU efficiency. The GPU will see larger tensor batches, improving occupancy and throughput. This also reduces the relative overhead of launching kernel and CPU/GPU transfer per inference.
+* **Cons:** If the search is running in a scenario where extremely low latency per move is required (e.g., real-time play with very low time per move), this could introduce a slight delay. However, the 20ms timeout was already in place, so using a few milliseconds for batching is within original design parameters. We must ensure this doesn’t stall the search threads: but since they don’t wait for results (except possibly at the end of search), a small eval delay is usually fine.
+
+Additionally, we can make the batch size **adaptive**: The code has some logic for `min_batch_size_` in internal mode (adjusting if average batch is much smaller or larger than target). We should extend or reuse this in external mode. For example, if we consistently see only 2-3 requests per batch, we might reduce the `batch_timeout` or adjust scheduling; if we see the queue is often full (batch\_size items waiting), maybe we can increase throughput by raising `batch_size` (if GPU memory allows). An adaptive scheme can monitor `cumulative_batch_size_ / total_batches_` (average batch) and dynamically tweak waiting time or `min_batch_size`. This is a more complex enhancement – a simpler first step is implementing the fixed short delay, which addresses the immediate issue.
+
+### 2. Backpressure and Concurrency Control
+
+Currently, all threads will happily continue to add leaf evaluations up to `num_simulations`. If the neural net is slower, this could lead to a buildup of pending evaluations (though the design tries to push throughput, one could temporarily have many pending). We have a `max_concurrent_simulations` setting (512) that isn’t yet enforced in code. We should enforce it by limiting `active_simulations_` to that value at any time.
+
+A possible implementation:
+
+* When initializing `active_simulations_`, do `active_simulations_.store(std::min(settings_.num_simulations, settings_.max_concurrent_simulations))`. If `num_simulations` is larger, we will treat the search as in waves. After one wave finishes, we could then trigger the next wave. However, since the engine currently decrements all the way to 0, a better approach is:
+* Keep `active_simulations_ = settings_.num_simulations`, but use an atomic `pending_evaluations_` (already present) to decide if we should pause spawning new ones. E.g., in `treeTraversalWorker`, before selecting a new leaf, check `pending_evaluations_ < settings_.max_concurrent_simulations`. If that condition is false (meaning too many evals in flight), the thread can wait a bit (yield or sleep) until some evaluations complete. This essentially throttles the tree expansion when the GPU is overloaded.
+* We can implement this by modifying the loop that claims simulations. For instance, at the top of the while loop in `treeTraversalWorker`, add:
+
+  ```cpp
+  int pending = pending_evaluations_.load(std::memory_order_acquire);
+  if (pending > settings_.max_concurrent_simulations) {
+      // Too many evals in flight, wait for results to catch up
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      continue;
+  }
+  ```
+
+  and then proceed to check `active_simulations_`. This ensures that if the GPU is the bottleneck and a lot of leaves are waiting, the CPU threads pause briefly instead of piling up even more. The sleep can be very short (1ms or even just yield) because results will come in and wake threads via `result_cv_`.
+* **Pros:** This prevents memory explosion (each pending eval carries a whole game state and path). It also indirectly increases batch size: if threads hold off when many are pending, they will naturally form a larger queue for the evaluator to work on, instead of constantly adding new single items.
+* **Cons:** This means CPU threads might be idle at times, which could under-utilize CPU in scenarios where the GPU is under-utilized too (we need to be careful to only stall when the GPU truly has a backlog). Tuning the threshold is key –  if set too low, we throttle unnecessarily; if too high, we might still get big memory spikes. The chosen default of 512 seems reasonable for a single 3060 Ti in self-play (it’s unlikely the GPU can effectively handle more than 512 concurrent evaluations in a timely manner anyway). This number can be made configurable or adaptive (perhaps related to batch\_size: e.g., max pending = 4 \* batch\_size).
+
+### 3. Memory Management Improvements
+
+**GameState Pool usage:** We should modify `cloneGameState` to actually reuse `IGameState` objects. A plan:
+
+* Implement a method in each game’s state class like `copyFrom(const IGameState& other)`. This would copy all relevant fields (board configuration, current player, etc.) from `other` into `this` without altering pointers that shouldn’t be copied. This requires careful implementation in chess, go, gomoku states but is doable (since they likely already have a `clone()` that uses the copy constructor).
+* Change `GameStatePool::clone(const IGameState& source)` to try acquiring an object from the pool and then copying into it:
+
+  ```cpp
+  std::unique_ptr<IGameState> GameStatePool::clone(const IGameState& source) {
+      if (!pool_.empty()) {
+          auto state = acquire(); // get a blank state
+          state->copyFrom(source);
+          return state;
+      }
+      // if pool empty, either create new or fallback
+      return source.clone();
+  }
+  ```
+
+  We must ensure that the acquired state is of the same concrete game type as source (the pool is segregated by game type in `GameStatePoolManager`, so that holds). This way, instead of allocating a new state for every child, we reuse one from the pool.
+* Modify `MCTSNode::expand()` to release states back to the pool when a node is destroyed. One idea: intercept node deletion – perhaps via a custom deleter in the `shared_ptr<MCTSNode>` or at least have \~MCTSNode release its state:
+
+  ```cpp
+  MCTSNode::~MCTSNode() {
+      if (state_) {
+          // Return state to pool instead of deleting
+          utils::GameStatePoolManager::getInstance().release(std::move(state_));
+      }
+  }
+  ```
+
+  This would put the state back into the pool for reuse in future expansions. Because nodes are only destroyed when the whole tree is torn down (or perhaps when transpositions replace them, but in that case the pointer is not destroyed, just not used), most states will be released en masse at end of search. That’s fine, the pool will then have a warm cache of state objects for the next search.
+* **Pros:** Recycling states can dramatically cut the number of allocations. In a large search with, say, 100k node expansions, we might allocate 100k state objects normally. With pooling, we allocate perhaps up to the peak concurrent states (which might be equal to number of nodes in the tree at one time, possibly a few tens of thousands), and then reuse them next game. This reduces pressure on `malloc` and could improve cache usage (objects are reused, likely staying in memory). It also helps avoid fragmentation over many games.
+* **Cons:** Implementing `copyFrom` for each game state is error-prone – one must ensure every bit of game state is copied exactly (including history if any, castling rights in chess, Ko state in Go, etc.). Any bug in copyFrom could be disastrous (leading to incorrect game states). Thorough testing is required. If confident in that, the payoff is worth it. Another con is that releasing states at node destruction means during the search, we don’t reclaim memory (because nodes persist until end). That’s fine – the memory is needed while tree exists. But if memory becomes tight, one could consider more aggressive pruning of the tree (not in current scope) or releasing portions of it, which complicates things. For now, releasing at end of search is acceptable.
+
+**Node allocation:** Using `shared_ptr` for every node has overhead. We could consider using a custom memory pool (like an `ObjectPool<MCTSNode>` that allocates chunks of nodes). But switching away from shared\_ptr would require managing lifetimes differently. Since the code relies on shared\_ptr to handle complex ownership (especially with transposition table storing weak\_ptrs), we might keep it but try to reduce overhead:
+
+* We could reserve space for children vectors to the maximum legal moves of the game to avoid re-allocations. Actually, the code already reserves the children vector to `legal_moves.size()` on expansion, which is good.
+* The biggest per-node overhead is likely the atomic<float> for value (which might cause padding or lock contention if many are in same cache line). We can’t easily change that without locks. An atomic<float> is fine (in C++20 there is `atomic_ref<float>` which could operate on a float in a cache line without separate allocation, but not widely used yet). We could consider accumulating values in an `double` for more precision and then cast to float for policy, but that’s micro-optimization.
+* One idea: use **intrusive shared pointers** (boost intrusive\_ptr or similar) for MCTSNode, so that the refcount is a field in the node (could reduce separate allocation). This would remove one atomic per node (the control block’s refcount) and instead put an atomic in the node structure for refcount. It saves one allocation per node and some pointer chasing. However, this change is fairly invasive and may not yield a huge difference unless node count is extremely high.
+* Given the complexity, node pooling or intrusive ptr might be overkill. A simpler step: ensure that `transposition_table_` doesn’t keep nodes alive longer than needed. It stores weak\_ptr, so that’s fine. We just need to be sure to call `transposition_table_->clear()` at game end (the code does this).
+* In summary, node-level optimizations are a bit more involved and yield smaller gains than the state pooling. So we prioritize state pooling first (bigger impact on memory).
+
+**Removing NodeTracker:** On the code cleanup side, we can remove the NodeTracker instance or set `node_tracker_ = nullptr` when using external queues to avoid any unintended overhead. NodeTracker’s map was never populated in this flow, so it’s not doing much harm, but freeing that reserved memory (10000 entries) at engine start might be nice. This is mostly a maintainability improvement.
+
+### 4. Parallelization and Threading Improvements
+
+**Collision reduction:** As noted, currently if two threads try to evaluate the same leaf, one backs off (losing that simulation). We can enhance this by detecting the situation earlier. One method:
+
+* When selecting a child in `MCTSNode::selectChild`, if a child is found with `evaluation_in_progress_ == true` (meaning another thread has queued it for eval and not finished yet), we could choose to skip that child in the scoring (treat it as temporarily invalid for selection). Presently, `selectChild` doesn’t explicitly skip nodes being evaluated (it only indirectly lowers their score via the virtual loss that was applied). If virtual loss is large, that might be enough; but if the node had a very high prior, even subtracting 3 might not stop another thread from selecting it. To strengthen this, we could modify `selectChild` to continue the loop without considering a child if `child->isBeingEvaluated()` returns true. The code has `evaluation_in_progress_` flag and related methods. This would explicitly prevent threads from selecting a node under evaluation. The tradeoff is that if a node is being evaluated, all threads will ignore it until it’s done, exploring other moves instead – which is actually good (this is effectively what virtual loss is meant to do, just making it binary here).
+* Also, as mentioned, if a thread finds `tryMarkForEvaluation()` returns false (meaning someone else is already evaluating this leaf), instead of returning 0 and ending, we could have it go back up and choose a different leaf. For example, detect the condition and call `traverseTree(root_)` again (effectively restarting the simulation). The pseudo-code from our design docs suggests doing that. Implementing that in `expandAndEvaluate` might require a loop or a higher-level check in `traverseTree`. Since our current `treeTraversalWorker` loop just calls `traverseTree` for each claimed sim, we could catch a special return code from `traverseTree` indicating “node in progress, try again”. This would complicate the interface slightly but is doable. However, given the overhead of a full simulation, losing one simulation occasionally is not dire. So this is a nice-to-have improvement. It ensures full utilization of sim count, but in practice, it might not change outcomes significantly. Still, it’s worth implementing if time allows, as it aligns with making the algorithm more elegant.
+* **Pros:** These changes reduce wasted computation and ensure each simulation contributes useful information. It will also slightly reduce variance in multi-threaded results (because two threads won’t double-explore the same path).
+* **Cons:** Skipping an evaluated node entirely (as opposed to just virtual loss penalty) could in rare cases cause the algorithm to explore suboptimal moves just because the best move’s evaluation is pending. However, since the evaluation will finish quickly (tens of ms), and then that node becomes available with a real value, this is fine. It’s actually closer to how humans would avoid reconsidering a position until new info arrives. The impact on strength is likely neutral or positive.
+
+**Work stealing:** The current batch-claiming of simulations might leave some threads idle if tasks not evenly divisible, but the implementation already addresses that by each thread continuously checking `active_simulations_`. There is an implicit work stealing: any thread that finishes its batch will loop again and try to claim more from `active_simulations_`. So the distribution is fairly dynamic. One improvement could be to reduce the batch size as the number of remaining simulations shrinks, to avoid overshooting. But the code already does `to_claim = min(batch_size - claimed, old_value)`, which handles that.
+If we wanted a more standard approach, we could instead push “simulation tasks” into a concurrent queue and let threads pop them (this is basically what active\_simulations does, but using CAS rather than actual task objects). There’s no clear evidence that switching to an explicit task queue would be faster – in fact, the CAS approach is likely lower overhead.
+
+One possible enhancement is to allow *dynamic adjustment of thread usage*: for instance, if the batch evaluator becomes a bottleneck (GPU is busy and many evals pending), one could in theory reduce the number of tree threads or have some threads help in processing results. However, dividing roles too much could complicate things. The current separation (tree threads vs eval thread vs result thread) is clean and typically one eval thread can handle the load if batching is effective. So we won’t complicate that now.
+
+### 5. Transposition Table Policy
+
+To optimize the transposition table:
+
+* We can initialize it with a number of shards equal to thread count (the code already does something like that when resizing). They chose `num_shards = max(4, hardware_concurrency)` by default. If we have 16 threads, 16 shards is okay.
+* Implementing a proper replacement strategy: For example, use an LRU queue per shard or store a timestamp or visit count and periodically prune least-used entries. A simple approach could be to limit the total entries. 128 MB for a table of weak\_ptrs (8 bytes for pointer, plus overhead) could store on the order of a million entries (roughly estimating). It’s unlikely a single search will hit that many unique states unless we allow extremely large number of simulations or in Go 19x19 with huge search. But if it does, performance might degrade (large hashing overhead). Having an upper bound (like 1e6 entries) and then refusing to add new entries or randomly dropping some might be acceptable.
+* Another idea: do not store very shallow nodes in the TT, because they are likely near root and won’t have duplicates anyway except symmetrical moves. Focus TT on deeper states where transpositions matter (especially in games like Go or chess with repetitive positions). This can be done by storing depth and maybe not replacing entries with depth less than current if collision occurs.
+* These changes can get complex, so one pragmatic step: keep an `entry_count` and once it exceeds (capacity \* 0.9), clear a portion (like clear half of entries, or all – but clearing all loses info). A better approach: use a ring buffer of TT entries to evict oldest. The phmap might not support easy removal except by key.
+* For now, given time, we might leave TT as is, since it’s functioning and not the primary performance bottleneck. Just note these improvements for completeness. The main TT-related action item is to ensure it’s not causing memory leaks (it isn’t, since cleared each search, and uses weak\_ptrs so it doesn’t keep nodes alive).
+
+### 6. Testing and Verification
+
+After implementing these optimizations, careful testing is needed:
+
+* **Functional tests:** Ensure that with the virtual loss fix and new scheduling, the search results (e.g., distribution of moves) remain reasonable. The virtual loss bug fix might cause the search to explore previously “over-penalized” nodes more, which is a correct change. We should see search outputs become more stable with multiple threads.
+* **Performance tests:** Measure average batch size before and after changes. We expect the average to go from \~1-2 to perhaps 8-16+ in self-play conditions (depending on how many leaves are expanded quickly).
+* Monitor that the throughput (playouts per second) increases on GPU. For example, if originally we had \~1000 simulations/sec with batch size \~1, and each inference taking \~3ms, the GPU was mostly idle. After changes, we might see the same 1000 sims now processed in, say, 30% less wall time if batches of 8 or more are used (rough estimate).
+* **Memory usage:** With pooling, track memory via `trackMemory`. Ideally, we see memory usage plateau instead of climb across games. If we see memory stable at, e.g., 2GB after many games whereas before it climbed, that’s a success. We should ensure no double-delete or use-after-free occurs with the pool (test with address sanitizer perhaps).
+
+By addressing the batch throughput and memory reuse, we tackle the biggest slowdowns. The MCTS will be able to utilize the GPU to evaluate many states in parallel, while not running far ahead of itself with too many pending states. These changes, combined with minor fixes (virtual loss) and code cleanup, set the stage for a much more efficient AlphaZero engine.
+
+\</optimization\_scheme>
+
+\<parallelization\_improvements>
+
+## Enhanced Parallelization Strategy
+
+To maximize parallel efficiency, we concentrate on the leaf evaluation pipeline and thread coordination:
+
+**1. Improved Leaf Parallelization:** The current design already queues leaf evaluations asynchronously; our focus is on making this more effective.
+
+* **Batching Leaves:** As described, we now accumulate leaf nodes for a short time to submit a bigger batch to the GPU. This means threads might queue up, say, 10 leaves in a short period, and the evaluator will process all 10 in one go. The improvement here is that the GPU does 10 evaluations nearly as fast as 1 (due to parallelism), effectively giving \~10x throughput for that moment. Meanwhile, the CPU threads that submitted those leaves continue working on other parts of the tree. This overlap of CPU (selection/expansion) and GPU (evaluation) is true leaf parallelism in action – each are busy doing their share of work simultaneously. By increasing the batch size, we ensure the GPU is not idle and the CPU is not starved waiting.
+* **Parallelizing State Encoding:** If the state-to-tensor conversion is costly, we can parallelize that using multiple CPU threads or vectorization. For instance, using OpenMP in the loop that fills the input tensor from game states (as hinted by possible code in the docs). This way, preparing a batch of 64 states might be split across 4 CPU cores, reducing wall time for batch preparation. Since the evaluator thread is single, we could allow it to spawn an OpenMP parallel for to utilize multiple cores for encoding, which is fine because the tree search threads are anyway busy elsewhere. This yields better overlap and utilization of all CPU cores (some working on MCTS, some on preparing NN inputs).
+* **Leaf Expansion Parallelism:** We ensure that only one thread expands a given node’s children (via the `expansion_mutex_` in MCTSNode), which is necessary to avoid duplicate children. This is effectively parallel – different threads expand different nodes concurrently. By the time the search is in mid-simulation, many threads will be expanding different parts of the tree at once. That scaling should continue linearly with threads, limited only by occasional mutex collisions (rare) or fighting over the same best move (mitigated by virtual loss).
+* **Avoiding Redundant Evaluations:** With our improved checks, no two threads will evaluate the same leaf state twice. This was mostly true before (due to `evaluation_in_progress_` flag) but now it’s reinforced by skipping nodes under evaluation entirely during selection. This means all threads always work on distinct leaves, maximizing coverage of the search space and not wasting precious neural net evaluations on repeats.
+
+**2. Thread Synchronization Refinements:**
+
+* **Condition Variable Utilization:** We use `cv_` to put threads to sleep when no work is ready. This prevents busy-waiting and saves CPU cycles for when they can be used better (like encoding states or other OS threads). We’ve added more granular wake-ups: e.g., when results come in, we notify worker threads that some pending evaluations finished by incrementing `active_simulations_` or simply by the result thread notifying `cv_` after processing results. In the current code, after each result batch, they do `cv_.notify_all()` in case threads were waiting for `active_simulations_` to become non-zero. We maintain this, and also notify if we implement any pauses for backpressure. The backpressure check (if too many pending, threads sleep 1ms) is a light form of synchronization; it doesn’t use a CV, but it’s a short sleep that yields CPU. This is acceptable since it’s a rare scenario (only when 500+ evals are pending).
+* **Work Stealing Behavior:** As noted, our thread loop with atomic counter is akin to work stealing – any free thread will decrement the global counter and take on work. By chunking the work, we reduce contention. Our modifications don’t remove this logic; in fact, by pausing threads when GPU is overloaded, we implicitly allow other threads (or the same thread a bit later) to steal work once the overload subsides. It’s like saying “don’t grab more tasks until the current ones are partly done.”
+* **Thread Roles and Core Affinity:** We could consider pinning the evaluator thread to a specific core (especially if it’s doing heavy Torch work and maybe can benefit from being pinned to avoid migrating between cores). Similarly, tree traversal threads could be pinned or at least given high priority. The current implementation doesn’t specify this, except naming threads for debugging. As an improvement, one might use `pthread_setaffinity_np` on Linux to bind threads (e.g., evaluator to core 0, result to core 1, workers to cores 2+ etc.). This could reduce context switching cache misses. It’s an advanced optimization that might yield minor improvements in throughput stability.
+
+**3. Multi-GPU or Distributed Parallelization (Future scope):** Although out-of-scope per PRD, it’s worth noting that the current architecture would allow scale-out if needed. For example, if we had two GPUs, we could run two evaluator threads, each taking from the same leaf queue (or partition the queue) to process evaluations in parallel. Our backpressure logic and batch accumulation would need extension to handle multiple concurrent batches. This is a larger change but the concept of external queues is extensible: one could imagine N evaluator threads pulling from one ConcurrentQueue of states – moodycamel’s queue is thread-safe and could feed multiple consumers (though we’d need to be careful to not give the same item twice; maybe use separate queues per evaluator). Similarly, more tree threads beyond CPU cores typically saturate returns less benefit due to diminishing returns of simulation throughput vs eval throughput – thus focusing on GPU parallelism is key.
+
+**4. Leaf Parallelism Verification:** With these improvements, we expect to see:
+
+* Multiple pending evaluations in flight nearly all the time (especially early in search). The `pending_evaluations_` counter should oscillate around a target (maybe around max concurrent or at least frequently above 1). If initially it was often 0 or 1, now it should often be, say, 5, 10, or higher, indicating real parallel eval going on.
+* CPU utilization balanced: some cores busy in MCTS, one busy feeding GPU, one busy applying results. Ideally all cores have something to do. If the GPU becomes the bottleneck (which is likely when batch sizes are large), the CPU might throttle as designed – which is fine, because it means we’re maxing out the GPU and not just piling work that can’t be completed faster.
+
+In conclusion, these parallelization improvements create a more harmonious pipeline:
+
+* Tree search threads produce work as fast as the GPU can consume it (without significantly overproducing).
+* The GPU is kept fed with batches of states, improving its efficiency.
+* No single thread becomes a bottleneck: the eval thread does a lot of work but if it falls behind, tree threads slow down slightly until it catches up (instead of overwhelming it).
+* The result thread offloads all backup computations so that tree threads remain focused on expansion and selection.
+
+This balanced approach should yield near-linear scaling in throughput with respect to CPU cores (up to the point where the GPU becomes the limiting factor, at which point additional CPU threads don’t help because the eval is the bottleneck). At that GPU-bound point, our backpressure ensures we don’t waste memory or CPU on fruitless extra simulations. Instead, any extra CPU could possibly be redirected to other tasks (or simply remains idle, which in a self-play context is fine since GPU is the critical resource).
+
+In summary, **leaf parallelization** is fully leveraged – many leaves can be evaluated in parallel – and **thread coordination** is tightened to avoid collisions and wasted effort, making the Monte Carlo Tree Search more efficient in a multi-threaded, GPU-accelerated environment.
+
+\</parallelization\_improvements>
+
+\<gpu\_throughput\_scenario>
+
+## Maximizing GPU Throughput
+
+To illustrate the impact of our changes, consider a typical self-play scenario on a single GPU:
+
+**Initial Scenario (Before optimizations):**
+
+* Batch size effectively = 1 most of the time. A leaf arrives, the evaluator immediately processes it. The GPU performs one forward pass (\~3-5 ms), then idles while waiting for the next.
+* Suppose 100 leaf evaluations are needed. The GPU does 100 separate jobs, incurring overhead each time. If each job has \~1 ms of launch overhead and \~3 ms of compute, that’s 4 ms \* 100 = 400 ms total.
+* During this time, CPU threads continue to churn out leaves, possibly building a backlog or overshooting (or if they were waiting on results, they might under-utilize GPU).
+* GPU utilization might be very low (e.g., 20-30%) because it’s mostly handling small inference jobs and waiting in between.
+
+**Optimized Scenario (After improvements):**
+
+1. **Tensor Preallocation and Memory Pinning:** We set up preallocated GPU tensors for common batch sizes. For example, allocate a tensor of shape \[256, C, H, W] on the GPU at startup (where 256 is a max batch we expect, C channels, H,W board dims). Also prepare pinned CPU memory buffers for batches. This way, we **avoid allocating new tensors for each batch**. Instead, we copy data into the existing tensor slice. PyTorch (libtorch) allows using `.index({Slice(0, batch_size)})` to get a sub-tensor view without copy. We do this:
+
+   * Preallocate e.g. for batch sizes 16, 32, 64, 128 (some powers of two up to max). Or simply one large and use a slice as needed.
+   * Use page-locked (pinned) memory for the CPU staging area, so that CPU->GPU DMA is faster.
+   * The pros: no dynamic allocation during search (less CPU overhead, more deterministic). Also pinned memory can significantly speed up transfers (2-3x faster host to device copies).
+   * Cons: preallocating large tensors uses more memory up front (but a 256-batch of 19x19 Go might be on the order of 256*19*19*features*4 bytes, which is maybe a few tens of MB – fine on a 8GB GPU).
+
+2. **Batch Filling Parallelism:** When a batch of states is ready, we convert them to tensor format. We can parallelize this loop across available CPU cores. For instance, with OpenMP:
+
+   ```cpp
+   #pragma omp parallel for
+   for (int i = 0; i < batch_size; ++i) {
+       auto tensor_view = cpu_tensor[i];  // slice per state
+       states[i]->fillTensor(tensor_view);
+   }
+   ```
+
+   Each state’s `fillTensor` writes the board representation into the provided tensor slice (which is a view into the bigger tensor). If we have 8 cores and batch of 64, each core handles 8 states in parallel, possibly bringing batch preparation down to the time of \~8 states instead of 64. This overlaps well with other computations.
+
+3. **Single Copy to GPU:** After filling the pinned CPU tensor, issue one asynchronous transfer to GPU for the whole batch. This is far more efficient than 64 small copies. The GPU can DMA the 64 states in one block. If using CUDA streams, this copy can even overlap with the GPU executing the previous batch’s network forward pass (though that requires stream management beyond current scope, but could be done).
+
+   * Because we preallocated a large GPU tensor, this copy is actually a device-to-device copy if we directly fill the GPU tensor from CPU. Alternatively, we fill a pinned CPU tensor and call `cudaMemcpyAsync` to the preallocated GPU tensor slice.
+   * The network forward is then invoked on the GPU tensor slice containing the batch.
+
+4. **Network Forward Pass (Batch Inference):** The GPU now computes the policy and value for the entire batch simultaneously. Modern GPUs are very efficient at batch computations – the fixed overheads (kernel launch, memory global latency, etc.) are amortized. The compute units are fully engaged. For a ResNet model, batch size 64 might use, say, 60% of GPU compute capacity for 3 ms, whereas batch size 1 might use 5% for 3 ms – essentially, 64 can be done in about the same time as 1 in many cases, or slightly more if memory-bound, but certainly not 64x more.
+
+   * Example: Let’s say one state takes 3 ms, 64 states might take 4 ms on the GPU. So throughput per state improves by \~16x.
+   * The result is a vector of 64 NetworkOutput objects. We copy those back to CPU (this is small: just probabilities and value per state, maybe a few hundred bytes each, negligible time). Even this copy can be overlapped if using streams.
+
+5. **Result Integration:** The result thread takes those 64 outputs and quickly updates the tree. This part is on CPU and was relatively fast anyway (backprop 64 values is minor compared to what the GPU did). The result thread can batch these updates too (the code already processes results in batches of up to 32). We could increase that batch to 64 to match a large eval batch if needed. The backprop loop is O(depth) per result; depth maybe \~50 average, so 64\*50 = 3200 node updates, which is fine in microseconds range due to atomic ops.
+
+6. **Throughput Gains:** In this scenario, those 100 leaf evaluations from earlier might be processed as 10 batches of 10 instead of 100 of 1. Let’s do rough math:
+
+   * Without optimization: 100 \* 4 ms = 400 ms GPU time.
+   * With optimization: maybe \~10 batches \* (copy + forward + overhead):
+
+     * Copy 10 states to GPU: maybe 0.2 ms (for small data, if pinned).
+     * GPU forward 10 states: maybe 1.5 ms (since GPU likes at least a little batch).
+     * Total \~1.7 ms per batch \* 10 = 17 ms.
+   * This is a **huge improvement**, albeit this is optimistic. More realistically, if we manage average batch of 32:
+
+     * 100 states = \~4 batches of 25 (roughly).
+     * Each batch 25 might take \~2.5-3 ms on GPU.
+     * Total \~10-12 ms vs 400 ms originally. That’s \~30-40x faster for the evaluation part.
+   * The overall MCTS loop then becomes CPU-bound likely, which is fine – means GPU is no longer the limiter except in brief bursts.
+
+7. **GPU Utilization:** With larger batches, the GPU utilization jumps. Instead of many small idle periods, the GPU will see steady streams of work. It might reach 80-90% utilization if the MCTS is continuously feeding it batches. This is ideal as we paid for the GPU – we want it working. The only caveat is if we oversaturate, which our backpressure prevents. So we target a balanced pipeline.
+
+8. **Monitoring:** We will measure metrics like:
+
+   * **Average batch size:** Suppose this climbs from \~1.5 to \~20 after our changes.
+   * **Average GPU inference latency:** It might go from \~3 ms (for a single state) to \~5 ms (for 32 states) – a slight increase per batch, but per state latency drops massively.
+   * **Evaluations per second:** Initially maybe \~300 states/sec on GPU (since 3ms each). After, potentially \~2000+ states/sec (if we can batch 32 at a time in \~5ms, that’s 32/5ms = 6400/sec just for GPU throughput, but CPU and other factors will lower it, still on order of thousands).
+   * These improvements mean we can either run more simulations in the same time (improving playing strength) or achieve the same number of simulations much faster (saving time or energy).
+
+9. **Pros/Cons Recap:**
+
+   * *Pros:* Maximizing hardware utilization, significantly faster self-play generation (games completed per hour skyrockets), ability to either reduce think time or increase search depth. This directly translates to stronger AI play given a fixed time budget, since more simulations = better policy convergence.
+   * *Cons:* Slightly more complex code (managing preallocated buffers and multi-threading encoding). Higher memory usage due to buffers (but still minor relative to a 64GB RAM or GPU memory). Also, when batch sizes increase, the first move in a game might take a bit longer to gather a big batch (though we cap waiting at e.g. 20ms), but subsequent moves in self-play pipeline usually overlap anyway (one game’s thinking time overlaps with another’s training perhaps, depending on pipeline design).
+
+In essence, the scenario after optimizations shows the GPU as a true workhorse handling many positions in parallel, while the CPU coordination ensures that those positions are generated and processed in a timely manner. The net effect is that the overall system can evaluate far more positions per second than before, increasing the strength of the MCTS-based AI without changing the neural network itself.
+
+Finally, consider an extreme test: If we have 16 threads and a powerful GPU, the engine might consistently fill batches of 128. The GPU might handle that in \~8-10 ms. The CPU might produce those 128 leaves in roughly that time as well (16 threads \* maybe 8 expansions each in \~10 ms). This would mean every 10 ms we finish 128 simulations – that’s 12,800 simulations per second, an impressively high number. These numbers are hypothetical, but they indicate the headroom unlocked by proper batching and parallelization. Even if actual performance is a fraction of that, it’s a big win over the unoptimized case.
+
+**Conclusion:** By implementing the steps above (preallocation, parallel encoding, batch processing), we transform the GPU from a sporadically-used component to a fully engaged accelerator that significantly speeds up the MCTS evaluations. This **high-throughput scenario** is critical for self-play training, where thousands of games must be generated – it means more training data in less time, or achieving a higher Elo policy network given the same training duration.
+
+\</gpu\_throughput\_scenario>

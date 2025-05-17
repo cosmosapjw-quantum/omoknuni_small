@@ -334,6 +334,56 @@ std::unique_ptr<core::IGameState> GomokuState::clone() const {
     }
 }
 
+void GomokuState::copyFrom(const core::IGameState& source) {
+    // Ensure source is a GomokuState
+    const GomokuState* gomoku_source = dynamic_cast<const GomokuState*>(&source);
+    if (!gomoku_source) {
+        throw std::runtime_error("Cannot copy from non-GomokuState: incompatible game types");
+    }
+    
+    // Verify board sizes match
+    if (board_size_ != gomoku_source->board_size_) {
+        throw std::runtime_error("Cannot copy: board sizes mismatch");
+    }
+    
+    // Copy rule configurations
+    use_renju_ = gomoku_source->use_renju_;
+    use_omok_ = gomoku_source->use_omok_;
+    use_pro_long_opening_ = gomoku_source->use_pro_long_opening_;
+    
+    // Copy game state
+    current_player_ = gomoku_source->current_player_;
+    black_first_stone_ = gomoku_source->black_first_stone_;
+    last_action_played_ = gomoku_source->last_action_played_;
+    move_history_ = gomoku_source->move_history_;
+    
+    // Deep copy bitboards
+    size_t expected_size = (board_size_ * board_size_ + 63) / 64;
+    for (int p = 0; p < 2; ++p) {
+        if (player_bitboards_[p].size() != expected_size) {
+            player_bitboards_[p].resize(expected_size, 0);
+        }
+        std::copy(
+            gomoku_source->player_bitboards_[p].begin(),
+            gomoku_source->player_bitboards_[p].end(),
+            player_bitboards_[p].begin()
+        );
+    }
+    
+    // Mark all caches as dirty to ensure thread safety
+    valid_moves_dirty_ = true;
+    cached_valid_moves_.clear();
+    cached_winner_ = NO_PLAYER;
+    winner_check_dirty_ = true;
+    hash_signature_ = 0;
+    hash_dirty_ = true;
+    
+    // Validate the copied state
+    if (!validate()) {
+        throw std::runtime_error("Copied GomokuState failed validation");
+    }
+}
+
 std::string GomokuState::actionToString(int action) const {
     if (action < 0 || action >= getActionSpaceSize()) return "PASS";
     auto [r, c] = action_to_coords_pair(action);
@@ -699,12 +749,25 @@ void GomokuState::refresh_valid_moves_cache() const {
         return;
     }
 
+    // Debug logging (commented out for production)
+    // if (count_total_stones() == 0) {
+    //     std::cerr << "refresh_valid_moves_cache: total_stones=0, current_player=" << current_player_ 
+    //               << ", use_pro_long_opening=" << use_pro_long_opening_ << std::endl;
+    // }
+
     int total_actions = getActionSpaceSize();
     for (int action = 0; action < total_actions; ++action) {
         if (is_move_valid_internal(action, true)) { 
             cached_valid_moves_.insert(action);
         }
     }
+    
+    // Debug logging (commented out for production)
+    // if (count_total_stones() == 0 && cached_valid_moves_.size() != 1) {
+    //     std::cerr << "refresh_valid_moves_cache: WARNING - expected 1 valid move but found " 
+    //               << cached_valid_moves_.size() << std::endl;
+    // }
+    
     valid_moves_dirty_ = false;
 }
 
@@ -812,7 +875,13 @@ bool GomokuState::is_pro_long_opening_move_valid(int action, int total_stones_on
 
     if (current_player_ == BLACK) {
         if (total_stones_on_board == 0) { 
-            return action == center_action;
+            bool valid = (action == center_action);
+            // Debug logging (commented out for production)
+            // if (!valid && action == 0) { // Log only once for the first action checked
+            //     std::cerr << "Pro-long opening: Black at move 0 must play center " << center_action 
+            //              << ", but tried " << action << " (board_size=" << board_size_ << ")" << std::endl;
+            // }
+            return valid;
         }
         if (total_stones_on_board == 2) { 
             if (black_first_stone_ == -1) {

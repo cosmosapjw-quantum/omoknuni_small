@@ -56,6 +56,21 @@ struct ALPHAZERO_API MCTSSettings {
     // Transposition table settings
     bool use_transposition_table = true;
     size_t transposition_table_size_mb = 128; // Default 128MB
+    
+    // Progressive widening settings
+    bool use_progressive_widening = true;
+    float progressive_widening_c = 1.0f;  // C parameter for progressive widening
+    float progressive_widening_k = 10.0f; // K parameter for progressive widening
+    
+    // Root parallelization settings  
+    bool use_root_parallelization = true;
+    int num_root_workers = 4;  // Number of parallel MCTS trees to run
+    // Threads per root worker will be num_threads / num_root_workers
+    
+    // RAVE (Rapid Action Value Estimation) settings
+    bool use_rave = true;
+    float rave_constant = 3000.0f;  // Constant for RAVE weight calculation
+    
 };
 
 struct ALPHAZERO_API MCTSStats {
@@ -196,6 +211,23 @@ public:
      * @return false if the evaluator failed to start
      */
     bool ensureEvaluatorStarted();
+    
+    /**
+     * @brief Monitor memory usage and perform cleanup if needed
+     * 
+     * Tracks memory usage and triggers cleanup if memory consumption
+     * exceeds configured thresholds. Called periodically during search.
+     */
+    void monitorMemoryUsage();
+    
+    /**
+     * @brief Force aggressive memory cleanup
+     * 
+     * Performs immediate memory cleanup including clearing caches,
+     * trimming pools, and forcing garbage collection. Use when
+     * memory pressure is detected.
+     */
+    void forceCleanup();
 
 public:
     // Pending evaluation tracking
@@ -267,9 +299,18 @@ private:
     // Add Dirichlet noise to root node policy
     void addDirichletNoise(std::shared_ptr<MCTSNode> root);
     
-    // New specialized worker methods
-    void treeTraversalWorker(int worker_id);
-    void batchAccumulatorWorker();
+    // OpenMP-based parallel search
+    void runOpenMPSearch();
+    
+    // Root parallel search - run multiple MCTS trees in parallel
+    void runRootParallelSearch();
+    
+    // Combine results from multiple root nodes
+    void combineRootResults(const std::vector<std::shared_ptr<MCTSNode>>& root_nodes);
+    
+    // Single simulation execution 
+    void executeSingleSimulation(std::shared_ptr<MCTSNode> root,
+                                std::vector<PendingEvaluation>& thread_local_batch);
     void resultDistributorWorker();
     void traverseTree(std::shared_ptr<MCTSNode> root);
     
@@ -292,9 +333,7 @@ private:
     std::atomic<int> active_simulations_;
     std::atomic<bool> search_running_;
     
-    // Synchronization
-    std::mutex cv_mutex_;
-    std::condition_variable cv_;
+    // Removed cv_mutex_ and cv_ - using lock-free polling instead
     
     // Random generator for stochastic actions
     std::mt19937 random_engine_;
@@ -324,6 +363,7 @@ private:
     
     // Helper method to clone game state using memory pool
     std::unique_ptr<core::IGameState> cloneGameState(const core::IGameState& state);
+    
 
     // Producer-consumer queues and tracking
     std::atomic<int> pending_evaluations_{0};
@@ -331,29 +371,34 @@ private:
     std::atomic<int> total_leaves_generated_{0};
     std::atomic<int> total_results_processed_{0};
     
+    // Lock-free batch collection
+    std::atomic<int> batch_submission_counter_{0};
+    static constexpr int BATCH_SUBMISSION_INTERVAL = 64;
+    
     // Producer-consumer queues
     moodycamel::ConcurrentQueue<PendingEvaluation> leaf_queue_;
     moodycamel::ConcurrentQueue<BatchInfo> batch_queue_;
     moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>> result_queue_;
     
-    // Additional synchronization for new architecture
-    std::mutex batch_mutex_;
-    std::condition_variable batch_cv_;
-    std::mutex result_mutex_;
-    std::condition_variable result_cv_;
+    // Per-thread data to avoid contention
+    static constexpr int MAX_THREADS = 64;
+    struct ThreadData {
+        std::vector<PendingEvaluation> local_batch;
+        int pending_count = 0;
+    };
+    ThreadData thread_data_[MAX_THREADS];
     
-    // Specialized worker threads
-    std::thread batch_accumulator_worker_;
+    // Removed mutexes and condition variables - using lock-free polling instead
+    
+    // Result distribution thread (OpenMP handles tree traversal)
     std::thread result_distributor_worker_;
-    std::vector<std::thread> tree_traversal_workers_;
+    // Commented out - replaced with OpenMP thread pool
+    // std::vector<std::thread> tree_traversal_workers_;
     
     // Control flag for specialized workers
     std::atomic<bool> workers_active_{false};
     
-    // Flags to track mutex destruction
-    std::atomic<bool> cv_mutex_destroyed_{false};
-    std::atomic<bool> batch_mutex_destroyed_{false};
-    std::atomic<bool> result_mutex_destroyed_{false};
+    // Removed mutex destruction flags - no longer needed with lock-free approach
     
     // Flag to enable memory pool for GameState cloning
     bool game_state_pool_enabled_;

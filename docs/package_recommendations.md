@@ -57,30 +57,6 @@ If rapid development and experimentation are priorities, **PyTorch C++** offers:
 - CUDA graph capture to reduce CPU overhead
 - Dynamic computational graphs for more flexible models
 
-## Specialized board game frameworks for different games
-
-### For Gomoku (Initial Target)
-
-**lygztq's Gomoku implementation** provides a solid foundation specifically for Gomoku with MCTS and neural network integration. It can be enhanced with bitboard representation for a 15×15 or 19×19 Gomoku board, which enables fast bitwise operations for move generation and evaluation.
-
-### For Chess (Secondary Target)
-
-**Leela Chess Zero (Lc0)** offers a highly optimized C++ implementation with:
-- Multiple backends optimized for different hardware
-- Support for shared neural network evaluation
-- Bitboard representation for maximum efficiency
-- **Significantly better** than general-purpose MCTS libraries for chess
-
-### For Go (Tertiary Target)
-
-**KataGo** implements a sophisticated version of MCTS (Monte Carlo Graph Search) that operates on graphs instead of trees. Its features include:
-- Built-in GPU acceleration through TensorRT, CUDA, or OpenCL
-- Highly optimized board representation
-- Support for multiple board sizes
-- Dedicated structures for stone chains and liberties
-
-KataGo's architecture can be adapted for Gomoku as both use similar board representations. It's **substantially more efficient** than implementing a Go engine from scratch.
-
 ## Advanced MCTS optimizations for production-level performance
 
 ### Asynchronous Neural Network Evaluation (Critical)
@@ -127,12 +103,6 @@ Using CUDA Graphs to precompile neural network inference patterns:
 3. **CUDA Toolkit** - Add for direct GPU acceleration
 4. **TensorRT** - Add for maximum neural network inference speed
 5. **RAPIDS Memory Manager (RMM)** - Add for optimized GPU memory allocation
-
-### Game-Specific Extensions (Recommended)
-
-6. For **Gomoku**: lygztq's implementation with custom bitboard representation
-7. For **Chess**: Leela Chess Zero (Lc0) components for board representation
-8. For **Go**: KataGo's board representation and MCTS implementation
 
 ### Advanced Optimization Layer (Performance Boosters)
 

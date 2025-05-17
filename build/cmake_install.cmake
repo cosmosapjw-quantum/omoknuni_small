@@ -62,7 +62,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
      NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_py.cpython-310-x86_64-linux-gnu.so")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_py.cpython-310-x86_64-linux-gnu.so"
-         OLD_RPATH "/lib/intel64:/lib/intel64_win:/lib/win-x64:/home/cosmos/omoknuni_small/build/lib/Release:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda-12.8/lib64:/usr/local/cuda/lib64:"
+         OLD_RPATH "/lib/intel64:/lib/intel64_win:/lib/win-x64:/home/cosmos/omoknuni_small/build/lib/Release:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda/lib64:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_py.cpython-310-x86_64-linux-gnu.so")
@@ -90,7 +90,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
      NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so"
-         OLD_RPATH "/lib/intel64:/lib/intel64_win:/lib/win-x64:/home/cosmos/omoknuni_small/build/lib/Release:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda-12.8/lib64:/usr/local/cuda/lib64:"
+         OLD_RPATH "/lib/intel64:/lib/intel64_win:/lib/win-x64:/home/cosmos/omoknuni_small/build/lib/Release:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda/lib64:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}/usr/local/lib/python3.10/dist-packages/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so")
@@ -101,6 +101,11 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
   include("/home/cosmos/omoknuni_small/build/_deps/phmap-build/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/home/cosmos/omoknuni_small/build/_deps/concurrentqueue-build/cmake_install.cmake")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
@@ -125,7 +130,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libalphazero.so")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libalphazero.so"
-         OLD_RPATH "/lib/intel64:/lib/intel64_win:/lib/win-x64:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda-12.8/lib64:/usr/local/cuda/lib64:"
+         OLD_RPATH "/lib/intel64:/lib/intel64_win:/lib/win-x64:/opt/libtorch-2.7.0-cu128/lib:/usr/local/cuda/lib64:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libalphazero.so")
