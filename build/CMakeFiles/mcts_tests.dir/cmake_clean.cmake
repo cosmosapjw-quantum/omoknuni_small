@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/mcts_tests.dir/link.d"
   "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o"
   "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o.d"
   "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o"

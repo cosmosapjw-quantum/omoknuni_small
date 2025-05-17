@@ -27,3 +27,5 @@ fffe449a4d8689a47b872fc7d20727d0 CMakeFiles/NightlyBuild
 e9a458622119e88de1cc51be54ea2f66 CMakeFiles/NightlySubmit
 d5cbd46ebcaee6e584affdf29ed0d62b CMakeFiles/NightlyTest
 d4177b8f6dc81977aaa4cec7e87beed7 CMakeFiles/NightlyUpdate
+ff6139c80d57b86c23d50aa0946f92c8 _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target
+3779ee91eadec05c997fad645a2c809e _deps/mimalloc-build/mimalloc.o

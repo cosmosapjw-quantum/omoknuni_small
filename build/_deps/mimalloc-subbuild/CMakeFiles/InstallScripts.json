@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

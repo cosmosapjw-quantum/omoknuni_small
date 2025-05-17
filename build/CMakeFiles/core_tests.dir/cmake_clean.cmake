@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/core_tests.dir/link.d"
   "CMakeFiles/core_tests.dir/tests/core/game_export_test.cpp.o"
   "CMakeFiles/core_tests.dir/tests/core/game_export_test.cpp.o.d"
   "CMakeFiles/core_tests.dir/tests/core/igamestate_test.cpp.o"

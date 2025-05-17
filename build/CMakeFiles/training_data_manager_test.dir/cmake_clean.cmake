@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/training_data_manager_test.dir/link.d"
   "CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.o"
   "CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.o.d"
   "bin/Release/training_data_manager_test"

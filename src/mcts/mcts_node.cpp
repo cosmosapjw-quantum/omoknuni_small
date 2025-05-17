@@ -295,15 +295,26 @@ int MCTSNode::getNumExpandedChildren() const {
 }
 
 void MCTSNode::addVirtualLoss() {
-    virtual_loss_count_.fetch_add(1, std::memory_order_release);
+    // Add virtual loss with saturation to prevent overflow
+    int current = virtual_loss_count_.load(std::memory_order_relaxed);
+    // Cap at reasonable maximum to prevent integer overflow
+    int new_value = std::min(current + 1, 1000);  
+    virtual_loss_count_.store(new_value, std::memory_order_release);
 }
 
 void MCTSNode::removeVirtualLoss() {
-    virtual_loss_count_.fetch_sub(1, std::memory_order_release);
+    // Remove virtual loss with floor at zero
+    int current = virtual_loss_count_.load(std::memory_order_relaxed);
+    int new_value = std::max(current - 1, 0);
+    virtual_loss_count_.store(new_value, std::memory_order_release);
 }
 
 void MCTSNode::applyVirtualLoss(int amount) {
-    virtual_loss_count_.fetch_add(amount, std::memory_order_release);
+    // Apply virtual loss with saturation
+    int current = virtual_loss_count_.load(std::memory_order_relaxed);
+    int new_value = std::min(current + amount, 1000);  
+    new_value = std::max(new_value, 0);  // Ensure non-negative
+    virtual_loss_count_.store(new_value, std::memory_order_release);
 }
 
 int MCTSNode::getVirtualLoss() const {
@@ -538,6 +549,8 @@ float MCTSNode::getCombinedValue(float rave_constant) const {
     // Return weighted combination
     return (1.0f - beta) * mcts_value + beta * rave_value;
 }
+
+// Methods required by mcts_taskflow_engine - All these methods are defined in mcts_node_methods.cpp now
 
 } // namespace mcts
 } // namespace alphazero

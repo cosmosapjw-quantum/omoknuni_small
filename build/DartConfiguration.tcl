@@ -21,6 +21,7 @@ LabelsForSubprojects:
 
 # Submission information
 SubmitURL: http://
+SubmitInactivityTimeout: 
 
 # Dashboard start time
 NightlyStartTime: 00:00:00 EDT
@@ -63,7 +64,7 @@ UpdateType: git
 
 # Compiler info
 Compiler: /usr/bin/g++
-CompilerVersion: 11.4.0
+CompilerVersion: 13.3.0
 
 # Dynamic analysis (MemCheck)
 PurifyCommand: 
@@ -93,6 +94,9 @@ TimeOut: 1500
 # During parallel testing CTest will not start a new test if doing
 # so would cause the system load to exceed this value.
 TestLoad: 
+
+TLSVerify: 
+TLSVersion: 
 
 UseLaunchers: 
 CurlOptions: 

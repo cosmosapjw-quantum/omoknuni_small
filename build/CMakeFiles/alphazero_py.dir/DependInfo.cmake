@@ -9,11 +9,15 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/src/python/bindings.cpp" "CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o" "gcc" "CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o.d"
+  "" "lib/Release/alphazero_py.cpython-312-x86_64-linux-gnu.so" "gcc" "CMakeFiles/alphazero_py.dir/link.d"
   )
 
-# Targets to which this target links.
-set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/home/cosmos/omoknuni_small/build/CMakeFiles/alphazero.dir/DependInfo.cmake"
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_FORWARD_LINKED_INFO_FILES
   )
 
 # Fortran module output directory.

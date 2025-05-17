@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/self_play_games_test.dir/link.d"
   "CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test.cpp.o"
   "CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test.cpp.o.d"
   "bin/Release/self_play_games_test"

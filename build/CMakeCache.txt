@@ -44,6 +44,18 @@ C10_CUDA_LIBRARY:FILEPATH=/opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
 //Enable cuDNN usage for Caffe2
 CAFFE2_USE_CUDNN:BOOL=1
 
+//The directory containing a CMake configuration file for CCCL.
+CCCL_DIR:PATH=/usr/local/lib/rapids/cmake/cccl
+
+//Create a CCCL::Thrust target using CCCL_THRUST_[HOST|DEVICE]_SYSTEM.
+CCCL_ENABLE_DEFAULT_THRUST_TARGET:BOOL=ON
+
+//Device system for CCCL::Thrust target.
+CCCL_THRUST_DEVICE_SYSTEM:STRING=CUDA
+
+//Host system for CCCL::Thrust target.
+CCCL_THRUST_HOST_SYSTEM:STRING=CPP
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 
@@ -80,11 +92,11 @@ CMAKE_CUDA_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_CXX_COMPILER_AR:FILEPATH=/usr/bin/gcc-ar-11
+CMAKE_CXX_COMPILER_AR:FILEPATH=/usr/bin/gcc-ar-13
 
 //A wrapper around 'ranlib' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-11
+CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-13
 
 //Flags used by the CXX compiler during all build types.
 CMAKE_CXX_FLAGS:STRING=
@@ -103,11 +115,11 @@ CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_C_COMPILER_AR:FILEPATH=/usr/bin/gcc-ar-11
+CMAKE_C_COMPILER_AR:FILEPATH=/usr/bin/gcc-ar-13
 
 //A wrapper around 'ranlib' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_C_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-11
+CMAKE_C_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-13
 
 //Flags used by the C compiler during all build types.
 CMAKE_C_FLAGS:STRING=
@@ -144,6 +156,9 @@ CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
 //Enable/Disable output of compile commands during generation.
 CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
+
+//Value Computed by CMake.
+CMAKE_FIND_PACKAGE_REDIRECTS_DIR:STATIC=/home/cosmos/omoknuni_small/build/CMakeFiles/pkgRedirects
 
 //User executables (bin)
 CMAKE_INSTALL_BINDIR:PATH=bin
@@ -311,6 +326,9 @@ CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 //Path to a program.
 CMAKE_STRIP:FILEPATH=/usr/bin/strip
 
+//Path to a program.
+CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
+
 //If this value is on, makefiles will be generated without the
 // .SILENT directive, and all commands will be echoed to the console
 // during the make.  This is useful for debugging only. With Visual
@@ -350,6 +368,9 @@ CTEST_SUBMIT_RETRY_COUNT:STRING=3
 
 //How long to wait between timed-out CTest submissions.
 CTEST_SUBMIT_RETRY_DELAY:STRING=5
+
+//The directory containing a CMake configuration file for CUB.
+CUB_DIR:PATH=/usr/local/lib/rapids/cmake/cub
 
 //Path to a file.
 CUDAToolkit_CUPTI_INCLUDE_DIR:PATH=/usr/local/cuda-12.8/include
@@ -480,6 +501,9 @@ CUDA_cudart_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcudart.so
 //static CUDA runtime library
 CUDA_cudart_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcudart_static.a
 
+//Path to a library.
+CUDA_cudla_LIBRARY:FILEPATH=CUDA_cudla_LIBRARY-NOTFOUND
+
 //"cufft" library
 CUDA_cufft_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libcufft.so
 
@@ -600,8 +624,20 @@ CUDA_npps_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnpps.so
 //Path to a library.
 CUDA_npps_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnpps_static.a
 
+//Path to a library.
+CUDA_nvJitLink_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvJitLink.so
+
+//Path to a library.
+CUDA_nvJitLink_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvJitLink_static.a
+
 //"nvToolsExt" library
 CUDA_nvToolsExt_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvToolsExt.so
+
+//Path to a library.
+CUDA_nvfatbin_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvfatbin.so
+
+//Path to a library.
+CUDA_nvfatbin_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvfatbin_static.a
 
 //Path to a library.
 CUDA_nvgraph_LIBRARY:FILEPATH=CUDA_nvgraph_LIBRARY-NOTFOUND
@@ -619,7 +655,34 @@ CUDA_nvjpeg_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvjpeg_static.a
 CUDA_nvml_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so
 
 //Path to a library.
+CUDA_nvml_static_LIBRARY:FILEPATH=/usr/local/cuda-12.8/targets/x86_64-linux/lib/stubs/libnvidia-ml.a
+
+//Path to a library.
+CUDA_nvperf_host_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvperf_host.so
+
+//Path to a library.
+CUDA_nvperf_host_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvperf_host_static.a
+
+//Path to a library.
+CUDA_nvperf_target_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvperf_target.so
+
+//Path to a library.
+CUDA_nvptxcompiler_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvptxcompiler_static.a
+
+//Path to a library.
 CUDA_nvrtc_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvrtc.so
+
+//Path to a library.
+CUDA_nvrtc_builtins_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvrtc-builtins.so
+
+//Path to a library.
+CUDA_nvrtc_builtins_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvrtc-builtins_static.a
+
+//Path to a library.
+CUDA_nvrtc_static_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libnvrtc_static.a
+
+//Path to a library.
+CUDA_pcsamplingutil_LIBRARY:FILEPATH=/usr/local/cuda/lib64/libpcsamplingutil.so
 
 //Path to a library.
 CUDA_rt_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/librt.a
@@ -657,6 +720,12 @@ DISABLE_CUDNN:BOOL=OFF
 //Enable fallback mode for CUDA functions
 ENABLE_CUDA_FALLBACK:BOOL=ON
 
+//Enable RAPIDS Memory Manager
+ENABLE_RMM:BOOL=ON
+
+//Enable Tracy profiler
+ENABLE_TRACY:BOOL=ON
+
 //Directory under which to collect all populated content
 FETCHCONTENT_BASE_DIR:PATH=/home/cosmos/omoknuni_small/build/_deps
 
@@ -672,8 +741,12 @@ FETCHCONTENT_QUIET:BOOL=ON
 FETCHCONTENT_SOURCE_DIR_CONCURRENTQUEUE:PATH=
 
 //When not empty, overrides where to find pre-populated content
-// for phmap
-FETCHCONTENT_SOURCE_DIR_PHMAP:PATH=
+// for mimalloc
+FETCHCONTENT_SOURCE_DIR_MIMALLOC:PATH=
+
+//When not empty, overrides where to find pre-populated content
+// for tracy
+FETCHCONTENT_SOURCE_DIR_TRACY:PATH=
 
 //Enables UPDATE_DISCONNECTED behavior for all content population
 FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
@@ -681,8 +754,11 @@ FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
 //Enables UPDATE_DISCONNECTED behavior just for population of concurrentqueue
 FETCHCONTENT_UPDATES_DISCONNECTED_CONCURRENTQUEUE:BOOL=OFF
 
-//Enables UPDATE_DISCONNECTED behavior just for population of phmap
-FETCHCONTENT_UPDATES_DISCONNECTED_PHMAP:BOOL=OFF
+//Enables UPDATE_DISCONNECTED behavior just for population of mimalloc
+FETCHCONTENT_UPDATES_DISCONNECTED_MIMALLOC:BOOL=OFF
+
+//Enables UPDATE_DISCONNECTED behavior just for population of tracy
+FETCHCONTENT_UPDATES_DISCONNECTED_TRACY:BOOL=OFF
 
 //Path to a program.
 GITCOMMAND:FILEPATH=/usr/bin/git
@@ -702,11 +778,120 @@ MEMORYCHECK_COMMAND:FILEPATH=/usr/bin/valgrind
 //File that contains suppressions for the memory checker
 MEMORYCHECK_SUPPRESSIONS_FILE:FILEPATH=
 
+//Path to a file.
+MIMALLOC_INCLUDE_DIR:PATH=MIMALLOC_INCLUDE_DIR-NOTFOUND
+
+//Path to a library.
+MIMALLOC_LIBRARY:FILEPATH=MIMALLOC_LIBRARY-NOTFOUND
+
+//Build object library
+MI_BUILD_OBJECT:BOOL=ON
+
+//Build shared library
+MI_BUILD_SHARED:BOOL=OFF
+
+//Build static library
+MI_BUILD_STATIC:BOOL=ON
+
+//Build test executables
+MI_BUILD_TESTS:BOOL=OFF
+
+//Use full internal invariant checking in DEBUG mode (deprecated,
+// use MI_DEBUG_FULL instead)
+MI_CHECK_FULL:BOOL=OFF
+
+//Use full internal heap invariant checking in DEBUG mode (expensive)
+MI_DEBUG_FULL:BOOL=OFF
+
+//Build with thread sanitizer (needs clang)
+MI_DEBUG_TSAN:BOOL=OFF
+
+//Build with undefined-behavior sanitizer (needs clang++)
+MI_DEBUG_UBSAN:BOOL=OFF
+
+//Install directly into $CMAKE_INSTALL_PREFIX instead of PREFIX/lib/mimalloc-version
+// (deprecated)
+MI_INSTALL_TOPLEVEL:BOOL=OFF
+
+//Path to a library.
+MI_LIBATOMIC:FILEPATH=MI_LIBATOMIC-NOTFOUND
+
+//Path to a library.
+MI_LIBPTHREAD:FILEPATH=/usr/lib/x86_64-linux-gnu/libpthread.a
+
+//Path to a library.
+MI_LIBRT:FILEPATH=/usr/lib/x86_64-linux-gnu/librt.a
+
+//Use slightly slower, dlopen-compatible TLS mechanism (Unix)
+MI_LOCAL_DYNAMIC_TLS:BOOL=OFF
+
+//Force no use of padding even in DEBUG mode etc.
+MI_NO_PADDING:BOOL=OFF
+
+//Use interpose to override standard malloc on macOS
+MI_OSX_INTERPOSE:BOOL=ON
+
+//Use malloc zone to override standard malloc on macOS
+MI_OSX_ZONE:BOOL=ON
+
+//Override the standard malloc interface (e.g. define entry points
+// for malloc() etc)
+MI_OVERRIDE:BOOL=ON
+
+//Enable padding to detect heap block overflow (always on in DEBUG
+// or SECURE mode, or with Valgrind/ASAN)
+MI_PADDING:BOOL=OFF
+
+//Use full security mitigations (like guard pages, allocation randomization,
+// double-free mitigation, and free-list corruption detection)
+MI_SECURE:BOOL=OFF
+
+//Generate assembly files
+MI_SEE_ASM:BOOL=OFF
+
+//Show error and warning messages by default (only enabled by default
+// in DEBUG mode)
+MI_SHOW_ERRORS:BOOL=OFF
+
+//Skip collecting memory on program exit
+MI_SKIP_COLLECT_ON_EXIT:BOOL=OFF
+
+//Compile with address sanitizer support (adds a small overhead)
+MI_TRACK_ASAN:BOOL=OFF
+
+//Compile with Windows event tracing (ETW) support (adds a small
+// overhead)
+MI_TRACK_ETW:BOOL=OFF
+
+//Compile with Valgrind support (adds a small overhead)
+MI_TRACK_VALGRIND:BOOL=OFF
+
+//Use the C++ compiler to compile the library (instead of the C
+// compiler)
+MI_USE_CXX:BOOL=ON
+
+//Explicitly link with -latomic (on older systems) (deprecated
+// and detected automatically)
+MI_USE_LIBATOMIC:BOOL=OFF
+
+//Use redirection module ('mimalloc-redirect') on Windows if compiling
+// mimalloc as a DLL
+MI_WIN_REDIRECT:BOOL=ON
+
+//Enable abort() call on memory allocation failure by default
+MI_XMALLOC:BOOL=OFF
+
 //The directory containing a CMake configuration file for MKLDNN.
 MKLDNN_DIR:PATH=MKLDNN_DIR-NOTFOUND
 
 //The directory containing a CMake configuration file for MKL.
 MKL_DIR:PATH=MKL_DIR-NOTFOUND
+
+//CUDA compiler flags for OpenMP parallelization
+OpenMP_CUDA_FLAGS:STRING=-fopenmp
+
+//CUDA compiler libraries for OpenMP parallelization
+OpenMP_CUDA_LIB_NAMES:STRING=gomp;pthread
 
 //CXX compiler flags for OpenMP parallelization
 OpenMP_CXX_FLAGS:STRING=-fopenmp
@@ -715,22 +900,13 @@ OpenMP_CXX_FLAGS:STRING=-fopenmp
 OpenMP_CXX_LIB_NAMES:STRING=gomp;pthread
 
 //Path to the gomp library for OpenMP
-OpenMP_gomp_LIBRARY:FILEPATH=/usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so
+OpenMP_gomp_LIBRARY:FILEPATH=/usr/lib/gcc/x86_64-linux-gnu/13/libgomp.so
 
 //Path to the pthread library for OpenMP
 OpenMP_pthread_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpthread.a
 
-//Whether or not to build the examples
-PHMAP_BUILD_EXAMPLES:BOOL=OFF
-
-//Whether or not to build the tests
-PHMAP_BUILD_TESTS:BOOL=OFF
-
 //Path to a file.
-PHMAP_INCLUDE_DIR:PATH=PHMAP_INCLUDE_DIR-NOTFOUND
-
-//Enable installation
-PHMAP_INSTALL:BOOL=OFF
+PHMAP_INCLUDE_DIR:PATH=/usr/include
 
 //Name of the computer/site where compile is being run
 SITE:STRING=cosmosapjw
@@ -744,8 +920,116 @@ TORCH_CUDA_VERSION:STRING=12.8
 //Path to a library.
 TORCH_LIBRARY:FILEPATH=/opt/libtorch-2.7.0-cu128/lib/libtorch.so
 
+//Enforce callstack collection for tracy regions
+TRACY_CALLSTACK:BOOL=OFF
+
+//Whether to build Tracy python client library
+TRACY_CLIENT_PYTHON:BOOL=OFF
+
+//Enable delayed initialization of the library (init on first call)
+TRACY_DELAYED_INIT:BOOL=OFF
+
+//[advanced] Don't use default demangling function - You'll need
+// to provide your own
+TRACY_DEMANGLE:BOOL=OFF
+
+//Enable profiling
+TRACY_ENABLE:BOOL=ON
+
+//Enable fibers support
+TRACY_FIBERS:BOOL=OFF
+
+//Enable libbacktrace to support dynamically loaded elfs in symbol
+// resolution resolution after the first symbol resolve operation
+TRACY_LIBBACKTRACE_ELF_DYNLOAD_SUPPORT:BOOL=OFF
+
+//Use libunwind backtracing where supported
+TRACY_LIBUNWIND_BACKTRACE:BOOL=OFF
+
+//Enable the manual lifetime management of the profile
+TRACY_MANUAL_LIFETIME:BOOL=OFF
+
+//Disable client discovery by broadcast to local network
+TRACY_NO_BROADCAST:BOOL=OFF
+
+//Disable all callstack related functionality
+TRACY_NO_CALLSTACK:BOOL=OFF
+
+//Disables the inline functions in callstacks
+TRACY_NO_CALLSTACK_INLINES:BOOL=OFF
+
+//Disable collection of source code
+TRACY_NO_CODE_TRANSFER:BOOL=OFF
+
+//Disable capture of context switches
+TRACY_NO_CONTEXT_SWITCH:BOOL=OFF
+
+//Disable crash handling
+TRACY_NO_CRASH_HANDLER:BOOL=OFF
+
+//Client executable does not exit until all profile data is sent
+// to server
+TRACY_NO_EXIT:BOOL=OFF
+
+//Disable the frame image support and its thread
+TRACY_NO_FRAME_IMAGE:BOOL=OFF
+
+//Disable call stack sampling
+TRACY_NO_SAMPLING:BOOL=OFF
+
+//Disable systrace sampling
+TRACY_NO_SYSTEM_TRACING:BOOL=OFF
+
+//Disable zone validation for C API
+TRACY_NO_VERIFY:BOOL=OFF
+
+//Disable capture of hardware Vsync events
+TRACY_NO_VSYNC_CAPTURE:BOOL=OFF
+
+//Tracy will only accept connections on IPv4 addresses (disable
+// IPv6)
+TRACY_ONLY_IPV4:BOOL=OFF
+
+//Only listen on the localhost interface
+TRACY_ONLY_LOCALHOST:BOOL=OFF
+
+//On-demand profiling
+TRACY_ON_DEMAND:BOOL=OFF
+
+//Enable nopsleds for efficient patching by system-level tools
+// (e.g. rr)
+TRACY_PATCHABLE_NOPSLEDS:BOOL=OFF
+
+//Whether to build Tracy as a static library
+TRACY_STATIC:BOOL=OFF
+
+//Instead of full runtime symbol resolution, only resolve the image
+// path and offset to enable offline symbol resolution
+TRACY_SYMBOL_OFFLINE_RESOLVE:BOOL=OFF
+
+//Use lower resolution timers
+TRACY_TIMER_FALLBACK:BOOL=OFF
+
+//The directory containing a CMake configuration file for Taskflow.
+Taskflow_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Taskflow
+
+//The directory containing a CMake configuration file for Thrust.
+Thrust_DIR:PATH=/usr/local/lib/rapids/cmake/thrust
+
 //Directory containing TorchConfig.cmake
 Torch_DIR:PATH=/opt/libtorch-2.7.0-cu128/share/cmake/Torch
+
+//Dependencies for the target
+TracyClient_LIB_DEPENDS:STATIC=general;dl;
+
+//Value Computed by CMake
+Tracy_BINARY_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/tracy-build
+
+//Value Computed by CMake
+Tracy_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+Tracy_SOURCE_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/tracy-src
 
 //Enable cuDNN usage
 USE_CUDNN:BOOL=1
@@ -768,29 +1052,50 @@ concurrentqueue_IS_TOP_LEVEL:STATIC=OFF
 //Value Computed by CMake
 concurrentqueue_SOURCE_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/concurrentqueue-src
 
+//The directory containing a CMake configuration file for fmt.
+fmt_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/fmt
+
 //Path to a library.
 kineto_LIBRARY:FILEPATH=/opt/libtorch-2.7.0-cu128/lib/libkineto.a
 
+//The directory containing a CMake configuration file for libcudacxx.
+libcudacxx_DIR:PATH=/usr/local/lib/rapids/cmake/libcudacxx
+
+//Value Computed by CMake
+libmimalloc_BINARY_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/mimalloc-build
+
+//Value Computed by CMake
+libmimalloc_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+libmimalloc_SOURCE_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/mimalloc-src
+
+//The directory containing a CMake configuration file for mimalloc.
+mimalloc_DIR:PATH=mimalloc_DIR-NOTFOUND
+
 //The directory containing a CMake configuration file for nlohmann_json.
-nlohmann_json_DIR:PATH=/usr/lib/cmake/nlohmann_json
+nlohmann_json_DIR:PATH=/usr/share/cmake/nlohmann_json
+
+//The directory containing a CMake configuration file for nvtx3.
+nvtx3_DIR:PATH=/usr/local/lib/cmake/nvtx3
 
 //Path to a file.
 nvtx3_dir:PATH=nvtx3_dir-NOTFOUND
 
-//Value Computed by CMake
-phmap_BINARY_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/phmap-build
-
 //The directory containing a CMake configuration file for phmap.
 phmap_DIR:PATH=phmap_DIR-NOTFOUND
 
-//Value Computed by CMake
-phmap_IS_TOP_LEVEL:STATIC=OFF
-
-//Value Computed by CMake
-phmap_SOURCE_DIR:STATIC=/home/cosmos/omoknuni_small/build/_deps/phmap-src
-
 //The directory containing a CMake configuration file for pybind11.
 pybind11_DIR:PATH=/usr/lib/cmake/pybind11
+
+//The directory containing a CMake configuration file for rapids_logger.
+rapids_logger_DIR:PATH=/usr/local/lib/cmake/rapids_logger
+
+//The directory containing a CMake configuration file for rmm.
+rmm_DIR:PATH=/usr/local/lib/cmake/rmm
+
+//The directory containing a CMake configuration file for spdlog.
+spdlog_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/spdlog
 
 //The directory containing a CMake configuration file for yaml-cpp.
 yaml-cpp_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/yaml-cpp
@@ -800,6 +1105,16 @@ yaml-cpp_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/yaml-cpp
 # INTERNAL cache entries
 ########################
 
+//ADVANCED property for variable: CCCL_ENABLE_DEFAULT_THRUST_TARGET
+CCCL_ENABLE_DEFAULT_THRUST_TARGET-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CCCL_THRUST_DEVICE_SYSTEM
+CCCL_THRUST_DEVICE_SYSTEM-ADVANCED:INTERNAL=1
+//STRINGS property for variable: CCCL_THRUST_DEVICE_SYSTEM
+CCCL_THRUST_DEVICE_SYSTEM-STRINGS:INTERNAL=CUDA;CPP;OMP;TBB
+//ADVANCED property for variable: CCCL_THRUST_HOST_SYSTEM
+CCCL_THRUST_HOST_SYSTEM-ADVANCED:INTERNAL=1
+//STRINGS property for variable: CCCL_THRUST_HOST_SYSTEM
+CCCL_THRUST_HOST_SYSTEM-STRINGS:INTERNAL=CPP;OMP;TBB
 //ADVANCED property for variable: CMAKE_ADDR2LINE
 CMAKE_ADDR2LINE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_AR
@@ -807,11 +1122,11 @@ CMAKE_AR-ADVANCED:INTERNAL=1
 //This is the directory where this CMakeCache.txt was created
 CMAKE_CACHEFILE_DIR:INTERNAL=/home/cosmos/omoknuni_small/build
 //Major version of cmake used to create the current loaded cache
-CMAKE_CACHE_MAJOR_VERSION:INTERNAL=3
+CMAKE_CACHE_MAJOR_VERSION:INTERNAL=4
 //Minor version of cmake used to create the current loaded cache
-CMAKE_CACHE_MINOR_VERSION:INTERNAL=22
+CMAKE_CACHE_MINOR_VERSION:INTERNAL=0
 //Patch version of cmake used to create the current loaded cache
-CMAKE_CACHE_PATCH_VERSION:INTERNAL=1
+CMAKE_CACHE_PATCH_VERSION:INTERNAL=2
 //ADVANCED property for variable: CMAKE_COLOR_MAKEFILE
 CMAKE_COLOR_MAKEFILE-ADVANCED:INTERNAL=1
 //Path to CMake executable.
@@ -890,8 +1205,6 @@ CMAKE_GENERATOR_PLATFORM:INTERNAL=
 CMAKE_GENERATOR_TOOLSET:INTERNAL=
 //Test CMAKE_HAVE_LIBC_PTHREAD
 CMAKE_HAVE_LIBC_PTHREAD:INTERNAL=1
-//Have include pthread.h
-CMAKE_HAVE_PTHREAD_H:INTERNAL=1
 //Source directory with the top level CMakeLists.txt file for this
 // project
 CMAKE_HOME_DIRECTORY:INTERNAL=/home/cosmos/omoknuni_small
@@ -931,6 +1244,8 @@ CMAKE_INSTALL_SO_NO_EXE:INTERNAL=1
 CMAKE_INSTALL_SYSCONFDIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_LINKER
 CMAKE_LINKER-ADVANCED:INTERNAL=1
+//Name of CMakeLists files to read
+CMAKE_LIST_FILE_NAME:INTERNAL=CMakeLists.txt
 //ADVANCED property for variable: CMAKE_MAKE_PROGRAM
 CMAKE_MAKE_PROGRAM-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_MODULE_LINKER_FLAGS
@@ -946,7 +1261,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=3
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=4
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -958,7 +1273,7 @@ CMAKE_RANLIB-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_READELF
 CMAKE_READELF-ADVANCED:INTERNAL=1
 //Path to CMake installation.
-CMAKE_ROOT:INTERNAL=/usr/share/cmake-3.22
+CMAKE_ROOT:INTERNAL=/usr/share/cmake-4.0
 //ADVANCED property for variable: CMAKE_SHARED_LINKER_FLAGS
 CMAKE_SHARED_LINKER_FLAGS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_SHARED_LINKER_FLAGS_DEBUG
@@ -985,6 +1300,8 @@ CMAKE_STATIC_LINKER_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_STRIP
 CMAKE_STRIP-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_TAPI
+CMAKE_TAPI-ADVANCED:INTERNAL=1
 //uname command
 CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
@@ -1009,6 +1326,12 @@ CPACK_SOURCE_ZIP-ADVANCED:INTERNAL=1
 CTEST_SUBMIT_RETRY_COUNT-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CTEST_SUBMIT_RETRY_DELAY
 CTEST_SUBMIT_RETRY_DELAY-ADVANCED:INTERNAL=1
+CUB_VERSION:INTERNAL=2.7.0.0
+CUB_VERSION_COUNT:INTERNAL=4
+CUB_VERSION_MAJOR:INTERNAL=2
+CUB_VERSION_MINOR:INTERNAL=7
+CUB_VERSION_PATCH:INTERNAL=0
+CUB_VERSION_TWEAK:INTERNAL=0
 //ADVANCED property for variable: CUDAToolkit_CUPTI_INCLUDE_DIR
 CUDAToolkit_CUPTI_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDAToolkit_nvToolsExt_INCLUDE_DIR
@@ -1094,6 +1417,8 @@ CUDA_cudadevrt_LIBRARY-ADVANCED:INTERNAL=1
 CUDA_cudart_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_cudart_static_LIBRARY
 CUDA_cudart_static_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_cudla_LIBRARY
+CUDA_cudla_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_cufft_LIBRARY
 CUDA_cufft_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_cufft_static_LIBRARY
@@ -1176,8 +1501,16 @@ CUDA_nppitc_static_LIBRARY-ADVANCED:INTERNAL=1
 CUDA_npps_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_npps_static_LIBRARY
 CUDA_npps_static_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvJitLink_LIBRARY
+CUDA_nvJitLink_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvJitLink_static_LIBRARY
+CUDA_nvJitLink_static_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_nvToolsExt_LIBRARY
 CUDA_nvToolsExt_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvfatbin_LIBRARY
+CUDA_nvfatbin_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvfatbin_static_LIBRARY
+CUDA_nvfatbin_static_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_nvgraph_LIBRARY
 CUDA_nvgraph_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_nvgraph_static_LIBRARY
@@ -1188,10 +1521,30 @@ CUDA_nvjpeg_LIBRARY-ADVANCED:INTERNAL=1
 CUDA_nvjpeg_static_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_nvml_LIBRARY
 CUDA_nvml_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvml_static_LIBRARY
+CUDA_nvml_static_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvperf_host_LIBRARY
+CUDA_nvperf_host_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvperf_host_static_LIBRARY
+CUDA_nvperf_host_static_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvperf_target_LIBRARY
+CUDA_nvperf_target_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvptxcompiler_static_LIBRARY
+CUDA_nvptxcompiler_static_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_nvrtc_LIBRARY
 CUDA_nvrtc_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvrtc_builtins_LIBRARY
+CUDA_nvrtc_builtins_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvrtc_builtins_static_LIBRARY
+CUDA_nvrtc_builtins_static_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_nvrtc_static_LIBRARY
+CUDA_nvrtc_static_LIBRARY-ADVANCED:INTERNAL=1
 //Location of parse_cubin.cmake
 CUDA_parse_cubin:INTERNAL=/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Modules_CUDA_fix/upstream/FindCUDA/parse_cubin.cmake
+//ADVANCED property for variable: CUDA_pcsamplingutil_LIBRARY
+CUDA_pcsamplingutil_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDA_rt_LIBRARY
+CUDA_rt_LIBRARY-ADVANCED:INTERNAL=1
 //Location of run_nvcc.cmake
 CUDA_run_nvcc:INTERNAL=/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Modules_CUDA_fix/upstream/FindCUDA/run_nvcc.cmake
 //ADVANCED property for variable: CUDNN_INCLUDE_DIR
@@ -1202,30 +1555,46 @@ CUDNN_LIBRARY-ADVANCED:INTERNAL=1
 CUDNN_ROOT-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: DART_TESTING_TIMEOUT
 DART_TESTING_TIMEOUT-ADVANCED:INTERNAL=1
+//Details about finding CCCL
+FIND_PACKAGE_MESSAGE_DETAILS_CCCL:INTERNAL=[/usr/local/lib/rapids/cmake/cccl/cccl-config.cmake][v2.7.0.0()]
 //Details about finding CUDA
 FIND_PACKAGE_MESSAGE_DETAILS_CUDA:INTERNAL=[/usr/local/cuda][/usr/local/cuda/bin/nvcc][/usr/local/cuda/include][/usr/local/cuda/lib64/libcudart.so][v12.8()]
 //Details about finding CUDAToolkit
-FIND_PACKAGE_MESSAGE_DETAILS_CUDAToolkit:INTERNAL=[/usr/local/cuda-12.8/include][12.8.93][/usr/local/cuda/lib64/libcudart.so][/usr/local/cuda-12.8/bin][v12.8.93()]
+FIND_PACKAGE_MESSAGE_DETAILS_CUDAToolkit:INTERNAL=[/usr/local/cuda-12.8/targets/x86_64-linux/include][/usr/local/cuda/lib64/libcudart.so][/usr/local/cuda-12.8/bin][v12.8.93()]
 //Details about finding CUDNN
 FIND_PACKAGE_MESSAGE_DETAILS_CUDNN:INTERNAL=[/opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9][/usr/include/x86_64-linux-gnu][v()]
 //Details about finding GTest
-FIND_PACKAGE_MESSAGE_DETAILS_GTest:INTERNAL=[/usr/lib/x86_64-linux-gnu/cmake/GTest/GTestConfig.cmake][c ][v1.11.0()]
+FIND_PACKAGE_MESSAGE_DETAILS_GTest:INTERNAL=[/usr/lib/x86_64-linux-gnu/cmake/GTest/GTestConfig.cmake][ ][v1.14.0()]
 //Details about finding OpenMP
-FIND_PACKAGE_MESSAGE_DETAILS_OpenMP:INTERNAL=[TRUE][c ][v4.5()]
+FIND_PACKAGE_MESSAGE_DETAILS_OpenMP:INTERNAL=[TRUE][ ][v4.5()]
 //Details about finding OpenMP_CXX
-FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_CXX:INTERNAL=[-fopenmp][/usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so][/usr/lib/x86_64-linux-gnu/libpthread.a][v4.5()]
+FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_CXX:INTERNAL=[-fopenmp][/usr/lib/gcc/x86_64-linux-gnu/13/libgomp.so][/usr/lib/x86_64-linux-gnu/libpthread.a][v4.5()]
 //Details about finding Python
-FIND_PACKAGE_MESSAGE_DETAILS_Python:INTERNAL=[/usr/bin/python3.10][cfound components: Interpreter ][v3.10.12()]
+FIND_PACKAGE_MESSAGE_DETAILS_Python:INTERNAL=[/usr/bin/python3.12][found components: Interpreter ][v3.12.3()]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
+//Details about finding Thrust
+FIND_PACKAGE_MESSAGE_DETAILS_Thrust:INTERNAL=[/usr/local/lib/rapids/cmake/thrust/thrust-config.cmake][v2.7.0.0(2.7.0.0)]
 //Details about finding Torch
 FIND_PACKAGE_MESSAGE_DETAILS_Torch:INTERNAL=[/opt/libtorch-2.7.0-cu128/lib/libtorch.so][/opt/libtorch-2.7.0-cu128/include;/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include][v()]
+//Details about finding nvtx3
+FIND_PACKAGE_MESSAGE_DETAILS_nvtx3:INTERNAL=[/usr/local/lib/cmake/nvtx3/nvtx3-config.cmake][v3.1.0()]
+//Details about finding rapids_logger
+FIND_PACKAGE_MESSAGE_DETAILS_rapids_logger:INTERNAL=[/usr/local/lib/cmake/rapids_logger/rapids_logger-config.cmake][v0.1.0()]
+//Details about finding rmm
+FIND_PACKAGE_MESSAGE_DETAILS_rmm:INTERNAL=[/usr/local/lib/cmake/rmm/rmm-config.cmake][v25.04.0()]
 //ADVANCED property for variable: GITCOMMAND
 GITCOMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: GIT_EXECUTABLE
 GIT_EXECUTABLE-ADVANCED:INTERNAL=1
 //Test HAS_FLTO
 HAS_FLTO:INTERNAL=1
+LIBCUDACXX_VERSION:INTERNAL=2.7.0.0
+LIBCUDACXX_VERSION_COUNT:INTERNAL=4
+LIBCUDACXX_VERSION_MAJOR:INTERNAL=2
+LIBCUDACXX_VERSION_MINOR:INTERNAL=7
+LIBCUDACXX_VERSION_PATCH:INTERNAL=0
+LIBCUDACXX_VERSION_TWEAK:INTERNAL=0
 //ADVANCED property for variable: MAKECOMMAND
 MAKECOMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: MEMORYCHECK_COMMAND
@@ -1233,7 +1602,15 @@ MEMORYCHECK_COMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: MEMORYCHECK_SUPPRESSIONS_FILE
 MEMORYCHECK_SUPPRESSIONS_FILE-ADVANCED:INTERNAL=1
 //Result of TRY_COMPILE
+OpenMP_COMPILE_RESULT_CUDA_fopenmp:INTERNAL=TRUE
+//Result of TRY_COMPILE
 OpenMP_COMPILE_RESULT_CXX_fopenmp:INTERNAL=TRUE
+//ADVANCED property for variable: OpenMP_CUDA_FLAGS
+OpenMP_CUDA_FLAGS-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: OpenMP_CUDA_LIB_NAMES
+OpenMP_CUDA_LIB_NAMES-ADVANCED:INTERNAL=1
+//CUDA compiler's OpenMP specification date
+OpenMP_CUDA_SPEC_DATE:INTERNAL=201511
 //ADVANCED property for variable: OpenMP_CXX_FLAGS
 OpenMP_CXX_FLAGS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OpenMP_CXX_LIB_NAMES
@@ -1241,35 +1618,76 @@ OpenMP_CXX_LIB_NAMES-ADVANCED:INTERNAL=1
 //CXX compiler's OpenMP specification date
 OpenMP_CXX_SPEC_DATE:INTERNAL=201511
 //Result of TRY_COMPILE
+OpenMP_SPECTEST_CUDA_:INTERNAL=TRUE
+//Result of TRY_COMPILE
 OpenMP_SPECTEST_CXX_:INTERNAL=TRUE
 //ADVANCED property for variable: OpenMP_gomp_LIBRARY
 OpenMP_gomp_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OpenMP_pthread_LIBRARY
 OpenMP_pthread_LIBRARY-ADVANCED:INTERNAL=1
 //Python executable during the last CMake run
-PYBIND11_PYTHON_EXECUTABLE_LAST:INTERNAL=/usr/bin/python3.10
+PYBIND11_PYTHON_EXECUTABLE_LAST:INTERNAL=/usr/bin/python3.12
 //Python debug status
 PYTHON_IS_DEBUG:INTERNAL=0
-PYTHON_MODULE_EXTENSION:INTERNAL=.cpython-310-x86_64-linux-gnu.so
+PYTHON_MODULE_EXTENSION:INTERNAL=.cpython-312-x86_64-linux-gnu.so
 //ADVANCED property for variable: SITE
 SITE-ADVANCED:INTERNAL=1
+//CUB version used by Thrust
+THRUST_CUB_VERSION:INTERNAL=2.7.0.0
+//Valid Thrust device systems
+THRUST_DEVICE_SYSTEM_OPTIONS:INTERNAL=CUDA;CPP;OMP;TBB
+//Valid Thrust host systems.
+THRUST_HOST_SYSTEM_OPTIONS:INTERNAL=CPP;OMP;TBB
+THRUST_VERSION:INTERNAL=2.7.0.0
+THRUST_VERSION_COUNT:INTERNAL=4
+THRUST_VERSION_MAJOR:INTERNAL=2
+THRUST_VERSION_MINOR:INTERNAL=7
+THRUST_VERSION_PATCH:INTERNAL=0
+THRUST_VERSION_TWEAK:INTERNAL=0
+//libcudacxx version used by Thrust
+THRUST_libcudacxx_VERSION:INTERNAL=2.7.0.0
+//ADVANCED property for variable: TRACY_DEMANGLE
+TRACY_DEMANGLE-ADVANCED:INTERNAL=1
+//Location of CUB headers.
+_CUB_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids
+//Quiet mode enabled for CUB find_package calls.
+_CUB_QUIET:INTERNAL=ON
+_CUB_QUIET_FLAG:INTERNAL=QUIET
+//Path to a file.
+_CUB_VERSION_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids
 //CMAKE_INSTALL_PREFIX during last run
 _GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/usr/local
 _Python:INTERNAL=Python
-_Python_DEVELOPMENT_EMBED_SIGNATURE:INTERNAL=dda1c5a898074ddd86cc57d4f1aa6e4f
-_Python_DEVELOPMENT_MODULE_SIGNATURE:INTERNAL=c5a4196440ec27af21f23fe28f108fb0
-_Python_EXECUTABLE:INTERNAL=/usr/bin/python3.10
+//Compiler reason failure
+_Python_Compiler_REASON_FAILURE:INTERNAL=
+_Python_DEVELOPMENT_EMBED_SIGNATURE:INTERNAL=a8fd6906d9078ad7f0c724cee5c37e33
+_Python_DEVELOPMENT_MODULE_SIGNATURE:INTERNAL=e176b05b75342c1dd2b5202bb344a689
+//Development reason failure
+_Python_Development_REASON_FAILURE:INTERNAL=
+_Python_EXECUTABLE:INTERNAL=/usr/bin/python3.12
 //Path to a file.
-_Python_INCLUDE_DIR:INTERNAL=/usr/include/python3.10
+_Python_INCLUDE_DIR:INTERNAL=/usr/include/python3.12
 //Python Properties
-_Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;10;12;64;;cpython-310-x86_64-linux-gnu;/usr/lib/python3.10;/usr/lib/python3.10;/usr/lib/python3/dist-packages;/usr/lib/python3/dist-packages
-_Python_INTERPRETER_SIGNATURE:INTERNAL=61380851b1f49cd20124cec6c9ca8095
+_Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;12;3;64;<none>;cpython-312-x86_64-linux-gnu;abi3;/usr/lib/python3.12;/usr/lib/python3.12;/usr/local/lib/python3.12/dist-packages;/usr/local/lib/python3.12/dist-packages
+_Python_INTERPRETER_SIGNATURE:INTERNAL=0b516266b7ed9a0986c924c82c2c3a08
 //Path to a library.
-_Python_LIBRARY_RELEASE:INTERNAL=/usr/lib/x86_64-linux-gnu/libpython3.10.so
+_Python_LIBRARY_RELEASE:INTERNAL=/usr/lib/x86_64-linux-gnu/libpython3.12.so
+//NumPy reason failure
+_Python_NumPy_REASON_FAILURE:INTERNAL=
+//Location of thrust-config.cmake
+_THRUST_CMAKE_DIR:INTERNAL=/usr/local/lib/rapids/cmake/thrust
+//Location of Thrust headers.
+_THRUST_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids
+//Path to a file.
+_THRUST_VERSION_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids
+//Location of libcudacxx headers.
+_libcudacxx_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids/libcudacxx
+//Path to a file.
+_libcudacxx_VERSION_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids/libcudacxx
 //Result of TRY_COMPILE
 compile_result:INTERNAL=TRUE
 //Directories where pybind11 and possibly Python headers are located
-pybind11_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/python3.10
-//Result of TRY_RUN
+pybind11_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/python3.12
+//Result of try_run()
 run_result:INTERNAL=0
 

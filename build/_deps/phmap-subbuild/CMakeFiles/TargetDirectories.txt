@@ -1,3 +1,0 @@
-/home/cosmos/omoknuni_small/build/_deps/phmap-subbuild/CMakeFiles/phmap-populate.dir
-/home/cosmos/omoknuni_small/build/_deps/phmap-subbuild/CMakeFiles/edit_cache.dir
-/home/cosmos/omoknuni_small/build/_deps/phmap-subbuild/CMakeFiles/rebuild_cache.dir

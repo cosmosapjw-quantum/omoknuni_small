@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/cosmos/omoknuni_small/build/_deps/concurrentqueue-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

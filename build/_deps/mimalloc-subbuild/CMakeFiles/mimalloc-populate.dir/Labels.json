@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/CMakeFiles/mimalloc-populate"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/CMakeFiles/mimalloc-populate.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/CMakeFiles/mimalloc-populate-complete.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/mimalloc-populate-prefix/src/mimalloc-populate-stamp/mimalloc-populate-build.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/mimalloc-populate-prefix/src/mimalloc-populate-stamp/mimalloc-populate-configure.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/mimalloc-populate-prefix/src/mimalloc-populate-stamp/mimalloc-populate-download.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/mimalloc-populate-prefix/src/mimalloc-populate-stamp/mimalloc-populate-install.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/mimalloc-populate-prefix/src/mimalloc-populate-stamp/mimalloc-populate-mkdir.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/mimalloc-populate-prefix/src/mimalloc-populate-stamp/mimalloc-populate-patch.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/mimalloc-populate-prefix/src/mimalloc-populate-stamp/mimalloc-populate-test.rule"
+		},
+		{
+			"file" : "/home/cosmos/omoknuni_small/build/_deps/mimalloc-subbuild/mimalloc-populate-prefix/src/mimalloc-populate-stamp/mimalloc-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"mimalloc-populate"
+		],
+		"name" : "mimalloc-populate"
+	}
+}

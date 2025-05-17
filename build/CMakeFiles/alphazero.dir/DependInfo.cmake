@@ -25,7 +25,10 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/src/mcts/mcts_engine.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/mcts_evaluator.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/mcts_node.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/mcts/mcts_node_methods.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_node_methods.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_node_methods.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/mcts_node_pending_eval.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/mcts/mcts_node_pool.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/mcts/mcts_taskflow_engine.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_taskflow_engine.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_taskflow_engine.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/node_tracker.cpp" "CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/transposition_table.cpp" "CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/nn/ddw_randwire_resnet.cpp" "CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o.d"
@@ -38,13 +41,20 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/src/utils/attack_defense_module.cpp" "CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/debug_monitor.cpp" "CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/gamestate_pool.cpp" "CMakeFiles/alphazero.dir/src/utils/gamestate_pool.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/gamestate_pool.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/utils/gpu_memory_manager.cpp" "CMakeFiles/alphazero.dir/src/utils/gpu_memory_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/gpu_memory_manager.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/hash_specializations.cpp" "CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/utils/logger.cpp" "CMakeFiles/alphazero.dir/src/utils/logger.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/logger.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/memory_tracker.cpp" "CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/zobrist_hash.cpp" "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o.d"
+  "" "lib/Release/libalphazero.so" "gcc" "CMakeFiles/alphazero.dir/link.d"
   )
 
-# Targets to which this target links.
-set(CMAKE_TARGET_LINKED_INFO_FILES
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_FORWARD_LINKED_INFO_FILES
   )
 
 # Fortran module output directory.

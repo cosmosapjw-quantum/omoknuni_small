@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/transposition_integration_test.dir/link.d"
   "CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.o"
   "CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.o.d"
   "bin/Release/transposition_integration_test"

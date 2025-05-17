@@ -17,7 +17,10 @@ namespace mcts {
 
 class ALPHAZERO_API MCTSNode : public std::enable_shared_from_this<MCTSNode> {
 private:
-    // Private constructor to force using factory method
+    // Friend class for memory pool
+    friend class MCTSNodePool;
+    
+    // Constructor accessible to pool
     MCTSNode(std::unique_ptr<core::IGameState> state, std::weak_ptr<MCTSNode> parent = {});
     
 public:
@@ -90,8 +93,21 @@ public:
     bool hasPendingEvaluation() const;
     void markEvaluationPending();
     void clearPendingEvaluation();
+    
+    // New methods required by mcts_taskflow_engine
+    float getPrior() const { return prior_probability_; }
+    void setPrior(float prior) { prior_probability_ = prior; }
+    int getPlayer() const { return state_->getCurrentPlayer(); }
+    int getDepth() const;
+    std::mutex& getExpansionMutex();
+    float getTerminalValue() const;
+    std::shared_ptr<MCTSNode> getMostVisitedChild() const;
+    bool needsEvaluation() const { return !is_expanded_ && !isTerminal(); }
+    void markEvaluationInProgress() { evaluation_in_progress_ = true; }
 
 private:
+    // Mutable mutex for const methods that need synchronization
+    mutable std::mutex expansion_mutex_;
     // Game state
     std::unique_ptr<core::IGameState> state_;
     

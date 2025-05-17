@@ -9,11 +9,15 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/tests/games/gomoku/gomoku_test.cpp" "CMakeFiles/gomoku_tests.dir/tests/games/gomoku/gomoku_test.cpp.o" "gcc" "CMakeFiles/gomoku_tests.dir/tests/games/gomoku/gomoku_test.cpp.o.d"
+  "" "bin/Release/gomoku_tests" "gcc" "CMakeFiles/gomoku_tests.dir/link.d"
   )
 
-# Targets to which this target links.
-set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/home/cosmos/omoknuni_small/build/CMakeFiles/alphazero.dir/DependInfo.cmake"
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_FORWARD_LINKED_INFO_FILES
   )
 
 # Fortran module output directory.

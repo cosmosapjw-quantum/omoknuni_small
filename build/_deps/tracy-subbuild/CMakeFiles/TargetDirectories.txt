@@ -1,0 +1,3 @@
+/home/cosmos/omoknuni_small/build/_deps/tracy-subbuild/CMakeFiles/tracy-populate.dir
+/home/cosmos/omoknuni_small/build/_deps/tracy-subbuild/CMakeFiles/edit_cache.dir
+/home/cosmos/omoknuni_small/build/_deps/tracy-subbuild/CMakeFiles/rebuild_cache.dir

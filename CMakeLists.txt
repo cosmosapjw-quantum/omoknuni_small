@@ -617,7 +617,7 @@ set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp)
 set(CHESS_SOURCES     src/games/chess/chess_state.cpp src/games/chess/chess_rules.cpp src/games/chess/chess960.cpp)
 set(GO_SOURCES        src/games/go/go_state.cpp   src/games/go/go_rules.cpp)
 set(GOMOKU_SOURCES    src/games/gomoku/gomoku_state.cpp src/games/gomoku/gomoku_rules.cpp)
-set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp)
+set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp)
 
 # Conditionally define NN_SOURCES based on WITH_TORCH
 set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
@@ -631,10 +631,13 @@ endif()
 
 set(MCTS_SOURCES
     src/mcts/mcts_node.cpp
+    src/mcts/mcts_node_methods.cpp
     src/mcts/mcts_node_pending_eval.cpp
+    src/mcts/mcts_node_pool.cpp
     src/mcts/evaluation_types.cpp
     src/mcts/mcts_evaluator.cpp
     src/mcts/mcts_engine.cpp
+    src/mcts/mcts_taskflow_engine.cpp
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
 )
@@ -872,6 +875,194 @@ else()
             
         target_link_libraries(alphazero PUBLIC moodycamel::concurrentqueue)
     endif()
+endif()
+
+# ───────────────────────────── mimalloc setup ─────────────────────────
+message(STATUS "Setting up mimalloc...")
+
+# First try to find it on the system
+find_package(mimalloc CONFIG QUIET)
+
+if(mimalloc_FOUND)
+    message(STATUS "Found system mimalloc: ${mimalloc_VERSION}")
+    target_link_libraries(alphazero PUBLIC mimalloc)
+    target_compile_definitions(alphazero PUBLIC USE_MIMALLOC)
+else()
+    # Try to find mimalloc headers and library directly
+    find_path(MIMALLOC_INCLUDE_DIR mimalloc.h
+        PATHS
+        /usr/include
+        /usr/local/include
+    )
+    
+    find_library(MIMALLOC_LIBRARY
+        NAMES mimalloc
+        PATHS
+        /usr/lib
+        /usr/local/lib
+        /usr/lib/x86_64-linux-gnu
+        /usr/local/lib/x86_64-linux-gnu
+    )
+    
+    if(MIMALLOC_INCLUDE_DIR AND MIMALLOC_LIBRARY)
+        message(STATUS "Found mimalloc headers at: ${MIMALLOC_INCLUDE_DIR}")
+        message(STATUS "Found mimalloc library at: ${MIMALLOC_LIBRARY}")
+        
+        # Create imported target
+        add_library(mimalloc::mimalloc STATIC IMPORTED)
+        set_target_properties(mimalloc::mimalloc PROPERTIES
+            IMPORTED_LOCATION "${MIMALLOC_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${MIMALLOC_INCLUDE_DIR}")
+            
+        target_link_libraries(alphazero PUBLIC mimalloc::mimalloc)
+        target_compile_definitions(alphazero PUBLIC USE_MIMALLOC)
+    else()
+        # Download mimalloc
+        message(STATUS "mimalloc not found on system - downloading from GitHub...")
+        include(FetchContent)
+        FetchContent_Declare(
+            mimalloc
+            GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+            GIT_TAG        v2.1.2  # Latest stable release
+            GIT_SHALLOW    TRUE
+        )
+        
+        # Configure mimalloc build options
+        set(MI_BUILD_SHARED OFF CACHE BOOL "Build shared library" FORCE)
+        set(MI_BUILD_STATIC ON CACHE BOOL "Build static library" FORCE)
+        set(MI_BUILD_TESTS OFF CACHE BOOL "Build tests" FORCE)
+        set(MI_USE_CXX ON CACHE BOOL "Use C++ interface" FORCE)
+        
+        FetchContent_MakeAvailable(mimalloc)
+        message(STATUS "Downloaded mimalloc to ${mimalloc_SOURCE_DIR}")
+        
+        target_link_libraries(alphazero PUBLIC mimalloc-static)
+        target_compile_definitions(alphazero PUBLIC USE_MIMALLOC)
+    endif()
+endif()
+
+# ───────────────────────────── Cpp-Taskflow setup ─────────────────────────
+message(STATUS "Setting up Cpp-Taskflow...")
+
+# First try to find it on the system
+find_package(Taskflow CONFIG QUIET)
+
+if(Taskflow_FOUND)
+    message(STATUS "Found system Taskflow: ${Taskflow_VERSION}")
+    target_link_libraries(alphazero PUBLIC Taskflow::Taskflow)
+else()
+    # Download Cpp-Taskflow header-only library
+    message(STATUS "Taskflow not found on system - downloading from GitHub...")
+    include(FetchContent)
+    FetchContent_Declare(
+        taskflow
+        GIT_REPOSITORY https://github.com/taskflow/taskflow.git
+        GIT_TAG        v3.7.0  # Latest stable release
+        GIT_SHALLOW    TRUE
+    )
+    
+    FetchContent_MakeAvailable(taskflow)
+    message(STATUS "Downloaded Taskflow to ${taskflow_SOURCE_DIR}")
+    
+    # Taskflow is header-only, just need to add include directory
+    target_include_directories(alphazero PUBLIC ${taskflow_SOURCE_DIR})
+endif()
+
+# ───────────────────────────── spdlog setup ─────────────────────────
+message(STATUS "Setting up spdlog...")
+
+# First try to find it on the system
+find_package(spdlog CONFIG QUIET)
+
+if(spdlog_FOUND)
+    message(STATUS "Found system spdlog: ${spdlog_VERSION}")
+    target_link_libraries(alphazero PUBLIC spdlog::spdlog)
+else()
+    # Download spdlog
+    message(STATUS "spdlog not found on system - downloading from GitHub...")
+    include(FetchContent)
+    FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG        v1.14.1  # Latest stable release
+        GIT_SHALLOW    TRUE
+    )
+    
+    # Configure spdlog options
+    set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "Build the example" FORCE)
+    set(SPDLOG_BUILD_TESTS OFF CACHE BOOL "Build tests" FORCE)
+    set(SPDLOG_INSTALL OFF CACHE BOOL "Install spdlog" FORCE)
+    
+    FetchContent_MakeAvailable(spdlog)
+    message(STATUS "Downloaded spdlog to ${spdlog_SOURCE_DIR}")
+    
+    target_link_libraries(alphazero PUBLIC spdlog::spdlog)
+endif()
+
+# ───────────────────────────── Tracy Profiler setup ─────────────────────────
+message(STATUS "Setting up Tracy Profiler...")
+
+# Option to enable/disable Tracy profiling
+option(ENABLE_TRACY "Enable Tracy profiler" ON)
+
+if(ENABLE_TRACY)
+    # Download Tracy
+    message(STATUS "Tracy profiling enabled - downloading from GitHub...")
+    include(FetchContent)
+    FetchContent_Declare(
+        tracy
+        GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+        GIT_TAG        v0.11.0  # Latest stable release
+        GIT_SHALLOW    TRUE
+    )
+    
+    FetchContent_MakeAvailable(tracy)
+    message(STATUS "Downloaded Tracy to ${tracy_SOURCE_DIR}")
+    
+    # Check if TracyClient target already exists
+    if(NOT TARGET TracyClient)
+        # Add Tracy as a library
+        add_library(TracyClient SHARED ${tracy_SOURCE_DIR}/public/TracyClient.cpp)
+        target_include_directories(TracyClient PUBLIC ${tracy_SOURCE_DIR}/public ${tracy_SOURCE_DIR}/public/tracy)
+        target_compile_definitions(TracyClient PUBLIC TRACY_ENABLE)
+    endif()
+    
+    # Link Tracy to our library
+    target_link_libraries(alphazero PUBLIC TracyClient)
+    target_compile_definitions(alphazero PUBLIC TRACY_ENABLE)
+    target_include_directories(alphazero PUBLIC ${tracy_SOURCE_DIR}/public)
+    
+    # Optional: Enable GPU tracing
+    if(WITH_TORCH AND CUDA_FOUND)
+        target_compile_definitions(TracyClient PUBLIC TRACY_ENABLE_GPU)
+    endif()
+else()
+    message(STATUS "Tracy profiling disabled")
+endif()
+
+# ───────────────────────────── RAPIDS Memory Manager setup ─────────────────────────
+# Enable RMM for memory management
+option(ENABLE_RMM "Enable RAPIDS Memory Manager" ON)
+
+if(ENABLE_RMM AND WITH_TORCH AND CUDA_FOUND)
+    message(STATUS "Setting up RAPIDS Memory Manager (RMM)...")
+    
+    # Try to find system-installed RMM
+    find_package(rmm CONFIG)
+    
+    if(rmm_FOUND)
+        message(STATUS "Found system RMM: ${rmm_VERSION}")
+        target_link_libraries(alphazero PUBLIC rmm::rmm)
+        target_compile_definitions(alphazero PUBLIC USE_RAPIDS_RMM)
+    else()
+        message(WARNING "RMM not found. Please install RMM using one of the following methods:")
+        message(WARNING "  conda install -c rapidsai -c conda-forge -c nvidia rmm")
+        message(WARNING "  OR build from source: https://github.com/rapidsai/rmm")
+        message(WARNING "  OR use vcpkg: vcpkg install rmm")
+        message(STATUS "Continuing without RMM support")
+    endif()
+else()
+    message(STATUS "RAPIDS RMM setup skipped (disabled or requires CUDA and Torch)")
 endif()
 
 # ───────────────────────────── Runtime Library Management ──────────────────────────

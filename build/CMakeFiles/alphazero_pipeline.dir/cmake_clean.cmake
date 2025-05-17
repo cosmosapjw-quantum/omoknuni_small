@@ -1,7 +1,8 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/alphazero_pipeline.dir/link.d"
   "CMakeFiles/alphazero_pipeline.dir/src/python/alphazero_bindings.cpp.o"
   "CMakeFiles/alphazero_pipeline.dir/src/python/alphazero_bindings.cpp.o.d"
-  "lib/Release/alphazero_pipeline.cpython-310-x86_64-linux-gnu.so"
+  "lib/Release/alphazero_pipeline.cpython-312-x86_64-linux-gnu.so"
   "lib/Release/alphazero_pipeline.pdb"
 )
 
