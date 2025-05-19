@@ -514,31 +514,49 @@ void MCTSEvaluator::evaluationLoop() {
             if (queue_check_count < 100 || queue_check_count % 10000 == 0) {
                 }
             
-            // Adaptive batching based on queue depth
+                // Adaptive batching based on queue depth and historical performance
+            static double avg_batch_size = 0.0;
+            static double avg_processing_time_ms = 10.0;
+            static int batch_count = 0;
             
             size_t MIN_BATCH;
             size_t OPTIMAL_BATCH;
+            auto adaptive_timeout = timeout_;
             
             if (queue_size < 10) {
                 // Very few items - prioritize low latency
                 MIN_BATCH = 1;
-                OPTIMAL_BATCH = 8;
-                // Removed verbose logging for performance
+                OPTIMAL_BATCH = std::min(size_t(16), batch_size_ / 8);
+                adaptive_timeout = std::chrono::milliseconds(2);
             } else if (queue_size < 50) {
                 // Moderate queue - balance latency and throughput
                 MIN_BATCH = std::min(size_t(4), batch_size_ / 16);
-                OPTIMAL_BATCH = std::min(size_t(16), batch_size_ / 8);
-                // Removed verbose logging for performance
+                OPTIMAL_BATCH = std::min(size_t(32), batch_size_ / 4);
+                adaptive_timeout = std::chrono::milliseconds(5);
             } else if (queue_size < 200) {
                 // Larger queue - optimize for throughput
                 MIN_BATCH = std::min(size_t(8), batch_size_ / 8);
-                OPTIMAL_BATCH = std::min(size_t(32), batch_size_ / 4);
-                // Removed verbose logging for performance
+                OPTIMAL_BATCH = std::min(size_t(64), batch_size_ / 2);
+                adaptive_timeout = std::chrono::milliseconds(10);
             } else {
                 // Very large queue - maximize batch efficiency
                 MIN_BATCH = std::min(size_t(16), batch_size_ / 4);
-                OPTIMAL_BATCH = std::min(size_t(64), batch_size_ / 2);
-                // Removed verbose logging for performance
+                OPTIMAL_BATCH = batch_size_;
+                adaptive_timeout = std::chrono::milliseconds(20);
+            }
+            
+            // Adjust timeout based on historical performance
+            if (batch_count > 10) {
+                double efficiency_ratio = avg_processing_time_ms / avg_batch_size;
+                if (efficiency_ratio < 0.2) {
+                    // Very efficient - can wait longer for bigger batches
+                    adaptive_timeout = std::chrono::milliseconds(
+                        std::min(static_cast<int>(adaptive_timeout.count() * 1.5), 30));
+                } else if (efficiency_ratio > 0.5) {
+                    // Less efficient - reduce wait time
+                    adaptive_timeout = std::chrono::milliseconds(
+                        std::max(static_cast<int>(adaptive_timeout.count() * 0.7), 2));
+                }
             }
             
             if (queue_size >= MIN_BATCH) {
@@ -562,7 +580,15 @@ void MCTSEvaluator::evaluationLoop() {
                 // Process whatever we have after deadline
                 if (queue_size > 0) {
                     // Timeout reached, process what we have
+                    auto batch_start = std::chrono::steady_clock::now();
                     processBatch();
+                    auto batch_end = std::chrono::steady_clock::now();
+                    
+                    // Update adaptive metrics
+                    double processing_time = std::chrono::duration<double, std::milli>(
+                        batch_end - batch_start).count();
+                    avg_processing_time_ms = avg_processing_time_ms * 0.9 + processing_time * 0.1;
+                    batch_count++;
                 }
             } else {
                 // No items - yield CPU aggressively

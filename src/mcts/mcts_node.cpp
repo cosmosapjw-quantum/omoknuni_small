@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <omp.h>
+#include <unordered_set>
 #include "utils/debug_monitor.h"
 
 namespace alphazero {
@@ -18,9 +19,9 @@ MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state_param, std::weak_ptr<
       visit_count_(0),
       value_sum_(0.0f),
       virtual_loss_count_(0),
-      prior_probability_(0.0f),
-      rave_count_(0),
-      rave_value_sum_(0.0f) {
+      rave_count_(0),  // Move before prior_probability_ to match header order
+      rave_value_sum_(0.0f),
+      prior_probability_(0.0f) {
 
     // Safety check - ensure we have a valid state
     if (!state_) {
@@ -195,17 +196,49 @@ void MCTSNode::expand(bool use_progressive_widening, float cpw, float kpw) {
     // Determine how many children to expand based on progressive widening
     size_t num_children_to_expand = legal_moves.size();
     
+    // Track unexpanded moves for incremental expansion  
     if (use_progressive_widening && visit_count_ > 0) {
         // Progressive widening formula: num_children = cpw * N^kpw
         // where N is the parent's visit count
         int parent_visits = visit_count_.load();
-        num_children_to_expand = std::min(
+        size_t current_children = children_.size();
+        
+        // Calculate total children we should have based on visit count
+        size_t target_children = std::min(
             legal_moves.size(),
             static_cast<size_t>(cpw * std::pow(parent_visits, kpw))
         );
         
-        // Ensure we expand at least one child
-        num_children_to_expand = std::max(num_children_to_expand, static_cast<size_t>(1));
+        // Incremental expansion: only add new children as needed
+        if (current_children > 0 && is_expanded_.load(std::memory_order_acquire)) {
+            // Node was previously expanded, check if we need more children
+            if (target_children > current_children) {
+                num_children_to_expand = target_children - current_children;
+                
+                // Find moves that haven't been expanded yet
+                std::vector<int> unexpanded_moves;
+                unexpanded_moves.reserve(legal_moves.size());
+                
+                // Create a set of already expanded actions for fast lookup
+                std::unordered_set<int> expanded_actions(actions_.begin(), actions_.end());
+                
+                for (int move : legal_moves) {
+                    if (expanded_actions.find(move) == expanded_actions.end()) {
+                        unexpanded_moves.push_back(move);
+                    }
+                }
+                
+                // Update legal_moves to only contain unexpanded moves
+                legal_moves = std::move(unexpanded_moves);
+                num_children_to_expand = std::min(num_children_to_expand, legal_moves.size());
+            } else {
+                // Already have enough children, no need to expand more
+                return;
+            }
+        } else {
+            // First expansion: ensure we expand at least some children
+            num_children_to_expand = std::max(target_children, static_cast<size_t>(1));
+        }
     }
     
     // Reserve space for efficiency
@@ -302,6 +335,20 @@ void MCTSNode::addVirtualLoss() {
     virtual_loss_count_.store(new_value, std::memory_order_release);
 }
 
+void MCTSNode::addVirtualLoss(int amount) {
+    // Add specified amount of virtual loss with saturation to prevent overflow
+    int current = virtual_loss_count_.load(std::memory_order_relaxed);
+    // Cap at reasonable maximum to prevent integer overflow
+    int new_value = std::min(current + amount, 1000);  
+    new_value = std::max(new_value, 0);  // Ensure non-negative
+    virtual_loss_count_.store(new_value, std::memory_order_release);
+}
+
+void MCTSNode::applyVirtualLoss(int amount) {
+    // Alias for addVirtualLoss to match header declaration
+    addVirtualLoss(amount);
+}
+
 void MCTSNode::removeVirtualLoss() {
     // Remove virtual loss with floor at zero
     int current = virtual_loss_count_.load(std::memory_order_relaxed);
@@ -309,13 +356,14 @@ void MCTSNode::removeVirtualLoss() {
     virtual_loss_count_.store(new_value, std::memory_order_release);
 }
 
-void MCTSNode::applyVirtualLoss(int amount) {
-    // Apply virtual loss with saturation
+void MCTSNode::removeVirtualLoss(int amount) {
+    // Remove specified amount of virtual loss with floor at zero
     int current = virtual_loss_count_.load(std::memory_order_relaxed);
-    int new_value = std::min(current + amount, 1000);  
-    new_value = std::max(new_value, 0);  // Ensure non-negative
+    int new_value = std::max(current - amount, 0);
     virtual_loss_count_.store(new_value, std::memory_order_release);
 }
+
+// applyVirtualLoss method already merged with addVirtualLoss(int) above
 
 int MCTSNode::getVirtualLoss() const {
     return virtual_loss_count_.load(std::memory_order_acquire);

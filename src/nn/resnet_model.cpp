@@ -249,8 +249,11 @@ torch::Tensor ResNetModel::prepareInputTensor(
     // Create a CPU tensor first, then move if needed.
     // This simplifies data population from std::vector.
     auto tensor_alloc_start_time = std::chrono::high_resolution_clock::now();
-    auto options_cpu = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCPU);
-    torch::Tensor batch_tensor_cpu = torch::empty({static_cast<int64_t>(states.size()), actual_data_channels, height, width}, options_cpu);
+    auto cpu_options = torch::TensorOptions()
+        .dtype(torch::kFloat32)
+        .memory_format(torch::MemoryFormat::Contiguous)  // Ensure contiguous memory
+        .pinned_memory(true);
+    torch::Tensor batch_tensor_cpu = torch::empty({static_cast<int64_t>(states.size()), actual_data_channels, height, width}, cpu_options);
     auto tensor_alloc_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
     // std::cout << "[PREP] CPU Tensor alloc: " << tensor_alloc_duration.count() << " us." << std::endl;
     
@@ -360,22 +363,46 @@ torch::Tensor ResNetModel::prepareInputTensor(const std::vector<std::unique_ptr<
 void ResNetModel::TensorPool::init(int64_t batch_size, int64_t channels, int64_t height, int64_t width, torch::Device device) {
     if (initialized) return;
     
+    // Use CUDA streams for async operations
+    static thread_local cudaStream_t tensor_stream = nullptr;
+    if (device.is_cuda() && !tensor_stream) {
+        cudaStreamCreate(&tensor_stream);
+    }
+    
     cpu_tensors.reserve(pool_size);
     gpu_tensors.reserve(pool_size);
     
-    // Pre-allocate tensors
+    // Pre-allocate tensors with optimized memory layout
     for (size_t i = 0; i < pool_size; ++i) {
-        // Create pinned CPU tensors
-        auto cpu_tensor = torch::zeros({batch_size, channels, height, width}, 
-                                      torch::dtype(torch::kFloat32).pinned_memory(true));
+        // Create pinned CPU tensors for zero-copy transfers
+        auto cpu_options = torch::TensorOptions()
+            .dtype(torch::kFloat32)
+            .memory_format(torch::MemoryFormat::Contiguous)  // Ensure contiguous memory
+            .pinned_memory(true);
+        
+        auto cpu_tensor = torch::zeros({batch_size, channels, height, width}, cpu_options);
         cpu_tensors.push_back(cpu_tensor);
         
-        // Create GPU tensors if device is CUDA
+        // Create GPU tensors with optimized memory access patterns
         if (device.is_cuda()) {
-            auto gpu_tensor = torch::zeros({batch_size, channels, height, width}, 
-                                         torch::dtype(torch::kFloat32).device(device));
+            // Set the stream for this allocation
+            if (tensor_stream) {
+                c10::cuda::CUDAStream stream_guard(c10::cuda::getStreamFromExternal(tensor_stream, device.index()));
+            }
+            
+            auto gpu_options = torch::TensorOptions()
+                .dtype(torch::kFloat32)
+                .memory_format(torch::MemoryFormat::Contiguous)
+                .device(device);
+                
+            auto gpu_tensor = torch::zeros({batch_size, channels, height, width}, gpu_options);
             gpu_tensors.push_back(gpu_tensor);
         }
+    }
+    
+    // Warm up the memory pool to avoid first-use overhead
+    if (device.is_cuda()) {
+        c10::cuda::CUDACachingAllocator::emptyCache();
     }
     
     initialized = true;
@@ -502,9 +529,30 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
                     }
                 }
                 
-                // Move to GPU if needed
+                // Use async memory transfer for better GPU utilization
                 if (model_device.is_cuda()) {
-                    input_tensor = cpu_tensor.to(model_device, /*non_blocking=*/true);
+                    // Create CUDA stream for async operations
+                    static thread_local cudaStream_t infer_stream = nullptr;
+                    if (!infer_stream) {
+                        cudaStreamCreateWithFlags(&infer_stream, cudaStreamNonBlocking);
+                    }
+                    
+                    // Use stream guard for proper stream association
+                    c10::cuda::CUDAStream stream_guard(c10::cuda::getStreamFromExternal(infer_stream, model_device.index()));
+                    
+                    // Try to use pre-allocated GPU tensor for even faster transfers
+                    auto gpu_tensor = tensor_pool_.getGPUTensor(states.size());
+                    if (gpu_tensor.defined()) {
+                        // Direct GPU-to-GPU copy (fastest path)
+                        gpu_tensor.copy_(cpu_tensor, /*non_blocking=*/true);
+                        input_tensor = gpu_tensor;
+                    } else {
+                        // Async CPU-to-GPU transfer
+                        input_tensor = cpu_tensor.to(model_device, /*non_blocking=*/true);
+                    }
+                    
+                    // Ensure transfer completes before inference
+                    cudaStreamSynchronize(infer_stream);
                 } else {
                     input_tensor = cpu_tensor;
                 }

@@ -15,7 +15,7 @@ mcts_batch_size: 64
 mcts_batch_timeout_ms: 50 
 mcts_max_concurrent_simulations: 512
 mcts_exploration_constant: 1.4
-mcts_virtual_loss: 3
+mcts_virtual_loss: 1
 mcts_add_dirichlet_noise: true
 mcts_dirichlet_alpha: 0.3
 mcts_dirichlet_epsilon: 0.25

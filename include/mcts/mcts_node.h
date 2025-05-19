@@ -46,7 +46,9 @@ public:
 
     // Virtual loss
     void addVirtualLoss();
+    void addVirtualLoss(int amount);
     void removeVirtualLoss();
+    void removeVirtualLoss(int amount);
 
     // Backpropagation
     void update(float value);

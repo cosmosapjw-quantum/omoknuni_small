@@ -13,6 +13,8 @@
 #include <queue>
 #include <omp.h>
 #include <cstdlib>
+#include <pthread.h>
+#include <sched.h>
 
 namespace alphazero {
 namespace mcts {
@@ -25,7 +27,7 @@ std::atomic<int> MCTSEngine::s_evaluator_init_counter{0};
 } // namespace alphazero
 
 // Configurable debug level
-#define MCTS_DEBUG 0
+#define MCTS_DEBUG 0  // CRITICAL: Keep at 0 for production performance
 #define MCTS_VERBOSE 0  // Set to 1 for verbose logging, 0 for performance
 
 // Lightweight logging macros
@@ -41,7 +43,7 @@ std::atomic<int> MCTSEngine::s_evaluator_init_counter{0};
     #define MCTS_LOG_DEBUG(msg) (void)0
 #endif
 
-#define MCTS_LOG_ERROR(msg) (void)0
+#define MCTS_LOG_ERROR(msg) std::cerr << "[ERROR] " << msg << std::endl
 
 namespace alphazero {
 namespace mcts {
@@ -55,7 +57,7 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
       transposition_table_(nullptr),
       use_transposition_table_(settings.use_transposition_table),
       evaluator_started_(false),
-      game_state_pool_enabled_(false) {  // Disable game state pool for debugging
+      game_state_pool_enabled_(true) {  // Enable game state pool for better performance
     
     // Create transposition table with configurable size
     if (use_transposition_table_) {
@@ -100,7 +102,7 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
       transposition_table_(nullptr),
       use_transposition_table_(settings.use_transposition_table),
       evaluator_started_(false),
-      game_state_pool_enabled_(false) {  // Disable game state pool for debugging
+      game_state_pool_enabled_(true) {  // Enable game state pool for better performance
     
     // Create transposition table with configurable size
     if (use_transposition_table_) {
@@ -893,7 +895,9 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
 
         // Initialize root node - expand it and set prior probabilities
         try {
-            root_->expand();
+            root_->expand(settings_.use_progressive_widening, 
+                        settings_.progressive_widening_c,
+                        settings_.progressive_widening_k);
             
             // For the initial root evaluation, we need to set prior probabilities
             // This is normally done by the neural network, but for the root we need to bootstrap
@@ -1038,7 +1042,9 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                     auto root_copy = MCTSNode::create(std::move(cloned_state), nullptr);
                     if (root_copy) {
                         // Initialize the root copy same as the main root
-                        root_copy->expand();
+                        root_copy->expand(settings_.use_progressive_widening,
+                                settings_.progressive_widening_c,
+                                settings_.progressive_widening_k);
                         
                         // Copy prior probabilities from the main root
                         if (root_copy->getNumExpandedChildren() > 0 && root_->getNumExpandedChildren() > 0) {
@@ -1117,6 +1123,11 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
             const size_t MIN_BATCH_SIZE = 1;  // Always process single items to avoid deadlock
             leaf_batch.reserve(OPTIMAL_BATCH_SIZE);
             
+            // Thread-local cache for reusable game states
+            static thread_local std::vector<std::shared_ptr<core::IGameState>> state_cache;
+            static thread_local size_t cache_hits = 0;
+            static thread_local size_t cache_misses = 0;
+            
             int consecutive_empty_tries = 0;
             const int MAX_EMPTY_TRIES = 3;  // Reduce to be more responsive
             
@@ -1145,6 +1156,7 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                     if (active_simulations_.compare_exchange_weak(old_sims, old_sims - simulations_to_claim,
                                                                   std::memory_order_acq_rel)) {
                         int leaves_found = 0;
+                        int actually_claimed = 0;
                         
                         // Try to collect the claimed simulations
                         for (int i = 0; i < simulations_to_claim && leaf_batch.size() < OPTIMAL_BATCH_SIZE; ++i) {
@@ -1157,10 +1169,47 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                                 path = temp_path;
                                 
                                 if (leaf && !leaf->isBeingEvaluated()) {
-                                    if (leaf->tryMarkForEvaluation()) {
-                                        // Clone state for evaluation
+                                    if (leaf->isTerminal()) {
+                                        // Terminal node - process immediately
+                                        float value = 0.0f;
+                                        try {
+                                            auto game_result = leaf->getState().getGameResult();
+                                            int current_player = leaf->getState().getCurrentPlayer();
+                                            if (game_result == core::GameResult::WIN_PLAYER1) {
+                                                value = current_player == 1 ? 1.0f : -1.0f;
+                                            } else if (game_result == core::GameResult::WIN_PLAYER2) {
+                                                value = current_player == 2 ? 1.0f : -1.0f;
+                                            }
+                                        } catch (...) {
+                                            value = 0.0f;
+                                        }
+                                        backPropagate(path, value);
+                                        actually_claimed++;
+                                    } else if (leaf->tryMarkForEvaluation()) {
+                                        // Clone state for evaluation - use cache for better performance
                                         const core::IGameState& leaf_state = leaf->getState();
-                                        std::shared_ptr<core::IGameState> state_clone = cloneGameState(leaf_state);
+                                        std::shared_ptr<core::IGameState> state_clone;
+                                        
+                                        // Try to use thread-local cache first
+                                        if (!state_cache.empty()) {
+                                            auto cached_state = std::move(state_cache.back());
+                                            state_cache.pop_back();
+                                            
+                                            // Reuse cached state by copying from leaf state
+                                            try {
+                                                cached_state->copyFrom(leaf_state);
+                                                state_clone = std::move(cached_state);
+                                                cache_hits++;
+                                            } catch (...) {
+                                                // Fall back to cloning if copyFrom fails
+                                                state_clone = cloneGameState(leaf_state);
+                                                cache_misses++;
+                                            }
+                                        } else {
+                                            // No cached state available, use pool or create new
+                                            state_clone = cloneGameState(leaf_state);
+                                            cache_misses++;
+                                        }
                                         
                                         // Create pending evaluation
                                         PendingEvaluation pending;
@@ -1172,13 +1221,24 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                                         
                                         leaf_batch.push_back(std::move(pending));
                                         leaves_found++;
+                                        actually_claimed++;
                                     }
+                                } else if(!leaf) {
+                                    // Null leaf means node is already being evaluated - don't count as claimed
+                                    active_simulations_.fetch_add(1, std::memory_order_acq_rel); // Give back unclaimed simulation
                                 }
                                 
                                 completed_simulations.fetch_add(1, std::memory_order_relaxed);
                             } catch (const std::exception& e) {
                                 MCTS_LOG_ERROR("[LEAF] Error during leaf collection: " << e.what());
+                                active_simulations_.fetch_add(1, std::memory_order_acq_rel); // Give back on error
                             }
+                        }
+                        
+                        // Adjust active_simulations if we didn't actually use all claimed simulations
+                        int unused = simulations_to_claim - actually_claimed;
+                        if (unused > 0) {
+                            active_simulations_.fetch_add(unused, std::memory_order_acq_rel);
                         }
                         
                         if (leaves_found == 0) {
@@ -1261,8 +1321,26 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                 }
             }
         } else {
-            // Use OpenMP for parallel tree traversal
+            // Use OpenMP for parallel tree traversal with work-stealing
             const int actual_threads = std::max(1, settings_.num_threads);  // Ensure at least 1 thread
+            
+            // Create work-stealing queues for better load balancing
+            std::vector<moodycamel::ConcurrentQueue<int>> work_queues(actual_threads);
+            std::atomic<int> total_work{num_simulations};
+            
+            // Initialize work distribution
+            #pragma omp parallel num_threads(actual_threads)
+            {
+                int tid = omp_get_thread_num();
+                int work_per_thread = num_simulations / actual_threads;
+                int extra = (tid < num_simulations % actual_threads) ? 1 : 0;
+                int my_work = work_per_thread + extra;
+                
+                for (int i = 0; i < my_work; ++i) {
+                    work_queues[tid].enqueue(1);
+                }
+            }
+            
             #pragma omp parallel num_threads(actual_threads)
             {
                 // Thread-local batch for each OpenMP thread - larger for better GPU utilization
@@ -1270,26 +1348,72 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                 const size_t OPTIMAL_THREAD_BATCH = std::max(size_t(16), size_t(settings_.batch_size / actual_threads));
                 thread_batch.reserve(OPTIMAL_THREAD_BATCH);
                 
-                #pragma omp critical
-                {
-                    }
-                
+                int tid = omp_get_thread_num();
                 int consecutive_empty = 0;
                 const int MAX_EMPTY_ATTEMPTS = 3;
                 
-                while (active_simulations_.load(std::memory_order_acquire) > 0) {
-                    // Try to claim multiple simulations at once
-                    int simulations_remaining = active_simulations_.load(std::memory_order_acquire);
-                    if (simulations_remaining <= 0) break;
+                // Set thread affinity for better cache locality
+                cpu_set_t cpuset;
+                CPU_ZERO(&cpuset);
+                CPU_SET(tid % std::thread::hardware_concurrency(), &cpuset);
+                pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+                
+                while (total_work.load(std::memory_order_acquire) > 0) {
+                    // Try to get work from own queue first
+                    int work_item;
+                    bool got_work = false;
                     
-                    // Claim up to 4 simulations at once per thread
-                    int to_claim = std::min(4, simulations_remaining);
-                    if (active_simulations_.compare_exchange_weak(simulations_remaining, 
-                                                                  simulations_remaining - to_claim,
-                                                                  std::memory_order_acq_rel)) {
+                    if (work_queues[tid].try_dequeue(work_item)) {
+                        got_work = true;
+                    } else {
+                        // Work stealing: try to steal from other threads
+                        for (int steal_from = 0; steal_from < actual_threads && !got_work; ++steal_from) {
+                            if (steal_from != tid && work_queues[steal_from].try_dequeue(work_item)) {
+                                got_work = true;
+                            }
+                        }
+                    }
+                    
+                    if (!got_work) {
+                        // No work available, check if we're done
+                        if (total_work.load(std::memory_order_acquire) == 0) {
+                            break;
+                        }
+                        consecutive_empty++;
+                        if (consecutive_empty >= MAX_EMPTY_ATTEMPTS) {
+                            std::this_thread::yield();
+                        }
+                        continue;
+                    }
+                    
+                    // Reduce atomic operations by batching claims
+                    static thread_local int local_simulations = 0;
+                    static thread_local int local_claims = 0;
+                    
+                    // Refill local work counter if empty
+                    if (local_simulations <= 0) {
+                        int simulations_remaining = active_simulations_.load(std::memory_order_acquire);
+                        if (simulations_remaining <= 0) break;
+                        
+                        // Claim a batch of simulations for this thread
+                        int to_claim = std::min(8, simulations_remaining);  // Larger batch to reduce contention
+                        if (active_simulations_.compare_exchange_weak(simulations_remaining, 
+                                                                      simulations_remaining - to_claim,
+                                                                      std::memory_order_acq_rel)) {
+                            local_simulations = to_claim;
+                            local_claims = to_claim;
+                        } else {
+                            continue;  // Retry
+                        }
+                    }
+                    
+                    // Process one local simulation
+                    if (local_simulations > 0) {
+                        local_simulations--;
+                        int to_process = std::min(4, local_claims);  // Process up to 4 at once
                         int found_leaves = 0;
                         
-                        for (int sim = 0; sim < to_claim && thread_batch.size() < OPTIMAL_THREAD_BATCH; ++sim) {
+                        for (int sim = 0; sim < to_process && thread_batch.size() < OPTIMAL_THREAD_BATCH; ++sim) {
                             try {
                                 // Use thread ID to select root for better cache locality
                                 int thread_id = omp_get_thread_num();
@@ -1326,6 +1450,8 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                             }
                         }
                         
+                        // Update work counter
+                        total_work.fetch_sub(1, std::memory_order_acq_rel);
                         consecutive_empty = (found_leaves == 0) ? consecutive_empty + 1 : 0;
                         
                         // Submit batch when we have enough or can't find more leaves
@@ -1692,6 +1818,20 @@ void MCTSEngine::resultDistributorWorker() {
                             
                             // Clear the evaluation flag now that we're done
                             eval.node->clearEvaluationFlag();
+                            
+                            // Return the state to thread-local cache for reuse
+                            if (eval.state) {
+                                #pragma omp critical(state_cache)
+                                {
+                                    static thread_local std::vector<std::shared_ptr<core::IGameState>> state_cache;
+                                    const size_t MAX_CACHE_SIZE = 32;  // Limit cache size per thread
+                                    
+                                    if (state_cache.size() < MAX_CACHE_SIZE) {
+                                        // Reset state to initial position before caching
+                                        state_cache.push_back(std::move(eval.state));
+                                    }
+                                }
+                            }
                         } catch (const std::exception& e) {
                             // Node might have been destroyed, skip it
                             MCTS_LOG_ERROR("[RESULT] Error processing node: " << e.what());
@@ -1865,13 +2005,13 @@ std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> MCT
         if (current_node_in_traversal->hasPendingEvaluation()) {
             // Remove virtual loss from path since we're not going deeper
             for (auto& node : path) {
-                node->removeVirtualLoss();
+                node->removeVirtualLoss(settings_.virtual_loss);
             }
             return {nullptr, path}; // Return null leaf to indicate pending
         }
         
         std::shared_ptr<MCTSNode> parent_for_selection = current_node_in_traversal;
-        parent_for_selection->addVirtualLoss();
+        parent_for_selection->addVirtualLoss(settings_.virtual_loss);
 
         std::shared_ptr<MCTSNode> selected_child = parent_for_selection->selectChild(
             settings_.exploration_constant, settings_.use_rave, settings_.rave_constant);
@@ -1879,13 +2019,13 @@ std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> MCT
         if (!selected_child) {
             // If no child is selected (e.g., all children are terminal or have issues),
             // remove virtual loss from parent and break to return parent as leaf.
-            parent_for_selection->removeVirtualLoss();
+            parent_for_selection->removeVirtualLoss(settings_.virtual_loss);
             break;  
         }
 
         // Tentatively, the traversal will proceed with selected_child.
         // Apply virtual loss to it for this traversal step.
-        selected_child->addVirtualLoss();
+        selected_child->addVirtualLoss(settings_.virtual_loss);
         
         std::shared_ptr<MCTSNode> node_to_use_for_traversal = selected_child;
 
@@ -1914,9 +2054,9 @@ std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> MCT
                         
                             // Virtual loss needs to be correct: selected_child's VL (from this step) removed,
                             // transposition_entry's VL (for this step) added.
-                            selected_child->removeVirtualLoss(); // Remove VL from the originally selected child.
+                            selected_child->removeVirtualLoss(settings_.virtual_loss); // Remove VL from the originally selected child.
                             node_to_use_for_traversal = transposition_entry;
-                            node_to_use_for_traversal->addVirtualLoss(); // Ensure VL is on the node we are actually using for traversal.
+                            node_to_use_for_traversal->addVirtualLoss(settings_.virtual_loss); // Ensure VL is on the node we are actually using for traversal.
                             
                             // FIX: Clear evaluation flag from orphaned node to prevent memory leaks
                             if (selected_child->tryMarkForEvaluation()) {
@@ -1963,9 +2103,11 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
         }
     }
     
-    // Expand the leaf node
+    // Expand the leaf node with progressive widening from settings
     try {
-        leaf->expand();
+        leaf->expand(settings_.use_progressive_widening, 
+                    settings_.progressive_widening_c, 
+                    settings_.progressive_widening_k);
     } catch (const std::exception& e) {
         // Commented out: Error expanding leaf node with error message
         return 0.0f;
@@ -2139,7 +2281,7 @@ void MCTSEngine::backPropagate(std::vector<std::shared_ptr<MCTSNode>>& path, flo
         float update_value = invert ? -value : value;
         
         // Remove virtual loss and update node statistics
-        node->removeVirtualLoss();
+        node->removeVirtualLoss(settings_.virtual_loss);
         node->update(update_value);
         
         // RAVE update - update all children that match actions in the path
@@ -2280,7 +2422,9 @@ void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
     
     // Expand root node if it's not already expanded
     if (root->isLeaf() && !root->isTerminal()) {
-        root->expand();
+        root->expand(settings_.use_progressive_widening,
+                    settings_.progressive_widening_c,
+                    settings_.progressive_widening_k);
         
         if (root->getChildren().empty()) {
             return;  // No children to add noise to
