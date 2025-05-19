@@ -60,7 +60,7 @@ mcts_progressive_widening_k: 0.5  # Growth rate based on visit count
 
 # Root parallelization settings
 mcts_use_root_parallelization: true
-mcts_num_root_workers: 4  # Number of parallel MCTS trees (threads will be divided among them)
+mcts_num_root_workers: 1  # Number of parallel MCTS trees (threads will be divided among them)
 
 # Training settings
 train_epochs: 10
@@ -74,7 +74,7 @@ train_lr_gamma: 0.1
 # Arena/evaluation settings
 enable_evaluation: true
 arena_num_games: 20
-arena_num_parallel_games: 4
+arena_num_parallel_games: 1
 arena_num_threads: 4
 arena_num_simulations: 100
 arena_temperature: 0.1

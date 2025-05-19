@@ -16,17 +16,24 @@ The engine will be delivered under an MIT open-source license, targeting a singl
 *   **Game Abstraction Layer** for Gomoku, Chess, and Go\
     – C++ interfaces: state representation, move generation, application, outcome detection\
     – Zobrist hashing for fast transposition lookups
-*   **MCTS Engine**\
-    – Multi-threaded playouts with virtual loss, progressive widening, transposition table\
-    – Leaf-parallelization: workers submit leaf states to a centralized batch evaluator
+*   **Advanced MCTS Engine**\
+    – Multi-threaded playouts with virtual loss for collision prevention\
+    – Progressive widening to control tree branching factor (C and K parameters)\
+    – RAVE (Rapid Action Value Estimation) with configurable weighting\
+    – Root parallelization: multiple independent MCTS trees running in parallel\
+    – Leaf-parallelization: workers submit leaf states to a centralized batch evaluator\
+    – Lock-free concurrent queues (moodycamel) for efficient communication\
+    – Transposition table with configurable size and sharding
 *   **Neural Network Integration**\
     – DDW-RandWire-ResNet policy/value heads via libtorch (CUDA)\
-    – Central batch inference thread with configurable batch size and timeout
+    – Central batch inference thread with configurable batch size and timeout\
+    – Support for external queue integration for shared evaluator
 *   **Python CLI & Bindings**\
     – `omoknuni-cli` for self-play, train, eval, play commands via pybind11
 *   **Self-Play & Training Pipeline**\
     – Flat-file storage (JSON or binary) for game records, ELO logs, and model checkpoints\
-    – Regular text/log output of statistics: ELO progression, GPU/CPU utilization, batch latencies
+    – Regular text/log output of statistics: ELO progression, GPU/CPU utilization, batch latencies\
+    – Temperature scheduling and Dirichlet noise for exploration
 *   **Flat-File Logging & Reporting**\
     – spdlog (or similar) for structured text logs; daily summary reports
 
@@ -51,11 +58,16 @@ With configuration in place, the developer runs `omoknuni-cli self-play --config
     • Zobrist hashing for efficient transposition table keys
 *   **AlphaZero-Style MCTS Engine**\
     • Multi-threaded playouts with virtual losses to avoid thread collisions\
-    • Progressive widening and transposition tables for deep searches
+    • Progressive widening with configurable C and K parameters for controlled tree growth\
+    • Transposition tables with sharded design for efficient position caching\
+    • RAVE (Rapid Action Value Estimation) for improved action value estimates\
+    • Root parallelization option to run multiple independent MCTS trees\
+    • Lock-free concurrent queues (moodycamel) for producer-consumer patterns
 *   **Leaf-Parallelization & Centralized Batch Evaluator**\
     • Worker threads produce leaf evaluation requests to a lock-free queue\
-    • Single evaluator thread batches states (up to N or timeout) and runs GPU inference\
-    • Results returned via std::future/std::promise to calling threads
+    • Single evaluator thread batches states (up to batch_size or timeout) and runs GPU inference\
+    • Results returned via concurrent queues or external shared queues\
+    • Adaptive batch collection with configurable timeout strategies
 *   **Neural Network: DDW-RandWire-ResNet**\
     • 40-node random DAG backbone, C=144 channels, SE-style edge gating\
     • CoordConv input, policy head (n²+1 logits), value head (tanh output)
@@ -92,8 +104,9 @@ With configuration in place, the developer runs `omoknuni-cli self-play --config
 ## 6. Non-Functional Requirements
 
 *   **Performance**\
-    • Batch inference latency ≤ 30 ms for 64 states on RTX 3060 Ti\
-    • MCTS simulation throughput ≥ 1,000 playouts/sec per thread
+    • Batch inference latency ≤ 30 ms for 256 states on RTX 3060 Ti\
+    • MCTS simulation throughput ≥ 10,000 playouts/sec total with 12 threads\
+    • Queue operations < 1 microsecond per enqueue/dequeue
 *   **Scalability**\
     • Up to 16 worker threads feeding a single evaluator thread
 *   **Reliability & Safety**\
@@ -121,7 +134,8 @@ With configuration in place, the developer runs `omoknuni-cli self-play --config
 ## 8. Known Issues & Potential Pitfalls
 
 *   **Batch Size Stuck at 1**\
-    • Likely due to evaluator thread immediately draining the queue or a missing timeout. Mitigate by implementing a wait-for-batch logic: sleep until either `batch_size` requests arrive or `timeout_ms` elapses.
+    • Likely due to evaluator thread immediately draining the queue or a missing timeout. Mitigate by implementing a wait-for-batch logic: sleep until either `batch_size` requests arrive or `timeout_ms` elapses.\
+    • Current implementation uses adaptive batching with configurable minimum batch size.
 *   **Race Conditions in MCTS Backup**\
     • Must protect shared N/Q statistics with atomics or fine-grained mutexes. Use `std::atomic` for counters, or a small per-node mutex for value updates.
 *   **Queue Contention**\

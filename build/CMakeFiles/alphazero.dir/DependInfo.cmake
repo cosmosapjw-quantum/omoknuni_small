@@ -32,6 +32,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/src/mcts/node_tracker.cpp" "CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/transposition_table.cpp" "CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/nn/ddw_randwire_resnet.cpp" "CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/nn/gpu_optimizer.cpp" "CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/nn/neural_network_factory.cpp" "CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/nn/resnet_model.cpp" "CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/selfplay/self_play_manager.cpp" "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o.d"

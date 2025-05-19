@@ -25,14 +25,14 @@ struct ALPHAZERO_API MCTSSettings {
     // Number of simulations to run
     int num_simulations = 800;
     
-    // Number of worker threads
-    int num_threads = 4;
+    // Number of worker threads - should match physical cores for best performance
+    int num_threads = 12;  // Optimized for Ryzen 5900X (12 cores)
     
     // Neural network batch size - optimized for GPU efficiency
-    int batch_size = 128;  // Increased for better GPU utilization
+    int batch_size = 256;  // Larger batch for better GPU utilization
     
-    // Neural network batch timeout - tuned for balance between latency and throughput
-    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(20);  // Reduced for faster response
+    // Neural network batch timeout - reduced for better responsiveness
+    std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(5);  // Shorter timeout for leaf parallelization
     
     // Maximum concurrent simulations to prevent memory explosion
     int max_concurrent_simulations = 512;
@@ -121,8 +121,49 @@ struct ALPHAZERO_API SearchResult {
     MCTSStats stats;
 };
 
+// Pending evaluation tracking
+struct PendingEvaluation {
+    std::shared_ptr<MCTSNode> node;
+    std::vector<std::shared_ptr<MCTSNode>> path;
+    std::shared_ptr<core::IGameState> state;  // Changed from unique_ptr to shared_ptr
+    int batch_id;
+    int request_id;
+    
+    // Default constructor
+    PendingEvaluation() = default;
+    
+    // Move constructor
+    PendingEvaluation(PendingEvaluation&& other) noexcept
+        : node(std::move(other.node)),
+          path(std::move(other.path)),
+          state(std::move(other.state)),
+          batch_id(other.batch_id),
+          request_id(other.request_id) {
+    }
+    
+    // Move assignment
+    PendingEvaluation& operator=(PendingEvaluation&& other) noexcept {
+        if (this != &other) {
+            node = std::move(other.node);
+            path = std::move(other.path);
+            state = std::move(other.state);
+            batch_id = other.batch_id;
+            request_id = other.request_id;
+        }
+        return *this;
+    }
+    
+    // Delete copy operations
+    PendingEvaluation(const PendingEvaluation&) = delete;
+    PendingEvaluation& operator=(const PendingEvaluation&) = delete;
+};
+
 class ALPHAZERO_API MCTSEngine {
 public:
+    // Static mutex for global evaluator initialization coordination
+    static std::mutex s_global_evaluator_mutex;
+    static std::atomic<int> s_evaluator_init_counter;
+    
     // Signature for neural network inference function
     using InferenceFunction = std::function<std::vector<NetworkOutput>(
         const std::vector<std::unique_ptr<core::IGameState>>&)>;
@@ -228,44 +269,28 @@ public:
      * memory pressure is detected.
      */
     void forceCleanup();
+    
+    /**
+     * @brief Set shared external queues to use instead of internal queues
+     * 
+     * @param leaf_queue Shared queue for pending evaluations
+     * @param result_queue Shared queue for evaluation results
+     * @param notify_fn Notification function when results are ready
+     */
+    void setSharedExternalQueues(
+        moodycamel::ConcurrentQueue<PendingEvaluation>* leaf_queue,
+        moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>>* result_queue,
+        std::function<void()> notify_fn);
+        
+    /**
+     * @brief Get the evaluator for direct access
+     * 
+     * @return Pointer to the evaluator (may be nullptr)
+     */
+    MCTSEvaluator* getEvaluator() const { return evaluator_.get(); }
+    
 
 public:
-    // Pending evaluation tracking
-    struct PendingEvaluation {
-        std::shared_ptr<MCTSNode> node;
-        std::vector<std::shared_ptr<MCTSNode>> path;
-        std::unique_ptr<core::IGameState> state;
-        int batch_id;
-        int request_id;
-        
-        // Default constructor
-        PendingEvaluation() = default;
-        
-        // Move constructor
-        PendingEvaluation(PendingEvaluation&& other) noexcept
-            : node(std::move(other.node)),
-              path(std::move(other.path)),
-              state(std::move(other.state)),
-              batch_id(other.batch_id),
-              request_id(other.request_id) {
-        }
-        
-        // Move assignment
-        PendingEvaluation& operator=(PendingEvaluation&& other) noexcept {
-            if (this != &other) {
-                node = std::move(other.node);
-                path = std::move(other.path);
-                state = std::move(other.state);
-                batch_id = other.batch_id;
-                request_id = other.request_id;
-            }
-            return *this;
-        }
-        
-        // Delete copy operations
-        PendingEvaluation(const PendingEvaluation&) = delete;
-        PendingEvaluation& operator=(const PendingEvaluation&) = delete;
-    };
     
     // Batch tracking
     struct BatchInfo {
@@ -345,7 +370,10 @@ private:
     bool use_transposition_table_;
 
     // Whether the evaluator thread has been started
-    bool evaluator_started_;
+    std::atomic<bool> evaluator_started_{false};
+    
+    // Mutex for evaluator initialization
+    std::mutex evaluator_mutex_;
 
     // Safely stop the evaluator if it was started
     void safelyStopEvaluator();
@@ -362,7 +390,7 @@ private:
     int calculateMaxDepth(std::shared_ptr<MCTSNode> node);
     
     // Helper method to clone game state using memory pool
-    std::unique_ptr<core::IGameState> cloneGameState(const core::IGameState& state);
+    std::shared_ptr<core::IGameState> cloneGameState(const core::IGameState& state);
     
 
     // Producer-consumer queues and tracking
@@ -379,6 +407,11 @@ private:
     moodycamel::ConcurrentQueue<PendingEvaluation> leaf_queue_;
     moodycamel::ConcurrentQueue<BatchInfo> batch_queue_;
     moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>> result_queue_;
+    
+    // Optional external shared queues  
+    moodycamel::ConcurrentQueue<PendingEvaluation>* shared_leaf_queue_ = nullptr;
+    moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>>* shared_result_queue_ = nullptr;
+    bool use_shared_queues_ = false;
     
     // Per-thread data to avoid contention
     static constexpr int MAX_THREADS = 64;

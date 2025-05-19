@@ -16,6 +16,10 @@
 #include <nlohmann/json.hpp>
 #include "core/game_export.h"
 
+// PyTorch/LibTorch headers for CUDA memory management
+#include <torch/torch.h>
+#include <c10/cuda/CUDACachingAllocator.h>
+
 namespace alphazero {
 namespace selfplay {
 
@@ -47,7 +51,7 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
               << " MCTS simulations" << std::endl;
     
     // Track initial memory
-    alphazero::utils::trackMemory("SelfPlayManager created");
+    // alphazero::utils::trackMemory("SelfPlayManager created");
     
     // Initialize random number generator
     if (settings_.random_seed < 0) {
@@ -57,101 +61,133 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         rng_.seed(static_cast<unsigned int>(settings_.random_seed));
     }
 
-    // Create a single MCTS engine for sequential processing
-    engines_.reserve(1);
-    try {
-        auto engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
-        
-        // Important: Start the evaluator immediately to ensure neural network is initialized properly
-        if (engine) {
-            // First, explicitly ensure the evaluator is started
+    // Create multiple MCTS engines for parallel game processing with OpenMP
+    // Use the number of threads specified in settings or config
+    int desired_engines = settings_.reserved_parallel > 0 ? settings_.reserved_parallel : 8;
+    const int num_engines = std::min(desired_engines, omp_get_max_threads());
+    engines_.reserve(num_engines);
+    
+    // Create a single shared evaluator for all engines
+    auto notify_fn = [this]() {
+        // Wake up the shared evaluator when there's work to do
+        if (shared_evaluator_) {
+            shared_evaluator_->notifyLeafAvailable();
+        }
+    };
+    
+    // Create the shared evaluator with the neural network
+    auto evaluator_inference_fn = [this](const std::vector<std::unique_ptr<core::IGameState>>& states) -> std::vector<mcts::NetworkOutput> {
+        return neural_net_->inference(states);
+    };
+    shared_evaluator_ = std::make_shared<mcts::MCTSEvaluator>(
+        evaluator_inference_fn,
+        settings_.mcts_settings.batch_size,
+        settings_.mcts_settings.batch_timeout
+    );
+    
+    // Configure the shared evaluator to use the shared queues
+    shared_evaluator_->setExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
+    shared_evaluator_->start();
+    
+    // Create engines sequentially for better initialization
+    for (int i = 0; i < num_engines; ++i) {
+        try {
+            auto engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
             
-            if (!engine->ensureEvaluatorStarted()) {
-                        std::cerr << "ERROR: Failed to start evaluator for single engine" << std::endl;
-                        throw std::runtime_error("Failed to start evaluator for self-play engine");
-                    }
-                    
+            // Set up shared external queues for all engines
+            if (engine) {
+                // Configure engine to use the shared queues
+                // std::cout << "Setting shared queues on engine " << i 
+                //           << ": leaf=" << &shared_leaf_queue_ 
+                //           << ", result=" << &shared_result_queue_ 
+                //           << ", thread_id=" << std::hex << std::this_thread::get_id() << std::dec 
+                //           << std::endl;
+                engine->setSharedExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
                 
-                // GPU Warm-up sequence
-                
-                // We need game_type and board_size. Assuming GOMOKU and 15x15 based on user's current run.
-                // A more robust solution would pass these through SelfPlaySettings.
-                core::GameType warmup_game_type = core::GameType::GOMOKU; 
-                int warmup_board_size = 15; // Matches user's config.yaml
-
-                std::unique_ptr<core::IGameState> warmup_state_template = createGame(warmup_game_type, warmup_board_size, 0);
-
-                if (warmup_state_template && neural_net_) {
-                    // Warm-up with batch size 1
-                    std::vector<std::unique_ptr<core::IGameState>> warmup_batch_1;
-                    try {
-                        warmup_batch_1.push_back(warmup_state_template->clone());
-                        if (!warmup_batch_1.empty() && warmup_batch_1.front()) {
-                             
-                            auto outputs1 = neural_net_->inference(warmup_batch_1);
-                            
-                        } else {
-                            std::cerr << "SelfPlayManager: Failed to create or clone dummy state for batch 1 warm-up." << std::endl;
-                        }
-                    } catch (const std::exception& e) {
-                        std::cerr << "SelfPlayManager: Warning - warm-up inference (batch 1) failed: " << e.what() << std::endl;
-                    }
-
-                    // Warm-up with a typical batch size (e.g., mcts.batch_size)
-                    size_t N_batch_size = static_cast<size_t>(settings_.mcts_settings.batch_size);
-                    if (N_batch_size > 0) {
-                        std::vector<std::unique_ptr<core::IGameState>> warmup_batch_N;
-                        try {
-                            for(size_t j = 0; j < N_batch_size; ++j) {
-                                warmup_batch_N.push_back(warmup_state_template->clone());
-                            }
-                            if (!warmup_batch_N.empty() && warmup_batch_N.size() == N_batch_size) {
-                                
-                                auto outputsN = neural_net_->inference(warmup_batch_N);
-                                
-                            } else {
-                                 std::cerr << "SelfPlayManager: Failed to create or clone dummy states for batch " << N_batch_size << " warm-up." << std::endl;
-                            }
-                        } catch (const std::exception& e) {
-                            std::cerr << "SelfPlayManager: Warning - warm-up inference (batch " << N_batch_size << ") failed: " << e.what() << std::endl;
-                        }
-                    }
-                    
-                } else {
-                    if (!warmup_state_template) {
-                        std::cerr << "SelfPlayManager: Warning - could not create dummy state for warm-up. Game type: " << static_cast<int>(warmup_game_type) << ", Board size: " << warmup_board_size << std::endl;
-                    }
-                    if (!neural_net_) {
-                         std::cerr << "SelfPlayManager: Warning - neural_net_ is null, skipping warm-up" << std::endl;
-                    }
-                }
+                engines_.push_back(std::move(engine));
             }
-            
-            engines_.emplace_back(std::move(engine));
-            
-    } catch (const std::exception& e) {
-        std::cerr << "Error creating MCTS engine: " << e.what() << std::endl;
-        throw;
+        } catch (const std::exception& e) {
+            std::cerr << "ERROR creating engine " << i << ": " << e.what() << std::endl;
+        }
     }
     
-    std::cout << "SelfPlayManager: Successfully created single MCTS engine for sequential processing" << std::endl;
+    if (engines_.empty()) {
+        throw std::runtime_error("Failed to create any MCTS engines");
+    }
+    
+    // GPU Warm-up sequence on the first engine
+    try {
+        core::GameType warmup_game_type = core::GameType::GOMOKU; 
+        int warmup_board_size = 15; // Matches user's config.yaml
+
+        std::unique_ptr<core::IGameState> warmup_state_template = createGame(warmup_game_type, warmup_board_size, 0);
+
+        if (warmup_state_template && neural_net_) {
+            // Warm-up with batch size 1
+            std::vector<std::unique_ptr<core::IGameState>> warmup_batch_1;
+            try {
+                warmup_batch_1.push_back(warmup_state_template->clone());
+                if (!warmup_batch_1.empty() && warmup_batch_1.front()) {
+                    auto outputs1 = neural_net_->inference(warmup_batch_1);
+                } else {
+                    std::cerr << "SelfPlayManager: Failed to create or clone dummy state for batch 1 warm-up." << std::endl;
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "SelfPlayManager: Warning - warm-up inference (batch 1) failed: " << e.what() << std::endl;
+            }
+
+            // Warm-up with a typical batch size (e.g., mcts.batch_size)
+            size_t N_batch_size = static_cast<size_t>(settings_.mcts_settings.batch_size);
+            if (N_batch_size > 0) {
+                std::vector<std::unique_ptr<core::IGameState>> warmup_batch_N;
+                try {
+                    for(size_t j = 0; j < N_batch_size; ++j) {
+                        warmup_batch_N.push_back(warmup_state_template->clone());
+                    }
+                    if (!warmup_batch_N.empty() && warmup_batch_N.size() == N_batch_size) {
+                        auto outputsN = neural_net_->inference(warmup_batch_N);
+                    } else {
+                        std::cerr << "SelfPlayManager: Failed to create or clone dummy states for batch " << N_batch_size << " warm-up." << std::endl;
+                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "SelfPlayManager: Warning - warm-up inference (batch " << N_batch_size << ") failed: " << e.what() << std::endl;
+                }
+            }
+        } else {
+            if (!warmup_state_template) {
+                std::cerr << "SelfPlayManager: Warning - could not create dummy state for warm-up. Game type: " << static_cast<int>(warmup_game_type) << ", Board size: " << warmup_board_size << std::endl;
+            }
+            if (!neural_net_) {
+                std::cerr << "SelfPlayManager: Warning - neural_net_ is null, skipping warm-up" << std::endl;
+            }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error during warm-up sequence: " << e.what() << std::endl;
+        // Don't throw - warm-up is optional
+    }
+    
     
 }
 
 SelfPlayManager::~SelfPlayManager() {
-    
+    // Stop the shared evaluator first
+    if (shared_evaluator_) {
+        try {
+            shared_evaluator_->stop();
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: Exception during evaluator cleanup: " << e.what() << std::endl;
+        }
+    }
     
     // Reset game counter
     game_counter_ = 0;
     
     // Force GPU memory cleanup before engines are destroyed
     if (neural_net_) {
-        
         neural_net_.reset();
     }
     
     // Clean up engines in reverse order of creation
-    
     while (!engines_.empty()) {
         try {
             engines_.pop_back();  // This will destroy the unique_ptr and call engine destructor
@@ -159,8 +195,6 @@ SelfPlayManager::~SelfPlayManager() {
             std::cerr << "Warning: Exception during engine cleanup: " << e.what() << std::endl;
         }
     }
-    
-    
 }
 
 std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager::generateGames(core::GameType game_type,
@@ -179,7 +213,7 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
         throw std::runtime_error("No MCTS engines available");
     }
     
-    std::cout << "Generating " << num_games << " games using full MCTS search..." << std::endl;
+    
     
     // Initialize result vector
     std::vector<alphazero::selfplay::GameData> games;
@@ -188,29 +222,63 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     // Create a timestamp base for game IDs
     std::string timestamp_base = getCurrentTimestamp();
     
-    // Generate games sequentially for better CPU utilization
-    std::cout << "Generating " << num_games << " self-play games..." << std::endl;
+    // Generate games in parallel with OpenMP for better CPU/GPU utilization
+    std::cout << "Generating " << num_games << " self-play games using " 
+              << engines_.size() << " engines..." << std::endl;
+    // Thread-safe game collection
+    std::mutex games_mutex;
+    std::atomic<int> completed_games(0);
     
+    // Limit OpenMP threads to engine count to prevent invalid engine access
+    const int max_threads = engines_.size();
+    #pragma omp parallel for schedule(dynamic) num_threads(max_threads)
     for (int i = 0; i < num_games; i++) {
-        // Periodic memory cleanup
+        // Get thread ID and engine
+        int thread_id = omp_get_thread_num();
+        int engine_idx = thread_id % engines_.size();
+        
+        #pragma omp critical(debug_print)
+        {
+            }
+        
+        // Periodic memory cleanup per thread
         if (i > 0 && i % 50 == 0) {
-            utils::GameStatePoolManager::getInstance().clearAllPools();
-            std::cout << "Progress: " << i << "/" << num_games << " games" << std::endl;
+            #pragma omp critical
+            {
+                utils::GameStatePoolManager::getInstance().clearAllPools();
+                std::cout << "Progress: " << completed_games.load() << "/" << num_games << " games" << std::endl;
+            }
         }
         
         std::string game_id = timestamp_base + "_" + std::to_string(i);
         
         try {
-            auto game_data = generateGame(game_type, board_size, game_id, 0);
+            auto game_data = generateGame(game_type, board_size, game_id, engine_idx);
             
             // Add game to results if it has at least one move
             if (!game_data.moves.empty()) {
-                games.push_back(std::move(game_data));
+                #pragma omp critical(games_add)
+                {
+                    games.push_back(std::move(game_data));
+                }
                 
-                // Progress update
-                if ((i + 1) % 10 == 0) {
-                    std::cout << "Completed " << (i + 1) << "/" << num_games << " games"
-                              << " with " << game_data.moves.size() << " moves" << std::endl;
+                int comp = completed_games.fetch_add(1, std::memory_order_relaxed) + 1;
+                
+                // Progress update and memory cleanup
+                if (comp % 10 == 0) {
+                    #pragma omp critical(progress_print)
+                    {
+                        std::cout << "Completed " << comp << "/" << num_games << " games" << std::endl;
+                        
+                        // More aggressive cleanup between games
+                        utils::GameStatePoolManager::getInstance().clearAllPools();
+                        if (torch::cuda::is_available()) {
+                            try {
+                                torch::cuda::synchronize();
+                                c10::cuda::CUDACachingAllocator::emptyCache();
+                            } catch (...) {}
+                        }
+                    }
                 }
             } else {
                 std::cerr << "Failed to generate game " << i << ": no moves were made" << std::endl;
@@ -256,12 +324,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
     // Get a reference to the engine
     mcts::MCTSEngine& engine = *engines_[thread_id];
     
-    // Ensure the evaluator is started before use
-    
-    if (!engine.ensureEvaluatorStarted()) {
-        std::cerr << "SelfPlayManager::generateGame - ERROR: Failed to start evaluator for engine " << thread_id << std::endl;
-        throw std::runtime_error("Failed to start evaluator for engine " + std::to_string(thread_id));
-    }
+    // Don't start evaluator here - it will be configured with external queues during search
     
 
     // Select a random starting position
@@ -358,15 +421,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
             // Run search with timeout detection and robust error handling to prevent stalling
             mcts::SearchResult result;
             
-            // First, ensure the evaluator is started
-            // Debug: Re-ensuring evaluator is started before search
-            // std::cout << "SelfPlayManager::generateGame - Re-ensuring evaluator is started before search for move " 
-            //          << move_count << " in game " << game_id << std::endl;
-            if (!engine.ensureEvaluatorStarted()) {
-                std::cerr << "SelfPlayManager::generateGame - ERROR: Failed to start evaluator for engine before search in game " 
-                         << game_id << std::endl;
-                throw std::runtime_error("Failed to start evaluator before search");
-            }
+            // Don't start evaluator here - it will be configured with external queues in the search method
             
             
             // Validate the game state before search
@@ -400,7 +455,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 
                 // Track memory every 10 moves
                 if (move_count % 10 == 0) {
-                    alphazero::utils::trackMemory("Before search - Game " + game_id + ", Move " + std::to_string(move_count));
+                    // alphazero::utils::trackMemory("Before search - Game " + game_id + ", Move " + std::to_string(move_count));
                 }
                 
                 result = engine.search(*game);
@@ -409,7 +464,16 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 if (move_count % 10 == 0) {
                     std::cout << "Game " << game_id << ": Move " << move_count 
                              << " completed (action: " << result.action << ")" << std::endl;
-                    alphazero::utils::trackMemory("After search - Game " + game_id + ", Move " + std::to_string(move_count));
+                    // alphazero::utils::trackMemory("After search - Game " + game_id + ", Move " + std::to_string(move_count));
+                    
+                    // Periodic memory cleanup
+                    utils::GameStatePoolManager::getInstance().clearAllPools();
+                    if (torch::cuda::is_available()) {
+                        try {
+                            torch::cuda::synchronize();
+                            c10::cuda::CUDACachingAllocator::emptyCache();
+                        } catch (...) {}
+                    }
                 }
             } catch (const std::exception& e) {
                 std::cerr << "SelfPlayManager::generateGame - Exception during direct search: " << e.what() << std::endl;

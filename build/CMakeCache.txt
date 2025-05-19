@@ -64,7 +64,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=
+CMAKE_BUILD_TYPE:STRING=Release
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -1085,8 +1085,8 @@ nvtx3_dir:PATH=nvtx3_dir-NOTFOUND
 //The directory containing a CMake configuration file for phmap.
 phmap_DIR:PATH=phmap_DIR-NOTFOUND
 
-//The directory containing a CMake configuration file for pybind11.
-pybind11_DIR:PATH=/usr/lib/cmake/pybind11
+//pybind11 CMake directory from Python
+pybind11_DIR:PATH=/usr/lib/python3/dist-packages/pybind11/share/cmake/pybind11
 
 //The directory containing a CMake configuration file for rapids_logger.
 rapids_logger_DIR:PATH=/usr/local/lib/cmake/rapids_logger
@@ -1670,6 +1670,8 @@ _Python_INCLUDE_DIR:INTERNAL=/usr/include/python3.12
 //Python Properties
 _Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;12;3;64;<none>;cpython-312-x86_64-linux-gnu;abi3;/usr/lib/python3.12;/usr/lib/python3.12;/usr/local/lib/python3.12/dist-packages;/usr/local/lib/python3.12/dist-packages
 _Python_INTERPRETER_SIGNATURE:INTERNAL=0b516266b7ed9a0986c924c82c2c3a08
+//Interpreter reason failure
+_Python_Interpreter_REASON_FAILURE:INTERNAL=
 //Path to a library.
 _Python_LIBRARY_RELEASE:INTERNAL=/usr/lib/x86_64-linux-gnu/libpython3.12.so
 //NumPy reason failure
@@ -1687,7 +1689,7 @@ _libcudacxx_VERSION_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids/libcudacxx
 //Result of TRY_COMPILE
 compile_result:INTERNAL=TRUE
 //Directories where pybind11 and possibly Python headers are located
-pybind11_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/python3.12
+pybind11_INCLUDE_DIRS:INTERNAL=/usr/lib/python3/dist-packages/pybind11/include;/usr/include/python3.12
 //Result of try_run()
 run_result:INTERNAL=0
 

@@ -16,6 +16,13 @@ struct ALPHAZERO_API NetworkOutput {
     float value;
 };
 
+// Evaluation result to be sent back to engines
+struct ALPHAZERO_API EvaluationResult {
+    NetworkOutput output;
+    int batch_id;
+    int request_id;
+};
+
 class MCTSNode;
 
 struct ALPHAZERO_API EvaluationRequest {

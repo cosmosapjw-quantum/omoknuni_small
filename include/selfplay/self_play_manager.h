@@ -10,6 +10,9 @@
 #include "mcts/mcts_engine.h"
 #include "nn/neural_network.h"
 #include "core/export_macros.h"
+#include <moodycamel/concurrentqueue.h>
+#include "mcts/evaluation_types.h"
+#include "mcts/mcts_evaluator.h"
 
 namespace alphazero {
 namespace selfplay {
@@ -210,6 +213,13 @@ private:
     
     // Sequential game counter (no longer using atomic for parallel operations)
     int game_counter_;
+    
+    // Shared external queues for all engines to use
+    moodycamel::ConcurrentQueue<mcts::PendingEvaluation> shared_leaf_queue_;
+    moodycamel::ConcurrentQueue<std::pair<mcts::NetworkOutput, mcts::PendingEvaluation>> shared_result_queue_;
+    
+    // Shared evaluator for all engines
+    std::shared_ptr<mcts::MCTSEvaluator> shared_evaluator_;
 };
 
 } // namespace selfplay

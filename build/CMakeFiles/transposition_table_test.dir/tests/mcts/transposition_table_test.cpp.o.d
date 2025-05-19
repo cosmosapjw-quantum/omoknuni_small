@@ -331,6 +331,10 @@ CMakeFiles/transposition_table_test.dir/tests/mcts/transposition_table_test.cpp.
  /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
  /usr/include/c++/13/deque /usr/include/c++/13/bits/stl_deque.h \
  /usr/include/c++/13/bits/deque.tcc \
+ /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
+ /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
  /usr/include/c++/13/algorithm \
@@ -4945,7 +4949,6 @@ CMakeFiles/transposition_table_test.dir/tests/mcts/transposition_table_test.cpp.
  /opt/libtorch-2.7.0-cu128/include/ATen/Parallel.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/Config.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/ParallelOpenMP.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/Parallel-inl.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/ParallelGuard.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/profiler.h \

@@ -1,0 +1,83 @@
+# GPU Optimized Configuration for AlphaZero
+# Optimized for Ryzen 5900X + RTX 3060 Ti
+
+# Game settings
+game: gomoku
+board_size: 15
+
+# Self-play settings
+self_play_games_per_generation: 400
+
+# GPU-optimized MCTS settings  
+mcts_simulations: 400 
+mcts_num_threads: 12  
+mcts_batch_size: 64  
+mcts_batch_timeout_ms: 50 
+mcts_max_concurrent_simulations: 512
+mcts_exploration_constant: 1.4
+mcts_virtual_loss: 3
+mcts_add_dirichlet_noise: true
+mcts_dirichlet_alpha: 0.3
+mcts_dirichlet_epsilon: 0.25
+
+# Leaf parallelization settings
+mcts_use_root_parallelization: false
+mcts_num_root_workers: 1
+
+# Progressive widening (helps with batching)
+mcts_use_progressive_widening: true
+mcts_progressive_widening_c: 1.0
+mcts_progressive_widening_k: 10.0
+
+# RAVE settings
+mcts_use_rave: true
+mcts_rave_constant: 3000
+
+# Transposition table
+mcts_use_transposition_table: true
+mcts_transposition_table_size_mb: 256
+
+# Neural network settings
+training_batch_size: 512  # Large training batch for GPU
+training_learning_rate: 0.01
+training_weight_decay: 0.0001
+training_num_epochs: 10
+training_window_size: 1000000
+training_sample_size: 50000
+training_save_frequency: 10
+
+# Evaluation settings
+evaluation_games: 100
+evaluation_mcts_simulations: 400
+evaluation_mcts_batch_size: 256
+evaluation_threshold: 0.55
+
+# Enable GPU memory optimization
+gpu_memory_optimization: true
+gpu_pinned_memory: true
+gpu_async_transfers: true
+
+# Model settings
+model_path: models/model.pt
+model_input_channels: 17
+model_num_res_blocks: 12
+model_num_filters: 128
+
+# OpenMP settings
+omp_num_threads: 12
+omp_affinity: close  # Keep threads on same NUMA node
+
+# Output settings  
+self_play_output_dir: data/self_play_games
+self_play_output_format: json
+
+# Game-specific settings
+gomoku_board_size: 15
+gomoku_win_length: 5
+gomoku_use_renju: false
+gomoku_use_omok: false  
+gomoku_use_pro_long_opening: false
+
+# Debug settings
+debug_level: 0
+enable_profiling: false

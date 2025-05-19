@@ -17,7 +17,7 @@ MCTSTaskflowEngine::MCTSTaskflowEngine(MCTSSettings settings,
       tt_(std::make_unique<TranspositionTable>()),
       node_tracker_(std::make_unique<NodeTracker>()),
       node_pool_(std::make_unique<MCTSNodePool>()),
-      leaf_queue_(std::make_unique<moodycamel::ConcurrentQueue<MCTSEngine::PendingEvaluation>>()),
+      leaf_queue_(std::make_unique<moodycamel::ConcurrentQueue<PendingEvaluation>>()),
       result_queue_(std::make_unique<moodycamel::ConcurrentQueue<mcts::NetworkOutput>>()) {
     
     // Create evaluator with shared_ptr to allow copying in lambda
@@ -265,7 +265,7 @@ void MCTSTaskflowEngine::treeTraversalTask() {
     if (current->needsEvaluation()) {
         current->markEvaluationInProgress();
         
-        MCTSEngine::PendingEvaluation pending;
+        PendingEvaluation pending;
         pending.state = current->getState().clone();
         pending.node = current;
         pending.path = std::move(path);
@@ -326,7 +326,7 @@ void MCTSTaskflowEngine::reset() {
     root_.reset();
     
     // Clear queues by consuming all items
-    MCTSEngine::PendingEvaluation pending;
+    PendingEvaluation pending;
     while (leaf_queue_->try_dequeue(pending)) {}
     
     mcts::NetworkOutput result;

@@ -5027,6 +5027,9 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o: \
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
  /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
+ /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
+ /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \

@@ -5,11 +5,17 @@ Omoknuni is a high-performance AI engine written in C++ that learns to play boar
 ## Key Features
 
 - **Game Abstraction Layer**: Supports Gomoku, Chess, and Go with a unified interface
-- **MCTS Engine**: Multi-threaded with virtual loss, progressive widening, and transposition tables
+- **Advanced MCTS Engine**: 
+  - Multi-threaded with virtual loss for collision prevention
+  - Progressive widening to control tree branching factor
+  - RAVE (Rapid Action Value Estimation) for improved action values
+  - Root parallelization for running multiple trees simultaneously
+  - Transposition tables for position caching
+  - Lock-free concurrent queues for efficient communication
 - **Neural Network Integration**: DDW-RandWire-ResNet architecture via libtorch (CUDA)
-- **Leaf-Parallelization & Batch Inference**: Efficient GPU utilization with batched evaluations
+- **Leaf-Parallelization & Batch Inference**: Centralized GPU batch evaluator with configurable batch size and timeout
 - **Python CLI & Bindings**: Full pipeline accessible through Python with pybind11
-- **Self-Play & Training Pipeline**: End-to-end training workflow
+- **Self-Play & Training Pipeline**: End-to-end training workflow with ELO tracking
 
 ## Project Structure
 
@@ -286,10 +292,34 @@ network_type: resnet
 num_res_blocks: 19
 num_filters: 256
 
+# MCTS settings
+mcts_num_simulations: 800
+mcts_num_threads: 12
+mcts_batch_size: 256
+mcts_batch_timeout_ms: 5
+mcts_exploration_constant: 1.4
+mcts_virtual_loss: 3
+
+# Progressive widening
+mcts_use_progressive_widening: true
+mcts_progressive_widening_c: 1.0
+mcts_progressive_widening_k: 10.0
+
+# Root parallelization
+mcts_use_root_parallelization: true
+mcts_num_root_workers: 4
+
+# RAVE settings
+mcts_use_rave: true
+mcts_rave_constant: 3000.0
+
+# Transposition table
+mcts_use_transposition_table: true
+mcts_transposition_table_size_mb: 128
+
 # Self-play settings
 self_play_num_games: 100
-mcts_num_simulations: 800
-mcts_num_threads: 8
+self_play_temperature: 1.0
 ```
 
 ### Running the AlphaZero Pipeline
@@ -315,6 +345,77 @@ python -m alphazero_main --config config.yaml
 - **Train**: Run the full pipeline (self-play, training, evaluation)
 - **Self-Play Only**: Generate games without training
 - **Evaluation**: Evaluate a trained model
+
+## Performance Tuning
+
+### Recommended Settings by Hardware
+
+**High-End GPU (RTX 3090/4090)**:
+```yaml
+mcts_batch_size: 512
+mcts_num_threads: 16
+mcts_num_root_workers: 8
+```
+
+**Mid-Range GPU (RTX 3060 Ti)**:
+```yaml
+mcts_batch_size: 256
+mcts_num_threads: 12
+mcts_num_root_workers: 4
+```
+
+**CPU-Only**:
+```yaml
+mcts_batch_size: 16
+mcts_num_threads: 8
+mcts_use_root_parallelization: false
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Low GPU Utilization**:
+   - Increase `mcts_batch_size`
+   - Decrease `mcts_batch_timeout_ms`
+   - Check if evaluator thread is running with `nvidia-smi`
+
+2. **Out of Memory**:
+   - Reduce `mcts_batch_size`
+   - Lower `mcts_max_concurrent_simulations`
+   - Decrease neural network size (`num_filters`, `num_res_blocks`)
+
+3. **Slow Search Speed**:
+   - Enable transposition tables
+   - Use progressive widening
+   - Optimize thread count to match CPU cores
+
+4. **Build Errors**:
+   - Ensure CUDA toolkit matches libtorch version
+   - Check CMake version (>= 3.14)
+   - Verify Python development headers are installed
+
+### Debug Options
+
+Enable verbose logging:
+```bash
+export MCTS_DEBUG=1
+export MCTS_VERBOSE=1
+```
+
+Monitor performance:
+```bash
+nvidia-smi dmon -s pucvmet
+```
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 

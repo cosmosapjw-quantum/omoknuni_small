@@ -48,6 +48,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o"
   "CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o.d"
+  "CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o"
+  "CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o"
   "CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o"

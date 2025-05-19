@@ -1454,6 +1454,30 @@ src/nn/ddw_randwire_resnet.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.s
 .PHONY : src/nn/ddw_randwire_resnet.cpp.s
 
+src/nn/gpu_optimizer.o: src/nn/gpu_optimizer.cpp.o
+.PHONY : src/nn/gpu_optimizer.o
+
+# target to build an object file
+src/nn/gpu_optimizer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o
+.PHONY : src/nn/gpu_optimizer.cpp.o
+
+src/nn/gpu_optimizer.i: src/nn/gpu_optimizer.cpp.i
+.PHONY : src/nn/gpu_optimizer.i
+
+# target to preprocess a source file
+src/nn/gpu_optimizer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.i
+.PHONY : src/nn/gpu_optimizer.cpp.i
+
+src/nn/gpu_optimizer.s: src/nn/gpu_optimizer.cpp.s
+.PHONY : src/nn/gpu_optimizer.s
+
+# target to generate assembly for a file
+src/nn/gpu_optimizer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.s
+.PHONY : src/nn/gpu_optimizer.cpp.s
+
 src/nn/neural_network_factory.o: src/nn/neural_network_factory.cpp.o
 .PHONY : src/nn/neural_network_factory.o
 
@@ -2249,6 +2273,33 @@ tests/mcts/mcts_openmp_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.s
 .PHONY : tests/mcts/mcts_openmp_test.cpp.s
 
+tests/mcts/mcts_optimization_test.o: tests/mcts/mcts_optimization_test.cpp.o
+.PHONY : tests/mcts/mcts_optimization_test.o
+
+# target to build an object file
+tests/mcts/mcts_optimization_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o
+.PHONY : tests/mcts/mcts_optimization_test.cpp.o
+
+tests/mcts/mcts_optimization_test.i: tests/mcts/mcts_optimization_test.cpp.i
+.PHONY : tests/mcts/mcts_optimization_test.i
+
+# target to preprocess a source file
+tests/mcts/mcts_optimization_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.i
+.PHONY : tests/mcts/mcts_optimization_test.cpp.i
+
+tests/mcts/mcts_optimization_test.s: tests/mcts/mcts_optimization_test.cpp.s
+.PHONY : tests/mcts/mcts_optimization_test.s
+
+# target to generate assembly for a file
+tests/mcts/mcts_optimization_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.s
+.PHONY : tests/mcts/mcts_optimization_test.cpp.s
+
 tests/mcts/transposition_integration_test.o: tests/mcts/transposition_integration_test.cpp.o
 .PHONY : tests/mcts/transposition_integration_test.o
 
@@ -2510,6 +2561,9 @@ help:
 	@echo "... src/nn/ddw_randwire_resnet.o"
 	@echo "... src/nn/ddw_randwire_resnet.i"
 	@echo "... src/nn/ddw_randwire_resnet.s"
+	@echo "... src/nn/gpu_optimizer.o"
+	@echo "... src/nn/gpu_optimizer.i"
+	@echo "... src/nn/gpu_optimizer.s"
 	@echo "... src/nn/neural_network_factory.o"
 	@echo "... src/nn/neural_network_factory.i"
 	@echo "... src/nn/neural_network_factory.s"
@@ -2606,6 +2660,9 @@ help:
 	@echo "... tests/mcts/mcts_openmp_test.o"
 	@echo "... tests/mcts/mcts_openmp_test.i"
 	@echo "... tests/mcts/mcts_openmp_test.s"
+	@echo "... tests/mcts/mcts_optimization_test.o"
+	@echo "... tests/mcts/mcts_optimization_test.i"
+	@echo "... tests/mcts/mcts_optimization_test.s"
 	@echo "... tests/mcts/transposition_integration_test.o"
 	@echo "... tests/mcts/transposition_integration_test.i"
 	@echo "... tests/mcts/transposition_integration_test.s"

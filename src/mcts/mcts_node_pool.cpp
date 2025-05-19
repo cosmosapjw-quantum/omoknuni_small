@@ -6,15 +6,15 @@ namespace alphazero {
 namespace mcts {
 
 MCTSNodePool::MemoryBlock::MemoryBlock(size_t block_size) 
-    : size(block_size) {
-    // Allocate raw memory for nodes using mimalloc if available
-#ifdef USE_MIMALLOC
-    void* raw_memory = alphazero::memory::aligned_alloc(
-        alignof(MCTSNode), block_size * sizeof(MCTSNode));
-    nodes.reset(static_cast<MCTSNode*>(raw_memory));
-#else
-    nodes = std::make_unique<MCTSNode[]>(block_size);
-#endif
+    : size(block_size),
+      nodes(static_cast<MCTSNode*>(::operator new(block_size * sizeof(MCTSNode))), 
+            [](MCTSNode* ptr) { ::operator delete(ptr); }) {
+    // Store individual pointers for placement new later
+    raw_pointers.reserve(block_size);
+    MCTSNode* base = nodes.get();
+    for (size_t i = 0; i < block_size; ++i) {
+        raw_pointers.push_back(&base[i]);
+    }
 }
 
 MCTSNodePool::MCTSNodePool(const Config& config) 
@@ -46,10 +46,12 @@ void MCTSNodePool::allocateBlock(size_t size) {
     
     auto block = std::make_unique<MemoryBlock>(size);
     
-    // Add all nodes to free list
+    // Add all nodes to free list efficiently using bulk operation
     std::lock_guard<std::mutex> lock(pool_mutex_);
-    for (size_t i = 0; i < size; ++i) {
-        free_nodes_.push(&block->nodes[i]);
+    
+    // Use bulk addition for better performance
+    for (MCTSNode* node : block->raw_pointers) {
+        free_nodes_.push(node);
     }
     
     memory_blocks_.push_back(std::move(block));

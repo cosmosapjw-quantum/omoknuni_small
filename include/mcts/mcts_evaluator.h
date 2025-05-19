@@ -59,6 +59,10 @@ public:
     
     // Set external queues for direct batch processing
     void setExternalQueues(void* leaf_queue, void* result_queue, std::function<void()> result_notify_callback = nullptr) {
+        std::lock_guard<std::mutex> lock(queue_mutex_);
+        // int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF;
+        // std::cout << "[EVALUATOR-" << evaluator_id << "] setExternalQueues called with leaf_queue=" << leaf_queue 
+        //           << ", result_queue=" << result_queue << std::endl;
         leaf_queue_ptr_ = leaf_queue;
         result_queue_ptr_ = result_queue;
         result_notify_callback_ = result_notify_callback;
@@ -107,6 +111,9 @@ private:
     // Condvar for early wakeup
     std::mutex cv_mutex_;
     std::condition_variable cv_;
+    
+    // Start/stop synchronization
+    std::mutex start_mutex_;
     
     // Diagnostic counters
     std::atomic<size_t> timeouts_{0};

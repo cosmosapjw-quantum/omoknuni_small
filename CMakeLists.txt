@@ -626,6 +626,7 @@ if(WITH_TORCH)
         src/nn/ddw_randwire_resnet.cpp
         src/nn/resnet_model.cpp
         src/nn/neural_network_factory.cpp
+        src/nn/gpu_optimizer.cpp
     )
 endif()
 
@@ -1203,7 +1204,8 @@ if(BUILD_TESTS)
     set(GO_TEST_SOURCES     tests/games/go/go_test.cpp)
     set(GOMOKU_TEST_SOURCES tests/games/gomoku/gomoku_test.cpp)
     set(MCTS_TEST_SOURCES   tests/mcts/mcts_node_test.cpp  tests/mcts/mcts_evaluator_test.cpp
-                            tests/mcts/mcts_engine_test.cpp tests/mcts/mcts_openmp_test.cpp)
+                            tests/mcts/mcts_engine_test.cpp tests/mcts/mcts_openmp_test.cpp
+                            tests/mcts/mcts_optimization_test.cpp)
     set(CLI_TEST_SOURCES tests/cli/cli_manager_test.cpp)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/mcts/mcts_test.cpp")
         list(APPEND MCTS_TEST_SOURCES tests/mcts/mcts_test.cpp)

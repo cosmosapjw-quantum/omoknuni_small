@@ -19,6 +19,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/tests/mcts/mcts_evaluator_test.cpp" "CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o" "gcc" "CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o.d"
   "/home/cosmos/omoknuni_small/tests/mcts/mcts_node_test.cpp" "CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o" "gcc" "CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o.d"
   "/home/cosmos/omoknuni_small/tests/mcts/mcts_openmp_test.cpp" "CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o" "gcc" "CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o.d"
+  "/home/cosmos/omoknuni_small/tests/mcts/mcts_optimization_test.cpp" "CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o" "gcc" "CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o.d"
   "" "bin/Release/all_tests" "gcc" "CMakeFiles/all_tests.dir/link.d"
   )
 

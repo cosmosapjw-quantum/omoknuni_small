@@ -1,0 +1,42 @@
+# Simple Configuration for AlphaZero Testing
+
+# Game settings
+game: gomoku
+board_size: 15
+
+# Self-play settings
+self_play_games_per_generation: 10
+
+# Basic MCTS settings  
+mcts_simulations: 100
+mcts_num_threads: 4
+mcts_batch_size: 32
+mcts_batch_timeout_ms: 10
+mcts_exploration_constant: 1.4
+mcts_virtual_loss: 3
+mcts_add_dirichlet_noise: true
+mcts_dirichlet_alpha: 0.3
+mcts_dirichlet_epsilon: 0.25
+
+# Disable advanced features for testing
+mcts_use_root_parallelization: false
+mcts_num_root_workers: 1
+mcts_use_progressive_widening: false
+mcts_use_rave: false
+mcts_use_transposition_table: false
+
+# Model settings
+model_path: models/model.pt
+model_input_channels: 17
+model_num_res_blocks: 10
+model_num_filters: 64
+
+# Training settings
+training_batch_size: 128
+training_learning_rate: 0.01
+training_weight_decay: 0.0001
+training_num_epochs: 10
+
+# Output settings
+self_play_output_dir: data/self_play_games
+self_play_output_format: json

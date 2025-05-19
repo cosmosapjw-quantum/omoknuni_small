@@ -212,10 +212,24 @@ CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/mcts_openmp_test.cpp -o CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.s
 
+CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o: CMakeFiles/all_tests.dir/flags.make
+CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/mcts_optimization_test.cpp
+CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o: CMakeFiles/all_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o -MF CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o.d -o CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/mcts_optimization_test.cpp
+
+CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/tests/mcts/mcts_optimization_test.cpp > CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.i
+
+CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/mcts_optimization_test.cpp -o CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.s
+
 CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o: CMakeFiles/all_tests.dir/flags.make
 CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o: /home/cosmos/omoknuni_small/tests/cli/cli_manager_test.cpp
 CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o: CMakeFiles/all_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o -MF CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o.d -o CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o -c /home/cosmos/omoknuni_small/tests/cli/cli_manager_test.cpp
 
 CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.i: cmake_force
@@ -238,6 +252,7 @@ all_tests_OBJECTS = \
 "CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o" \
 "CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.o" \
 "CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o" \
+"CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o" \
 "CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o"
 
 # External object files for target all_tests
@@ -253,6 +268,7 @@ bin/Release/all_tests: CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o
 bin/Release/all_tests: CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o
 bin/Release/all_tests: CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.o
 bin/Release/all_tests: CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o
+bin/Release/all_tests: CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o
 bin/Release/all_tests: CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o
 bin/Release/all_tests: CMakeFiles/all_tests.dir/build.make
 bin/Release/all_tests: CMakeFiles/all_tests.dir/compiler_depend.ts
@@ -280,7 +296,7 @@ bin/Release/all_tests: lib/Release/libTracyClient.so.0.11.0
 bin/Release/all_tests: /usr/local/cuda/lib64/libcudart.so
 bin/Release/all_tests: /usr/local/lib/librapids_logger.so
 bin/Release/all_tests: CMakeFiles/all_tests.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Linking CXX executable bin/Release/all_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX executable bin/Release/all_tests"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/all_tests.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

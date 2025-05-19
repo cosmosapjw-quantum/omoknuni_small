@@ -434,7 +434,7 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
     
     size_t count = inference_count.fetch_add(1);
     if (count % 100 == 0) {
-        alphazero::utils::trackMemory("ResNet inference #" + std::to_string(count) + ", batch=" + std::to_string(states.size()));
+        // alphazero::utils::trackMemory("ResNet inference #" + std::to_string(count) + ", batch=" + std::to_string(states.size()));
     }
     
     std::vector<mcts::NetworkOutput> default_outputs;

@@ -62,7 +62,7 @@ private:
     std::condition_variable search_complete_cv_;
     
     // Queues for batch evaluation
-    std::unique_ptr<moodycamel::ConcurrentQueue<MCTSEngine::PendingEvaluation>> leaf_queue_;
+    std::unique_ptr<moodycamel::ConcurrentQueue<PendingEvaluation>> leaf_queue_;
     std::unique_ptr<moodycamel::ConcurrentQueue<mcts::NetworkOutput>> result_queue_;
     
     // Random number generation

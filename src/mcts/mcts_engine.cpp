@@ -12,9 +12,20 @@
 #include <iomanip>
 #include <queue>
 #include <omp.h>
+#include <cstdlib>
+
+namespace alphazero {
+namespace mcts {
+
+// Define static members
+std::mutex MCTSEngine::s_global_evaluator_mutex;
+std::atomic<int> MCTSEngine::s_evaluator_init_counter{0};
+
+} // namespace mcts
+} // namespace alphazero
 
 // Configurable debug level
-#define MCTS_DEBUG 1
+#define MCTS_DEBUG 0
 #define MCTS_VERBOSE 0  // Set to 1 for verbose logging, 0 for performance
 
 // Lightweight logging macros
@@ -44,7 +55,7 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
       transposition_table_(nullptr),
       use_transposition_table_(settings.use_transposition_table),
       evaluator_started_(false),
-      game_state_pool_enabled_(true) {  // Enable game state pool
+      game_state_pool_enabled_(false) {  // Disable game state pool for debugging
     
     // Create transposition table with configurable size
     if (use_transposition_table_) {
@@ -69,7 +80,7 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
                 return neural_net->inference(states);
             }, 
             settings.batch_size, 
-            std::min(settings.batch_timeout, std::chrono::milliseconds(10)));  // Cap timeout at 10ms
+            settings.batch_timeout);  // Use configured timeout for better batching
             
         if (!evaluator_) {
             throw std::runtime_error("Failed to create MCTSEvaluator");
@@ -89,7 +100,7 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
       transposition_table_(nullptr),
       use_transposition_table_(settings.use_transposition_table),
       evaluator_started_(false),
-      game_state_pool_enabled_(true) {  // Enable game state pool
+      game_state_pool_enabled_(false) {  // Disable game state pool for debugging
     
     // Create transposition table with configurable size
     if (use_transposition_table_) {
@@ -124,21 +135,39 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
 }
 
 bool MCTSEngine::ensureEvaluatorStarted() {
-    // Check if already started
-    if (evaluator_started_) {
+    // Don't start local evaluator if using shared queues - the shared evaluator is managed externally
+    if (use_shared_queues_) {
+        return true;
+    }
+    
+    // First check without lock for performance
+    if (evaluator_started_.load(std::memory_order_acquire)) {
+        return true;
+    }
+    
+    // Acquire lock for initialization to prevent race conditions
+    std::lock_guard<std::mutex> lock(evaluator_mutex_);
+    
+    // Double-check with lock held
+    if (evaluator_started_.load(std::memory_order_relaxed)) {
         return true;
     }
     
     try {
         // Make sure evaluator exists
         if (!evaluator_) {
-            // MCTSEngine::ensureEvaluatorStarted - Evaluator is null
             return false;
         }
         
         // Start the evaluator
-        evaluator_->start();
-        evaluator_started_ = true;
+        try {
+            evaluator_->start();
+            } catch (const std::exception& e) {
+            throw;
+        } catch (...) {
+            throw;
+        }
+        evaluator_started_.store(true, std::memory_order_release);
         return true;
     } catch (const std::exception& e) {
         // MCTSEngine::ensureEvaluatorStarted - Failed to start evaluator
@@ -150,10 +179,15 @@ bool MCTSEngine::ensureEvaluatorStarted() {
 }
 
 void MCTSEngine::safelyStopEvaluator() {
-    if (evaluator_started_) {
+    // Don't stop evaluator if using shared queues - it's managed externally
+    if (use_shared_queues_) {
+        return;
+    }
+    
+    if (evaluator_started_.load(std::memory_order_acquire)) {
         try {
             evaluator_->stop();
-            evaluator_started_ = false;
+            evaluator_started_.store(false, std::memory_order_release);
         } catch (const std::exception& e) {
             // Commented out: Error stopping evaluator with error message
         } catch (...) {
@@ -195,37 +229,54 @@ float MCTSEngine::getTranspositionTableHitRate() const {
     return 0.0f;
 }
 
-MCTSEngine::MCTSEngine(MCTSEngine&& other) noexcept
-    : settings_(std::move(other.settings_)),
-      last_stats_(std::move(other.last_stats_)),
-      evaluator_(std::move(other.evaluator_)),
-      root_(std::move(other.root_)),
-      shutdown_(other.shutdown_.load()),
-      active_simulations_(other.active_simulations_.load()),
-      search_running_(other.search_running_.load()),
-      random_engine_(std::move(other.random_engine_)),
-      transposition_table_(std::move(other.transposition_table_)),
-      use_transposition_table_(other.use_transposition_table_),
-      evaluator_started_(other.evaluator_started_),
-      pending_evaluations_(other.pending_evaluations_.load()),
-      batch_counter_(other.batch_counter_.load()),
-      total_leaves_generated_(other.total_leaves_generated_.load()),
-      total_results_processed_(other.total_results_processed_.load()),
-      leaf_queue_(std::move(other.leaf_queue_)),
-      batch_queue_(std::move(other.batch_queue_)),
-      result_queue_(std::move(other.result_queue_)),
-      // batch_accumulator_worker_(std::move(other.batch_accumulator_worker_)),
-      result_distributor_worker_(std::move(other.result_distributor_worker_)),
-      // tree_traversal_workers_(std::move(other.tree_traversal_workers_)),
-      workers_active_(other.workers_active_.load()) {
+MCTSEngine::MCTSEngine(MCTSEngine&& other) noexcept {
+    // First stop the other engine to ensure thread safety
+    other.shutdown_ = true;
+    
+    // Stop evaluator if it was started
+    if (other.evaluator_ && other.evaluator_started_) {
+        try {
+            other.evaluator_->stop();
+        } catch (...) {
+            // Ignore exceptions during move
+        }
+    }
+    
+    // Wait for threads to complete
+    if (other.result_distributor_worker_.joinable()) {
+        try {
+            other.result_distributor_worker_.join();
+        } catch (...) {
+            // Ignore exceptions
+        }
+    }
+    
+    // Now safe to move resources
+    settings_ = std::move(other.settings_);
+    last_stats_ = std::move(other.last_stats_);
+    evaluator_ = std::move(other.evaluator_);
+    root_ = std::move(other.root_);
+    shutdown_ = other.shutdown_.load();
+    active_simulations_ = other.active_simulations_.load();
+    search_running_ = other.search_running_.load();
+    random_engine_ = std::move(other.random_engine_);
+    transposition_table_ = std::move(other.transposition_table_);
+    use_transposition_table_ = other.use_transposition_table_;
+    evaluator_started_.store(other.evaluator_started_.load(), std::memory_order_release);
+    pending_evaluations_ = other.pending_evaluations_.load();
+    batch_counter_ = other.batch_counter_.load();
+    total_leaves_generated_ = other.total_leaves_generated_.load();
+    total_results_processed_ = other.total_results_processed_.load();
+    leaf_queue_ = std::move(other.leaf_queue_);
+    batch_queue_ = std::move(other.batch_queue_);
+    result_queue_ = std::move(other.result_queue_);
+    result_distributor_worker_ = std::move(other.result_distributor_worker_);
+    workers_active_ = other.workers_active_.load();
     
     // Validate the moved evaluator
     if (!evaluator_) {
         // WARNING: evaluator_ is null after move constructor
     }
-    
-    // Properly clean up other's threads before clearing
-    other.shutdown_ = true;
     other.workers_active_ = false;
     // Commented out - not used in OpenMP version
     // other.cv_.notify_all();
@@ -251,7 +302,7 @@ MCTSEngine::MCTSEngine(MCTSEngine&& other) noexcept
     // other.tree_traversal_workers_.clear();
     other.search_running_ = false;
     other.active_simulations_ = 0;
-    other.evaluator_started_ = false;
+    other.evaluator_started_.store(false, std::memory_order_release);
 }
 
 MCTSEngine& MCTSEngine::operator=(MCTSEngine&& other) noexcept {
@@ -292,7 +343,7 @@ MCTSEngine& MCTSEngine::operator=(MCTSEngine&& other) noexcept {
         random_engine_ = std::move(other.random_engine_);
         transposition_table_ = std::move(other.transposition_table_);
         use_transposition_table_ = other.use_transposition_table_;
-        evaluator_started_ = other.evaluator_started_;
+        evaluator_started_.store(other.evaluator_started_.load(), std::memory_order_release);
         pending_evaluations_ = other.pending_evaluations_.load();
         batch_counter_ = other.batch_counter_.load();
         total_leaves_generated_ = other.total_leaves_generated_.load();
@@ -337,7 +388,7 @@ MCTSEngine& MCTSEngine::operator=(MCTSEngine&& other) noexcept {
         // other.tree_traversal_workers_.clear();
         other.search_running_ = false;
         other.active_simulations_ = 0;
-        other.evaluator_started_ = false;
+        other.evaluator_started_.store(false, std::memory_order_release);
     }
     
     return *this;
@@ -436,7 +487,7 @@ MCTSEngine::~MCTSEngine() {
 
 SearchResult MCTSEngine::search(const core::IGameState& state) {
     // MCTSEngine::search - Starting search...
-    alphazero::utils::trackMemory("MCTSEngine::search started");
+    // alphazero::utils::trackMemory("MCTSEngine::search started");
     auto start_time = std::chrono::steady_clock::now();
 
     // Validate the state before proceeding
@@ -484,15 +535,8 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
     // MUST be done AFTER clearing the transposition table
     root_.reset();
     
-    // Ensure evaluator is started (idempotent)
-    if (!evaluator_started_) {
-        if (!ensureEvaluatorStarted()) {
-            // MCTSEngine::search - Evaluator could not be started. Aborting search
-            SearchResult result; // Return default/error result
-            result.action = -1;
-            return result;
-        }
-    }
+    // Don't start evaluator here - it will be configured with external queues later
+    // The evaluator should only be started after external queues are configured
 
     // Initialize statistics for the new search
     last_stats_ = MCTSStats();
@@ -655,7 +699,7 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
     last_stats_.avg_batch_latency = evaluator_->getAverageBatchLatency();
     last_stats_.total_evaluations = evaluator_->getTotalEvaluations();
     
-    alphazero::utils::trackMemory("MCTSEngine::search completed");
+    // alphazero::utils::trackMemory("MCTSEngine::search completed");
 
     if (last_stats_.search_time.count() > 0) {
         last_stats_.nodes_per_second = 1000.0f * last_stats_.total_nodes / 
@@ -759,7 +803,7 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
     // MCTSEngine::runSearch - Creating new root node from state...
     try {
         // Clone the state with proper error handling
-        std::unique_ptr<core::IGameState> state_clone;
+        std::shared_ptr<core::IGameState> state_clone;
         // MCTSEngine::runSearch - Cloning state...
         try {
             state_clone = cloneGameState(state);
@@ -784,7 +828,7 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                 throw std::runtime_error("Cloned state failed validation");
             }
             // MCTSEngine::runSearch - Cloned state validated successfully
-        } catch (const std::exception& e) {
+            } catch (const std::exception& e) {
             // MCTSEngine::runSearch - Exception validating cloned state
             throw std::runtime_error(std::string("Cloned state validation error: ") + e.what());
         } catch (...) {
@@ -795,9 +839,10 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         // Create root node with proper error handling
         // MCTSEngine::runSearch - Creating root node...
         try {
-            root_ = MCTSNode::create(std::move(state_clone));
+            // Convert shared_ptr to unique_ptr for MCTSNode::create
+            root_ = MCTSNode::create(std::unique_ptr<core::IGameState>(state_clone->clone().release()));
             // MCTSEngine::runSearch - Root node created successfully
-        } catch (const std::exception& e) {
+            } catch (const std::exception& e) {
             // MCTSEngine::runSearch - Exception creating root node
             throw std::runtime_error(std::string("Failed to create root node: ") + e.what());
         } catch (...) {
@@ -846,6 +891,34 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
             #endif
         }
 
+        // Initialize root node - expand it and set prior probabilities
+        try {
+            root_->expand();
+            
+            // For the initial root evaluation, we need to set prior probabilities
+            // This is normally done by the neural network, but for the root we need to bootstrap
+            if (root_->getNumExpandedChildren() > 0) {
+                // Get neural network evaluation for root
+                auto state_clone = cloneGameState(root_->getState());
+                std::vector<std::unique_ptr<core::IGameState>> states;
+                states.push_back(std::unique_ptr<core::IGameState>(state_clone->clone().release()));
+                
+                // Get evaluation from neural network  
+                if (evaluator_ && evaluator_->getInferenceFunction()) {
+                    auto outputs = evaluator_->getInferenceFunction()(states);
+                    if (!outputs.empty()) {
+                        root_->setPriorProbabilities(outputs[0].policy);
+                        } else {
+                        }
+                } else {
+                    }
+            } else {
+                }
+        } catch (const std::exception& e) {
+            std::cerr << "[ENGINE] Error initializing root node: " << e.what() << std::endl;
+            throw;
+        }
+
         // Add Dirichlet noise to root node policy for exploration
         if (settings_.add_dirichlet_noise) {
             try {
@@ -861,29 +934,82 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
 
         // Set search running flag
         search_running_.store(true, std::memory_order_release);
-        active_simulations_ = 0;
+        active_simulations_ = settings_.num_simulations;  // Initialize with total simulations to run
 
-        // Configure evaluator to use external queues first
-        if (evaluator_) {
-            // [ENGINE] Setting external queues on evaluator
+        // Configure evaluator to use external queues BEFORE starting it
+        // Use global mutex to prevent multiple engines from initializing at once
+        // Always ensure evaluator is started
+        if (evaluator_ && !evaluator_started_.load(std::memory_order_acquire)) {
+            std::unique_lock<std::mutex> global_lock(s_global_evaluator_mutex);
             
-            // Provide a callback to notify when results are available
-            auto result_notify_fn = [this]() {
-                // Notification mechanism replaced with lock-free polling in OpenMP
-            };
+            // Increment global counter to track engine initialization order
+            int init_order = s_evaluator_init_counter.fetch_add(1, std::memory_order_acq_rel);
             
-            evaluator_->setExternalQueues(&leaf_queue_, &result_queue_, result_notify_fn);
-        }
+            // Release global lock immediately after getting our order
+            global_lock.unlock();
+            
+            // Now acquire local mutex for actual initialization
+            std::lock_guard<std::mutex> local_lock(evaluator_mutex_);
+            
+            // Double-check after acquiring lock
+            if (!evaluator_started_.load(std::memory_order_relaxed)) {
+                // Provide a callback to notify when results are available
+                auto result_notify_fn = [this]() {
+                    // Notification mechanism replaced with lock-free polling in OpenMP
+                };
+                
+                // Use shared queues if configured, otherwise use internal queues
+                if (use_shared_queues_) {
+                    evaluator_->setExternalQueues(shared_leaf_queue_, shared_result_queue_, result_notify_fn);
+                    } else {
+                    evaluator_->setExternalQueues(&leaf_queue_, &result_queue_, result_notify_fn);
+                    }
+                
+                // Now start the evaluator with external queues configured
+                // For shared queues, the evaluator is managed externally
+                if (use_shared_queues_) {
+                    // Mark as started but don't actually start - it's managed by SelfPlayManager
+                    evaluator_started_.store(true, std::memory_order_release);
+                    } else {
+                    // Direct evaluator start - we already hold the lock
+                    try {
+                        // Make sure evaluator exists
+                        if (!evaluator_) {
+                            throw std::runtime_error("Evaluator is null");
+                        }
+                        
+                        // Start the evaluator
+                        try {
+                            evaluator_->start();
+                            } catch (const std::exception& e) {
+                            throw;
+                        } catch (...) {
+                            throw;
+                        }
+                        evaluator_started_.store(true, std::memory_order_release);
+                        } catch (const std::exception& e) {
+                        std::cerr << "[ENGINE][" << init_order << "] Exception starting evaluator: " << e.what() << std::endl;
+                        throw;
+                    }
+                }
+            }
+        } else {
+            }
         
         // OpenMP implementation - use OpenMP threads instead of manual thread management
-        omp_set_num_threads(settings_.num_threads);
-        
-        // Start result distributor if not already running
-        if (!result_distributor_worker_.joinable()) {
-            workers_active_.store(true, std::memory_order_release);
-            shutdown_.store(false, std::memory_order_release);
-            result_distributor_worker_ = std::thread(&MCTSEngine::resultDistributorWorker, this);
-        }
+        // Note: We don't call omp_set_num_threads here since that doesn't work in nested parallel regions
+        // Instead, we'll use the num_threads clause on the parallel pragma
+        // Start result distributor only if not using shared queues
+        // With shared queues, the SelfPlayManager handles result distribution
+        if (!use_shared_queues_) {
+            if (!result_distributor_worker_.joinable()) {
+                workers_active_.store(true, std::memory_order_release);
+                shutdown_.store(false, std::memory_order_release);
+                result_distributor_worker_ = std::thread(&MCTSEngine::resultDistributorWorker, this);
+            } else {
+                }
+        } else {
+            }
 
         // Calculate the number of simulations to run
         int num_simulations = settings_.num_simulations;
@@ -901,70 +1027,414 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         if (settings_.use_root_parallelization && settings_.num_root_workers > 1) {
             // Root parallelization: create independent root copies for each worker
             for (int i = 0; i < settings_.num_root_workers; i++) {
-                // Create a deep copy of the root for each worker
-                auto root_copy = MCTSNode::create(root_->getState().clone(), nullptr);
-                search_roots.push_back(root_copy);
+                try {
+                    // Create a deep copy of the root for each worker
+                    auto cloned_state = root_->getState().clone();
+                    if (!cloned_state) {
+                        std::cerr << "[ROOT_PARALLEL] ERROR: Failed to clone root state for worker " << i << std::endl;
+                        continue;
+                    }
+                    
+                    auto root_copy = MCTSNode::create(std::move(cloned_state), nullptr);
+                    if (root_copy) {
+                        // Initialize the root copy same as the main root
+                        root_copy->expand();
+                        
+                        // Copy prior probabilities from the main root
+                        if (root_copy->getNumExpandedChildren() > 0 && root_->getNumExpandedChildren() > 0) {
+                            // Since we cloned the state, the children should have the same actions
+                            // So we can directly copy the prior probabilities
+                            std::vector<float> priors(root_copy->getState().getActionSpaceSize());
+                            auto& root_children = root_->getChildren();
+                            auto& copy_children = root_copy->getChildren();
+                            
+                            // Map actions to priors from the main root
+                            for (const auto& child : root_children) {
+                                int action = child->getAction();
+                                if (action >= 0 && action < priors.size()) {
+                                    priors[action] = child->getPriorProbability();
+                                    }
+                            }
+                            
+                            // Apply priors to the copy
+                            root_copy->setPriorProbabilities(priors);
+                        }
+                        
+                        // Apply Dirichlet noise if needed
+                        if (settings_.add_dirichlet_noise) {
+                            try {
+                                addDirichletNoise(root_copy);
+                            } catch (...) {
+                                // Continue without noise
+                            }
+                        }
+                        
+                        search_roots.push_back(root_copy);
+                    } else {
+                        std::cerr << "[MCTS] ERROR: Failed to create root copy for worker " << i << std::endl;
+                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "[MCTS] Exception creating root copy for worker " << i << ": " << e.what() << std::endl;
+                } catch (...) {
+                    std::cerr << "[MCTS] Unknown exception creating root copy for worker " << i << std::endl;
+                }
             }
-            std::cout << "[MCTS] Created " << search_roots.size() << " independent root copies for parallel search" << std::endl;
-        } else {
+            
+            if (search_roots.empty()) {
+                std::cerr << "[MCTS] WARNING: Failed to create any root copies, falling back to single root" << std::endl;
+                search_roots.push_back(root_);
+            }
+            
+            } else {
             // Single root (default)
             search_roots.push_back(root_);
-        }
+            }
 
-        // OpenMP parallel search
+        // OpenMP parallel search with aggressive leaf collection
         std::atomic<int> completed_simulations(0);
+        const int BATCH_SIZE = std::max(1, settings_.batch_size / 4);  // Ensure at least 1, dynamic batch size based on settings
         
-        #pragma omp parallel
-        {
-            // Each thread will process simulations
-            while (!shutdown_.load(std::memory_order_acquire)) {
-                // Try to claim work
-                int old_sims = active_simulations_.load(std::memory_order_acquire);
-                if (old_sims <= 0) break;
-                
-                // Try to claim some simulations
-                int to_claim = std::min(16, old_sims); // Process in batches
-                int claimed = 0;
-                
-                if (active_simulations_.compare_exchange_weak(old_sims, old_sims - to_claim,
-                                                              std::memory_order_acq_rel)) {
-                    claimed = to_claim;
+        // Check if result distributor is running
+        // Thread-local leaf storage for batching
+        struct ThreadLocalLeaves {
+            std::vector<PendingEvaluation> leaves;
+            std::vector<std::shared_ptr<MCTSNode>> visited_path;
+            int thread_id;
+            int batch_capacity;
+            
+            ThreadLocalLeaves(int batch_size) : thread_id(omp_get_thread_num()), batch_capacity(batch_size) {
+                leaves.reserve(batch_capacity);
+                visited_path.reserve(64);
+            }
+        };
+        
+        // Hybrid approach - OpenMP tree traversal + leaf parallelization
+        // If we're already in a parallel region (from self-play), use serial tree traversal with leaf batching
+        if (omp_in_parallel()) {
+            // Serial leaf collection when already in parallel - optimized for batching
+            std::vector<PendingEvaluation> leaf_batch;
+            const size_t OPTIMAL_BATCH_SIZE = settings_.batch_size;  // Use full batch size
+            const size_t MIN_BATCH_SIZE = 1;  // Always process single items to avoid deadlock
+            leaf_batch.reserve(OPTIMAL_BATCH_SIZE);
+            
+            int consecutive_empty_tries = 0;
+            const int MAX_EMPTY_TRIES = 3;  // Reduce to be more responsive
+            
+            while (active_simulations_.load(std::memory_order_acquire) > 0) {
+                // Check if we should wait for pending evaluations to complete
+                if (pending_evaluations_.load(std::memory_order_acquire) > settings_.batch_size * 4) {
+                    // Too many pending - wait for some to complete
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
                 }
                 
-                // Process claimed simulations
-                for (int i = 0; i < claimed; ++i) {
-                    try {
-                        // Select root based on thread ID
-                        int thread_id = omp_get_thread_num();
-                        int root_idx = thread_id % search_roots.size();
-                        traverseTree(search_roots[root_idx]);
-                        completed_simulations.fetch_add(1, std::memory_order_relaxed);
-                    } catch (const std::exception& e) {
-                        // Log error but continue
-                        #pragma omp critical
-                        std::cerr << "[OPENMP] Error during tree traversal: " << e.what() << std::endl;
+                // Aggressive batch collection - try to fill the entire batch quickly
+                auto batch_start_time = std::chrono::steady_clock::now();
+                const auto MAX_BATCH_COLLECTION_TIME = std::chrono::milliseconds(5);
+                
+                while (leaf_batch.size() < OPTIMAL_BATCH_SIZE && 
+                       active_simulations_.load(std::memory_order_acquire) > 0 &&
+                       (std::chrono::steady_clock::now() - batch_start_time) < MAX_BATCH_COLLECTION_TIME &&
+                       pending_evaluations_.load(std::memory_order_acquire) < settings_.batch_size * 6) {
+                    
+                    int old_sims = active_simulations_.load(std::memory_order_acquire);
+                    if (old_sims <= 0) break;
+                    
+                    // Claim multiple simulations at once for better efficiency
+                    int simulations_to_claim = std::min(4, old_sims);
+                    if (active_simulations_.compare_exchange_weak(old_sims, old_sims - simulations_to_claim,
+                                                                  std::memory_order_acq_rel)) {
+                        int leaves_found = 0;
+                        
+                        // Try to collect the claimed simulations
+                        for (int i = 0; i < simulations_to_claim && leaf_batch.size() < OPTIMAL_BATCH_SIZE; ++i) {
+                            try {
+                                auto current_root = root_;
+                                
+                                // Traverse and find a leaf
+                                std::vector<std::shared_ptr<MCTSNode>> path;
+                                auto [leaf, temp_path] = selectLeafNode(current_root);
+                                path = temp_path;
+                                
+                                if (leaf && !leaf->isBeingEvaluated()) {
+                                    if (leaf->tryMarkForEvaluation()) {
+                                        // Clone state for evaluation
+                                        const core::IGameState& leaf_state = leaf->getState();
+                                        std::shared_ptr<core::IGameState> state_clone = cloneGameState(leaf_state);
+                                        
+                                        // Create pending evaluation
+                                        PendingEvaluation pending;
+                                        pending.node = leaf;
+                                        pending.path = path;
+                                        pending.state = std::move(state_clone);
+                                        pending.batch_id = batch_counter_.fetch_add(1, std::memory_order_relaxed);
+                                        pending.request_id = total_leaves_generated_.fetch_add(1, std::memory_order_relaxed);
+                                        
+                                        leaf_batch.push_back(std::move(pending));
+                                        leaves_found++;
+                                    }
+                                }
+                                
+                                completed_simulations.fetch_add(1, std::memory_order_relaxed);
+                            } catch (const std::exception& e) {
+                                MCTS_LOG_ERROR("[LEAF] Error during leaf collection: " << e.what());
+                            }
+                        }
+                        
+                        if (leaves_found == 0) {
+                            consecutive_empty_tries++;
+                        } else {
+                            consecutive_empty_tries = 0;
+                        }
+                    }
+                }
+                
+                // Submit batch if we have enough leaves or timeout reached
+                if (!leaf_batch.empty() && 
+                    (leaf_batch.size() >= MIN_BATCH_SIZE || 
+                     consecutive_empty_tries >= MAX_EMPTY_TRIES ||
+                     active_simulations_.load(std::memory_order_acquire) == 0 ||
+                     (std::chrono::steady_clock::now() - batch_start_time) > MAX_BATCH_COLLECTION_TIME)) {
+                    
+                    // Bulk enqueue for better performance
+                    size_t enqueued = 0;
+                    
+                    // Choose correct queue based on whether shared queues are configured
+                    auto& target_queue = use_shared_queues_ ? *shared_leaf_queue_ : leaf_queue_;
+                    
+                    // Debug: log batch details
+                    if (leaf_batch.size() > 1) {
+                        // Try bulk enqueue - check if it's actually enqueueing all items
+                        size_t queue_size_before = target_queue.size_approx();
+                        enqueued = target_queue.enqueue_bulk(std::make_move_iterator(leaf_batch.begin()), 
+                                                           leaf_batch.size());
+                        size_t queue_size_after = target_queue.size_approx();
+                        
+                        } else {
+                        // Single item
+                        if (target_queue.enqueue(std::move(leaf_batch[0]))) {
+                            enqueued = 1;
+                        }
+                    }
+                    
+                    pending_evaluations_.fetch_add(enqueued, std::memory_order_acq_rel);
+                    
+                    // Always notify evaluator when we enqueue items
+                    if (evaluator_ && enqueued > 0) {
+                        evaluator_->notifyLeafAvailable();
+                    }
+                    
+                    leaf_batch.clear();
+                    consecutive_empty_tries = 0;
+                }
+                
+                // Process results directly when using shared queues to prevent deadlock
+                if (use_shared_queues_ && shared_result_queue_) {
+                    std::pair<NetworkOutput, PendingEvaluation> result;
+                    while (shared_result_queue_->try_dequeue(result)) {
+                        // Process the result inline
+                        auto& output = result.first;
+                        auto& eval = result.second;
+                        
+                        if (eval.node) {
+                            try {
+                                eval.node->setPriorProbabilities(output.policy);
+                                backPropagate(eval.path, output.value);
+                                eval.node->clearEvaluationFlag();
+                            } catch (...) {}
+                        }
+                        
+                        pending_evaluations_.fetch_sub(1, std::memory_order_acq_rel);
+                    }
+                }
+                
+                // Adaptive wait based on pending evaluations
+                if (pending_evaluations_.load(std::memory_order_acquire) > settings_.batch_size * 3) {
+                    // If too many pending, wait longer to prevent memory overflow
+                    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                } else if (leaf_batch.empty() && consecutive_empty_tries >= MAX_EMPTY_TRIES) {
+                    // If we can't find leaves, check if we're done
+                    if (active_simulations_.load(std::memory_order_acquire) == 0) {
+                        break;  // Exit the loop
+                    }
+                    std::this_thread::yield();
+                }
+            }
+        } else {
+            // Use OpenMP for parallel tree traversal
+            const int actual_threads = std::max(1, settings_.num_threads);  // Ensure at least 1 thread
+            #pragma omp parallel num_threads(actual_threads)
+            {
+                // Thread-local batch for each OpenMP thread - larger for better GPU utilization
+                std::vector<PendingEvaluation> thread_batch;
+                const size_t OPTIMAL_THREAD_BATCH = std::max(size_t(16), size_t(settings_.batch_size / actual_threads));
+                thread_batch.reserve(OPTIMAL_THREAD_BATCH);
+                
+                #pragma omp critical
+                {
+                    }
+                
+                int consecutive_empty = 0;
+                const int MAX_EMPTY_ATTEMPTS = 3;
+                
+                while (active_simulations_.load(std::memory_order_acquire) > 0) {
+                    // Try to claim multiple simulations at once
+                    int simulations_remaining = active_simulations_.load(std::memory_order_acquire);
+                    if (simulations_remaining <= 0) break;
+                    
+                    // Claim up to 4 simulations at once per thread
+                    int to_claim = std::min(4, simulations_remaining);
+                    if (active_simulations_.compare_exchange_weak(simulations_remaining, 
+                                                                  simulations_remaining - to_claim,
+                                                                  std::memory_order_acq_rel)) {
+                        int found_leaves = 0;
+                        
+                        for (int sim = 0; sim < to_claim && thread_batch.size() < OPTIMAL_THREAD_BATCH; ++sim) {
+                            try {
+                                // Use thread ID to select root for better cache locality
+                                int thread_id = omp_get_thread_num();
+                                auto current_root = search_roots.empty() ? root_ : 
+                                                   search_roots[thread_id % search_roots.size()];
+                                
+                                // Traverse and find a leaf
+                                std::vector<std::shared_ptr<MCTSNode>> path;
+                                auto [leaf, temp_path] = selectLeafNode(current_root);
+                                path = temp_path;
+                                
+                                if (leaf && !leaf->isBeingEvaluated()) {
+                                    if (leaf->tryMarkForEvaluation()) {
+                                        // Clone state for evaluation
+                                        const core::IGameState& leaf_state = leaf->getState();
+                                        std::shared_ptr<core::IGameState> state_clone = cloneGameState(leaf_state);
+                                        
+                                        // Create pending evaluation
+                                        PendingEvaluation pending;
+                                        pending.node = leaf;
+                                        pending.path = path;
+                                        pending.state = std::move(state_clone);
+                                        pending.batch_id = batch_counter_.fetch_add(1, std::memory_order_relaxed);
+                                        pending.request_id = total_leaves_generated_.fetch_add(1, std::memory_order_relaxed);
+                                        
+                                        thread_batch.push_back(std::move(pending));
+                                        found_leaves++;
+                                    }
+                                }
+                                
+                                completed_simulations.fetch_add(1, std::memory_order_relaxed);
+                            } catch (const std::exception& e) {
+                                MCTS_LOG_ERROR("[OPENMP] Error during leaf collection: " << e.what());
+                            }
+                        }
+                        
+                        consecutive_empty = (found_leaves == 0) ? consecutive_empty + 1 : 0;
+                        
+                        // Submit batch when we have enough or can't find more leaves
+                        if (!thread_batch.empty() && 
+                            (thread_batch.size() >= OPTIMAL_THREAD_BATCH || 
+                             consecutive_empty >= MAX_EMPTY_ATTEMPTS ||
+                             active_simulations_.load(std::memory_order_acquire) == 0)) {
+                            
+                            // Use lock-free bulk enqueue when possible
+                            size_t to_submit = thread_batch.size();
+                            auto& target_queue = use_shared_queues_ ? *shared_leaf_queue_ : leaf_queue_;
+                            
+                            if (to_submit > 1) {
+                                // Bulk enqueue without critical section
+                                size_t enqueued = target_queue.enqueue_bulk(
+                                    std::make_move_iterator(thread_batch.begin()), 
+                                    to_submit);
+                                pending_evaluations_.fetch_add(enqueued, std::memory_order_acq_rel);
+                                
+                                if (enqueued > 0 && evaluator_) {
+                                    evaluator_->notifyLeafAvailable();
+                                }
+                            } else {
+                                // Single item enqueue
+                                if (target_queue.enqueue(std::move(thread_batch[0]))) {
+                                    pending_evaluations_.fetch_add(1, std::memory_order_acq_rel);
+                                    if (evaluator_) {
+                                        evaluator_->notifyLeafAvailable();
+                                    }
+                                }
+                            }
+                            
+                            thread_batch.clear();
+                            consecutive_empty = 0;
+                        }
+                    }
+                    
+                    // Yield CPU if we can't find work
+                    if (consecutive_empty >= MAX_EMPTY_ATTEMPTS) {
+                        std::this_thread::yield();
+                    }
+                }
+                
+                // Submit any remaining leaves in thread-local batch
+                if (!thread_batch.empty()) {
+                    size_t to_submit = thread_batch.size();
+                    auto& target_queue = use_shared_queues_ ? *shared_leaf_queue_ : leaf_queue_;
+                    
+                    // Use bulk enqueue for final submission
+                    size_t enqueued = target_queue.enqueue_bulk(
+                        std::make_move_iterator(thread_batch.begin()), 
+                        to_submit);
+                    pending_evaluations_.fetch_add(enqueued, std::memory_order_acq_rel);
+                    
+                    if (enqueued > 0 && evaluator_) {
+                        evaluator_->notifyLeafAvailable();
                     }
                 }
             }
         }
         
-        // Wait for evaluations to complete
-        std::cout << "[OPENMP] Completed " << completed_simulations.load() << " simulations" << std::endl;
-        
         // Wait for pending evaluations to complete
+        // CRITICAL FIX: Notify evaluator that we're done producing leaves
+        // This helps the evaluator process any remaining items in its queue
+        if (evaluator_) {
+            evaluator_->notifyLeafAvailable();
+        }
+        
         auto wait_start = std::chrono::steady_clock::now();
+        int wait_log_count = 0;
         while (pending_evaluations_.load(std::memory_order_acquire) > 0) {
+            if (wait_log_count < 10 || wait_log_count % 100 == 0) {
+                }
+            wait_log_count++;
+            
             if (std::chrono::steady_clock::now() - wait_start > std::chrono::seconds(5)) {
-                std::cout << "[OPENMP] Timeout waiting for evaluations" << std::endl;
                 break;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            
+            // Process results directly when using shared queues - drain all available results
+            if (use_shared_queues_ && shared_result_queue_) {
+                std::pair<NetworkOutput, PendingEvaluation> result;
+                while (shared_result_queue_->try_dequeue(result)) {
+                    // Process the result inline
+                    auto& output = result.first;
+                    auto& eval = result.second;
+                    
+                    if (eval.node) {
+                        try {
+                            eval.node->setPriorProbabilities(output.policy);
+                            backPropagate(eval.path, output.value);
+                            eval.node->clearEvaluationFlag();
+                        } catch (...) {}
+                    }
+                    
+                    pending_evaluations_.fetch_sub(1, std::memory_order_acq_rel);
+                }
+            }
+            
+            // Notify evaluator to process remaining items
+            if (evaluator_) {
+                evaluator_->notifyLeafAvailable();
+            }
+            
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         
         // Aggregate results if using root parallelization
         if (settings_.use_root_parallelization && settings_.num_root_workers > 1 && root_) {
-            std::cout << "[MCTS] Aggregating results from " << search_roots.size() << " independent trees" << std::endl;
-            
             // First ensure root is expanded
             if (root_->isLeaf() && !root_->isTerminal()) {
                 root_->expand(settings_.use_progressive_widening,
@@ -972,37 +1442,48 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                              settings_.progressive_widening_k);
             }
             
-            // Aggregate statistics from all search roots
-            for (const auto& search_root : search_roots) {
-                if (!search_root || search_root == root_) continue;
-                
-                auto search_children = search_root->getChildren();
-                auto root_children = root_->getChildren();
-                
-                // Create a map for efficient action lookup
-                std::unordered_map<int, std::shared_ptr<MCTSNode>> root_action_map;
-                for (auto& child : root_children) {
-                    root_action_map[child->getAction()] = child;
+            // Create a map of action to aggregated statistics
+            std::unordered_map<int, int> action_visit_counts;
+            std::unordered_map<int, double> action_value_sums;
+            
+            // Collect statistics from all search roots
+            for (size_t i = 0; i < search_roots.size(); i++) {
+                const auto& search_root = search_roots[i];
+                if (!search_root) {
+                    continue;
                 }
                 
-                // Aggregate statistics from search tree children
-                for (const auto& search_child : search_children) {
-                    int action = search_child->getAction();
-                    auto it = root_action_map.find(action);
+                auto search_children = search_root->getChildren();
+                for (const auto& child : search_children) {
+                    int action = child->getAction();
+                    int visits = child->getVisitCount();
+                    float value = child->getValue();
                     
-                    if (it != root_action_map.end()) {
-                        // Aggregate visit counts and values
-                        int visits = search_child->getVisitCount();
-                        float average_value = search_child->getValue();
-                        
-                        // Update the main root's child with multiple update calls
-                        for (int i = 0; i < visits; i++) {
-                            it->second->update(average_value);
-                        }
+                    action_visit_counts[action] += visits;
+                    action_value_sums[action] += visits * value;
+                    
+                    }
+            }
+            
+            // Apply aggregated statistics to the main root's children
+            auto root_children = root_->getChildren();
+            for (auto& child : root_children) {
+                int action = child->getAction();
+                auto visits_it = action_visit_counts.find(action);
+                
+                if (visits_it != action_visit_counts.end() && visits_it->second > 0) {
+                    int total_visits = visits_it->second;
+                    double total_value = action_value_sums[action];
+                    float avg_value = total_value / total_visits;
+                    
+                    // Update the main root's child with aggregated statistics
+                    for (int i = 0; i < total_visits; i++) {
+                        child->update(avg_value);
                     }
                 }
             }
-        }
+            
+            }
         
         // Log final status
         // [SEARCH] Final status after search completion
@@ -1089,7 +1570,7 @@ void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
                     PendingEvaluation pending;
                     pending.node = leaf;
                     pending.path = std::move(path);
-                    pending.state = std::move(state_clone);
+                    pending.state = state_clone;
                     pending.batch_id = batch_counter_.fetch_add(1, std::memory_order_relaxed);
                     pending.request_id = total_leaves_generated_.fetch_add(1, std::memory_order_relaxed);
                     
@@ -1133,75 +1614,110 @@ void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
 // Removed batchAccumulatorWorker - functionality now integrated into MCTSEvaluator
 
 void MCTSEngine::resultDistributorWorker() {
+    if (use_shared_queues_ && !shared_result_queue_) {
+        }
     
     pthread_setname_np(pthread_self(), "ResultDist");
     
     try {
         std::vector<std::pair<NetworkOutput, PendingEvaluation>> result_batch;
-        result_batch.reserve(32);  // Process results in batches
+        result_batch.reserve(64);  // Larger batch for better throughput
         
         while (!shutdown_.load(std::memory_order_acquire) || 
-               result_queue_.size_approx() > 0) {
+               (use_shared_queues_ ? shared_result_queue_->size_approx() : result_queue_.size_approx()) > 0) {
             
             // Check for shutdown more frequently
-            if (shutdown_.load(std::memory_order_acquire) && result_queue_.size_approx() == 0) {
+            if (shutdown_.load(std::memory_order_acquire) && 
+                (use_shared_queues_ ? shared_result_queue_->size_approx() : result_queue_.size_approx()) == 0) {
                 break;
             }
             
-            // Try to dequeue multiple results at once
-        result_batch.clear();
-        while (result_batch.size() < 32) {
-            std::pair<NetworkOutput, PendingEvaluation> result_pair;
-            if (result_queue_.try_dequeue(result_pair)) {
-                result_batch.push_back(std::move(result_pair));
-            } else {
-                break;
-            }
-        }
-        
-        if (!result_batch.empty()) {
-            // Report batch processing
-            std::cout << "[RESULT DIST] Processing " << result_batch.size() 
-                      << " results, queue_size=" << result_queue_.size_approx() << std::endl;
+            // Aggressive bulk dequeue for maximum efficiency
+            result_batch.clear();
             
-            // Process all results in the batch
-            for (auto& [output, eval] : result_batch) {
-                // Check if we should stop processing
-                if (shutdown_.load(std::memory_order_acquire)) {
-                    break;
-                }
+            // Both shared and internal queues use the same type now
+            size_t dequeued = 0;
+            if (use_shared_queues_) {
+                // Use shared queue directly (no cast needed - same type)
+                dequeued = shared_result_queue_->try_dequeue_bulk(result_batch.data(), 64);
                 
-                // Update the node with neural network results
-                if (eval.node) {
-                    // Check if the node is still valid (not destroyed)
-                    try {
-                        eval.node->setPriorProbabilities(output.policy);
-                        
-                        // Perform backpropagation
-                        backPropagate(eval.path, output.value);
-                        
-                        // Clear the evaluation flag now that we're done
-                        eval.node->clearEvaluationFlag();
-                    } catch (const std::exception& e) {
-                        // Node might have been destroyed, skip it
-                        MCTS_LOG_ERROR("[RESULT] Error processing node: " << e.what());
-                        // Try to clear flag even on error  
-                        try { eval.node->clearEvaluationFlag(); } catch (...) {}
-                    } catch (...) {
-                        // Node might have been destroyed, skip it
-                        MCTS_LOG_ERROR("[RESULT] Unknown error processing node");
-                        // Try to clear flag even on error
-                        try { eval.node->clearEvaluationFlag(); } catch (...) {}
+                if (dequeued == 0) {
+                    std::pair<NetworkOutput, PendingEvaluation> result_pair;
+                    if (shared_result_queue_->try_dequeue(result_pair)) {
+                        result_batch.push_back(std::move(result_pair));
+                        dequeued = 1;
                     }
                 }
-                
-                pending_evaluations_.fetch_sub(1, std::memory_order_acq_rel);
-                total_results_processed_.fetch_add(1, std::memory_order_relaxed);
-            }
             } else {
-                // Lock-free polling instead of condition variables in OpenMP version
-                if (result_queue_.size_approx() == 0) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                // Use internal queue
+                dequeued = result_queue_.try_dequeue_bulk(result_batch.data(), 64);
+                
+                if (dequeued == 0) {
+                    // Fall back to single dequeue
+                    std::pair<NetworkOutput, PendingEvaluation> result_pair;
+                    if (result_queue_.try_dequeue(result_pair)) {
+                        result_batch.push_back(std::move(result_pair));
+                        dequeued = 1;
+                    }
+                }
+            }
+            
+            if (dequeued > 0) {
+                result_batch.resize(dequeued);  // Adjust size to actual dequeued count
+                
+                // Report batch processing
+                // Process results in parallel with OpenMP
+                #pragma omp parallel for schedule(dynamic, 4)
+                for (size_t i = 0; i < result_batch.size(); ++i) {
+                    // Check if we should stop processing before accessing any node
+                    if (shutdown_.load(std::memory_order_acquire)) {
+                        continue;
+                    }
+                    
+                    auto& [output, eval] = result_batch[i];
+                    
+                    // Update the node with neural network results
+                    if (eval.node) {
+                        // Double-check shutdown before accessing node
+                        if (shutdown_.load(std::memory_order_acquire)) {
+                            continue;
+                        }
+                        
+                        // Check if the node is still valid (not destroyed)
+                        try {
+                            eval.node->setPriorProbabilities(output.policy);
+                            
+                            // Perform backpropagation
+                            backPropagate(eval.path, output.value);
+                            
+                            // Clear the evaluation flag now that we're done
+                            eval.node->clearEvaluationFlag();
+                        } catch (const std::exception& e) {
+                            // Node might have been destroyed, skip it
+                            MCTS_LOG_ERROR("[RESULT] Error processing node: " << e.what());
+                            // Try to clear flag even on error  
+                            try { eval.node->clearEvaluationFlag(); } catch (...) {}
+                        } catch (...) {
+                            // Node might have been destroyed, skip it
+                            MCTS_LOG_ERROR("[RESULT] Unknown error processing node");
+                            // Try to clear flag even on error
+                            try { eval.node->clearEvaluationFlag(); } catch (...) {}
+                        }
+                    }
+                    
+                    pending_evaluations_.fetch_sub(1, std::memory_order_acq_rel);
+                    total_results_processed_.fetch_add(1, std::memory_order_relaxed);
+                }
+            } else {
+                // Adaptive waiting - yield CPU when queue is empty
+                // CRITICAL DEBUG: Log when result queue is empty
+                static int empty_count = 0;
+                // Count empty cycles
+                if (++empty_count < 10) {
+                    std::this_thread::yield();
+                } else {
+                    std::this_thread::sleep_for(std::chrono::microseconds(100));
+                    empty_count = 0;
                 }
             }
         }
@@ -1339,6 +1855,10 @@ std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> MCT
     }
     
     path.push_back(current_node_in_traversal);
+
+    static int select_count = 0;
+    if (++select_count < 10) {
+        }
 
     while (current_node_in_traversal && !current_node_in_traversal->isLeaf() && !current_node_in_traversal->isTerminal()) {
         // Check if current node has pending evaluation
@@ -1508,7 +2028,7 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
             }
             
             std::vector<std::unique_ptr<core::IGameState>> states;
-            states.push_back(std::move(state_clone));
+            states.push_back(std::unique_ptr<core::IGameState>(state_clone->clone().release()));
             
             auto outputs = evaluator_->getInferenceFunction()(states);
             if (!outputs.empty()) {
@@ -1539,12 +2059,31 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                 PendingEvaluation pending;
                 pending.node = leaf;
                 pending.path = path;
-                pending.state = std::move(state_clone);
+                pending.state = state_clone;
                 pending.batch_id = batch_counter_.fetch_add(1, std::memory_order_relaxed);
                 pending.request_id = total_leaves_generated_.fetch_add(1, std::memory_order_relaxed);
                 
-                // Submit to leaf queue for batching
-                if (leaf_queue_.enqueue(std::move(pending))) {
+                // Submit to appropriate queue for batching
+                bool enqueue_success = false;
+                if (use_shared_queues_ && shared_leaf_queue_) {
+                    enqueue_success = shared_leaf_queue_->enqueue(std::move(pending));
+                    if (enqueue_success) {
+                        // CRITICAL DEBUG: Log successful enqueue to shared queue
+                        static int shared_enqueue_count = 0;
+                        if (shared_enqueue_count < 10) {
+                            }
+                    }
+                } else {
+                    enqueue_success = leaf_queue_.enqueue(std::move(pending));
+                    if (enqueue_success) {
+                        // CRITICAL DEBUG: Log successful enqueue to local queue
+                        static int enqueue_count = 0;
+                        if (enqueue_count < 10) {
+                            }
+                    }
+                }
+                
+                if (enqueue_success) {
                     // Increment pending evaluations
                     pending_evaluations_.fetch_add(1, std::memory_order_acq_rel);
                     
@@ -1552,9 +2091,10 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                     leaf->applyVirtualLoss(settings_.virtual_loss);
                     
                     // Notify evaluator
-                    if (evaluator_) {
+                    if (!use_shared_queues_ && evaluator_) {
                         evaluator_->notifyLeafAvailable();
                     }
+                    // For shared queues, the notification is handled by the shared evaluator
                 } else {
                     MCTS_LOG_ERROR("[expandAndEvaluate] Failed to enqueue evaluation request");
                     leaf->clearEvaluationFlag();
@@ -1751,7 +2291,7 @@ void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
             auto state_clone = cloneGameState(root->getState());
             if (settings_.num_threads == 0) {
                 std::vector<std::unique_ptr<core::IGameState>> states;
-                states.push_back(std::move(state_clone));
+                states.push_back(std::unique_ptr<core::IGameState>(state_clone->clone().release()));
                 auto outputs = evaluator_->getInferenceFunction()(states);
                 if (!outputs.empty()) {
                     root->setPriorProbabilities(outputs[0].policy);
@@ -1761,7 +2301,9 @@ void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
                     root->setPriorProbabilities(uniform_policy);
                 }
             } else {
-                auto future = evaluator_->evaluateState(root, std::move(state_clone));
+                // Convert shared_ptr to unique_ptr for evaluator
+                auto unique_clone = std::unique_ptr<core::IGameState>(state_clone->clone().release());
+                auto future = evaluator_->evaluateState(root, std::move(unique_clone));
                 auto status = future.wait_for(std::chrono::seconds(2));
                 if (status == std::future_status::ready) {
                     auto result = future.get();
@@ -1849,15 +2391,124 @@ int MCTSEngine::calculateMaxDepth(std::shared_ptr<MCTSNode> node) {
     return max_depth;
 }
 
-std::unique_ptr<core::IGameState> MCTSEngine::cloneGameState(const core::IGameState& state) {
-    // Use pool-based cloning if enabled
-    if (game_state_pool_enabled_) {
-        return utils::GameStatePoolManager::getInstance().cloneState(state);
+std::shared_ptr<core::IGameState> MCTSEngine::cloneGameState(const core::IGameState& state) {
+    try {
+        // Add debug logging but reduce frequency
+        static std::atomic<int> clone_count(0);
+        static std::atomic<int> null_count(0);
+        int count = clone_count.fetch_add(1, std::memory_order_relaxed);
+        
+        if (count < 5 || count % 1000 == 0) {
+            MCTS_LOG_VERBOSE("[MCTS] cloneGameState called " << count << " times, pool_enabled=" 
+                     << game_state_pool_enabled_ << ", state type=" << typeid(state).name());
+        }
+        
+        // CRITICAL FIX: Initialize pool if not already done
+        if (game_state_pool_enabled_) {
+            auto game_type = state.getGameType();
+            auto& pool_manager = utils::GameStatePoolManager::getInstance();
+            
+            if (!pool_manager.hasPool(game_type)) {
+                // Initialize pool with adequate size
+                size_t pool_size = std::max(size_t(2000), size_t(settings_.num_simulations * 2));
+                try {
+                    pool_manager.initializePool(game_type, pool_size);
+                    MCTS_LOG_DEBUG("[MCTS] Initialized GameState pool for " << core::gameTypeToString(game_type) 
+                                  << " with size " << pool_size);
+                } catch (const std::exception& e) {
+                    MCTS_LOG_ERROR("[MCTS] Failed to initialize pool: " << e.what());
+                    game_state_pool_enabled_ = false; // Disable pool on failure
+                }
+            }
+            
+            // Try pool-based cloning if pool is available
+            if (game_state_pool_enabled_ && pool_manager.hasPool(game_type)) {
+                auto cloned = pool_manager.cloneState(state);
+                if (cloned) {
+                    return std::shared_ptr<core::IGameState>(cloned.release());
+                }
+                MCTS_LOG_ERROR("[MCTS] Pool cloning failed, falling back to regular clone");
+            }
+        }
+        
+        // Regular cloning with null check
+        auto cloned = state.clone();
+        if (!cloned) {
+            int nc = null_count.fetch_add(1, std::memory_order_relaxed);
+            MCTS_LOG_ERROR("[MCTS] ERROR: State clone returned null for state type=" 
+                     << typeid(state).name() << " (null count: " << nc + 1 << ")");
+            
+            // CRITICAL: Throw exception instead of returning null
+            throw std::runtime_error("Failed to clone game state - clone() returned null");
+        }
+        
+        // Validate cloned state
+        if (!cloned->validate()) {
+            MCTS_LOG_ERROR("[MCTS] ERROR: Cloned state failed validation");
+            throw std::runtime_error("Cloned state is invalid");
+        }
+        
+        return std::shared_ptr<core::IGameState>(cloned.release());
+        
+    } catch (const std::exception& e) {
+        MCTS_LOG_ERROR("[MCTS] ERROR: Exception in cloneGameState: " << e.what() 
+                 << " for state type=" << typeid(state).name());
+        throw; // Re-throw to let caller handle
+    } catch (...) {
+        MCTS_LOG_ERROR("[MCTS] ERROR: Unknown exception in cloneGameState for state type=" 
+                 << typeid(state).name());
+        throw std::runtime_error("Unknown error in cloneGameState");
+    }
+}
+
+void MCTSEngine::forceCleanup() {
+    MCTS_LOG_DEBUG("[MCTS] Forcing memory cleanup");
+    
+    // Clear transposition table
+    if (use_transposition_table_) {
+        transposition_table_->clear();
     }
     
-    // Fallback to regular cloning
-    return state.clone();
+    // Clear node tracker's pending evaluations
+    if (node_tracker_) {
+        node_tracker_->clear();
+    }
+    
+    // Clear game state pool
+    if (game_state_pool_enabled_) {
+        auto& pool_manager = utils::GameStatePoolManager::getInstance();
+        pool_manager.clearAllPools();
+    }
+    
+    // Note: We cannot recreate the evaluator without the neural network
+    // Just let it continue with its existing state
+    
+    // Force garbage collection for any remaining objects
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    
+    MCTS_LOG_DEBUG("[MCTS] Memory cleanup completed");
 }
+
+void MCTSEngine::setSharedExternalQueues(
+        moodycamel::ConcurrentQueue<PendingEvaluation>* leaf_queue,
+        moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>>* result_queue,
+        std::function<void()> notify_fn) {
+    shared_leaf_queue_ = leaf_queue;
+    shared_result_queue_ = result_queue;
+    use_shared_queues_ = true;
+    
+    // Also configure the evaluator to use these shared queues
+    if (evaluator_) {
+        evaluator_->setExternalQueues(shared_leaf_queue_, shared_result_queue_, notify_fn);
+        
+        // The engine's own evaluator should be marked as started since we're using external shared management
+        evaluator_started_.store(true, std::memory_order_release);
+        } else {
+        }
+    
+    // Debug: Verify the queue pointers are stored correctly
+    }
+
 
 
 } // namespace mcts

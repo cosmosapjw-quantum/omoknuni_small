@@ -8,6 +8,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.o.d"
   "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o"
   "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o.d"
+  "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o"
+  "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o.d"
   "bin/Release/mcts_tests"
   "bin/Release/mcts_tests.pdb"
 )

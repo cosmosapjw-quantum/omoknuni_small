@@ -260,11 +260,15 @@ CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o: \
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
  /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
  /usr/include/c++/13/deque /usr/include/c++/13/bits/stl_deque.h \
- /usr/include/c++/13/bits/deque.tcc /usr/include/c++/13/random \
+ /usr/include/c++/13/bits/deque.tcc \
+ /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
+ /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
+ /usr/include/c++/13/iostream /usr/include/c++/13/random \
  /usr/include/c++/13/bits/random.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h \
  /usr/include/c++/13/bits/random.tcc /usr/include/c++/13/numeric \
  /usr/include/c++/13/bits/stl_numeric.h \
- /usr/include/c++/13/pstl/glue_numeric_defs.h \
- /usr/include/c++/13/iostream /usr/include/c++/13/thread \
+ /usr/include/c++/13/pstl/glue_numeric_defs.h /usr/include/c++/13/thread \
  /usr/include/c++/13/bits/this_thread_sleep.h

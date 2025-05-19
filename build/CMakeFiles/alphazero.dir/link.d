@@ -22,6 +22,7 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o \
+  CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_methods.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o \
@@ -137,6 +138,8 @@ CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o:
 CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o:
+
+CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o:
 

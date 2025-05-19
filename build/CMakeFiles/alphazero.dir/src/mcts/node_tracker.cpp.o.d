@@ -264,4 +264,9 @@ CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o: \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
  /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
  /usr/include/c++/13/deque /usr/include/c++/13/bits/stl_deque.h \
- /usr/include/c++/13/bits/deque.tcc
+ /usr/include/c++/13/bits/deque.tcc \
+ /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
+ /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
+ /usr/include/c++/13/iostream

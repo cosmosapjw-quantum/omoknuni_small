@@ -11,6 +11,7 @@
 #include "core/export_macros.h"
 #include "mcts/evaluation_types.h"
 #include "utils/gamestate_pool.h"
+#include "utils/thread_local_allocator.h"
 
 namespace alphazero {
 namespace mcts {
@@ -58,10 +59,10 @@ public:
     // Combined value with RAVE
     float getCombinedValue(float rave_constant) const;
     
-    // Evaluation state - using atomic_flag for lock-free checking
-    bool tryMarkForEvaluation(); // Returns true if successfully marked
-    void clearEvaluationFlag();
-    bool isBeingEvaluated() const;
+    // Evaluation state - using atomic operations for thread safety
+    bool tryMarkForEvaluation(); // Returns true if successfully marked (lock-free)
+    void clearEvaluationFlag();  // Thread-safe clear
+    bool isBeingEvaluated() const; // Thread-safe check
 
     // Getters
     const core::IGameState& getState() const;

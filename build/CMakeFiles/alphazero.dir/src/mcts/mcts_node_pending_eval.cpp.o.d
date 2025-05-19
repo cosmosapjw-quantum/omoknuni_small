@@ -209,4 +209,10 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o: \
  /usr/include/c++/13/compare /usr/include/c++/13/bits/stl_algo.h \
  /usr/include/c++/13/bits/algorithmfwd.h \
  /usr/include/c++/13/bits/stl_heap.h \
- /usr/include/c++/13/bits/uniform_int_dist.h
+ /usr/include/c++/13/bits/uniform_int_dist.h \
+ /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
+ /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
+ /usr/include/c++/13/utility /usr/include/c++/13/bits/stl_relops.h \
+ /usr/include/c++/13/iostream

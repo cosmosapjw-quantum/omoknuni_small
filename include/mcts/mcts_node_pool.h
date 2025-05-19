@@ -8,6 +8,7 @@
 #include <vector>
 #include "mcts/mcts_node.h"
 #include "utils/memory_allocator.h"
+#include "utils/thread_local_allocator.h"
 #include "utils/logger.h"
 #include "utils/profiler.h"
 
@@ -88,7 +89,8 @@ public:
 private:
     // Memory blocks for nodes
     struct MemoryBlock {
-        std::unique_ptr<MCTSNode[]> nodes;
+        std::unique_ptr<MCTSNode[], std::function<void(MCTSNode*)>> nodes;
+        std::vector<MCTSNode*> raw_pointers;  // Individual pointers for efficient access
         size_t size;
         
         MemoryBlock(size_t block_size);
