@@ -236,7 +236,8 @@ std::vector<selfplay::GameData> AlphaZeroPipeline::runSelfPlay(const std::string
         settings.mcts_settings.batch_size = config_.mcts_batch_size;
         settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
         
-        settings.reserved_parallel = config_.self_play_num_parallel_games;
+        settings.num_parallel_games = config_.self_play_num_parallel_games;
+        settings.num_mcts_engines = config_.self_play_num_mcts_engines;
         settings.max_moves = config_.self_play_max_moves;
         settings.temperature_threshold = config_.self_play_temperature_threshold;
         settings.high_temperature = config_.self_play_high_temperature;
@@ -819,7 +820,8 @@ bool AlphaZeroPipeline::evaluateNewModel(const std::string& iteration_dir) {
         arena_settings.mcts_settings.batch_size = config_.mcts_batch_size;
         arena_settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
         
-        arena_settings.reserved_parallel = config_.arena_num_parallel_games;
+        arena_settings.num_parallel_games = config_.arena_num_parallel_games;
+        arena_settings.num_mcts_engines = config_.arena_num_mcts_engines;
         arena_settings.max_moves = config_.self_play_max_moves; // Same as self-play
         arena_settings.temperature_threshold = 0; // No high temperature period
         arena_settings.high_temperature = 0.0f;
@@ -1186,6 +1188,13 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
                 config.self_play_num_parallel_games = self_play["num_parallel_games"].as<int>();
             }
             
+            if (self_play["num_mcts_engines"]) {
+                config.self_play_num_mcts_engines = self_play["num_mcts_engines"].as<int>();
+            } else {
+                // Default to same as parallel games if not specified
+                config.self_play_num_mcts_engines = config.self_play_num_parallel_games;
+            }
+            
             if (self_play["max_moves"]) {
                 config.self_play_max_moves = self_play["max_moves"].as<int>();
             }
@@ -1219,6 +1228,13 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
                 config.arena_num_parallel_games = eval["num_parallel_games"].as<int>();
             }
             
+            if (eval["num_mcts_engines"]) {
+                config.arena_num_mcts_engines = eval["num_mcts_engines"].as<int>();
+            } else {
+                // Default to same as parallel games if not specified
+                config.arena_num_mcts_engines = config.arena_num_parallel_games;
+            }
+            
             if (eval["elo_threshold"]) {
                 float elo_threshold = eval["elo_threshold"].as<float>();
                 // Convert ELO threshold to win rate threshold using the formula:
@@ -1237,6 +1253,17 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
             
             if (arena["num_games"]) {
                 config.arena_num_games = arena["num_games"].as<int>();
+            }
+            
+            if (arena["num_parallel_games"]) {
+                config.arena_num_parallel_games = arena["num_parallel_games"].as<int>();
+            }
+            
+            if (arena["num_mcts_engines"]) {
+                config.arena_num_mcts_engines = arena["num_mcts_engines"].as<int>();
+            } else {
+                // Default to same as parallel games if not specified
+                config.arena_num_mcts_engines = config.arena_num_parallel_games;
             }
             
             if (arena["num_threads"]) {

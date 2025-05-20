@@ -4,7 +4,7 @@
 echo "Starting optimized AlphaZero pipeline with enhanced batching..."
 
 # Set environment variables for optimal performance
-export OMP_NUM_THREADS=12
+export OMP_NUM_THREADS=20
 export CUDA_VISIBLE_DEVICES=0
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build/lib/Release

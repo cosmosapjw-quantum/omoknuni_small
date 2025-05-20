@@ -123,6 +123,21 @@ private:
     // Main storage for transposition entries
     HashMapType entries_;
     
+    // Thread-local cache to improve lookup performance
+    static constexpr int MAX_THREADS = 64;
+    struct ThreadLocalCache {
+        // Recent lookups cache with limited size (unordered_map for O(1) lookups)
+        std::unordered_map<uint64_t, std::weak_ptr<MCTSNode>> recent_lookups;
+        
+        // Statistics for this thread's cache
+        size_t hits = 0;
+        size_t misses = 0;
+        
+        // Padding to avoid false sharing between threads
+        alignas(64) char padding[64];
+    };
+    std::array<ThreadLocalCache, MAX_THREADS> thread_caches_;
+    
     // Target capacity (approximate)
     size_t capacity_;
     

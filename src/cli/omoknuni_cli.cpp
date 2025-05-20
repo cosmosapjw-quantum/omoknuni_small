@@ -285,6 +285,10 @@ int main(int argc, char** argv) {
                     
                     int num_games = getIntConfigValue(config, "self_play_num_games", 100);
                     int num_parallel_games = getIntConfigValue(config, "self_play_num_parallel_games", 4);
+                    int num_mcts_engines = getIntConfigValue(config, "self_play_num_mcts_engines", num_parallel_games);
+                    
+                    std::cout << "  Number of parallel games: " << num_parallel_games << std::endl;
+                    std::cout << "  Number of MCTS engines: " << num_mcts_engines << std::endl;
                     int max_moves = getIntConfigValue(config, "self_play_max_moves", 0);
                     int temperature_threshold = getIntConfigValue(config, "self_play_temperature_threshold", 30);
                     float high_temperature = getFloatConfigValue(config, "self_play_high_temperature", 1.0f);
@@ -347,7 +351,8 @@ int main(int argc, char** argv) {
                     // Setup self-play settings
                     alphazero::selfplay::SelfPlaySettings self_play_settings;
                     self_play_settings.mcts_settings = mcts_settings;
-                    self_play_settings.reserved_parallel = num_parallel_games;
+                    self_play_settings.num_parallel_games = num_parallel_games;
+                    self_play_settings.num_mcts_engines = num_mcts_engines;
                     self_play_settings.max_moves = max_moves;
                     self_play_settings.temperature_threshold = temperature_threshold;
                     self_play_settings.high_temperature = high_temperature;
@@ -944,7 +949,8 @@ int main(int argc, char** argv) {
                     // Set up self-play settings for evaluation
                     alphazero::selfplay::SelfPlaySettings self_play_settings;
                     self_play_settings.mcts_settings = mcts_settings;
-                    self_play_settings.reserved_parallel = num_parallel_eval_games;
+                    self_play_settings.num_parallel_games = num_parallel_eval_games;
+                    self_play_settings.num_mcts_engines = num_parallel_eval_games;
                     self_play_settings.max_moves = max_moves_eval;
                     
                     // Run evaluation

@@ -35,6 +35,7 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     // Self-play settings
     int self_play_num_games = 500;
     int self_play_num_parallel_games = 8;
+    int self_play_num_mcts_engines = 8;  // Number of MCTS engines to create
     int self_play_max_moves = 0;  // 0 means auto-calculate based on board size
     int self_play_temperature_threshold = 30;
     float self_play_high_temperature = 1.0f;
@@ -65,6 +66,7 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     bool enable_evaluation = true;
     int arena_num_games = 50;
     int arena_num_parallel_games = 8;
+    int arena_num_mcts_engines = 8;  // Number of MCTS engines to create for arena evaluation
     int arena_num_threads = 4;
     int arena_num_simulations = 400;
     float arena_temperature = 0.1f;

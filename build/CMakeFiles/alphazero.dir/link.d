@@ -29,6 +29,7 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_taskflow_engine.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
@@ -152,6 +153,8 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o:
 CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o:
 

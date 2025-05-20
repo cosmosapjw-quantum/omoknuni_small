@@ -10,7 +10,7 @@
 #include <functional>
 #include <chrono>
 #include "mcts/mcts_node.h"
-#include "mcts/mcts_evaluator.h"
+// #include "mcts/mcts_evaluator.h" // Removed this line
 #include "mcts/transposition_table.h"
 #include "mcts/node_tracker.h"
 #include "core/igamestate.h"
@@ -20,6 +20,8 @@
 
 namespace alphazero {
 namespace mcts {
+
+class MCTSEvaluator; // Added forward declaration
 
 struct ALPHAZERO_API MCTSSettings {
     // Number of simulations to run
@@ -384,6 +386,11 @@ private:
     void distributeSimulations();
     void waitForSimulationsToComplete(std::chrono::steady_clock::time_point start_time);
     void countTreeStatistics();
+    
+    // Helper for adaptive waiting with exponential backoff
+    // Waits until the predicate returns true, using increasingly longer
+    // wait times to reduce CPU usage when waiting
+    void waitWithBackoff(std::function<bool()> predicate, std::chrono::milliseconds max_wait_time);
 
     // Methods for statistics calculation
     size_t countTreeNodes(std::shared_ptr<MCTSNode> node);

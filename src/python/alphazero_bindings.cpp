@@ -268,7 +268,9 @@ public:
         settings.mcts_settings.batch_size = config_.mcts_batch_size;
         settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
         
-        settings.reserved_parallel = config_.self_play_num_parallel_games;
+        settings.num_parallel_games = config_.self_play_num_parallel_games;
+        // Use the same number of engines as parallel games by default
+        settings.num_mcts_engines = config_.self_play_num_parallel_games;
         settings.max_moves = config_.self_play_max_moves > 0 ? 
                              config_.self_play_max_moves : 
                              config_.board_size * config_.board_size * 2; // Default max moves
@@ -408,7 +410,8 @@ public:
         arena_settings.mcts_settings.batch_size = config_.mcts_batch_size;
         arena_settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
         
-        arena_settings.reserved_parallel = config_.arena_num_parallel_games;
+        arena_settings.num_parallel_games = config_.arena_num_parallel_games;
+        arena_settings.num_mcts_engines = config_.arena_num_parallel_games; // Use same value by default
         arena_settings.max_moves = config_.self_play_max_moves > 0 ? 
                                   config_.self_play_max_moves : 
                                   config_.board_size * config_.board_size * 2;
@@ -536,6 +539,8 @@ private:
         // Self-play settings
         config.self_play_num_games = get_value("self_play_num_games", 500);
         config.self_play_num_parallel_games = get_value("self_play_num_parallel_games", 8);
+        // If explicitly provided, use separate parameter for MCTS engines
+        config.self_play_num_mcts_engines = get_value("self_play_num_mcts_engines", config.self_play_num_parallel_games);
         config.self_play_max_moves = get_value("self_play_max_moves", 0);
         config.self_play_temperature_threshold = get_value("self_play_temperature_threshold", 30);
         config.self_play_high_temperature = get_value("self_play_high_temperature", 1.0f);
@@ -566,6 +571,7 @@ private:
         config.enable_evaluation = get_value("enable_evaluation", true);
         config.arena_num_games = get_value("arena_num_games", 50);
         config.arena_num_parallel_games = get_value("arena_num_parallel_games", 8);
+        config.arena_num_mcts_engines = get_value("arena_num_mcts_engines", config.arena_num_parallel_games);
         config.arena_num_threads = get_value("arena_num_threads", 4);
         config.arena_num_simulations = get_value("arena_num_simulations", 400);
         config.arena_temperature = get_value("arena_temperature", 0.1f);
@@ -605,6 +611,7 @@ private:
         // Self-play settings
         dict["self_play_num_games"] = config.self_play_num_games;
         dict["self_play_num_parallel_games"] = config.self_play_num_parallel_games;
+        dict["self_play_num_mcts_engines"] = config.self_play_num_mcts_engines;
         dict["self_play_max_moves"] = config.self_play_max_moves;
         dict["self_play_temperature_threshold"] = config.self_play_temperature_threshold;
         dict["self_play_high_temperature"] = config.self_play_high_temperature;
@@ -635,6 +642,7 @@ private:
         dict["enable_evaluation"] = config.enable_evaluation;
         dict["arena_num_games"] = config.arena_num_games;
         dict["arena_num_parallel_games"] = config.arena_num_parallel_games;
+        dict["arena_num_mcts_engines"] = config.arena_num_mcts_engines;
         dict["arena_num_threads"] = config.arena_num_threads;
         dict["arena_num_simulations"] = config.arena_num_simulations;
         dict["arena_temperature"] = config.arena_temperature;

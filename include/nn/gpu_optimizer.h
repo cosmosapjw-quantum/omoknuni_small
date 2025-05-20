@@ -51,11 +51,75 @@ public:
         {}
     };
     
+    // Double-buffering system for improved CPU-GPU parallelism
+    struct BufferPair {
+        torch::Tensor cpu_tensor;  // Pinned memory tensor
+        torch::Tensor gpu_tensor;  // Device memory tensor
+        cudaEvent_t copy_done;     // Event to signal copy completion
+        cudaEvent_t compute_done;  // Event to signal inference completion
+        std::atomic<bool> in_use;  // Whether this buffer is currently in use
+
+        // Default constructor
+        BufferPair() : copy_done(nullptr), compute_done(nullptr), in_use(false) {}
+
+        // Move constructor
+        BufferPair(BufferPair&& other) noexcept
+            : cpu_tensor(std::move(other.cpu_tensor)),
+              gpu_tensor(std::move(other.gpu_tensor)),
+              copy_done(other.copy_done),
+              compute_done(other.compute_done),
+              in_use(other.in_use.load(std::memory_order_relaxed)) {
+            other.copy_done = nullptr;
+            other.compute_done = nullptr;
+        }
+
+        // Move assignment operator
+        BufferPair& operator=(BufferPair&& other) noexcept {
+            if (this != &other) {
+                cpu_tensor = std::move(other.cpu_tensor);
+                gpu_tensor = std::move(other.gpu_tensor);
+                
+                // Clean up existing events before overwriting (if they exist)
+                if (copy_done) cudaEventDestroy(copy_done);
+                if (compute_done) cudaEventDestroy(compute_done);
+
+                copy_done = other.copy_done;
+                compute_done = other.compute_done;
+                in_use.store(other.in_use.load(std::memory_order_relaxed), std::memory_order_relaxed);
+                
+                other.copy_done = nullptr;
+                other.compute_done = nullptr;
+            }
+            return *this;
+        }
+
+        // Prevent copying
+        BufferPair(const BufferPair&) = delete;
+        BufferPair& operator=(const BufferPair&) = delete;
+
+        // Destructor to clean up CUDA events
+        ~BufferPair() {
+            if (copy_done) {
+                cudaEventDestroy(copy_done);
+                copy_done = nullptr;
+            }
+            if (compute_done) {
+                cudaEventDestroy(compute_done);
+                compute_done = nullptr;
+            }
+        }
+    };
+    
     GPUOptimizer(const Config& config = Config());
     ~GPUOptimizer();
     
     // Convert game states to GPU tensors efficiently
-    torch::Tensor prepareStatesBatch(const std::vector<std::unique_ptr<core::IGameState>>& states);
+    // Set synchronize=false to use asynchronous transfer with double-buffering
+    torch::Tensor prepareStatesBatch(const std::vector<std::unique_ptr<core::IGameState>>& states, 
+                                   bool synchronize = true);
+                                   
+    // Get a buffer pair for double-buffering
+    BufferPair& getNextBufferPair(size_t batch_size);
     
     // Pre-allocate tensors for a specific batch size
     void preallocateTensors(size_t batch_size);
@@ -85,11 +149,15 @@ private:
     std::vector<cudaStream_t> cuda_streams_;
     std::atomic<size_t> current_stream_idx_{0};
     
-    // Pre-allocated tensors
+    // Pre-allocated tensors and buffer pairs
     struct TensorCache {
         std::vector<torch::Tensor> gpu_tensors;
         std::vector<at::Tensor> cpu_pinned_tensors;
         std::atomic<size_t> next_tensor_{0};
+        
+        // Double-buffering support
+        std::vector<BufferPair> buffer_pairs;
+        std::atomic<size_t> next_buffer_{0};
     };
     std::unique_ptr<TensorCache> tensor_cache_;
     

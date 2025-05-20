@@ -7,6 +7,7 @@
 #include <vector>
 #include <limits>
 #include <thread>
+#include <omp.h>
 
 namespace alphazero {
 namespace mcts {
@@ -30,8 +31,28 @@ TranspositionTable::TranspositionTable(size_t size_mb, size_t /*num_shards_param
 }
 
 std::shared_ptr<MCTSNode> TranspositionTable::get(uint64_t hash) {
+    // Get thread ID for thread-local cache
+    int thread_id = omp_get_thread_num() % MAX_THREADS;
+    auto& thread_cache = thread_caches_[thread_id];
+    
     try {
-        // Use the parallel_hashmap's find which is already thread-safe
+        // First check the thread-local cache for better performance
+        auto cache_it = thread_cache.recent_lookups.find(hash);
+        if (cache_it != thread_cache.recent_lookups.end()) {
+            // Try to lock the weak_ptr to get a shared_ptr
+            auto node_ptr = cache_it->second.lock();
+            if (node_ptr) {
+                // Cache hit - found in thread-local cache
+                thread_cache.hits++;
+                hits_.fetch_add(1, std::memory_order_relaxed);
+                return node_ptr;
+            } else {
+                // Weak pointer expired, remove from cache
+                thread_cache.recent_lookups.erase(cache_it);
+            }
+        }
+        
+        // Cache miss, check the main transposition table
         auto it = entries_.find(hash);
         
         if (it != entries_.end() && it->second) {
@@ -42,7 +63,17 @@ std::shared_ptr<MCTSNode> TranspositionTable::get(uint64_t hash) {
                 // Try to lock the weak_ptr to get a shared_ptr
                 auto node_ptr = entry->node.lock();
                 if (node_ptr) {
-                    // Found a valid entry
+                    // Found a valid entry in main table
+                    
+                    // Add to thread-local cache for future lookups
+                    // Limit cache size to prevent excessive memory usage
+                    const size_t MAX_CACHE_SIZE = 128;
+                    if (thread_cache.recent_lookups.size() >= MAX_CACHE_SIZE) {
+                        // Simple cache management: clear when full
+                        thread_cache.recent_lookups.clear();
+                    }
+                    thread_cache.recent_lookups[hash] = node_ptr;
+                    
                     hits_.fetch_add(1, std::memory_order_relaxed);
                     return node_ptr;
                 }
@@ -52,7 +83,8 @@ std::shared_ptr<MCTSNode> TranspositionTable::get(uint64_t hash) {
         // Any exception during lookup means we failed to find a valid entry
     }
     
-    // Entry not found or invalid
+    // Entry not found or invalid in both cache and main table
+    thread_cache.misses++;
     misses_.fetch_add(1, std::memory_order_relaxed);
     return nullptr;
 }
@@ -62,28 +94,48 @@ void TranspositionTable::store(uint64_t hash, std::weak_ptr<MCTSNode> node, int 
         return;  // Don't store expired nodes
     }
     
-    // Safely get the visit count of the new node once to avoid repeated access
+    // Get thread ID for thread-local cache
+    int thread_id = omp_get_thread_num() % MAX_THREADS;
+    auto& thread_cache = thread_caches_[thread_id];
+    
+    // Get a shared_ptr to the node
+    std::shared_ptr<MCTSNode> locked_node;
     int visit_count = 0;
+    
     try {
-        if (auto locked_node = node.lock()) {
-            visit_count = locked_node->getVisitCount();
-            
-            // FIX: Additional validation to prevent storing nodes that are being cleaned up
+        locked_node = node.lock();
+        if (!locked_node) {
+            return; // Node expired before we could read it
+        }
+        
+        visit_count = locked_node->getVisitCount();
+        
+        // FIX: Additional validation to prevent storing nodes that are being cleaned up
+        try {
             if (!locked_node->getState().validate()) {
                 return; // Don't store nodes with invalid state
             }
-        } else {
-            return; // Node expired before we could read it
+        } catch (...) {
+            // If validation throws an exception, don't store the node
+            return;
         }
     } catch (...) {
         // If we can't even get the visit count of the new node, don't store it
         return;
     }
     
-    // Create a new entry
+    // Update thread-local cache with this node
+    const size_t MAX_CACHE_SIZE = 128;
+    if (thread_cache.recent_lookups.size() >= MAX_CACHE_SIZE) {
+        // Simple cache management: clear when full
+        thread_cache.recent_lookups.clear();
+    }
+    thread_cache.recent_lookups[hash] = locked_node;
+    
+    // Create a new entry for the main table
     auto new_entry = std::make_shared<TranspositionEntry>(node, hash, depth, visit_count);
     
-    // Try to insert or update the entry
+    // Try to insert or update the entry in the main table
     entries_.insert_or_assign(hash, new_entry);
     
     // Periodically check and enforce capacity limits
@@ -115,6 +167,13 @@ void TranspositionTable::clear() {
         // Continue with cleanup even if some entries can't be accessed
     }
     
+    // Clear the thread-local caches
+    for (auto& cache : thread_caches_) {
+        cache.recent_lookups.clear();
+        cache.hits = 0;
+        cache.misses = 0;
+    }
+    
     // Clear the hash map and reset statistics
     entries_.clear();
     resetStats();
@@ -129,20 +188,38 @@ size_t TranspositionTable::capacity() const {
 }
 
 float TranspositionTable::hitRate() const {
-    size_t hits = hits_.load(std::memory_order_relaxed);
-    size_t misses = misses_.load(std::memory_order_relaxed);
-    size_t total = hits + misses;
+    // Combine global and thread-local statistics
+    size_t global_hits = hits_.load(std::memory_order_relaxed);
+    size_t global_misses = misses_.load(std::memory_order_relaxed);
+    
+    // Add thread-local cache statistics
+    size_t total_hits = global_hits;
+    size_t total_misses = global_misses;
+    
+    for (const auto& cache : thread_caches_) {
+        total_hits += cache.hits;
+        total_misses += cache.misses;
+    }
+    
+    size_t total = total_hits + total_misses;
     
     if (total == 0) {
         return 0.0f;
     }
     
-    return static_cast<float>(hits) / static_cast<float>(total);
+    return static_cast<float>(total_hits) / static_cast<float>(total);
 }
 
 void TranspositionTable::resetStats() {
+    // Reset global statistics
     hits_.store(0, std::memory_order_relaxed);
     misses_.store(0, std::memory_order_relaxed);
+    
+    // Reset thread-local cache statistics
+    for (auto& cache : thread_caches_) {
+        cache.hits = 0;
+        cache.misses = 0;
+    }
 }
 
 void TranspositionTable::enforceCapacityLimit() {

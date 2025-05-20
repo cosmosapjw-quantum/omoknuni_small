@@ -637,6 +637,7 @@ set(MCTS_SOURCES
     src/mcts/mcts_node_pool.cpp
     src/mcts/evaluation_types.cpp
     src/mcts/mcts_evaluator.cpp
+    src/mcts/mcts_evaluator_thread_functions.cpp
     src/mcts/mcts_engine.cpp
     src/mcts/mcts_taskflow_engine.cpp
     src/mcts/transposition_table.cpp

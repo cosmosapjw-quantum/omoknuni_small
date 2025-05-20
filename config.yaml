@@ -7,6 +7,8 @@ board_size: 15
 
 # Self-play settings
 self_play_games_per_generation: 400
+self_play_num_parallel_games: 12
+self_play_num_mcts_engines: 12
 
 # GPU-optimized MCTS settings  
 mcts_simulations: 400 
@@ -64,7 +66,7 @@ model_num_res_blocks: 12
 model_num_filters: 128
 
 # OpenMP settings
-omp_num_threads: 12
+omp_num_threads: 20
 omp_affinity: close  # Keep threads on same NUMA node
 
 # Output settings  

@@ -62,10 +62,13 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     }
 
     // Create multiple MCTS engines for parallel game processing with OpenMP
-    // Use the number of threads specified in settings or config
-    int desired_engines = settings_.reserved_parallel > 0 ? settings_.reserved_parallel : 8;
+    // Use the explicitly configured number of MCTS engines or fall back to parallel games
+    int desired_engines = settings_.num_mcts_engines > 0 ? settings_.num_mcts_engines : 
+                          (settings_.num_parallel_games > 0 ? settings_.num_parallel_games : 8);
     const int num_engines = std::min(desired_engines, omp_get_max_threads());
     engines_.reserve(num_engines);
+    
+    std::cout << "SelfPlayManager: Creating " << num_engines << " MCTS engines" << std::endl;
     
     // Create a single shared evaluator for all engines
     auto notify_fn = [this]() {

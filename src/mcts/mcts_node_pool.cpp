@@ -67,24 +67,57 @@ std::shared_ptr<MCTSNode> MCTSNodePool::allocateNode(
     
     PROFILE_SCOPE_N("MCTSNodePool::allocateNode");
     
+    // Get the thread-local pool for the current thread
+    int thread_id = omp_get_thread_num() % MAX_THREADS;
+    auto& thread_pool = thread_pools_[thread_id];
+    
     MCTSNode* raw_node = nullptr;
     
-    {
-        std::lock_guard<std::mutex> lock(pool_mutex_);
+    // First try to get a node from the thread-local free list
+    if (!thread_pool.free_nodes.empty()) {
+        // Get a node from the thread-local pool (no mutex needed)
+        raw_node = thread_pool.free_nodes.back();
+        thread_pool.free_nodes.pop_back();
+    } else {
+        // Thread-local pool is empty, try the global pool
+        bool allocated_from_global = false;
         
-        if (free_nodes_.empty()) {
-            // Need to allocate more nodes
-            allocateBlock(config_.grow_size);
+        {
+            std::lock_guard<std::mutex> lock(pool_mutex_);
             
-            if (free_nodes_.empty()) {
-                // Failed to allocate more nodes
-                LOG_SYSTEM_ERROR("Failed to allocate more nodes from pool");
-                throw std::bad_alloc();
+            if (!free_nodes_.empty()) {
+                // Get a node from the global pool
+                raw_node = free_nodes_.front();
+                free_nodes_.pop();
+                allocated_from_global = true;
+            } else {
+                // Need to allocate more nodes
+                allocateBlock(config_.grow_size);
+                
+                if (!free_nodes_.empty()) {
+                    raw_node = free_nodes_.front();
+                    free_nodes_.pop();
+                    allocated_from_global = true;
+                } else {
+                    // Failed to allocate more nodes
+                    LOG_SYSTEM_ERROR("Failed to allocate more nodes from pool");
+                    throw std::bad_alloc();
+                }
             }
         }
         
-        raw_node = free_nodes_.front();
-        free_nodes_.pop();
+        // If we got a node from the global pool, also refill the thread-local pool
+        if (allocated_from_global) {
+            std::lock_guard<std::mutex> lock(pool_mutex_);
+            
+            // Transfer some nodes to the thread-local pool for future use
+            const size_t refill_count = 32; // Reasonable batch size to refill
+            
+            for (size_t i = 0; i < refill_count && !free_nodes_.empty(); ++i) {
+                thread_pool.free_nodes.push_back(free_nodes_.front());
+                free_nodes_.pop();
+            }
+        }
     }
     
     // Placement new to construct the node in the allocated memory
@@ -111,11 +144,27 @@ void MCTSNodePool::freeNode(MCTSNode* node) {
     // Call destructor explicitly
     node->~MCTSNode();
     
-    // Return to pool
-    {
+    // Get the thread-local pool for the current thread
+    int thread_id = omp_get_thread_num() % MAX_THREADS;
+    auto& thread_pool = thread_pools_[thread_id];
+    
+    const size_t MAX_THREAD_LOCAL_NODES = 128; // Limit to avoid excessive memory usage
+    
+    // Check if thread-local pool is getting too large
+    if (thread_pool.free_nodes.size() >= MAX_THREAD_LOCAL_NODES) {
+        // Thread-local pool is full, move some nodes to the global pool
         std::lock_guard<std::mutex> lock(pool_mutex_);
-        free_nodes_.push(node);
+        
+        // Move half of the local nodes to the global pool
+        size_t half_size = thread_pool.free_nodes.size() / 2;
+        for (size_t i = 0; i < half_size; ++i) {
+            free_nodes_.push(thread_pool.free_nodes.back());
+            thread_pool.free_nodes.pop_back();
+        }
     }
+    
+    // Add the node to the thread-local pool
+    thread_pool.free_nodes.push_back(node);
     
     in_use_--;
     deallocations_++;
@@ -130,30 +179,43 @@ void MCTSNodePool::NodeDeleter::operator()(MCTSNode* node) {
 void MCTSNodePool::clear() {
     PROFILE_SCOPE_N("MCTSNodePool::clear");
     
-    std::lock_guard<std::mutex> lock(pool_mutex_);
-    
-    // Clear free nodes queue
-    while (!free_nodes_.empty()) {
-        free_nodes_.pop();
+    {
+        std::lock_guard<std::mutex> lock(pool_mutex_);
+        
+        // Clear global free nodes queue
+        while (!free_nodes_.empty()) {
+            free_nodes_.pop();
+        }
+        
+        // Clear all thread-local free lists
+        for (auto& thread_pool : thread_pools_) {
+            thread_pool.free_nodes.clear();
+        }
+        
+        // Deallocate all memory blocks
+        memory_blocks_.clear();
+        
+        // Reset statistics
+        total_allocated_ = 0;
+        in_use_ = 0;
     }
     
-    // Deallocate all memory blocks
-    memory_blocks_.clear();
-    
-    // Reset statistics
-    total_allocated_ = 0;
-    in_use_ = 0;
-    
-    LOG_SYSTEM_INFO("Node pool cleared");
+    LOG_SYSTEM_INFO("Node pool cleared (global and thread-local)");
 }
 
 MCTSNodePool::PoolStats MCTSNodePool::getStats() const {
     std::lock_guard<std::mutex> lock(pool_mutex_);
     
+    // Count free nodes in all thread-local pools
+    size_t total_free_nodes = free_nodes_.size();
+    for (const auto& thread_pool : thread_pools_) {
+        total_free_nodes += thread_pool.free_nodes.size();
+    }
+    
     return {
         total_allocated_.load(),
         in_use_.load(),
-        free_nodes_.size(),
+        total_free_nodes,
         peak_usage_.load(),
         allocations_.load(),
         deallocations_.load()

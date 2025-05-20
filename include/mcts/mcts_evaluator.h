@@ -11,13 +11,33 @@
 #include <condition_variable>
 #include <memory>
 #include <iostream>
+#include <future>
+#include <queue>
 #include "mcts/evaluation_types.h"
+#include "mcts/mcts_node.h"
 #include "core/export_macros.h"
+#include "mcts/mcts_engine.h"
 
 #include <moodycamel/concurrentqueue.h>
 
 namespace alphazero {
 namespace mcts {
+
+// Structure for batched inference jobs
+struct BatchForInference {
+    std::vector<std::unique_ptr<core::IGameState>> states;
+    std::vector<PendingEvaluation> pending_evals;
+    size_t batch_id;
+    std::chrono::steady_clock::time_point created_time;
+};
+
+// Structure for inference results
+struct BatchInferenceResult {
+    std::vector<NetworkOutput> outputs;
+    std::vector<PendingEvaluation> pending_evals;
+    size_t batch_id;
+    std::chrono::steady_clock::time_point processed_time;
+};
 
 class ALPHAZERO_API MCTSEvaluator {
 public:
@@ -27,7 +47,8 @@ public:
     
     MCTSEvaluator(InferenceFunction inference_fn, 
                  size_t batch_size = 16, 
-                 std::chrono::milliseconds timeout = std::chrono::milliseconds(5));
+                 std::chrono::milliseconds timeout = std::chrono::milliseconds(5),
+                 size_t num_inference_threads = 1);
     
     ~MCTSEvaluator();
     
@@ -71,21 +92,37 @@ public:
     }
     
 private:
-    // Worker thread function
-    void processBatches();
+    // Main batch collector thread function
+    void batchCollectorLoop();
     
-    // New evaluation loop with smarter batching
-    void evaluationLoop();
+    // NN inference worker thread function
+    void inferenceWorkerLoop();
     
-    // Process a single batch
+    // Result distributor thread function (for internal queue mode)
+    void resultDistributorLoop();
+    
+    // Process a single batch (old method, being deprecated)
     bool processBatch();
     
-    // Collect a batch of requests from the queue
-    // If target_batch_size is 0, uses the default batch_size_
-    std::vector<EvaluationRequest> collectBatch(size_t target_batch_size = 0);
+    // Collect a batch from external queue with improved batching logic
+    // This optimized implementation collects larger and more efficient batches
+    std::vector<PendingEvaluation> collectExternalBatch(size_t target_batch_size);
     
-    // Process a batch of requests
-    void processBatch(std::vector<EvaluationRequest>& batch);
+    // Collect a batch of requests from the internal queue with improved batching logic
+    // If target_batch_size is 0, uses the default batch_size_
+    std::vector<EvaluationRequest> collectInternalBatch(size_t target_batch_size = 0);
+    
+    // Process a batch of internal requests
+    void processInternalBatch(std::vector<EvaluationRequest>& batch);
+    
+    // Helper for adaptive waiting with exponential backoff
+    // Waits until the predicate returns true, using increasingly longer
+    // wait times to reduce CPU usage when waiting
+    void waitWithBackoff(std::function<bool()> predicate, std::chrono::milliseconds max_wait_time);
+    
+    // Missing declarations
+    void evaluationLoop();
+    void processBatches();
     
     // Neural network inference function
     InferenceFunction inference_fn_;
@@ -98,9 +135,14 @@ private:
     // Queue for collecting evaluation requests
     moodycamel::ConcurrentQueue<EvaluationRequest> request_queue_;
     
-    // Worker thread
-    std::thread worker_thread_;
+    // Thread pool
+    std::thread batch_collector_thread_;
+    std::vector<std::thread> inference_worker_threads_;
+    std::thread result_distributor_thread_;
     std::atomic<bool> shutdown_flag_;
+    
+    // Thread pool size
+    size_t num_inference_threads_;
     
     // Metrics
     std::atomic<size_t> total_batches_;
@@ -120,11 +162,18 @@ private:
     std::atomic<size_t> full_batches_{0};
     std::atomic<size_t> partial_batches_{0};
     
-    // Min batch size to attempt GPU inference (optimization)
-    size_t min_batch_size_{1};
+    // Batch processing parameters
+    size_t min_batch_size_{4};  // Minimum batch size to process
+    size_t optimal_batch_size_{16}; // Target batch size for best performance
     
     // Time to wait for additional requests after reaching min_batch_size
-    std::chrono::milliseconds additional_wait_time_{10};
+    std::chrono::milliseconds additional_wait_time_{5};
+    
+    // Queue for inference jobs between batch collector and inference workers
+    moodycamel::ConcurrentQueue<BatchForInference> inference_queue_;
+    
+    // Queue for results between inference workers and result processor
+    moodycamel::ConcurrentQueue<BatchInferenceResult> result_queue_internal_;
     
     // Queue size tracking for adaptive timeouts
     std::atomic<size_t> last_queue_size_{0};
@@ -138,8 +187,21 @@ private:
     // Queue mutex for synchronization
     std::mutex queue_mutex_;
     
-    // Condition variable for batch readiness
-    std::condition_variable batch_ready_cv_;
+    // Condition variables for synchronization
+    std::condition_variable batch_ready_cv_; // For batch collection
+    std::condition_variable inference_cv_;   // For inference workers
+    std::condition_variable result_cv_;      // For result processing
+    
+    // Mutexes for condition variables
+    std::mutex inference_mutex_;
+    std::mutex result_mutex_;
+    
+    // Atomic counters for tracking queue sizes
+    std::atomic<size_t> pending_inference_batches_{0};
+    std::atomic<size_t> pending_result_batches_{0};
+    
+    // Batch counter for tracking
+    std::atomic<size_t> batch_counter_{0};
 };
 
 } // namespace mcts

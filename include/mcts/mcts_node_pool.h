@@ -101,8 +101,16 @@ private:
     
     // Memory management
     std::vector<std::unique_ptr<MemoryBlock>> memory_blocks_;
-    std::queue<MCTSNode*> free_nodes_;
-    mutable std::mutex pool_mutex_;
+    std::queue<MCTSNode*> free_nodes_; // Global free list (used less frequently)
+    mutable std::mutex pool_mutex_;    // Global mutex (used less frequently)
+    
+    // Thread-local free lists to reduce contention
+    static constexpr int MAX_THREADS = 64;
+    struct ThreadLocalPool {
+        std::vector<MCTSNode*> free_nodes;
+        alignas(64) char padding[64]; // Avoid false sharing between threads
+    };
+    std::array<ThreadLocalPool, MAX_THREADS> thread_pools_;
     
     // Statistics
     std::atomic<size_t> total_allocated_{0};

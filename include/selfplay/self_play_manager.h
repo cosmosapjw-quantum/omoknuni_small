@@ -68,8 +68,11 @@ struct ALPHAZERO_API SelfPlaySettings {
     // MCTS settings
     mcts::MCTSSettings mcts_settings;
     
-    // Reserved for future use (previously num_parallel_games)
-    int reserved_parallel = 1;
+    // Number of parallel games
+    int num_parallel_games = 1;
+    
+    // Number of MCTS engines to create
+    int num_mcts_engines = 1;
     
     // Maximum number of moves before forcing a draw
     int max_moves = 0;

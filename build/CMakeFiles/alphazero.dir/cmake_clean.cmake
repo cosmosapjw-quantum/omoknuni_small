@@ -32,6 +32,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o"
   "CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o.d"
+  "CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.o"
+  "CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o"
   "CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/mcts/mcts_node_methods.cpp.o"

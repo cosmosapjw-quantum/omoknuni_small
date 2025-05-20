@@ -120,30 +120,43 @@ private:
     std::vector<int> actions_;
     int action_; // Action that led to this node
     
-    // MCTS statistics
-    std::atomic<int> visit_count_;
-    std::atomic<float> value_sum_;
-    std::atomic<int> virtual_loss_count_;
+    // MCTS statistics with cache line padding to prevent false sharing
+    // Each atomic variable is placed in its own cache line to avoid thread contention
+    alignas(64) std::atomic<int> visit_count_;
+    char padding1[60]; // Fill the rest of the cache line (64 bytes typical)
     
-    // RAVE statistics
-    std::atomic<int> rave_count_;
-    std::atomic<float> rave_value_sum_;
+    alignas(64) std::atomic<float> value_sum_;
+    char padding2[60];
+    
+    alignas(64) std::atomic<int> virtual_loss_count_;
+    char padding3[60];
+    
+    // RAVE statistics with padding
+    alignas(64) std::atomic<int> rave_count_;
+    char padding4[60];
+    
+    alignas(64) std::atomic<float> rave_value_sum_;
+    char padding5[60];
     
     // Prior probabilities from neural network
     std::vector<float> prior_probabilities_;
     float prior_probability_;
     
     // Flag to indicate if neural network evaluation is in progress
-    std::atomic<bool> evaluation_in_progress_{false};
+    // Added alignment and padding to prevent false sharing
+    alignas(64) std::atomic<bool> evaluation_in_progress_{false};
+    char padding6[60];
     
     // Pending evaluation tracking - using atomic_flag for lock-free operations
-    mutable std::atomic_flag pending_evaluation_ = ATOMIC_FLAG_INIT;
+    alignas(64) mutable std::atomic_flag pending_evaluation_ = ATOMIC_FLAG_INIT;
+    char padding7[60];
     
     // Remove mutex as we use lock-free atomic operations
     // std::mutex evaluation_mutex_;
     
     // Thread safety - atomic flag for expansion status (lock-free)
-    std::atomic<bool> is_expanded_{false};
+    alignas(64) std::atomic<bool> is_expanded_{false};
+    char padding8[60];
 };
 
 } // namespace mcts

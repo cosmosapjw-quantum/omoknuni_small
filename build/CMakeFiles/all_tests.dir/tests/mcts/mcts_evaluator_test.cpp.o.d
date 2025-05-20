@@ -201,38 +201,24 @@ CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: \
  /usr/include/c++/13/bits/locale_facets.tcc \
  /usr/include/c++/13/bits/basic_ios.tcc \
  /usr/include/c++/13/bits/ostream.tcc /usr/include/c++/13/istream \
- /usr/include/c++/13/bits/istream.tcc \
+ /usr/include/c++/13/bits/istream.tcc /usr/include/c++/13/future \
+ /usr/include/c++/13/bits/atomic_futex.h /usr/include/c++/13/queue \
+ /usr/include/c++/13/deque /usr/include/c++/13/bits/stl_deque.h \
+ /usr/include/c++/13/bits/deque.tcc /usr/include/c++/13/bits/stl_queue.h \
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
- /usr/include/c++/13/future /usr/include/c++/13/bits/atomic_futex.h \
  /home/cosmos/omoknuni_small/include/core/igamestate.h \
  /usr/include/c++/13/optional \
  /home/cosmos/omoknuni_small/include/core/export_macros.h \
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
  /usr/include/c++/13/sstream /usr/include/c++/13/bits/sstream.tcc \
- /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
- /usr/include/c++/13/cassert /usr/include/assert.h \
- /usr/include/c++/13/algorithm \
- /usr/include/c++/13/pstl/glue_algorithm_defs.h \
- /usr/include/c++/13/utility /usr/include/c++/13/bits/stl_relops.h \
- /usr/include/c++/13/climits \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
- /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
- /usr/include/x86_64-linux-gnu/bits/local_lim.h \
- /usr/include/linux/limits.h \
- /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
- /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
- /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
  /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
- /usr/include/c++/13/deque /usr/include/c++/13/bits/stl_deque.h \
- /usr/include/c++/13/bits/deque.tcc \
  /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
  /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
- /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
- /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
+ /usr/include/c++/13/utility /usr/include/c++/13/bits/stl_relops.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
  /usr/include/c++/13/random /usr/include/c++/13/cmath /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
@@ -266,8 +252,37 @@ CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
  /usr/include/c++/13/bits/random.tcc /usr/include/c++/13/numeric \
  /usr/include/c++/13/bits/stl_numeric.h \
- /usr/include/c++/13/pstl/glue_numeric_defs.h /usr/include/c++/13/iomanip \
- /usr/include/c++/13/locale \
+ /usr/include/c++/13/pstl/glue_numeric_defs.h \
+ /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+ /usr/include/parallel_hashmap/phmap.h /usr/include/c++/13/algorithm \
+ /usr/include/c++/13/pstl/glue_algorithm_defs.h \
+ /usr/include/c++/13/cstring /usr/include/string.h /usr/include/strings.h \
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /usr/include/c++/13/iterator /usr/include/c++/13/bits/stream_iterator.h \
+ /usr/include/c++/13/cassert /usr/include/assert.h \
+ /usr/include/parallel_hashmap/phmap_fwd_decl.h \
+ /usr/include/parallel_hashmap/phmap_utils.h \
+ /usr/include/parallel_hashmap/phmap_bits.h /usr/include/byteswap.h \
+ /usr/include/parallel_hashmap/phmap_config.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
+ /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+ /usr/include/linux/limits.h \
+ /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
+ /usr/include/parallel_hashmap/phmap_base.h \
+ /usr/include/c++/13/shared_mutex \
+ /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
+ /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
+ /usr/include/c++/13/climits \
+ /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
+ /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
+ /usr/include/c++/13/iomanip /usr/include/c++/13/locale \
  /usr/include/c++/13/bits/locale_facets_nonio.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h \
@@ -282,10 +297,7 @@ CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: \
  /usr/include/c++/13/bits/stl_multiset.h \
  /usr/include/gtest/gtest-assertion-result.h \
  /usr/include/gtest/gtest-message.h \
- /usr/include/gtest/internal/gtest-port.h /usr/include/string.h \
- /usr/include/strings.h \
- /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
- /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /usr/include/gtest/internal/gtest-port.h \
  /usr/include/x86_64-linux-gnu/sys/stat.h \
  /usr/include/x86_64-linux-gnu/bits/stat.h \
  /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
@@ -349,8 +361,7 @@ CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: \
  /usr/include/c++/13/cxxabi.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/cxxabi_tweaks.h \
  /usr/include/gtest/internal/custom/gtest-printers.h \
- /usr/include/gtest/gtest-param-test.h /usr/include/c++/13/iterator \
- /usr/include/c++/13/bits/stream_iterator.h \
+ /usr/include/gtest/gtest-param-test.h \
  /usr/include/gtest/internal/gtest-param-util.h \
  /usr/include/gtest/gtest-test-part.h \
  /usr/include/gtest/gtest-typed-test.h \

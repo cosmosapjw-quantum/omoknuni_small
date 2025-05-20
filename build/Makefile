@@ -1262,6 +1262,30 @@ src/mcts/mcts_evaluator.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.s
 .PHONY : src/mcts/mcts_evaluator.cpp.s
 
+src/mcts/mcts_evaluator_thread_functions.o: src/mcts/mcts_evaluator_thread_functions.cpp.o
+.PHONY : src/mcts/mcts_evaluator_thread_functions.o
+
+# target to build an object file
+src/mcts/mcts_evaluator_thread_functions.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.o
+.PHONY : src/mcts/mcts_evaluator_thread_functions.cpp.o
+
+src/mcts/mcts_evaluator_thread_functions.i: src/mcts/mcts_evaluator_thread_functions.cpp.i
+.PHONY : src/mcts/mcts_evaluator_thread_functions.i
+
+# target to preprocess a source file
+src/mcts/mcts_evaluator_thread_functions.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.i
+.PHONY : src/mcts/mcts_evaluator_thread_functions.cpp.i
+
+src/mcts/mcts_evaluator_thread_functions.s: src/mcts/mcts_evaluator_thread_functions.cpp.s
+.PHONY : src/mcts/mcts_evaluator_thread_functions.s
+
+# target to generate assembly for a file
+src/mcts/mcts_evaluator_thread_functions.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.s
+.PHONY : src/mcts/mcts_evaluator_thread_functions.cpp.s
+
 src/mcts/mcts_node.o: src/mcts/mcts_node.cpp.o
 .PHONY : src/mcts/mcts_node.o
 
@@ -2537,6 +2561,9 @@ help:
 	@echo "... src/mcts/mcts_evaluator.o"
 	@echo "... src/mcts/mcts_evaluator.i"
 	@echo "... src/mcts/mcts_evaluator.s"
+	@echo "... src/mcts/mcts_evaluator_thread_functions.o"
+	@echo "... src/mcts/mcts_evaluator_thread_functions.i"
+	@echo "... src/mcts/mcts_evaluator_thread_functions.s"
 	@echo "... src/mcts/mcts_node.o"
 	@echo "... src/mcts/mcts_node.i"
 	@echo "... src/mcts/mcts_node.s"

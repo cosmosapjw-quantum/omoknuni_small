@@ -48,7 +48,6 @@ void GPUOptimizer::allocatePinnedMemory() {
     tensor_cache_ = std::make_unique<TensorCache>();
     
     // Pre-allocate pinned memory tensors
-    
     for (size_t i = 0; i < config_.tensor_cache_size; ++i) {
         // Create CPU tensor with pinned memory
         auto options = torch::TensorOptions()
@@ -77,12 +76,45 @@ void GPUOptimizer::allocatePinnedMemory() {
         tensor_cache_->gpu_tensors.push_back(gpu_tensor);
     }
     
-    LOG_SYSTEM_INFO("Allocated {} pinned memory tensors of size {}x{}x{}x{}", 
-                   config_.tensor_cache_size, config_.max_batch_size, 
+    // Create buffer pairs for double-buffering
+    // Use 3 buffer pairs for optimal pipelining (triple-buffering)
+    const size_t num_buffer_pairs = 3;
+    tensor_cache_->buffer_pairs.resize(num_buffer_pairs);
+    
+    for (size_t i = 0; i < num_buffer_pairs; ++i) {
+        BufferPair& buffer = tensor_cache_->buffer_pairs[i];
+        
+        // Create pinned memory CPU tensor for this buffer
+        auto options = torch::TensorOptions()
+            .dtype(torch::kFloat32)
+            .device(torch::kCPU)
+            .pinned_memory(true);
+            
+        buffer.cpu_tensor = torch::empty(
+            {static_cast<long>(config_.max_batch_size), 
+             static_cast<long>(config_.num_channels),
+             static_cast<long>(config_.board_height), 
+             static_cast<long>(config_.board_width)}, 
+            options);
+            
+        // Create GPU tensor for this buffer
+        buffer.gpu_tensor = torch::empty_like(buffer.cpu_tensor, torch::device(torch::kCUDA));
+        
+        // Create CUDA events for synchronization
+        cudaEventCreate(&buffer.copy_done);
+        cudaEventCreate(&buffer.compute_done);
+        
+        // Initialize in_use flag
+        buffer.in_use.store(false, std::memory_order_release);
+    }
+    
+    LOG_SYSTEM_INFO("Allocated {} pinned memory tensors and {} buffer pairs of size {}x{}x{}x{}", 
+                   config_.tensor_cache_size, num_buffer_pairs, config_.max_batch_size, 
                    config_.num_channels, config_.board_height, config_.board_width);
 }
 
-torch::Tensor GPUOptimizer::prepareStatesBatch(const std::vector<std::unique_ptr<core::IGameState>>& states) {
+torch::Tensor GPUOptimizer::prepareStatesBatch(const std::vector<std::unique_ptr<core::IGameState>>& states, 
+                                              bool synchronize) {
     PROFILE_SCOPE_N("GPUOptimizer::prepareStatesBatch");
     
     if (states.empty()) {
@@ -98,18 +130,37 @@ torch::Tensor GPUOptimizer::prepareStatesBatch(const std::vector<std::unique_ptr
     const size_t height = config_.board_height;
     const size_t width = config_.board_width;
     
-    // Get a pre-allocated tensor or create new one
+    // Check if we should use double-buffering
+    bool use_double_buffer = !synchronize && tensor_cache_ && 
+                           !tensor_cache_->buffer_pairs.empty() && 
+                           batch_size <= config_.max_batch_size;
+    
+    // Choose between double-buffering and regular tensor allocation
     torch::Tensor cpu_tensor;
     torch::Tensor gpu_tensor;
+    cudaStream_t stream = getCurrentStream();
     
-    if (config_.use_pinned_memory && tensor_cache_ && 
-        batch_size <= config_.max_batch_size) {
-        // Use pre-allocated pinned memory
+    if (use_double_buffer) {
+        // Double-buffering path - get a buffer pair
+        BufferPair& buffer_pair = getNextBufferPair(batch_size);
+        
+        if (batch_size < config_.max_batch_size) {
+            // Use slices for smaller batches
+            cpu_tensor = buffer_pair.cpu_tensor.slice(0, 0, batch_size);
+            gpu_tensor = buffer_pair.gpu_tensor.slice(0, 0, batch_size);
+        } else {
+            // Use full tensor for max batch size
+            cpu_tensor = buffer_pair.cpu_tensor;
+            gpu_tensor = buffer_pair.gpu_tensor;
+        }
+    } else if (config_.use_pinned_memory && tensor_cache_ && 
+              batch_size <= config_.max_batch_size) {
+        // Regular path with pre-allocated tensors (fallback)
         size_t tensor_idx = tensor_cache_->next_tensor_.fetch_add(1) % config_.tensor_cache_size;
         cpu_tensor = tensor_cache_->cpu_pinned_tensors[tensor_idx].slice(0, 0, batch_size);
         gpu_tensor = tensor_cache_->gpu_tensors[tensor_idx].slice(0, 0, batch_size);
     } else {
-        // Allocate new tensors
+        // Allocate new tensors (rarely used fallback)
         auto cpu_options = torch::TensorOptions()
             .dtype(torch::kFloat32)
             .device(torch::kCPU)
@@ -136,13 +187,32 @@ torch::Tensor GPUOptimizer::prepareStatesBatch(const std::vector<std::unique_ptr
     
     // Transfer to GPU if available
     if (torch::cuda::is_available()) {
-        cudaStream_t stream = getCurrentStream();
-        
         // Non-blocking copy from pinned memory to GPU
         gpu_tensor.copy_(cpu_tensor, /*non_blocking=*/true);
         
-        // Record event for synchronization if needed
-        cudaStreamSynchronize(stream);
+        if (use_double_buffer) {
+            // Find the buffer pair we're using
+            for (auto& buffer : tensor_cache_->buffer_pairs) {
+                if (gpu_tensor.data_ptr() == buffer.gpu_tensor.data_ptr() ||
+                    (batch_size < config_.max_batch_size && 
+                     gpu_tensor.data_ptr() == buffer.gpu_tensor.slice(0, 0, batch_size).data_ptr())) {
+                    
+                    // Record event to signal when the copy is complete
+                    cudaEventRecord(buffer.copy_done, stream);
+                    
+                    // Only wait when synchronize is true
+                    if (synchronize) {
+                        cudaEventSynchronize(buffer.copy_done);
+                        buffer.in_use.store(false, std::memory_order_release);
+                    }
+                    
+                    break;
+                }
+            }
+        } else if (synchronize) {
+            // Traditional synchronization
+            cudaStreamSynchronize(stream);
+        }
         
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -257,6 +327,37 @@ void GPUOptimizer::preallocateTensors(size_t batch_size) {
     LOG_SYSTEM_INFO("Pre-allocated tensors for batch size {}", batch_size);
 }
 
+GPUOptimizer::BufferPair& GPUOptimizer::getNextBufferPair(size_t batch_size) {
+    if (!tensor_cache_ || tensor_cache_->buffer_pairs.empty() || batch_size > config_.max_batch_size) {
+        // No buffer pairs or batch too large - fallback to default buffer
+        static BufferPair dummy_buffer;
+        return dummy_buffer;
+    }
+    
+    // Try to find an available buffer pair
+    for (int attempt = 0; attempt < 3; ++attempt) {
+        size_t next_idx = tensor_cache_->next_buffer_.fetch_add(1) % tensor_cache_->buffer_pairs.size();
+        auto& buffer = tensor_cache_->buffer_pairs[next_idx];
+        
+        // Try to acquire the buffer
+        bool expected = false;
+        if (buffer.in_use.compare_exchange_strong(expected, true)) {
+            return buffer;
+        }
+        
+        // If all buffers are in use, we'll return the last one we tried
+        if (attempt == 2) {
+            // Wait for this buffer to be ready
+            cudaEventSynchronize(buffer.compute_done);
+            buffer.in_use.store(true, std::memory_order_release);
+            return buffer;
+        }
+    }
+    
+    // Fallback - should never reach here
+    return tensor_cache_->buffer_pairs[0];
+}
+
 void GPUOptimizer::cleanupResources() {
     // Destroy CUDA streams
     for (auto stream : cuda_streams_) {
@@ -264,8 +365,10 @@ void GPUOptimizer::cleanupResources() {
     }
     cuda_streams_.clear();
     
-    // Clear tensor cache
+    // Clean up buffer pair events and clear tensor cache
     if (tensor_cache_) {
+        // The ~BufferPair() destructor now handles event destruction.
+        tensor_cache_->buffer_pairs.clear();
         tensor_cache_->gpu_tensors.clear();
         tensor_cache_->cpu_pinned_tensors.clear();
     }

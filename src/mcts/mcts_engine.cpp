@@ -1,5 +1,6 @@
 // src/mcts/mcts_engine.cpp
 #include "mcts/mcts_engine.h"
+#include "mcts/mcts_evaluator.h" // Added include for full definition
 #include "mcts/mcts_node.h"
 #include "utils/debug_monitor.h"
 #include "utils/gamestate_pool.h"
@@ -1661,6 +1662,13 @@ void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
     if (!root) return;
     
     try {
+        // Use thread-local batch accumulation for better batching efficiency
+        // Each thread builds a local batch before submitting to the global queue
+        static thread_local std::vector<PendingEvaluation> thread_local_batch;
+        static thread_local size_t consecutive_small_batches = 0;
+        static thread_local auto last_flush_time = std::chrono::steady_clock::now();
+        int thread_id = omp_get_thread_num() % MAX_THREADS;
+        
         // Selection phase
         auto [leaf, path] = selectLeafNode(root);
         if (!leaf) return;
@@ -1700,17 +1708,67 @@ void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
                     pending.batch_id = batch_counter_.fetch_add(1, std::memory_order_relaxed);
                     pending.request_id = total_leaves_generated_.fetch_add(1, std::memory_order_relaxed);
                     
-                    // Submit to leaf queue with proper move semantics
-                    if (leaf_queue_.enqueue(std::move(pending))) {
-                        // Increment pending evaluations count (FIX: only once per leaf)
-                        pending_evaluations_.fetch_add(1, std::memory_order_acq_rel);
-                        if (evaluator_) { // Notify evaluator that a new leaf is available
-                            evaluator_->notifyLeafAvailable();
+                    // Add to thread-local batch first
+                    thread_local_batch.push_back(std::move(pending));
+                    
+                    // Check if we should flush the thread-local batch to the global queue
+                    auto now = std::chrono::steady_clock::now();
+                    bool should_flush = false;
+                    
+                    // Flush if: 
+                    // 1. The batch is large enough for efficient processing (16+ items)
+                    // 2. Or we have accumulated smaller batches multiple times
+                    // 3. Or too much time has passed since the last flush
+                    if (thread_local_batch.size() >= 16 || 
+                        (consecutive_small_batches > 5 && thread_local_batch.size() > 4) ||
+                        (thread_local_batch.size() > 0 && 
+                         std::chrono::duration_cast<std::chrono::milliseconds>(now - last_flush_time).count() > 20)) {
+                        
+                        // Target the appropriate queue (shared or local)
+                        auto& target_queue = use_shared_queues_ ? *shared_leaf_queue_ : leaf_queue_;
+                        
+                        // Use bulk enqueue for efficiency
+                        if (target_queue.enqueue_bulk(
+                                std::make_move_iterator(thread_local_batch.begin()),
+                                thread_local_batch.size())) {
+                            
+                            // Update statistics
+                            pending_evaluations_.fetch_add(thread_local_batch.size(), std::memory_order_acq_rel);
+                            
+                            // Notify the evaluator once for the batch (avoids multiple wakeups)
+                            if (evaluator_ && !thread_local_batch.empty()) {
+                                evaluator_->notifyLeafAvailable();
+                            }
+                            
+                            // Reset tracking variables
+                            last_flush_time = now;
+                            consecutive_small_batches = 0;
+                            thread_local_batch.clear();
+                            should_flush = true;
+                        } else {
+                            // Handle failure - try to enqueue nodes individually
+                            MCTS_LOG_ERROR("[TRAVERSE] Failed to bulk enqueue evaluations, trying individually");
+                            
+                            for (auto& eval : thread_local_batch) {
+                                if (target_queue.enqueue(std::move(eval))) {
+                                    pending_evaluations_.fetch_add(1, std::memory_order_acq_rel);
+                                } else {
+                                    // Clear evaluation flag if enqueue fails
+                                    if (eval.node) eval.node->clearEvaluationFlag();
+                                }
+                            }
+                            thread_local_batch.clear();
                         }
-                    } else {
-                        MCTS_LOG_ERROR("[TRAVERSE] Failed to enqueue evaluation request");
-                        // Clear the flag since we failed to enqueue
-                        leaf->clearEvaluationFlag();
+                    } else if (thread_local_batch.size() < 4) {
+                        // Track small batches
+                        consecutive_small_batches++;
+                    }
+                    
+                    // If we didn't flush, check if other threads need assistance
+                    if (!should_flush && thread_data_[thread_id].pending_count > 0) {
+                        // Help process backlogged evaluations in this thread's data structure
+                        // This improves load balancing across threads
+                        thread_data_[thread_id].pending_count--;
                     }
                 } else {
                     // Clear the flag since we failed to clone the state
@@ -1849,16 +1907,27 @@ void MCTSEngine::resultDistributorWorker() {
                     total_results_processed_.fetch_add(1, std::memory_order_relaxed);
                 }
             } else {
-                // Adaptive waiting - yield CPU when queue is empty
-                // CRITICAL DEBUG: Log when result queue is empty
+                // Use exponential backoff for adaptive waiting when queue is empty
+                // Predicate is a lambda that checks if there are results available
                 static int empty_count = 0;
-                // Count empty cycles
-                if (++empty_count < 10) {
-                    std::this_thread::yield();
-                } else {
-                    std::this_thread::sleep_for(std::chrono::microseconds(100));
-                    empty_count = 0;
-                }
+                empty_count++;
+                
+                auto check_results_available = [this]() -> bool {
+                    // Check if there are results available or if shutdown is requested
+                    if (shutdown_.load(std::memory_order_acquire)) return true;
+                    
+                    size_t approx_size = use_shared_queues_ ? 
+                        shared_result_queue_->size_approx() : 
+                        result_queue_.size_approx();
+                    
+                    return approx_size > 0;
+                };
+                
+                // Wait with backoff - more efficient CPU utilization
+                waitWithBackoff(check_results_available, std::chrono::milliseconds(5));
+                
+                // Reset counter periodically
+                if (empty_count > 100) empty_count = 0;
             }
         }
         
@@ -2653,7 +2722,26 @@ void MCTSEngine::setSharedExternalQueues(
     // Debug: Verify the queue pointers are stored correctly
     }
 
-
+void MCTSEngine::waitWithBackoff(std::function<bool()> predicate, std::chrono::milliseconds max_wait_time) {
+    // First try with quick yields - efficient for low contention
+    for (int i = 0; i < 10; ++i) {
+        if (predicate()) return;
+        std::this_thread::yield();
+    }
+    
+    // Then use exponential backoff with increasingly longer sleeps
+    for (int wait_us = 100; wait_us < 10000; wait_us *= 2) {
+        if (predicate()) return;
+        std::this_thread::sleep_for(std::chrono::microseconds(wait_us));
+    }
+    
+    // If still not satisfied, sleep for longer periods
+    auto deadline = std::chrono::steady_clock::now() + max_wait_time;
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (predicate()) return;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+}
 
 } // namespace mcts
 } // namespace alphazero

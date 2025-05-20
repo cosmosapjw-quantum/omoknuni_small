@@ -10,10 +10,8 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/4.0.2/CMakeSystem.cmake"
   "CMakeLists.txt"
   "mimalloc-populate-prefix/tmp/mimalloc-populate-mkdirs.cmake"
-  "/usr/share/cmake-4.0/Modules/CMakeDetermineSystem.cmake"
   "/usr/share/cmake-4.0/Modules/CMakeGenericSystem.cmake"
   "/usr/share/cmake-4.0/Modules/CMakeInitializeConfigs.cmake"
-  "/usr/share/cmake-4.0/Modules/CMakeSystem.cmake.in"
   "/usr/share/cmake-4.0/Modules/CMakeSystemSpecificInformation.cmake"
   "/usr/share/cmake-4.0/Modules/CMakeSystemSpecificInitialize.cmake"
   "/usr/share/cmake-4.0/Modules/ExternalProject.cmake"
@@ -38,7 +36,6 @@ set(CMAKE_MAKEFILE_OUTPUTS
 
 # Byproducts of CMake generate step:
 set(CMAKE_MAKEFILE_PRODUCTS
-  "CMakeFiles/4.0.2/CMakeSystem.cmake"
   "mimalloc-populate-prefix/tmp/mimalloc-populate-mkdirs.cmake"
   "mimalloc-populate-prefix/tmp/mimalloc-populate-gitclone.cmake"
   "mimalloc-populate-prefix/src/mimalloc-populate-stamp/mimalloc-populate-gitinfo.txt"

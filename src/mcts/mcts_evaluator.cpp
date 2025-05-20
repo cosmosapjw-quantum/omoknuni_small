@@ -1,7 +1,6 @@
 // src/mcts/mcts_evaluator.cpp
 #include "mcts/mcts_evaluator.h"
 #include "mcts/mcts_node.h"
-#include "mcts/mcts_engine.h"
 #include "utils/debug_monitor.h"
 #include "utils/memory_tracker.h"
 #include <torch/torch.h>
@@ -10,6 +9,8 @@
 #include <algorithm>
 #include <iostream>
 #include <omp.h>
+
+using namespace alphazero::mcts; // Added this line
 
 namespace alphazero {
 namespace mcts {
@@ -33,7 +34,8 @@ namespace mcts {
 
 MCTSEvaluator::MCTSEvaluator(InferenceFunction inference_fn, 
                            size_t batch_size, 
-                           std::chrono::milliseconds timeout)
+                           std::chrono::milliseconds timeout,
+                           size_t num_inference_threads)
     : inference_fn_(std::move(inference_fn)),
       batch_size_(batch_size),
       original_batch_size_(batch_size),
@@ -45,7 +47,8 @@ MCTSEvaluator::MCTSEvaluator(InferenceFunction inference_fn,
       cumulative_batch_time_ms_(0),
       timeouts_(0),
       full_batches_(0),
-      partial_batches_(0) {
+      partial_batches_(0),
+      num_inference_threads_(num_inference_threads) {
     
     // Validate parameters and set reasonable defaults
     if (batch_size_ < 1) {
@@ -56,13 +59,19 @@ MCTSEvaluator::MCTSEvaluator(InferenceFunction inference_fn,
         timeout_ = std::chrono::milliseconds(1);
     }
     
-    // Set min batch size to optimize GPU usage
-    min_batch_size_ = std::max(size_t(batch_size_ * 0.75), size_t(64));  // Wait for 75% batch or min 64
-    
-    // Increase wait time to allow batches to accumulate
-    additional_wait_time_ = std::chrono::milliseconds(25);
-    
+    if (num_inference_threads_ < 1) {
+        num_inference_threads_ = 1;
     }
+    
+    // Set min batch size to optimize GPU usage (reduced from 75% to 25% for faster batching)
+    min_batch_size_ = std::max(size_t(batch_size_ * 0.25), size_t(16));  // Wait for 25% batch or min 16
+    
+    // Set optimal batch size for GPU efficiency
+    optimal_batch_size_ = std::min(size_t(batch_size_ * 0.75), size_t(128));
+    
+    // Reduce wait time for more responsive batching
+    additional_wait_time_ = std::chrono::milliseconds(5);
+}
 
 MCTSEvaluator::~MCTSEvaluator() {
     // Ensure proper shutdown and cleanup
@@ -124,8 +133,7 @@ MCTSEvaluator::~MCTSEvaluator() {
 }
 
 void MCTSEvaluator::start() {
-    int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF;
-    // Don't hold the lock while creating the thread to avoid potential deadlocks
+    // Don't hold the lock while creating threads to avoid potential deadlocks
     {
         std::lock_guard<std::mutex> lock(start_mutex_);
         
@@ -164,24 +172,43 @@ void MCTSEvaluator::start() {
         }
     }
     
-    if (cleared_items > 0) {
-       // Cleared leftover items from queue before start
-    }
+    // Also clear the inference and result queues
+    BatchForInference dummy_inf;
+    while (inference_queue_.try_dequeue(dummy_inf)) {}
+    
+    BatchInferenceResult dummy_res;
+    while (result_queue_internal_.try_dequeue(dummy_res)) {}
     
     try {
-        int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF;  // Simple ID for logging
-        // Force debug output
-        // std::cerr << "[EVALUATOR-" << evaluator_id << "] START called, external=" << use_external_queues_ << std::endl;
-        worker_thread_ = std::thread(&MCTSEvaluator::evaluationLoop, this);
-        } catch (const std::exception& e) {
+        // Start the batch collector thread first
+        batch_collector_thread_ = std::thread(&MCTSEvaluator::batchCollectorLoop, this);
+        
+        // Start the inference worker threads
+        for (size_t i = 0; i < num_inference_threads_; ++i) {
+            inference_worker_threads_.emplace_back(&MCTSEvaluator::inferenceWorkerLoop, this);
+        }
+        
+        // Start the result distributor thread (for internal queue mode)
+        if (!use_external_queues_) {
+            result_distributor_thread_ = std::thread(&MCTSEvaluator::resultDistributorLoop, this);
+        }
+    } catch (const std::exception& e) {
         shutdown_flag_.store(true, std::memory_order_release);
-        // Failed to start MCTSEvaluator thread
+        // Attempt to clean up any threads that may have been started
+        if (batch_collector_thread_.joinable()) {
+            batch_collector_thread_.join();
+        }
+        for (auto& thread : inference_worker_threads_) {
+            if (thread.joinable()) {
+                thread.join();
+            }
+        }
+        if (result_distributor_thread_.joinable()) {
+            result_distributor_thread_.join();
+        }
         throw;
     }
-    
-    // Don't wait for worker_ready_ since evaluationLoop doesn't set it
-    // The worker thread will start processing immediately
-    }
+}
 
 void MCTSEvaluator::stop() {
     // Graceful shutdown procedure
@@ -190,57 +217,53 @@ void MCTSEvaluator::stop() {
     {
         std::lock_guard<std::mutex> lock(cv_mutex_);
         
-        if (!worker_thread_.joinable() || shutdown_flag_.load(std::memory_order_acquire)) {
+        if (shutdown_flag_.load(std::memory_order_acquire)) {
             return; // Already stopped or stopping
         }
         
         shutdown_flag_.store(true, std::memory_order_release);
         need_join = true;
-        cv_.notify_all(); // Wake up worker if it's waiting
     }
     
+    // Notify all condition variables to wake up threads
+    cv_.notify_all();
+    batch_ready_cv_.notify_all();
+    inference_cv_.notify_all();
+    result_cv_.notify_all();
+    
     if (need_join) {
-        // First, try joining directly with a short timeout
-        if (worker_thread_.joinable()) {
-            // Use a direct future-based approach for the main join attempt
-            auto join_future = std::async(std::launch::async, [this]() {
-                if (worker_thread_.joinable()) {
-                    worker_thread_.join();
-                    return true;
-                }
-                return false;
-            });
-            
-            // Wait for joining to complete with a timeout
-            if (join_future.wait_for(std::chrono::seconds(2)) == std::future_status::ready) {
-                // Thread joined successfully
-            } else {
-                // Error: Timeout waiting for MCTSEvaluator thread to join
-                std::cerr << "[EVALUATOR] FATAL: Worker thread did not complete within timeout" << std::endl;
-                
-                // Secondary approach: create a dedicated joiner thread with longer timeout
-                std::thread joiner([this]() {
-                    if (worker_thread_.joinable()) {
-                        worker_thread_.join();
-                    }
-                });
-                
-                if (joiner.joinable()) {
-                    if (join_for(joiner, std::chrono::seconds(3))) {
-                        // Thread joined on second attempt
-                    } else {
-                        // Fatal error - never detach threads as it leads to use-after-free
-                        std::cerr << "[EVALUATOR] FATAL: Cannot safely join worker thread" << std::endl;
-                        std::terminate();
-                    }
+        // Join the batch collector thread
+        if (batch_collector_thread_.joinable()) {
+            try {
+                batch_collector_thread_.join();
+            } catch (...) {
+                // Error joining batch collector thread
+            }
+        }
+        
+        // Join the inference worker threads
+        for (auto& thread : inference_worker_threads_) {
+            if (thread.joinable()) {
+                try {
+                    thread.join();
+                } catch (...) {
+                    // Error joining inference worker thread
                 }
             }
         }
         
-        // Drain the queue to ensure no pending requests
+        // Join the result distributor thread
+        if (result_distributor_thread_.joinable()) {
+            try {
+                result_distributor_thread_.join();
+            } catch (...) {
+                // Error joining result distributor thread
+            }
+        }
+        
+        // Drain the internal queue to ensure no pending requests
         int cleared_requests = 0;
         while (true) {
-            // Create a fresh request object for each iteration to avoid use-after-move issues
             EvaluationRequest request(nullptr, nullptr, 10);
             
             if (!request_queue_.try_dequeue(request)) {
@@ -258,6 +281,14 @@ void MCTSEvaluator::stop() {
                 // Promise might be broken already, just continue
             }
         }
+        
+        // Clear any items in the inference queue
+        BatchForInference dummy_inf;
+        while (inference_queue_.try_dequeue(dummy_inf)) {}
+        
+        // Clear any items in the result queue
+        BatchInferenceResult dummy_res;
+        while (result_queue_internal_.try_dequeue(dummy_res)) {}
     }
 }
 
@@ -485,7 +516,8 @@ void MCTSEvaluator::notifyLeafAvailable() {
 }
 
 void MCTSEvaluator::evaluationLoop() {
-    int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF;  // Simple ID for logging
+    // Simple ID for logging
+    // int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF;
     
     // Only log once at startup if using external queues
     while (!shutdown_flag_.load(std::memory_order_acquire)) {
@@ -494,109 +526,136 @@ void MCTSEvaluator::evaluationLoop() {
             if (!leaf_queue_ptr_) {
                 #pragma omp critical
                 {
-                    }
+                    // No external queue configured
+                }
                 std::this_thread::yield();
                 continue;
             }
             
-            // Track loop iterations for debugging
-            static int loop_count = 0;
-            static auto last_log_time = std::chrono::steady_clock::now();
-            loop_count++;
-            
+            // Get a pointer to the external leaf queue
             auto* external_leaf_queue = static_cast<moodycamel::ConcurrentQueue<PendingEvaluation>*>(leaf_queue_ptr_);
             
-            // Check queue size
+            // Check current queue size
             size_t queue_size = external_leaf_queue->size_approx();
             
-            // Track which engine evaluator is checking
-            static int queue_check_count = 0;
-            if (queue_check_count < 100 || queue_check_count % 10000 == 0) {
-                }
+            // Use our optimized collector to gather a batch with better batching strategy
+            std::vector<PendingEvaluation> batch = collectExternalBatch(batch_size_);
             
-                // Adaptive batching based on queue depth and historical performance
-            static double avg_batch_size = 0.0;
-            static double avg_processing_time_ms = 10.0;
-            static int batch_count = 0;
-            
-            size_t MIN_BATCH;
-            size_t OPTIMAL_BATCH;
-            auto adaptive_timeout = timeout_;
-            
-            if (queue_size < 10) {
-                // Very few items - prioritize low latency
-                MIN_BATCH = 1;
-                OPTIMAL_BATCH = std::min(size_t(16), batch_size_ / 8);
-                adaptive_timeout = std::chrono::milliseconds(2);
-            } else if (queue_size < 50) {
-                // Moderate queue - balance latency and throughput
-                MIN_BATCH = std::min(size_t(4), batch_size_ / 16);
-                OPTIMAL_BATCH = std::min(size_t(32), batch_size_ / 4);
-                adaptive_timeout = std::chrono::milliseconds(5);
-            } else if (queue_size < 200) {
-                // Larger queue - optimize for throughput
-                MIN_BATCH = std::min(size_t(8), batch_size_ / 8);
-                OPTIMAL_BATCH = std::min(size_t(64), batch_size_ / 2);
-                adaptive_timeout = std::chrono::milliseconds(10);
-            } else {
-                // Very large queue - maximize batch efficiency
-                MIN_BATCH = std::min(size_t(16), batch_size_ / 4);
-                OPTIMAL_BATCH = batch_size_;
-                adaptive_timeout = std::chrono::milliseconds(20);
-            }
-            
-            // Adjust timeout based on historical performance
-            if (batch_count > 10) {
-                double efficiency_ratio = avg_processing_time_ms / avg_batch_size;
-                if (efficiency_ratio < 0.2) {
-                    // Very efficient - can wait longer for bigger batches
-                    adaptive_timeout = std::chrono::milliseconds(
-                        std::min(static_cast<int>(adaptive_timeout.count() * 1.5), 30));
-                } else if (efficiency_ratio > 0.5) {
-                    // Less efficient - reduce wait time
-                    adaptive_timeout = std::chrono::milliseconds(
-                        std::max(static_cast<int>(adaptive_timeout.count() * 0.7), 2));
-                }
-            }
-            
-            if (queue_size >= MIN_BATCH) {
-                // Process immediately if we have minimum
-                processBatch();
-            } else if (queue_size > 0) {
-                // Brief wait to accumulate optimal batch
-                auto deadline = std::chrono::steady_clock::now() + std::chrono::microseconds(500);
-                // Brief wait to accumulate optimal batch
+            // Only process if we have items
+            if (!batch.empty()) {
+                // Create a timer to measure batch processing time
+                auto batch_start = std::chrono::steady_clock::now();
                 
-                while (std::chrono::steady_clock::now() < deadline) {
-                    queue_size = external_leaf_queue->size_approx();
-                    if (queue_size >= MIN_BATCH) {
-                        // Queue grew enough, process now
-                        processBatch();
-                        break;
-                    }
-                    std::this_thread::yield();
-                }
-                
-                // Process whatever we have after deadline
-                if (queue_size > 0) {
-                    // Timeout reached, process what we have
-                    auto batch_start = std::chrono::steady_clock::now();
-                    processBatch();
-                    auto batch_end = std::chrono::steady_clock::now();
+                try {
+                    // Process the collected batch
+                    // Extract states for inference and track valid indices
+                    std::vector<std::unique_ptr<core::IGameState>> states;
+                    std::vector<size_t> valid_indices;
+                    states.reserve(batch.size());
+                    valid_indices.reserve(batch.size());
                     
-                    // Update adaptive metrics
-                    double processing_time = std::chrono::duration<double, std::milli>(
-                        batch_end - batch_start).count();
-                    avg_processing_time_ms = avg_processing_time_ms * 0.9 + processing_time * 0.1;
-                    batch_count++;
+                    // Use OpenMP for parallel state extraction when beneficial
+                    if (batch.size() > 64) {
+                        // For parallel processing, first identify valid states
+                        std::vector<bool> is_valid(batch.size(), false);
+                        #pragma omp parallel for schedule(dynamic)
+                        for (size_t i = 0; i < batch.size(); ++i) {
+                            is_valid[i] = (batch[i].state != nullptr);
+                        }
+                        
+                        // Now collect valid states sequentially to maintain order
+                        for (size_t i = 0; i < batch.size(); ++i) {
+                            if (is_valid[i]) {
+                                // Convert shared_ptr to unique_ptr for the neural network
+                                auto unique_clone = batch[i].state->clone();
+                                if (unique_clone) {
+                                    states.push_back(std::move(unique_clone));
+                                    valid_indices.push_back(i);
+                                }
+                            }
+                        }
+                    } else {
+                        for (size_t i = 0; i < batch.size(); ++i) {
+                            if (batch[i].state) {
+                                // Convert shared_ptr to unique_ptr for the neural network
+                                auto unique_clone = batch[i].state->clone();
+                                if (unique_clone) {
+                                    states.push_back(std::move(unique_clone));
+                                    valid_indices.push_back(i);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Check if we have any valid states to process
+                    if (states.empty()) {
+                        std::cerr << "ERROR: No valid states to process in batch" << std::endl;
+                        continue;
+                    }
+                    
+                    // Perform inference
+                    std::vector<NetworkOutput> results = inference_fn_(states);
+                    
+                    // Pair results with original evaluations based on valid indices
+                    if (results.size() == states.size()) {
+                        // Use bulk enqueue for better performance when possible
+                        if (results.size() > 1) {
+                            std::vector<std::pair<NetworkOutput, PendingEvaluation>> result_pairs;
+                            result_pairs.reserve(results.size());
+                            
+                            for (size_t i = 0; i < results.size(); ++i) {
+                                size_t original_index = valid_indices[i];
+                                result_pairs.emplace_back(
+                                    std::move(results[i]), 
+                                    std::move(batch[original_index])
+                                );
+                            }
+                            
+                            auto* external_result_queue = static_cast<moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>>*>(result_queue_ptr_);
+                            external_result_queue->enqueue_bulk(
+                                std::make_move_iterator(result_pairs.begin()),
+                                result_pairs.size()
+                            );
+                        } else {
+                            // Single item, use regular enqueue
+                            size_t original_index = valid_indices[0];
+                            auto* external_result_queue = static_cast<moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>>*>(result_queue_ptr_);
+                            external_result_queue->enqueue(std::make_pair(
+                                std::move(results[0]), 
+                                std::move(batch[original_index])
+                            ));
+                        }
+                        
+                        // Update statistics
+                        total_batches_.fetch_add(1, std::memory_order_relaxed);
+                        total_evaluations_.fetch_add(results.size(), std::memory_order_relaxed);
+                        cumulative_batch_size_.fetch_add(results.size(), std::memory_order_relaxed);
+                        
+                        // Calculate processing time for this batch
+                        auto batch_end = std::chrono::steady_clock::now();
+                        auto batch_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            batch_end - batch_start).count();
+                        cumulative_batch_time_ms_.fetch_add(batch_duration_ms, std::memory_order_relaxed);
+                        
+                        // Notify the engine that results are available
+                        if (result_notify_callback_) {
+                            result_notify_callback_();
+                        }
+                    } else {
+                        // Mismatch in result count
+                        std::cerr << "ERROR: Mismatch in result count: expected " 
+                                 << states.size() << ", got " << results.size() << std::endl;
+                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "ERROR: Exception in batch processing: " << e.what() << std::endl;
                 }
             } else {
-                // No items - yield CPU aggressively
-                static int no_items_count = 0;
-                if (no_items_count < 10 || no_items_count % 1000 == 0) {
-                    }
-                no_items_count++;
-                std::this_thread::yield();
+                // No items - use condition variable to wait more efficiently
+                std::unique_lock<std::mutex> lock(cv_mutex_);
+                cv_.wait_for(lock, std::chrono::milliseconds(5), [this]() {
+                    return shutdown_flag_.load(std::memory_order_acquire) || 
+                          (leaf_queue_ptr_ && static_cast<moodycamel::ConcurrentQueue<PendingEvaluation>*>(leaf_queue_ptr_)->size_approx() > 0);
+                });
             }
             continue;
         }
@@ -607,17 +666,21 @@ void MCTSEvaluator::evaluationLoop() {
         // Wait for items or timeout
         auto wait_pred = [this]() {
             return shutdown_flag_.load(std::memory_order_acquire) || 
-                   request_queue_.size_approx() >= 1; // Process any available items immediately
+                   request_queue_.size_approx() >= min_batch_size_; // Wait for a reasonable batch size
         };
         
-        batch_ready_cv_.wait_for(lock, std::chrono::milliseconds(1), wait_pred);
+        batch_ready_cv_.wait_for(lock, timeout_, wait_pred);
         lock.unlock();
         
         if (shutdown_flag_.load(std::memory_order_acquire)) {
             break;
         }
         
-        if (!processBatch()) {
+        // Collect and process batch using the new optimized internal batch collector
+        auto batch = collectInternalBatch(batch_size_);
+        if (!batch.empty()) {
+            processInternalBatch(batch);
+        } else {
             // Only sleep if we truly have nothing to process
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
@@ -635,7 +698,7 @@ bool MCTSEvaluator::processBatch() {
         if (!leaf_queue_ptr_ || !result_queue_ptr_) {
             static int null_queue_count = 0;
             if (null_queue_count < 10) {
-                int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF;
+                // int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF; // Unused
                 }
             return false;
         }
@@ -722,7 +785,7 @@ bool MCTSEvaluator::processBatch() {
             // CRITICAL DEBUG: Log when we return false due to empty queue
             static int empty_count = 0;
             if (empty_count < 10) {
-                int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF;
+                // int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF; // Unused
                 }
             return false;
         }
@@ -857,12 +920,12 @@ bool MCTSEvaluator::processBatch() {
     }
     
     // Internal queue processing
-    auto batch = collectBatch(batch_size_);
+    auto batch = collectInternalBatch(batch_size_); // Corrected this call
     if (batch.empty()) {
         return false;
     }
     
-    processBatch(batch);
+    processInternalBatch(batch);
     return true;
 }
 
@@ -1111,7 +1174,7 @@ void MCTSEvaluator::processBatches() {
                     if (evaluations.empty()) {
                         // Wait for work using the evaluator's internal condition variable
                         std::unique_lock<std::mutex> lock(cv_mutex_);
-                        auto wait_result = cv_.wait_for(lock, std::chrono::milliseconds(10), [this]() {
+                        /* auto wait_result = */ cv_.wait_for(lock, std::chrono::milliseconds(10), [this]() { // Unused variable wait_result
                             return shutdown_flag_.load(std::memory_order_acquire);
                         });
                         lock.unlock(); // Release lock after waiting
@@ -1238,9 +1301,9 @@ void MCTSEvaluator::processBatches() {
                 
                 // Original internal queue processing
                 auto batch_collection_start_time = std::chrono::high_resolution_clock::now();
-                std::vector<EvaluationRequest> batch = collectBatch(batch_size_); 
+                std::vector<EvaluationRequest> batch = collectInternalBatch(batch_size_); 
                 auto batch_collection_end_time = std::chrono::high_resolution_clock::now();
-                auto batch_collection_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(batch_collection_end_time - batch_collection_start_time).count();
+                /* auto batch_collection_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(batch_collection_end_time - batch_collection_start_time).count(); */ // Unused
 
                 if (batch.empty()) {
                     // For very frequent timeouts, minimize logging to reduce overhead
@@ -1263,8 +1326,8 @@ void MCTSEvaluator::processBatches() {
                     continue;
                 }
 
-                bool should_log_detail = total_batches_.load(std::memory_order_relaxed) % 20 == 0;
-                size_t batch_count = total_batches_.load(std::memory_order_relaxed) + 1;
+                // bool should_log_detail = total_batches_.load(std::memory_order_relaxed) % 20 == 0; // Unused
+                size_t batch_count_stat = total_batches_.load(std::memory_order_relaxed) + 1; // Renamed from batch_count to avoid conflict
                 
                 // Log internal batch size periodically  
                 if (total_batches_.load(std::memory_order_relaxed) % 10 == 0) {
@@ -1331,7 +1394,7 @@ void MCTSEvaluator::processBatches() {
                     
                     // Record inference time
                     auto inference_end_time = std::chrono::high_resolution_clock::now();
-                    auto inference_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(inference_end_time - inference_start_time).count();
+                    /* auto inference_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(inference_end_time - inference_start_time).count(); */ // Unused
                     
                     // Inference completed
                     
@@ -1485,7 +1548,7 @@ void MCTSEvaluator::processBatches() {
                 
                 // Periodic CUDA memory management - more frequent for large or frequent batches
                 if (torch::cuda::is_available() && 
-                    ((batch_count % 25 == 0) || (batch.size() >= batch_size_ * 0.9))) {
+                    ((batch_count_stat % 25 == 0) || (batch.size() >= batch_size_ * 0.9))) {
                     try {
                         torch::cuda::synchronize();
                         c10::cuda::CUDACachingAllocator::emptyCache();
@@ -1595,7 +1658,7 @@ void MCTSEvaluator::processBatches() {
     // MCTSEvaluator::processBatches worker thread finished
 }
 
-std::vector<EvaluationRequest> MCTSEvaluator::collectBatch(size_t target_batch_size) {
+std::vector<EvaluationRequest> MCTSEvaluator::collectInternalBatch(size_t target_batch_size) {
     // If target_batch_size is 0, use the default batch_size_
     if (target_batch_size == 0) {
         target_batch_size = batch_size_;
@@ -1604,136 +1667,288 @@ std::vector<EvaluationRequest> MCTSEvaluator::collectBatch(size_t target_batch_s
     std::vector<EvaluationRequest> batch;
     batch.reserve(target_batch_size);
     
-    auto start_time = std::chrono::steady_clock::now();
+    // Configure batch collection parameters for more aggressive batching
+    const size_t OPTIMAL_BATCH_SIZE = std::max(size_t(64), target_batch_size / 2);  // Prefer larger batches
+    const size_t MIN_ACCEPTABLE_BATCH = std::max(size_t(16), target_batch_size / 8); // Minimum batch size to accept
+    const std::chrono::milliseconds MAX_WAIT_TIME(20); // Maximum time to wait for batch formation
     
-    // More aggressive batch collection for better GPU utilization
-    const size_t OPTIMAL_MIN_BATCH = std::max(size_t(64), target_batch_size / 2);  // Better GPU efficiency
-    const size_t ABSOLUTE_MIN_BATCH = 32;  // Higher threshold for better batching
-    
-    // First pass - collect everything immediately available
+    // Phase 1: Fast bulk collection - try to get as many as possible immediately
     size_t queue_size = request_queue_.size_approx();
     if (queue_size > 0) {
+        // Attempt to dequeue up to target_batch_size items at once
         size_t to_dequeue = std::min(queue_size, target_batch_size);
-        std::vector<EvaluationRequest> temp_batch;
-        temp_batch.reserve(to_dequeue);
         
-        // Dequeue one by one to avoid creating unnecessary promise objects
-        for (size_t i = 0; i < to_dequeue; ++i) {
-            EvaluationRequest req;
-            if (request_queue_.try_dequeue(req)) {
-                if (req.node && req.state) {
-                    batch.push_back(std::move(req));
-                } else {
-                    // Set the promise to avoid crash on destruction
-                    try {
-                        NetworkOutput default_output;
-                        default_output.value = 0.0f;
-                        int action_size = req.action_space_size > 0 ? req.action_space_size : 10;
-                        default_output.policy.resize(action_size, 1.0f / action_size);
-                        req.promise.set_value(std::move(default_output));
-                    } catch (...) {
-                        // Promise might already be set
-                    }
-                }
+        std::vector<EvaluationRequest> temp_batch(to_dequeue);
+        size_t dequeued = request_queue_.try_dequeue_bulk(temp_batch.data(), to_dequeue);
+        temp_batch.resize(dequeued); // Resize to actual number dequeued
+        
+        // Process valid requests
+        for (auto& req : temp_batch) {
+            if (req.node && req.state) {
+                batch.push_back(std::move(req));
             } else {
-                break; // No more items in queue
+                // Set default promise for invalid requests
+                try {
+                    NetworkOutput default_output;
+                    default_output.value = 0.0f;
+                    int action_size = req.action_space_size > 0 ? req.action_space_size : 10;
+                    default_output.policy.resize(action_size, 1.0f / action_size);
+                    req.promise.set_value(std::move(default_output));
+                } catch (...) {
+                    // Promise might already be set
+                }
             }
         }
     }
     
-    // Second pass - wait for optimal batch size with shorter timeout
-    if (batch.size() < OPTIMAL_MIN_BATCH && !shutdown_flag_.load(std::memory_order_acquire)) {
-        // Wait longer to accumulate larger batches for better GPU utilization
-        auto optimal_deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(20);  // Increased wait for better batching
+    // Phase 2: Wait for optimal batch size if below target
+    if (batch.size() < OPTIMAL_BATCH_SIZE && !shutdown_flag_.load(std::memory_order_acquire)) {
+        auto optimal_deadline = std::chrono::steady_clock::now() + MAX_WAIT_TIME;
         
         while (std::chrono::steady_clock::now() < optimal_deadline && 
                batch.size() < target_batch_size &&
                !shutdown_flag_.load(std::memory_order_acquire)) {
             
-            EvaluationRequest req;
-            if (request_queue_.try_dequeue(req)) {
-                if (req.node && req.state) {
-                    batch.push_back(std::move(req));
-                } else {
-                    // Set the promise to avoid crash on destruction
-                    try {
-                        NetworkOutput default_output;
-                        default_output.value = 0.0f;
-                        int action_size = req.action_space_size > 0 ? req.action_space_size : 10;
-                        default_output.policy.resize(action_size, 1.0f / action_size);
-                        req.promise.set_value(std::move(default_output));
-                    } catch (...) {
-                        // Promise might already be set
+            // Check how many more items we can accept
+            size_t remaining = target_batch_size - batch.size();
+            if (remaining <= 0) break;
+            
+            // Try to dequeue in bulk for efficiency
+            std::vector<EvaluationRequest> additional_batch(remaining);
+            size_t additional_dequeued = request_queue_.try_dequeue_bulk(additional_batch.data(), remaining);
+            
+            if (additional_dequeued > 0) {
+                // Process valid requests from this additional batch
+                for (size_t i = 0; i < additional_dequeued; ++i) {
+                    if (additional_batch[i].node && additional_batch[i].state) {
+                        batch.push_back(std::move(additional_batch[i]));
+                    } else {
+                        // Set default promise for invalid requests
+                        try {
+                            NetworkOutput default_output;
+                            default_output.value = 0.0f;
+                            int action_size = additional_batch[i].action_space_size > 0 ? additional_batch[i].action_space_size : 10;
+                            default_output.policy.resize(action_size, 1.0f / action_size);
+                            additional_batch[i].promise.set_value(std::move(default_output));
+                        } catch (...) {
+                            // Promise might already be set
+                        }
                     }
                 }
             } else {
-                std::this_thread::yield(); // Yield when queue is empty
+                // Wait briefly with condition variable instead of yielding
+                std::unique_lock<std::mutex> lock(cv_mutex_);
+                cv_.wait_for(lock, std::chrono::milliseconds(2), [this] {
+                    return shutdown_flag_.load(std::memory_order_acquire) || 
+                           request_queue_.size_approx() > 0;
+                });
             }
         }
     }
     
-    // Third pass - if still below absolute minimum, wait a bit more
-    if (batch.size() < ABSOLUTE_MIN_BATCH && !shutdown_flag_.load(std::memory_order_acquire)) {
-        auto final_deadline = std::chrono::steady_clock::now() + timeout_;
+    // Process whatever we have if we reached the minimum acceptable batch size or timeout
+    if (batch.size() < MIN_ACCEPTABLE_BATCH) {
+        timeouts_.fetch_add(1, std::memory_order_relaxed);
         
-        while (std::chrono::steady_clock::now() < final_deadline && 
-               batch.size() < ABSOLUTE_MIN_BATCH &&
+        if (batch.empty()) {
+            return std::vector<EvaluationRequest>();  // Return empty if no items at all
+        }
+    }
+    
+    // Return the collected batch
+    return batch;
+}
+
+std::vector<PendingEvaluation> MCTSEvaluator::collectExternalBatch(size_t target_batch_size) {
+    // If not using external queues or no queue is set, return empty
+    if (!use_external_queues_ || !leaf_queue_ptr_ || !result_queue_ptr_) {
+        return std::vector<PendingEvaluation>();
+    }
+    
+    auto* external_leaf_queue = static_cast<moodycamel::ConcurrentQueue<PendingEvaluation>*>(leaf_queue_ptr_);
+    size_t queue_size = external_leaf_queue->size_approx();
+    
+    // Determine the minimum acceptable batch size and maximum wait time based on queue size
+    size_t MIN_BATCH;
+    size_t OPTIMAL_BATCH_SIZE;
+    std::chrono::milliseconds MAX_WAIT_TIME;
+    
+    // Adapt parameters based on queue depth
+    if (queue_size < 20) {
+        // Small queue - still try for reasonable batches but with shorter timeout
+        MIN_BATCH = std::max(size_t(8), target_batch_size / 16);
+        OPTIMAL_BATCH_SIZE = std::max(size_t(16), target_batch_size / 8);
+        MAX_WAIT_TIME = std::chrono::milliseconds(5);
+    } else if (queue_size < 100) {
+        // Medium queue - balance between latency and throughput
+        MIN_BATCH = std::max(size_t(16), target_batch_size / 8);
+        OPTIMAL_BATCH_SIZE = std::max(size_t(32), target_batch_size / 4);
+        MAX_WAIT_TIME = std::chrono::milliseconds(10);
+    } else {
+        // Large queue - prioritize throughput
+        MIN_BATCH = std::max(size_t(32), target_batch_size / 4);
+        OPTIMAL_BATCH_SIZE = std::max(size_t(64), target_batch_size / 2);
+        MAX_WAIT_TIME = std::chrono::milliseconds(15);
+    }
+    
+    // Cap to target batch size
+    OPTIMAL_BATCH_SIZE = std::min(OPTIMAL_BATCH_SIZE, target_batch_size);
+    
+    std::vector<PendingEvaluation> batch;
+    batch.reserve(target_batch_size);
+    
+    // Phase 1: Immediate bulk dequeue for fast collection
+    if (queue_size > 0) {
+        // Allocate a vector sized to hold up to the optimal batch size
+        std::vector<PendingEvaluation> temp_batch(OPTIMAL_BATCH_SIZE);
+        size_t dequeued = external_leaf_queue->try_dequeue_bulk(temp_batch.data(), OPTIMAL_BATCH_SIZE);
+        
+        // Only take what we actually got
+        for (size_t i = 0; i < dequeued; ++i) {
+            batch.push_back(std::move(temp_batch[i]));
+        }
+    }
+    
+    // Phase 2: Wait for additional items if we didn't get enough in phase 1
+    if (batch.size() < OPTIMAL_BATCH_SIZE && batch.size() < queue_size && !shutdown_flag_.load(std::memory_order_acquire)) {
+        auto deadline = std::chrono::steady_clock::now() + MAX_WAIT_TIME;
+        
+        while (std::chrono::steady_clock::now() < deadline && 
+               batch.size() < target_batch_size && 
                !shutdown_flag_.load(std::memory_order_acquire)) {
             
-            EvaluationRequest req;
-            if (request_queue_.try_dequeue(req)) {
-                if (req.node && req.state) {
-                    batch.push_back(std::move(req));
-                } else {
-                    // Set the promise to avoid crash on destruction
-                    try {
-                        NetworkOutput default_output;
-                        default_output.value = 0.0f;
-                        int action_size = req.action_space_size > 0 ? req.action_space_size : 10;
-                        default_output.policy.resize(action_size, 1.0f / action_size);
-                        req.promise.set_value(std::move(default_output));
-                    } catch (...) {
-                        // Promise might already be set
+            // Check how many more we need for optimal size
+            size_t remaining = std::min(target_batch_size - batch.size(), 
+                                       OPTIMAL_BATCH_SIZE - batch.size());
+            
+            if (remaining <= 0) break;
+            
+            // Try to dequeue a batch of the remaining size
+            std::vector<PendingEvaluation> additional_batch(remaining);
+            size_t additional_dequeued = external_leaf_queue->try_dequeue_bulk(
+                additional_batch.data(), remaining);
+                
+            if (additional_dequeued > 0) {
+                // Add valid items to our batch
+                for (size_t i = 0; i < additional_dequeued; ++i) {
+                    if (additional_batch[i].state) {
+                        batch.push_back(std::move(additional_batch[i]));
                     }
                 }
+                
+                // If we've reached our target, exit early
+                if (batch.size() >= OPTIMAL_BATCH_SIZE) {
+                    break;
+                }
             } else {
-                std::this_thread::sleep_for(std::chrono::microseconds(100)); // Very short sleep
+                // No items available, wait briefly
+                std::unique_lock<std::mutex> lock(cv_mutex_);
+                cv_.wait_for(lock, std::chrono::milliseconds(1), [this, external_leaf_queue] {
+                    return shutdown_flag_.load(std::memory_order_acquire) || 
+                           external_leaf_queue->size_approx() > 0;
+                });
             }
         }
     }
     
-    // Process whatever we have if timeout is reached
-    if (batch.empty()) {
-        timeouts_.fetch_add(1, std::memory_order_relaxed);
-        return std::vector<EvaluationRequest>();  // Return empty
+    // Filter out any invalid states (null states)
+    if (!batch.empty()) {
+        batch.erase(
+            std::remove_if(batch.begin(), batch.end(), 
+                          [](const PendingEvaluation& eval) { return !eval.state; }),
+            batch.end()
+        );
+    }
+    
+    // If we didn't meet the minimum batch size and there's a reasonable queue,
+    // wait a bit more and try again
+    if (batch.size() < MIN_BATCH && 
+        external_leaf_queue->size_approx() >= MIN_BATCH &&
+        !shutdown_flag_.load(std::memory_order_acquire)) {
+        
+        // Put back what we have for a larger batch later
+        if (!batch.empty()) {
+            external_leaf_queue->enqueue_bulk(std::make_move_iterator(batch.begin()), batch.size()); // Changed to move iterator
+            batch.clear();
+        }
+        
+        // Wait briefly for more items to arrive
+        std::unique_lock<std::mutex> lock(cv_mutex_);
+        cv_.wait_for(lock, std::chrono::milliseconds(5));
+        
+        // Try again (will happen on next loop iteration)
+        return std::vector<PendingEvaluation>();
     }
     
     return batch;
 }
 
-void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
+void MCTSEvaluator::waitWithBackoff(std::function<bool()> predicate, std::chrono::milliseconds max_wait_time) {
+    // Start with very short yield - efficient for low contention scenarios
+    for (int i = 0; i < 10; ++i) {
+        if (predicate()) return;
+        std::this_thread::yield();
+    }
+    
+    // Then use exponentially increasing sleep time for better CPU efficiency
+    for (int wait_us = 100; wait_us < 10000; wait_us *= 2) {
+        if (predicate()) return;
+        std::this_thread::sleep_for(std::chrono::microseconds(wait_us));
+    }
+    
+    // For long waits, use condition variable
+    auto deadline = std::chrono::steady_clock::now() + max_wait_time;
+    
+    std::unique_lock<std::mutex> lock(cv_mutex_);
+    cv_.wait_until(lock, deadline, predicate);
+}
+
+void MCTSEvaluator::processInternalBatch(std::vector<EvaluationRequest>& batch) {
     if (batch.empty()) {
         return;
     }
     
-    // Report batch size for internal queue
+    // Report batch size for internal queue (only log occasionally to reduce overhead)
     static int internal_batch_count = 0;
+    internal_batch_count++;
     if (internal_batch_count % 100 == 0) {
         std::cout << "[BATCH] Internal batch size: " << batch.size() 
                   << " (total batches: " << internal_batch_count << ")" << std::endl;
     }
-    internal_batch_count++;
     
-    // Extract states from requests and track valid indices
+    // Create a timer to measure batch processing time
+    auto batch_start = std::chrono::steady_clock::now();
+    
+    // Extract states from requests and track valid indices - use more efficient approach
     std::vector<std::unique_ptr<core::IGameState>> states;
     std::vector<size_t> valid_indices;
     states.reserve(batch.size());
     valid_indices.reserve(batch.size());
     
-    for (size_t i = 0; i < batch.size(); ++i) {
-        if (batch[i].state) {
-            states.push_back(std::move(batch[i].state));
-            valid_indices.push_back(i);
+    // Use OpenMP for parallel state extraction for larger batches
+    if (batch.size() > 64) {
+        // For parallel processing, first identify valid states
+        std::vector<bool> is_valid(batch.size(), false);
+        #pragma omp parallel for schedule(dynamic)
+        for (size_t i = 0; i < batch.size(); ++i) {
+            is_valid[i] = (batch[i].state != nullptr);
+        }
+        
+        // Now collect valid states sequentially to maintain order
+        for (size_t i = 0; i < batch.size(); ++i) {
+            if (is_valid[i]) {
+                // Move the unique_ptr directly since we're the only owner
+                states.push_back(std::move(batch[i].state));
+                valid_indices.push_back(i);
+            }
+        }
+    } else {
+        // For smaller batches, simply process sequentially
+        for (size_t i = 0; i < batch.size(); ++i) {
+            if (batch[i].state) {
+                states.push_back(std::move(batch[i].state));
+                valid_indices.push_back(i);
+            }
         }
     }
     
@@ -1755,18 +1970,35 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
         return;
     }
     
-    // Perform inference
+    // Perform inference with proper error handling
     try {
+        // Call the neural network inference function with our batch
         auto results = inference_fn_(states);
         
         // Set results back to requests using valid indices
         if (results.size() == states.size()) {
-            for (size_t i = 0; i < results.size(); ++i) {
-                size_t original_index = valid_indices[i];
-                try {
-                    batch[original_index].promise.set_value(std::move(results[i]));
-                } catch (...) {
-                    // Promise might already be fulfilled
+            // Use bulk or parallelized result processing for larger batches
+            if (results.size() > 32) {
+                #pragma omp parallel for schedule(dynamic)
+                for (size_t i = 0; i < results.size(); ++i) {
+                    size_t original_index = valid_indices[i];
+                    try {
+                        // Use atomic operation for thread safety in the promise
+                        NetworkOutput result_copy = results[i]; // Copy for thread safety
+                        batch[original_index].promise.set_value(std::move(result_copy));
+                    } catch (...) {
+                        // Promise already fulfilled - ignore
+                    }
+                }
+            } else {
+                // For smaller batches, process sequentially
+                for (size_t i = 0; i < results.size(); ++i) {
+                    size_t original_index = valid_indices[i];
+                    try {
+                        batch[original_index].promise.set_value(std::move(results[i]));
+                    } catch (...) {
+                        // Promise already fulfilled
+                    }
                 }
             }
         } else {
@@ -1790,8 +2022,15 @@ void MCTSEvaluator::processBatch(std::vector<EvaluationRequest>& batch) {
         total_evaluations_.fetch_add(batch.size(), std::memory_order_relaxed);
         cumulative_batch_size_.fetch_add(batch.size(), std::memory_order_relaxed);
         
+        // Calculate processing time for this batch
+        auto batch_end = std::chrono::steady_clock::now();
+        auto batch_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            batch_end - batch_start).count();
+        cumulative_batch_time_ms_.fetch_add(batch_duration_ms, std::memory_order_relaxed);
+        
     } catch (const std::exception& e) {
-        // Error during batch inference
+        // Error during batch inference - log and provide default outputs
+        std::cerr << "ERROR: Exception during internal batch inference: " << e.what() << std::endl;
         
         // Provide default outputs on error
         for (auto& req : batch) {
