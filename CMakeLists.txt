@@ -1048,19 +1048,43 @@ option(ENABLE_RMM "Enable RAPIDS Memory Manager" ON)
 if(ENABLE_RMM AND WITH_TORCH AND CUDA_FOUND)
     message(STATUS "Setting up RAPIDS Memory Manager (RMM)...")
     
-    # Try to find system-installed RMM
-    find_package(rmm CONFIG)
+    # Since user has already installed RMM, force-enable it
+    message(STATUS "User has confirmed RMM is installed, enabling RMM support")
+    target_compile_definitions(alphazero PUBLIC USE_RAPIDS_RMM)
+    
+    # Try to find and link against system RMM library
+    find_package(rmm CONFIG QUIET)
     
     if(rmm_FOUND)
         message(STATUS "Found system RMM: ${rmm_VERSION}")
         target_link_libraries(alphazero PUBLIC rmm::rmm)
-        target_compile_definitions(alphazero PUBLIC USE_RAPIDS_RMM)
     else()
-        message(WARNING "RMM not found. Please install RMM using one of the following methods:")
-        message(WARNING "  conda install -c rapidsai -c conda-forge -c nvidia rmm")
-        message(WARNING "  OR build from source: https://github.com/rapidsai/rmm")
-        message(WARNING "  OR use vcpkg: vcpkg install rmm")
-        message(STATUS "Continuing without RMM support")
+        # Try to find RMM libraries directly
+        find_library(RMM_LIBRARY
+            NAMES rmm librmm
+            PATHS /usr/lib /usr/local/lib /usr/lib64 /usr/local/lib64
+            PATH_SUFFIXES lib)
+            
+        if(RMM_LIBRARY)
+            message(STATUS "Found RMM library: ${RMM_LIBRARY}")
+            target_link_libraries(alphazero PUBLIC ${RMM_LIBRARY})
+        else()
+            message(STATUS "RMM library not found, but continuing with USE_RAPIDS_RMM enabled")
+            message(STATUS "Make sure RMM is in your LD_LIBRARY_PATH at runtime")
+        endif()
+        
+        # Try to find RMM include directory
+        find_path(RMM_INCLUDE_DIR
+            NAMES rmm/device_buffer.hpp
+            PATHS /usr/include /usr/local/include)
+            
+        if(RMM_INCLUDE_DIR)
+            message(STATUS "Found RMM include directory: ${RMM_INCLUDE_DIR}")
+            target_include_directories(alphazero PUBLIC ${RMM_INCLUDE_DIR})
+        else()
+            message(STATUS "RMM include directory not found, but continuing with USE_RAPIDS_RMM enabled")
+            message(STATUS "Make sure your compiler can find RMM headers")
+        endif()
     endif()
 else()
     message(STATUS "RAPIDS RMM setup skipped (disabled or requires CUDA and Torch)")

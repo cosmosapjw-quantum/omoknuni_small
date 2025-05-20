@@ -51,6 +51,20 @@ void GPUMemoryManager::initialize(size_t initial_pool_size, size_t maximum_pool_
 #endif
     
     initialized_ = true;
+    
+    // Log debug info about CUDA device
+    int device_count = 0;
+    cudaGetDeviceCount(&device_count);
+    int current_device = 0;
+    cudaGetDevice(&current_device);
+    
+    LOG_SYSTEM_INFO("GPU Memory Manager initialized on device {}/{}", 
+                   current_device + 1, device_count);
+                   
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, current_device);
+    LOG_SYSTEM_INFO("  Device name: {}", prop.name);
+    LOG_SYSTEM_INFO("  Total memory: {} MB", prop.totalGlobalMem / (1024 * 1024));
 }
 
 void* GPUMemoryManager::allocate(size_t size, cudaStream_t stream) {
@@ -119,6 +133,20 @@ GPUMemoryManager::MemoryStats GPUMemoryManager::getStats() const {
     // RMM doesn't provide direct pool statistics in the current API
     // We can only get general CUDA memory info
     stats.pool_size = total_bytes;
+    
+    // Track peak allocated memory
+    static size_t peak_allocated = 0;
+    if (stats.allocated_bytes > peak_allocated) {
+        peak_allocated = stats.allocated_bytes;
+    }
+    stats.peak_allocated = peak_allocated;
+    
+    // Log detailed memory info at debug level
+    LOG_SYSTEM_DEBUG("GPU Memory: Used {} MB, Free {} MB, Total {} MB, Peak {} MB",
+                    stats.allocated_bytes / (1024 * 1024),
+                    stats.free_bytes / (1024 * 1024),
+                    total_bytes / (1024 * 1024),
+                    peak_allocated / (1024 * 1024));
 #else
     stats.pool_size = 0;
 #endif

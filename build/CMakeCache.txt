@@ -1555,12 +1555,10 @@ CUDNN_LIBRARY-ADVANCED:INTERNAL=1
 CUDNN_ROOT-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: DART_TESTING_TIMEOUT
 DART_TESTING_TIMEOUT-ADVANCED:INTERNAL=1
-//Details about finding CCCL
-FIND_PACKAGE_MESSAGE_DETAILS_CCCL:INTERNAL=[/usr/local/lib/rapids/cmake/cccl/cccl-config.cmake][v2.7.0.0()]
 //Details about finding CUDA
 FIND_PACKAGE_MESSAGE_DETAILS_CUDA:INTERNAL=[/usr/local/cuda][/usr/local/cuda/bin/nvcc][/usr/local/cuda/include][/usr/local/cuda/lib64/libcudart.so][v12.8()]
 //Details about finding CUDAToolkit
-FIND_PACKAGE_MESSAGE_DETAILS_CUDAToolkit:INTERNAL=[/usr/local/cuda-12.8/targets/x86_64-linux/include][/usr/local/cuda/lib64/libcudart.so][/usr/local/cuda-12.8/bin][v12.8.93()]
+FIND_PACKAGE_MESSAGE_DETAILS_CUDAToolkit:INTERNAL=[/usr/local/cuda-12.8/include][12.8.93][/usr/local/cuda/lib64/libcudart.so][/usr/local/cuda-12.8/bin][v12.8.93()]
 //Details about finding CUDNN
 FIND_PACKAGE_MESSAGE_DETAILS_CUDNN:INTERNAL=[/opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9][/usr/include/x86_64-linux-gnu][v()]
 //Details about finding GTest
@@ -1573,16 +1571,8 @@ FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_CXX:INTERNAL=[-fopenmp][/usr/lib/gcc/x86_64-
 FIND_PACKAGE_MESSAGE_DETAILS_Python:INTERNAL=[/usr/bin/python3.12][found components: Interpreter ][v3.12.3()]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
-//Details about finding Thrust
-FIND_PACKAGE_MESSAGE_DETAILS_Thrust:INTERNAL=[/usr/local/lib/rapids/cmake/thrust/thrust-config.cmake][v2.7.0.0(2.7.0.0)]
 //Details about finding Torch
 FIND_PACKAGE_MESSAGE_DETAILS_Torch:INTERNAL=[/opt/libtorch-2.7.0-cu128/lib/libtorch.so][/opt/libtorch-2.7.0-cu128/include;/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include][v()]
-//Details about finding nvtx3
-FIND_PACKAGE_MESSAGE_DETAILS_nvtx3:INTERNAL=[/usr/local/lib/cmake/nvtx3/nvtx3-config.cmake][v3.1.0()]
-//Details about finding rapids_logger
-FIND_PACKAGE_MESSAGE_DETAILS_rapids_logger:INTERNAL=[/usr/local/lib/cmake/rapids_logger/rapids_logger-config.cmake][v0.1.0()]
-//Details about finding rmm
-FIND_PACKAGE_MESSAGE_DETAILS_rmm:INTERNAL=[/usr/local/lib/cmake/rmm/rmm-config.cmake][v25.04.0()]
 //ADVANCED property for variable: GITCOMMAND
 GITCOMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: GIT_EXECUTABLE
@@ -1678,6 +1668,9 @@ _Python_NumPy_REASON_FAILURE:INTERNAL=
 _THRUST_CMAKE_DIR:INTERNAL=/usr/local/lib/rapids/cmake/thrust
 //Location of Thrust headers.
 _THRUST_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids
+//Quiet mode enabled for Thrust find_package calls.
+_THRUST_QUIET:INTERNAL=ON
+_THRUST_QUIET_FLAG:INTERNAL=QUIET
 //Path to a file.
 _THRUST_VERSION_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids
 //Location of libcudacxx headers.
