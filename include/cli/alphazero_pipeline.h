@@ -35,7 +35,8 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     // Self-play settings
     int self_play_num_games = 500;
     int self_play_num_parallel_games = 8;
-    int self_play_num_mcts_engines = 8;  // Number of MCTS engines to create
+    // Note: self_play_num_mcts_engines is deprecated - root parallelization is used instead
+    int self_play_num_mcts_engines = 8; // Deprecated - kept for backward compatibility
     int self_play_max_moves = 0;  // 0 means auto-calculate based on board size
     int self_play_temperature_threshold = 30;
     float self_play_high_temperature = 1.0f;
@@ -46,6 +47,7 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     int mcts_num_simulations = 800;
     int mcts_num_threads = 8;
     int mcts_batch_size = 64;
+    int mcts_max_collection_batch_size = 32; // Controls batch size for leaf collection
     int mcts_batch_timeout_ms = 20;
     float mcts_exploration_constant = 1.5f;
     float mcts_temperature = 1.0f;
@@ -66,7 +68,8 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     bool enable_evaluation = true;
     int arena_num_games = 50;
     int arena_num_parallel_games = 8;
-    int arena_num_mcts_engines = 8;  // Number of MCTS engines to create for arena evaluation
+    // Note: arena_num_mcts_engines is deprecated - root parallelization is used instead
+    int arena_num_mcts_engines = 8; // Deprecated - kept for backward compatibility
     int arena_num_threads = 4;
     int arena_num_simulations = 400;
     float arena_temperature = 0.1f;

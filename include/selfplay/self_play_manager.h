@@ -71,8 +71,9 @@ struct ALPHAZERO_API SelfPlaySettings {
     // Number of parallel games
     int num_parallel_games = 1;
     
-    // Number of MCTS engines to create
-    int num_mcts_engines = 1;
+    // IMPORTANT: num_mcts_engines is deprecated, use root parallelization instead
+    // Configure mcts_settings.use_root_parallelization and mcts_settings.num_root_workers
+    int num_mcts_engines = 1; // Deprecated - kept for backward compatibility
     
     // Maximum number of moves before forcing a draw
     int max_moves = 0;
@@ -180,13 +181,10 @@ private:
     /**
      * @brief Generate a single game
      * 
-     * @param game_type Game type
-     * @param board_size Board size
      * @param game_id Game ID
-     * @param engine_id Engine ID to use for this game
      * @return Game data
      */
-    GameData generateGame(core::GameType game_type, int board_size, const std::string& game_id, int engine_id = -1);
+    GameData generateGame(mcts::MCTSEngine& engine, core::GameType game_type, int board_size, const std::string& game_id);
     
     // Removed parallel gameWorker - Now using sequential generation only
     
@@ -208,8 +206,9 @@ private:
     // Self-play settings
     SelfPlaySettings settings_;
     
-    // MCTS engines for each worker thread
+    // Single MCTS engine used for all games
     std::vector<std::unique_ptr<mcts::MCTSEngine>> engines_;
+    int num_engines_resolved_;
     
     // Random number generator
     std::mt19937 rng_;
@@ -217,11 +216,11 @@ private:
     // Sequential game counter (no longer using atomic for parallel operations)
     int game_counter_;
     
-    // Shared external queues for all engines to use
+    // Shared external queues for the MCTS engine to use
     moodycamel::ConcurrentQueue<mcts::PendingEvaluation> shared_leaf_queue_;
     moodycamel::ConcurrentQueue<std::pair<mcts::NetworkOutput, mcts::PendingEvaluation>> shared_result_queue_;
     
-    // Shared evaluator for all engines
+    // Shared evaluator
     std::shared_ptr<mcts::MCTSEvaluator> shared_evaluator_;
 };
 

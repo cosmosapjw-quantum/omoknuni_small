@@ -256,6 +256,7 @@ int main(int argc, char** argv) {
                     int num_simulations = getIntConfigValue(config, "mcts_num_simulations", 800);
                     int num_threads = getIntConfigValue(config, "mcts_num_threads", 4);
                     int batch_size = getIntConfigValue(config, "mcts_batch_size", 16);
+                    int max_collection_batch_size = getIntConfigValue(config, "mcts_max_collection_batch_size", 32);
                     float exploration_constant = getFloatConfigValue(config, "mcts_exploration_constant", 1.5f);
                     int virtual_loss = getIntConfigValue(config, "mcts_virtual_loss", 3);
                     bool add_dirichlet_noise = getBoolConfigValue(config, "mcts_add_dirichlet_noise", true);
@@ -285,10 +286,11 @@ int main(int argc, char** argv) {
                     
                     int num_games = getIntConfigValue(config, "self_play_num_games", 100);
                     int num_parallel_games = getIntConfigValue(config, "self_play_num_parallel_games", 4);
-                    int num_mcts_engines = getIntConfigValue(config, "self_play_num_mcts_engines", num_parallel_games);
+                    
+                    // Root parallelization settings - already set above, no need to redefine
                     
                     std::cout << "  Number of parallel games: " << num_parallel_games << std::endl;
-                    std::cout << "  Number of MCTS engines: " << num_mcts_engines << std::endl;
+                    std::cout << "  Number of root workers per game: " << num_root_workers << std::endl;
                     int max_moves = getIntConfigValue(config, "self_play_max_moves", 0);
                     int temperature_threshold = getIntConfigValue(config, "self_play_temperature_threshold", 30);
                     float high_temperature = getFloatConfigValue(config, "self_play_high_temperature", 1.0f);
@@ -331,6 +333,7 @@ int main(int argc, char** argv) {
                     mcts_settings.num_simulations = num_simulations;
                     mcts_settings.num_threads = num_threads;
                     mcts_settings.batch_size = batch_size;
+                    mcts_settings.max_collection_batch_size = max_collection_batch_size;
                     mcts_settings.batch_timeout = std::chrono::milliseconds(batch_timeout_ms);
                     mcts_settings.exploration_constant = exploration_constant;
                     mcts_settings.virtual_loss = virtual_loss;
@@ -352,7 +355,10 @@ int main(int argc, char** argv) {
                     alphazero::selfplay::SelfPlaySettings self_play_settings;
                     self_play_settings.mcts_settings = mcts_settings;
                     self_play_settings.num_parallel_games = num_parallel_games;
-                    self_play_settings.num_mcts_engines = num_mcts_engines;
+                    
+                    // Ensure root parallelization is enabled with proper number of workers
+                    self_play_settings.mcts_settings.use_root_parallelization = true;
+                    self_play_settings.mcts_settings.num_root_workers = num_root_workers;
                     self_play_settings.max_moves = max_moves;
                     self_play_settings.temperature_threshold = temperature_threshold;
                     self_play_settings.high_temperature = high_temperature;

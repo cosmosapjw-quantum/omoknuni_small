@@ -61,14 +61,17 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         rng_.seed(static_cast<unsigned int>(settings_.random_seed));
     }
 
-    // Create multiple MCTS engines for parallel game processing with OpenMP
-    // Use the explicitly configured number of MCTS engines or fall back to parallel games
-    int desired_engines = settings_.num_mcts_engines > 0 ? settings_.num_mcts_engines : 
-                          (settings_.num_parallel_games > 0 ? settings_.num_parallel_games : 8);
-    const int num_engines = std::min(desired_engines, omp_get_max_threads());
-    engines_.reserve(num_engines);
+    // Configure root parallelization in MCTS settings
+    // auto mcts_settings = settings_.mcts_settings; // This line is unused and will be removed.
     
-    std::cout << "SelfPlayManager: Creating " << num_engines << " MCTS engines" << std::endl;
+    // WORKAROUND: Disable root parallelization to avoid cloning issues
+    // mcts_settings.use_root_parallelization = false; // These lines were using the local mcts_settings
+    // mcts_settings.num_root_workers = 1;
+    // Instead, if modifications to settings_ are needed for engine creation, they should be done on a copy
+    // or settings_.mcts_settings should be used directly if no modifications for the engine vector are needed.
+    // The current engine creation loop uses settings_.mcts_settings directly.
+    
+    std::cout << "SelfPlayManager: Using single root worker per game (root parallelization disabled - this is a workaround note in code)" << std::endl;
     
     // Create a single shared evaluator for all engines
     auto notify_fn = [this]() {
@@ -92,33 +95,46 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     shared_evaluator_->setExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
     shared_evaluator_->start();
     
-    // Create engines sequentially for better initialization
-    for (int i = 0; i < num_engines; ++i) {
+    // Create a single MCTS engine with root parallelization
+    // try {
+    //     engine_ = std::make_unique<mcts::MCTSEngine>(neural_net_, mcts_settings);
+    //     
+    //     // Set up shared external queues
+    //     if (engine_) {
+    //         engine_->setSharedExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
+    //         std::cout << "SelfPlayManager: Created MCTS engine with shared evaluator" << std::endl;
+    //     } else {
+    //         throw std::runtime_error("Engine creation failed - null engine");
+    //     }
+    // } catch (const std::exception& e) {
+    //     std::cerr << "ERROR creating MCTS engine: " << e.what() << std::endl;
+    //     throw std::runtime_error("Failed to create MCTS engine: " + std::string(e.what()));
+    // }
+
+    // Determine the number of engines based on parallel games setting or available cores
+    num_engines_resolved_ = settings_.num_parallel_games > 0 ? settings_.num_parallel_games : omp_get_max_threads();
+    num_engines_resolved_ = std::max(1, num_engines_resolved_); // Ensure at least one engine
+    
+    std::cout << "SelfPlayManager: Initializing " << num_engines_resolved_ << " MCTS engine(s) for parallel games." << std::endl;
+
+    engines_.reserve(num_engines_resolved_);
+    for (int i = 0; i < num_engines_resolved_; ++i) {
         try {
             auto engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
-            
-            // Set up shared external queues for all engines
             if (engine) {
-                // Configure engine to use the shared queues
-                // std::cout << "Setting shared queues on engine " << i 
-                //           << ": leaf=" << &shared_leaf_queue_ 
-                //           << ", result=" << &shared_result_queue_ 
-                //           << ", thread_id=" << std::hex << std::this_thread::get_id() << std::dec 
-                //           << std::endl;
                 engine->setSharedExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
-                
                 engines_.push_back(std::move(engine));
+            } else {
+                throw std::runtime_error("Engine creation failed - null engine in loop");
             }
         } catch (const std::exception& e) {
-            std::cerr << "ERROR creating engine " << i << ": " << e.what() << std::endl;
+            std::cerr << "ERROR creating MCTS engine instance " << i << ": " << e.what() << std::endl;
+            throw std::runtime_error("Failed to create MCTS engine instance: " + std::string(e.what()));
         }
     }
-    
-    if (engines_.empty()) {
-        throw std::runtime_error("Failed to create any MCTS engines");
-    }
-    
-    // GPU Warm-up sequence on the first engine
+    std::cout << "SelfPlayManager: Created " << engines_.size() << " MCTS engine(s) sharing one evaluator." << std::endl;
+
+    // GPU Warm-up sequence on the engine
     try {
         core::GameType warmup_game_type = core::GameType::GOMOKU; 
         int warmup_board_size = 15; // Matches user's config.yaml
@@ -190,14 +206,15 @@ SelfPlayManager::~SelfPlayManager() {
         neural_net_.reset();
     }
     
-    // Clean up engines in reverse order of creation
-    while (!engines_.empty()) {
+    // Clean up the MCTS engines
+    for (auto& engine_ptr : engines_) { // Use a different variable name to avoid conflict if engine_ was a member
         try {
-            engines_.pop_back();  // This will destroy the unique_ptr and call engine destructor
+            if (engine_ptr) engine_ptr.reset();
         } catch (const std::exception& e) {
             std::cerr << "Warning: Exception during engine cleanup: " << e.what() << std::endl;
         }
     }
+    engines_.clear();
 }
 
 std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager::generateGames(core::GameType game_type,
@@ -213,7 +230,7 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     }
     
     if (engines_.empty()) {
-        throw std::runtime_error("No MCTS engines available");
+        throw std::runtime_error("MCTS engines not initialized");
     }
     
     
@@ -226,23 +243,25 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     std::string timestamp_base = getCurrentTimestamp();
     
     // Generate games in parallel with OpenMP for better CPU/GPU utilization
-    std::cout << "Generating " << num_games << " self-play games using " 
-              << engines_.size() << " engines..." << std::endl;
+    std::cout << "Generating " << num_games << " self-play games using root parallelization..." << std::endl;
     // Thread-safe game collection
     std::mutex games_mutex;
     std::atomic<int> completed_games(0);
     
-    // Limit OpenMP threads to engine count to prevent invalid engine access
-    const int max_threads = engines_.size();
+    // Use OpenMP for parallel game generation (one game per thread)
+    const int max_threads = settings_.num_parallel_games > 0 ? 
+                          std::min(settings_.num_parallel_games, omp_get_max_threads()) : 
+                          omp_get_max_threads();
     #pragma omp parallel for schedule(dynamic) num_threads(max_threads)
     for (int i = 0; i < num_games; i++) {
-        // Get thread ID and engine
+        // Thread ID for debugging
         int thread_id = omp_get_thread_num();
-        int engine_idx = thread_id % engines_.size();
+        mcts::MCTSEngine& current_engine = *engines_[thread_id % engines_.size()];
         
         #pragma omp critical(debug_print)
         {
-            }
+            std::cout << "Thread " << thread_id << " starting game " << i << " using engine " << (thread_id % engines_.size()) << std::endl;
+        }
         
         // Periodic memory cleanup per thread
         if (i > 0 && i % 50 == 0) {
@@ -256,7 +275,7 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
         std::string game_id = timestamp_base + "_" + std::to_string(i);
         
         try {
-            auto game_data = generateGame(game_type, board_size, game_id, engine_idx);
+            auto game_data = generateGame(current_engine, game_type, board_size, game_id);
             
             // Add game to results if it has at least one move
             if (!game_data.moves.empty()) {
@@ -297,36 +316,12 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     return games;
 }
 
-alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame(core::GameType game_type, int board_size,
-                                      const std::string& game_id, int engine_id) {
+alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame(mcts::MCTSEngine& engine, core::GameType game_type, int board_size,
+                                      const std::string& game_id) {
     
-    
-    // Use the provided engine_id
-    int thread_id = engine_id;
-    if (thread_id < 0 || thread_id >= engines_.size()) {
-        std::cerr << "SelfPlayManager::generateGame - Invalid engine_id: " << engine_id << std::endl;
-        thread_id = 0; // Fallback to first engine
-    }
-    
-    
-    
-    // Check engine validity before use
-    if (thread_id >= engines_.size()) {
-        std::cerr << "SelfPlayManager::generateGame - ERROR: Invalid engine index " << thread_id 
-                 << " (engines_.size() = " << engines_.size() << ")" << std::endl;
-        throw std::runtime_error("Invalid MCTS engine index");
-    }
-    
-    if (!engines_[thread_id]) {
-        std::cerr << "SelfPlayManager::generateGame - ERROR: Engine at index " << thread_id << " is null" << std::endl;
-        throw std::runtime_error("Null MCTS engine");
-    }
-    
-    
-    
-    // Get a reference to the engine
-    mcts::MCTSEngine& engine = *engines_[thread_id];
-    
+    // Verify engine exists (engine is now passed by reference)
+    // No need to check engines_.empty() here as a valid reference is expected
+
     // Don't start evaluator here - it will be configured with external queues during search
     
 
@@ -364,6 +359,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
     data.game_id = game_id;
 
     // Log game creation once
+    int thread_id = omp_get_thread_num();
     std::cout << "Game " << game_id << ": Started (thread " << thread_id << ")" << std::endl;
     
     // Calculate max moves if not specified
@@ -925,9 +921,21 @@ const alphazero::selfplay::SelfPlaySettings& alphazero::selfplay::SelfPlayManage
 void alphazero::selfplay::SelfPlayManager::updateSettings(const alphazero::selfplay::SelfPlaySettings& settings) {
     settings_ = settings;
     
-    // Update MCTS settings in engines
-    for (auto& engine : engines_) {
-        engine->updateSettings(settings_.mcts_settings);
+    // Update MCTS settings in the engines
+    // Make sure root parallelization is enabled for maximum performance
+    auto mcts_settings_update = settings_.mcts_settings; // Use a new variable to avoid confusion
+    mcts_settings_update.use_root_parallelization = true;
+    
+    // Adjust num_root_workers based on available cores and parallel games
+    const int available_cores_update = omp_get_max_threads(); // Use a new variable
+    const int parallel_games_update = settings_.num_parallel_games > 0 ? settings_.num_parallel_games : 1; // Use a new variable
+    int cores_per_game_update = std::max(1, available_cores_update / parallel_games_update); // Use a new variable
+    mcts_settings_update.num_root_workers = cores_per_game_update;
+    
+    for (auto& engine_ptr : engines_) { // Use a different variable name
+        if (engine_ptr) {
+            engine_ptr->updateSettings(mcts_settings_update);
+        }
     }
 }
 

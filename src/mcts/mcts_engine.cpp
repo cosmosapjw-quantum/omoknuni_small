@@ -85,6 +85,9 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
             settings.batch_size, 
             settings.batch_timeout);  // Use configured timeout for better batching
             
+        // Set the max collection batch size
+        evaluator_->setMaxCollectionBatchSize(settings.max_collection_batch_size);
+            
         if (!evaluator_) {
             throw std::runtime_error("Failed to create MCTSEvaluator");
         }
@@ -127,6 +130,9 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
             std::move(inference_fn), 
             settings.batch_size, 
             std::min(settings.batch_timeout, std::chrono::milliseconds(10)));  // Cap timeout at 10ms
+            
+        // Set the max collection batch size
+        evaluator_->setMaxCollectionBatchSize(settings.max_collection_batch_size);
             
         if (!evaluator_) {
             throw std::runtime_error("Failed to create MCTSEvaluator");
@@ -490,6 +496,8 @@ MCTSEngine::~MCTSEngine() {
 
 SearchResult MCTSEngine::search(const core::IGameState& state) {
     // MCTSEngine::search - Starting search...
+    // Starting search for player
+    
     // alphazero::utils::trackMemory("MCTSEngine::search started");
     auto start_time = std::chrono::steady_clock::now();
 
@@ -732,7 +740,8 @@ const MCTSStats& MCTSEngine::getLastStats() const {
 }
 
 void MCTSEngine::runSearch(const core::IGameState& state) {
-    // MCTSEngine::runSearch - Starting runSearch...
+    // Starting runSearch for player
+    
     // Reset statistics
     last_stats_ = MCTSStats();
     
@@ -1023,16 +1032,22 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         }
 
         // Set all simulations at once for better batching
+        // Use a reasonable number of simulations to avoid hanging
+        num_simulations = std::min(100, num_simulations); // Cap at 100 for better performance
+        // Setting active simulations
         active_simulations_.store(num_simulations, std::memory_order_release);
         // cv_.notify_all(); // Not needed in OpenMP version
 
         // Create search roots based on parallelization strategy
         std::vector<std::shared_ptr<MCTSNode>> search_roots;
         
+        // Debug: Check root parallelization settings
         if (settings_.use_root_parallelization && settings_.num_root_workers > 1) {
+            // Creating multiple search roots for parallelization
             // Root parallelization: create independent root copies for each worker
             for (int i = 0; i < settings_.num_root_workers; i++) {
                 try {
+                    // Creating deep copy of root for worker
                     // Create a deep copy of the root for each worker
                     auto cloned_state = root_->getState().clone();
                     if (!cloned_state) {
@@ -1094,8 +1109,11 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
             
             } else {
             // Single root (default)
+            // Using single search root (no parallelization)
             search_roots.push_back(root_);
             }
+            
+        // Created search roots
 
         // OpenMP parallel search with aggressive leaf collection
         std::atomic<int> completed_simulations(0);
@@ -1116,8 +1134,9 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         };
         
         // Hybrid approach - OpenMP tree traversal + leaf parallelization
-        // If we're already in a parallel region (from self-play), use serial tree traversal with leaf batching
-        if (omp_in_parallel()) {
+        // Always use serial tree traversal with leaf batching
+        // Using serial tree traversal with leaf batching
+        if (true) { // Always use serial approach
             // Serial leaf collection when already in parallel - optimized for batching
             std::vector<PendingEvaluation> leaf_batch;
             const size_t OPTIMAL_BATCH_SIZE = settings_.batch_size;  // Use full batch size
@@ -1168,6 +1187,8 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                                 std::vector<std::shared_ptr<MCTSNode>> path;
                                 auto [leaf, temp_path] = selectLeafNode(current_root);
                                 path = temp_path;
+                                
+                                // Debug logging removed for performance
                                 
                                 if (leaf && !leaf->isBeingEvaluated()) {
                                     if (leaf->isTerminal()) {
@@ -1266,10 +1287,8 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                     // Debug: log batch details
                     if (leaf_batch.size() > 1) {
                         // Try bulk enqueue - check if it's actually enqueueing all items
-                        size_t queue_size_before = target_queue.size_approx();
                         enqueued = target_queue.enqueue_bulk(std::make_move_iterator(leaf_batch.begin()), 
                                                            leaf_batch.size());
-                        size_t queue_size_after = target_queue.size_approx();
                         
                         } else {
                         // Single item
@@ -1281,7 +1300,9 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                     pending_evaluations_.fetch_add(enqueued, std::memory_order_acq_rel);
                     
                     // Always notify evaluator when we enqueue items
-                    if (evaluator_ && enqueued > 0) {
+                    if (use_shared_queues_ && external_queue_notify_fn_ && enqueued > 0) {
+                        external_queue_notify_fn_();
+                    } else if (!use_shared_queues_ && evaluator_ && enqueued > 0) {
                         evaluator_->notifyLeafAvailable();
                     }
                     
@@ -1426,6 +1447,8 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
                                 auto [leaf, temp_path] = selectLeafNode(current_root);
                                 path = temp_path;
                                 
+                                // Debug logging removed for performance
+                                
                                 if (leaf && !leaf->isBeingEvaluated()) {
                                     if (leaf->tryMarkForEvaluation()) {
                                         // Clone state for evaluation
@@ -1517,7 +1540,9 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         // Wait for pending evaluations to complete
         // CRITICAL FIX: Notify evaluator that we're done producing leaves
         // This helps the evaluator process any remaining items in its queue
-        if (evaluator_) {
+        if (use_shared_queues_ && external_queue_notify_fn_) {
+            external_queue_notify_fn_();
+        } else if (!use_shared_queues_ && evaluator_) {
             evaluator_->notifyLeafAvailable();
         }
         
@@ -1553,7 +1578,9 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
             }
             
             // Notify evaluator to process remaining items
-            if (evaluator_) {
+            if (use_shared_queues_ && external_queue_notify_fn_) {
+                external_queue_notify_fn_();
+            } else if (!use_shared_queues_ && evaluator_) {
                 evaluator_->notifyLeafAvailable();
             }
             
@@ -1659,7 +1686,12 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
 // }
 
 void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
-    if (!root) return;
+    static std::atomic<int> traverse_counter(0);
+    int call_id = traverse_counter.fetch_add(1, std::memory_order_relaxed);
+    
+    if (!root) {
+        return;
+    }
     
     try {
         // Use thread-local batch accumulation for better batching efficiency
@@ -1671,7 +1703,9 @@ void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
         
         // Selection phase
         auto [leaf, path] = selectLeafNode(root);
-        if (!leaf) return;
+        if (!leaf) {
+            return;
+        }
         
         // Expansion phase - never block
         if (!leaf->isTerminal() && leaf->isLeaf()) {
@@ -2275,41 +2309,56 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                 pending.request_id = total_leaves_generated_.fetch_add(1, std::memory_order_relaxed);
                 
                 // Submit to appropriate queue for batching
-                bool enqueue_success = false;
                 if (use_shared_queues_ && shared_leaf_queue_) {
-                    enqueue_success = shared_leaf_queue_->enqueue(std::move(pending));
-                    if (enqueue_success) {
+                    std::cout << "MCTS ENGINE: Enqueueing eval to shared queue at " << shared_leaf_queue_ << std::endl;
+                    bool queue_success = shared_leaf_queue_->enqueue(std::move(pending));
+                    
+                    if (queue_success) {
                         // CRITICAL DEBUG: Log successful enqueue to shared queue
                         static int shared_enqueue_count = 0;
-                        if (shared_enqueue_count < 10) {
-                            }
+                        shared_enqueue_count++;
+                        if (shared_enqueue_count <= 100 || shared_enqueue_count % 100 == 0) {
+                            std::cout << "MCTS ENGINE: Successfully enqueued eval #" << shared_enqueue_count 
+                                      << " to shared queue, queue size now: " << shared_leaf_queue_->size_approx() << std::endl;
+                        }
+                        
+                        // Notify the evaluator that a new item is available
+                        if (evaluator_) {
+                            evaluator_->notifyLeafAvailable();
+                        }
+                    } else {
+                        std::cout << "MCTS ENGINE: FAILED to enqueue eval to shared queue!" << std::endl;
                     }
                 } else {
-                    enqueue_success = leaf_queue_.enqueue(std::move(pending));
-                    if (enqueue_success) {
+                    bool queue_success = leaf_queue_.enqueue(std::move(pending));
+                    
+                    if (queue_success) {
                         // CRITICAL DEBUG: Log successful enqueue to local queue
                         static int enqueue_count = 0;
-                        if (enqueue_count < 10) {
-                            }
+                        enqueue_count++;
+                        if (enqueue_count <= 10) {
+                            std::cout << "MCTS ENGINE: Successfully enqueued eval #" << enqueue_count 
+                                      << " to local queue, queue size now: " << leaf_queue_.size_approx() << std::endl;
+                        }
+                    } else {
+                        std::cout << "MCTS ENGINE: FAILED to enqueue eval to local queue!" << std::endl;
                     }
                 }
                 
-                if (enqueue_success) {
-                    // Increment pending evaluations
-                    pending_evaluations_.fetch_add(1, std::memory_order_acq_rel);
-                    
-                    // Apply virtual loss to prevent other threads from selecting this path
-                    leaf->applyVirtualLoss(settings_.virtual_loss);
-                    
-                    // Notify evaluator
-                    if (!use_shared_queues_ && evaluator_) {
-                        evaluator_->notifyLeafAvailable();
-                    }
-                    // For shared queues, the notification is handled by the shared evaluator
-                } else {
-                    MCTS_LOG_ERROR("[expandAndEvaluate] Failed to enqueue evaluation request");
-                    leaf->clearEvaluationFlag();
+                // Always update pending evaluations counter if queue operations succeeded
+                pending_evaluations_.fetch_add(1, std::memory_order_acq_rel);
+                
+                // Apply virtual loss to prevent other threads from selecting this path
+                leaf->applyVirtualLoss(settings_.virtual_loss);
+                
+                // Notify evaluator
+                if (!use_shared_queues_ && evaluator_) {
+                    evaluator_->notifyLeafAvailable();
                 }
+                // For shared queues, the notification is handled by the shared evaluator
+            } else {
+                // Already being evaluated by another thread, apply virtual loss
+                leaf->applyVirtualLoss(settings_.virtual_loss);
             }
             
             // Return dummy value - actual value will be backpropagated when evaluation completes
@@ -2709,6 +2758,7 @@ void MCTSEngine::setSharedExternalQueues(
     shared_leaf_queue_ = leaf_queue;
     shared_result_queue_ = result_queue;
     use_shared_queues_ = true;
+    external_queue_notify_fn_ = notify_fn; // Store the passed notify_fn
     
     // Also configure the evaluator to use these shared queues
     if (evaluator_) {

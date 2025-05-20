@@ -81,19 +81,31 @@ public:
     // Set external queues for direct batch processing
     void setExternalQueues(void* leaf_queue, void* result_queue, std::function<void()> result_notify_callback = nullptr) {
         std::lock_guard<std::mutex> lock(queue_mutex_);
-        // int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF;
-        // std::cout << "[EVALUATOR-" << evaluator_id << "] setExternalQueues called with leaf_queue=" << leaf_queue 
-        //           << ", result_queue=" << result_queue << std::endl;
+        std::cout << "MCTSEvaluator::setExternalQueues - Setting leaf_queue=" << leaf_queue 
+                  << ", result_queue=" << result_queue << std::endl;
+                  
         leaf_queue_ptr_ = leaf_queue;
         result_queue_ptr_ = result_queue;
         result_notify_callback_ = result_notify_callback;
         use_external_queues_ = true;
-        // External queues set
+        
+        // Wake up any waiting threads to check the new queue
+        cv_.notify_all();
+        
+        std::cout << "MCTSEvaluator::setExternalQueues - External queues configured successfully" << std::endl;
+    }
+    
+    // Set the maximum batch size for collection
+    void setMaxCollectionBatchSize(size_t size) {
+        max_collection_batch_size_ = size;
     }
     
 private:
     // Main batch collector thread function
     void batchCollectorLoop();
+    
+    // Maximum batch size for collection (controls responsiveness vs efficiency)
+    size_t max_collection_batch_size_ = 32;
     
     // NN inference worker thread function
     void inferenceWorkerLoop();

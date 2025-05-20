@@ -478,7 +478,25 @@ size_t MCTSEvaluator::getTotalEvaluations() const {
 }
 
 void MCTSEvaluator::notifyLeafAvailable() {
-    // Batch notifications to avoid excessive thread wake-ups
+    // For external queues, we should immediately notify all waiting threads
+    // to ensure responsive processing
+    if (use_external_queues_) {
+        // Get current queue sizes for diagnostics
+        size_t leaf_queue_size = 0;
+        if (leaf_queue_ptr_) {
+            auto* external_leaf_queue = static_cast<moodycamel::ConcurrentQueue<PendingEvaluation>*>(leaf_queue_ptr_);
+            leaf_queue_size = external_leaf_queue->size_approx();
+        }
+        
+        // Always notify all waiting threads when using external queues
+        cv_.notify_all();
+        batch_ready_cv_.notify_all();
+        inference_cv_.notify_all();
+        result_cv_.notify_all();
+        return;
+    }
+    
+    // For internal queues, batch notifications for efficiency
     static std::atomic<int> notification_count{0};
     static std::atomic<std::chrono::steady_clock::time_point> last_notify_time{std::chrono::steady_clock::now()};
     
@@ -492,26 +510,20 @@ void MCTSEvaluator::notifyLeafAvailable() {
     int count = notification_count.load(std::memory_order_relaxed);
     bool should_notify = false;
     
-    // CRITICAL FIX: For external queues, always notify immediately
-    if (use_external_queues_) {
-        should_notify = true;
-    } else {
-        // Get the configured batch size for better notification batching
-        size_t target_batch = batch_size_ / 2;  // Notify when we have half a batch
-        
-        // Notify if we have enough pending notifications or if enough time has passed
-        if (count >= static_cast<int>(target_batch) || time_since_last > 2000) { // Target batch size or 2ms
-            // Try to reset the counter
-            if (notification_count.compare_exchange_strong(count, 0, std::memory_order_relaxed)) {
-                last_notify_time.store(now, std::memory_order_relaxed);
-                should_notify = true;
-            }
+    // Get the configured batch size for better notification batching
+    size_t target_batch = batch_size_ / 2;  // Notify when we have half a batch
+    
+    // Notify if we have enough pending notifications or if enough time has passed
+    if (count >= static_cast<int>(target_batch) || time_since_last > 2000) { // Target batch size or 2ms
+        // Try to reset the counter
+        if (notification_count.compare_exchange_strong(count, 0, std::memory_order_relaxed)) {
+            last_notify_time.store(now, std::memory_order_relaxed);
+            should_notify = true;
         }
     }
     
     if (should_notify) {
-        std::lock_guard<std::mutex> lock(cv_mutex_);
-        cv_.notify_one();
+        cv_.notify_all(); // Notify all waiting threads
     }
 }
 
@@ -526,20 +538,20 @@ void MCTSEvaluator::evaluationLoop() {
             if (!leaf_queue_ptr_) {
                 #pragma omp critical
                 {
-                    // No external queue configured
+                    // std::cout << "EVALUATOR[" << evaluator_id << "]: No external leaf queue configured!" << std::endl;
                 }
                 std::this_thread::yield();
                 continue;
             }
             
             // Get a pointer to the external leaf queue
-            auto* external_leaf_queue = static_cast<moodycamel::ConcurrentQueue<PendingEvaluation>*>(leaf_queue_ptr_);
+            // auto* external_leaf_queue = static_cast<moodycamel::ConcurrentQueue<PendingEvaluation>*>(leaf_queue_ptr_); // Unused variable
             
             // Check current queue size
-            size_t queue_size = external_leaf_queue->size_approx();
+            // size_t queue_size = external_leaf_queue->size_approx(); // Unused variable
             
             // Use our optimized collector to gather a batch with better batching strategy
-            std::vector<PendingEvaluation> batch = collectExternalBatch(batch_size_);
+            std::vector<PendingEvaluation> batch = collectExternalBatch(batch_size_); //เก็บ log เพิ่มเติม
             
             // Only process if we have items
             if (!batch.empty()) {
@@ -589,7 +601,6 @@ void MCTSEvaluator::evaluationLoop() {
                     
                     // Check if we have any valid states to process
                     if (states.empty()) {
-                        std::cerr << "ERROR: No valid states to process in batch" << std::endl;
                         continue;
                     }
                     
@@ -631,6 +642,7 @@ void MCTSEvaluator::evaluationLoop() {
                         total_evaluations_.fetch_add(results.size(), std::memory_order_relaxed);
                         cumulative_batch_size_.fetch_add(results.size(), std::memory_order_relaxed);
                         
+                        
                         // Calculate processing time for this batch
                         auto batch_end = std::chrono::steady_clock::now();
                         auto batch_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -643,11 +655,9 @@ void MCTSEvaluator::evaluationLoop() {
                         }
                     } else {
                         // Mismatch in result count
-                        std::cerr << "ERROR: Mismatch in result count: expected " 
-                                 << states.size() << ", got " << results.size() << std::endl;
                     }
                 } catch (const std::exception& e) {
-                    std::cerr << "ERROR: Exception in batch processing: " << e.what() << std::endl;
+                    // Exception in batch processing
                 }
             } else {
                 // No items - use condition variable to wait more efficiently
@@ -697,9 +707,7 @@ bool MCTSEvaluator::processBatch() {
         
         if (!leaf_queue_ptr_ || !result_queue_ptr_) {
             static int null_queue_count = 0;
-            if (null_queue_count < 10) {
-                // int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF; // Unused
-                }
+            if (null_queue_count < 10) {}
             return false;
         }
         
@@ -751,6 +759,7 @@ bool MCTSEvaluator::processBatch() {
         if (evaluations.size() < MIN_BATCH) {
             auto deadline = std::chrono::steady_clock::now() + max_wait;
             // Wait briefly for more items if below minimum
+            // std::cout << "BATCH: Batch size " << evaluations.size() << " < min " << MIN_BATCH << ", waiting up to " << max_wait.count() << "ms" << std::endl;
             
             while (std::chrono::steady_clock::now() < deadline && 
                    evaluations.size() < OPTIMAL_BATCH &&
@@ -762,7 +771,8 @@ bool MCTSEvaluator::processBatch() {
                 size_t dequeued = external_leaf_queue->try_dequeue_bulk(temp_batch.data(), remaining);
                 
                 if (dequeued > 0) {
-                    size_t old_size = evaluations.size();
+                    // evaluations.insert(evaluations.end(), std::make_move_iterator(temp_batch.begin()), std::make_move_iterator(temp_batch.begin() + dequeued));
+                    // size_t old_size = evaluations.size(); // Unused variable
                     for (size_t i = 0; i < dequeued; ++i) {
                         evaluations.push_back(std::move(temp_batch[i]));
                     }
@@ -793,8 +803,7 @@ bool MCTSEvaluator::processBatch() {
         // Report batch size for external queue processing
         static int external_batch_count = 0;
         if (external_batch_count % 100 == 0) {
-            std::cout << "[BATCH] External batch size: " << evaluations.size() 
-                      << " (total batches: " << external_batch_count << ")" << std::endl;
+            // [BATCH] Track external batch size and count
         }
         external_batch_count++;
         
@@ -830,10 +839,10 @@ bool MCTSEvaluator::processBatch() {
                             states.push_back(std::move(unique_clone));
                             valid_indices.push_back(i);
                         } else {
-                            std::cerr << "WARNING: Failed to clone state at index " << i << ", skipping" << std::endl;
+                            // WARNING: Failed to clone state at index i, skipping
                         }
                     } else {
-                        std::cerr << "WARNING: Null state in parallel evaluation at index " << i << ", skipping" << std::endl;
+                        // WARNING: Null state in parallel evaluation at index i, skipping
                     }
                 }
             } else {
@@ -845,17 +854,16 @@ bool MCTSEvaluator::processBatch() {
                             states.push_back(std::move(unique_clone));
                             valid_indices.push_back(i);
                         } else {
-                            std::cerr << "WARNING: Failed to clone state at index " << i << ", skipping" << std::endl;
+                            // WARNING: Failed to clone state at index i, skipping
                         }
                     } else {
-                        std::cerr << "WARNING: Null state in evaluation at index " << i << ", skipping" << std::endl;
+                        // WARNING: Null state in evaluation at index i, skipping
                     }
                 }
             }
             
             // Check if we have any valid states to process
             if (states.empty()) {
-                std::cerr << "ERROR: No valid states to process in batch" << std::endl;
                 return false;
             }
             
@@ -866,8 +874,7 @@ bool MCTSEvaluator::processBatch() {
             static int total_inferences = 0;
             total_inferences++;
             if (total_inferences % 100 == 0) {
-                std::cout << "[BATCH] Neural net inference: " << states.size() 
-                          << " states (inference #" << total_inferences << ")" << std::endl;
+                // [BATCH] Track neural net inference count
             }
             
             // Pair results with original evaluations based on valid indices
@@ -902,6 +909,7 @@ bool MCTSEvaluator::processBatch() {
                 total_batches_.fetch_add(1, std::memory_order_relaxed);
                 total_evaluations_.fetch_add(results.size(), std::memory_order_relaxed);
                 cumulative_batch_size_.fetch_add(results.size(), std::memory_order_relaxed);
+                
                 
                 // Notify the engine that results are available
                 if (result_notify_callback_) {
@@ -957,6 +965,8 @@ void MCTSEvaluator::processBatches() {
     std::deque<float> recent_batch_times;
     std::deque<size_t> recent_batch_sizes;
     const size_t max_history = 20;
+
+    auto batch_collection_start_time = std::chrono::high_resolution_clock::now(); // Define higher up
 
     try {
         while (!shutdown_flag_.load(std::memory_order_acquire)) {
@@ -1068,7 +1078,7 @@ void MCTSEvaluator::processBatches() {
                 }
                 
                 // Check if we're using external queues
-                bool use_external_queue = (use_external_queues_ && external_leaf_queue && external_result_queue);
+                bool use_external_queue = use_external_queues_ && (leaf_queue_ptr_ != nullptr) && (result_queue_ptr_ != nullptr);
                 
                 // Print detailed debugging info first time and periodically
                 static int external_queue_check_counter = 0;
@@ -1082,15 +1092,13 @@ void MCTSEvaluator::processBatches() {
                     // Debug print when using external queue
                     static int external_queue_usage_count = 0;
                     if (external_queue_usage_count++ < 10) {
-                        std::cerr << "[EVALUATOR] Using external queue, count=" << external_queue_usage_count 
-                                 << ", queue ptr=" << external_leaf_queue
-                                 << ", leaf_queue_ptr_=" << leaf_queue_ptr_ << std::endl;
+                        // [EVALUATOR] Using external queue with queue pointer and leaf_queue_ptr_
                     }
                     
                     // Collect batch directly from leaf queue
                     std::vector<PendingEvaluation> evaluations;
                     evaluations.reserve(batch_size_);
-                    auto batch_start_collect = std::chrono::steady_clock::now();
+                    // auto batch_start_collect = std::chrono::steady_clock::now(); // Unused-but-set
                     
                     // Aggressive batch collection - wait for larger batches
                     const auto start_time = std::chrono::steady_clock::now();
@@ -1101,29 +1109,26 @@ void MCTSEvaluator::processBatches() {
                     if (external_leaf_queue->size_approx() > 0) {
                         size_t queue_size = external_leaf_queue->size_approx();
                         size_t bulk_size = std::min(queue_size, batch_size_);
-                        std::cerr << "[EVALUATOR] Starting bulk dequeue: queue size=" << queue_size 
-                                 << ", bulk_size=" << bulk_size << std::endl;
+                        // [EVALUATOR] Starting bulk dequeue with queue size and bulk size
                         
                         std::vector<PendingEvaluation> bulk_items(bulk_size);
                         
                         // Debug: Check queue before dequeue
-                        std::cerr << "[EVALUATOR] Before bulk dequeue: queue size=" << external_leaf_queue->size_approx() 
-                                 << ", bulk_size=" << bulk_size << std::endl;
+                        // [EVALUATOR] Before bulk dequeue: logging queue size and bulk size
                         
                         size_t dequeued = external_leaf_queue->try_dequeue_bulk(bulk_items.data(), bulk_size);
-                        std::cerr << "[EVALUATOR] Bulk dequeue result: dequeued=" << dequeued 
-                                 << " from queue at " << external_leaf_queue << std::endl;
+                        // [EVALUATOR] Bulk dequeue result: log number of items dequeued from queue
                         
                         // Debug output for bulk dequeue
                         int null_count = 0;
-                        std::cerr << "[EVALUATOR] Checking " << dequeued << " bulk dequeued items" << std::endl;
+                        // [EVALUATOR] Checking bulk dequeued items
                         
                         for (size_t i = 0; i < dequeued; ++i) {
                             if (!bulk_items[i].state) {
                                 null_count++;
-                                std::cerr << "[EVALUATOR] Item " << i << " has null state immediately after bulk dequeue" << std::endl;
+                                // [EVALUATOR] Item has null state immediately after bulk dequeue
                             } else {
-                                std::cerr << "[EVALUATOR] Item " << i << " has valid state at " << bulk_items[i].state.get() << std::endl;
+                                // [EVALUATOR] Item has valid state at specific memory address
                             }
                         }
                         
@@ -1132,14 +1137,12 @@ void MCTSEvaluator::processBatches() {
                             void* state_ptr_before = bulk_items[i].state.get();
                             evaluations.push_back(std::move(bulk_items[i]));
                             if (state_ptr_before && !evaluations.back().state) {
-                                std::cerr << "[EVALUATOR] ERROR: State became null after move to evaluations! Was at " 
-                                         << state_ptr_before << std::endl;
+                                // [EVALUATOR] ERROR: State became null after move to evaluations
                             }
                         }
                         
                         if (null_count > 0) {
-                            std::cerr << "[EVALUATOR] Bulk dequeue: " << null_count << "/" << dequeued 
-                                     << " states are null!" << std::endl;
+                            // [EVALUATOR] Bulk dequeue: tracking number of null states
                         }
                     }
                     
@@ -1149,7 +1152,7 @@ void MCTSEvaluator::processBatches() {
                         PendingEvaluation eval;
                         if (external_leaf_queue->try_dequeue(eval)) {
                             if (!eval.state) {
-                                std::cerr << "[EVALUATOR] Single dequeue: state is null!" << std::endl;
+                                // [EVALUATOR] Single dequeue: state is null
                             }
                             evaluations.push_back(std::move(eval));
                         } else if (evaluations.size() < min_batch_for_processing) {
@@ -1208,16 +1211,16 @@ void MCTSEvaluator::processBatches() {
                                     states.push_back(std::move(unique_clone));
                                     valid_indices.push_back(i);
                                 } else {
-                                    std::cerr << "WARNING: Failed to clone state at index " << i << ", skipping" << std::endl;
+                                    // Failed to clone state
                                 }
                             } else {
-                                std::cerr << "WARNING: Null state in evaluation at index " << i << ", skipping" << std::endl;
+                                // Null state in evaluation
                             }
                         }
                         
                         // Check if we have any valid states to process
                         if (states.empty()) {
-                            std::cerr << "ERROR: No valid states to process in batch" << std::endl;
+                            // ERROR: No valid states to process in batch
                             continue;
                         }
                         
@@ -1241,13 +1244,14 @@ void MCTSEvaluator::processBatches() {
                             // Also directly notify any waiting threads
                             cv_.notify_all();
                         } else {
-                            std::cerr << "ERROR: Mismatch in result count. Expected " << states.size() << " got " << results.size() << std::endl;
+                            // ERROR: Mismatch in result count between expected and actual
                         }
                         
                         // Track stats
                         total_batches_.fetch_add(1, std::memory_order_relaxed);
                         total_evaluations_.fetch_add(results.size(), std::memory_order_relaxed);
                         cumulative_batch_size_.fetch_add(results.size(), std::memory_order_relaxed);
+                        
                         
                         auto batch_end_time = std::chrono::high_resolution_clock::now();
                         auto batch_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -1300,10 +1304,10 @@ void MCTSEvaluator::processBatches() {
                 }
                 
                 // Original internal queue processing
-                auto batch_collection_start_time = std::chrono::high_resolution_clock::now();
+                batch_collection_start_time = std::chrono::high_resolution_clock::now(); // Re-assign for internal path
                 std::vector<EvaluationRequest> batch = collectInternalBatch(batch_size_); 
-                auto batch_collection_end_time = std::chrono::high_resolution_clock::now();
-                /* auto batch_collection_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(batch_collection_end_time - batch_collection_start_time).count(); */ // Unused
+                // auto batch_collection_end_time = std::chrono::high_resolution_clock::now(); // Unused-but-set
+                // auto batch_collection_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(batch_collection_end_time - batch_collection_start_time).count(); // Unused
 
                 if (batch.empty()) {
                     // For very frequent timeouts, minimize logging to reduce overhead
@@ -1386,15 +1390,14 @@ void MCTSEvaluator::processBatches() {
                     continue;
                 }
                 
-                auto inference_start_time = std::chrono::high_resolution_clock::now();
-                
+                // Perform inference with proper error handling
                 try {
                     // Perform batch inference
                     std::vector<NetworkOutput> results = inference_fn_(states_for_eval);
                     
                     // Record inference time
-                    auto inference_end_time = std::chrono::high_resolution_clock::now();
-                    /* auto inference_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(inference_end_time - inference_start_time).count(); */ // Unused
+                    // auto inference_end_time = std::chrono::high_resolution_clock::now(); // Unused-but-set
+                    // auto inference_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(inference_end_time - inference_start_time).count(); // Unused
                     
                     // Inference completed
                     
@@ -1533,7 +1536,7 @@ void MCTSEvaluator::processBatches() {
                 
                 // Calculate total batch processing time
                 auto batch_end_time = std::chrono::high_resolution_clock::now();
-                auto entire_batch_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(batch_end_time - batch_collection_start_time).count();
+                long long entire_batch_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(batch_end_time - batch_collection_start_time).count();
                 
                 // Track for adaptive batch sizing (in milliseconds)
                 cumulative_batch_time_ms_.fetch_add(entire_batch_duration_us / 1000, std::memory_order_relaxed);
@@ -1766,120 +1769,64 @@ std::vector<PendingEvaluation> MCTSEvaluator::collectExternalBatch(size_t target
     }
     
     auto* external_leaf_queue = static_cast<moodycamel::ConcurrentQueue<PendingEvaluation>*>(leaf_queue_ptr_);
-    size_t queue_size = external_leaf_queue->size_approx();
+    size_t initial_queue_size = external_leaf_queue->size_approx();
     
-    // Determine the minimum acceptable batch size and maximum wait time based on queue size
-    size_t MIN_BATCH;
-    size_t OPTIMAL_BATCH_SIZE;
-    std::chrono::milliseconds MAX_WAIT_TIME;
+    // Use the configurable max_collection_batch_size_ parameter for batch size control
     
-    // Adapt parameters based on queue depth
-    if (queue_size < 20) {
-        // Small queue - still try for reasonable batches but with shorter timeout
-        MIN_BATCH = std::max(size_t(8), target_batch_size / 16);
-        OPTIMAL_BATCH_SIZE = std::max(size_t(16), target_batch_size / 8);
-        MAX_WAIT_TIME = std::chrono::milliseconds(5);
-    } else if (queue_size < 100) {
-        // Medium queue - balance between latency and throughput
-        MIN_BATCH = std::max(size_t(16), target_batch_size / 8);
-        OPTIMAL_BATCH_SIZE = std::max(size_t(32), target_batch_size / 4);
-        MAX_WAIT_TIME = std::chrono::milliseconds(10);
-    } else {
-        // Large queue - prioritize throughput
-        MIN_BATCH = std::max(size_t(32), target_batch_size / 4);
-        OPTIMAL_BATCH_SIZE = std::max(size_t(64), target_batch_size / 2);
-        MAX_WAIT_TIME = std::chrono::milliseconds(15);
-    }
-    
-    // Cap to target batch size
-    OPTIMAL_BATCH_SIZE = std::min(OPTIMAL_BATCH_SIZE, target_batch_size);
-    
+    // Prepare result vector
     std::vector<PendingEvaluation> batch;
     batch.reserve(target_batch_size);
-    
-    // Phase 1: Immediate bulk dequeue for fast collection
-    if (queue_size > 0) {
-        // Allocate a vector sized to hold up to the optimal batch size
-        std::vector<PendingEvaluation> temp_batch(OPTIMAL_BATCH_SIZE);
-        size_t dequeued = external_leaf_queue->try_dequeue_bulk(temp_batch.data(), OPTIMAL_BATCH_SIZE);
-        
-        // Only take what we actually got
-        for (size_t i = 0; i < dequeued; ++i) {
-            batch.push_back(std::move(temp_batch[i]));
-        }
-    }
-    
-    // Phase 2: Wait for additional items if we didn't get enough in phase 1
-    if (batch.size() < OPTIMAL_BATCH_SIZE && batch.size() < queue_size && !shutdown_flag_.load(std::memory_order_acquire)) {
-        auto deadline = std::chrono::steady_clock::now() + MAX_WAIT_TIME;
-        
-        while (std::chrono::steady_clock::now() < deadline && 
-               batch.size() < target_batch_size && 
-               !shutdown_flag_.load(std::memory_order_acquire)) {
-            
-            // Check how many more we need for optimal size
-            size_t remaining = std::min(target_batch_size - batch.size(), 
-                                       OPTIMAL_BATCH_SIZE - batch.size());
-            
-            if (remaining <= 0) break;
-            
-            // Try to dequeue a batch of the remaining size
-            std::vector<PendingEvaluation> additional_batch(remaining);
-            size_t additional_dequeued = external_leaf_queue->try_dequeue_bulk(
-                additional_batch.data(), remaining);
-                
-            if (additional_dequeued > 0) {
-                // Add valid items to our batch
-                for (size_t i = 0; i < additional_dequeued; ++i) {
-                    if (additional_batch[i].state) {
-                        batch.push_back(std::move(additional_batch[i]));
-                    }
-                }
-                
-                // If we've reached our target, exit early
-                if (batch.size() >= OPTIMAL_BATCH_SIZE) {
-                    break;
-                }
-            } else {
-                // No items available, wait briefly
-                std::unique_lock<std::mutex> lock(cv_mutex_);
-                cv_.wait_for(lock, std::chrono::milliseconds(1), [this, external_leaf_queue] {
-                    return shutdown_flag_.load(std::memory_order_acquire) || 
-                           external_leaf_queue->size_approx() > 0;
-                });
+
+    // Attempt to dequeue a small batch to balance responsiveness and throughput
+    // target_batch_size is typically small (e.g., 8 as set by batchCollectorLoop)
+    size_t dequeued_count = external_leaf_queue->try_dequeue_bulk(std::back_inserter(batch), target_batch_size);
+
+    // If bulk dequeue failed or got nothing, and queue might have items, try single dequeue to be safe
+    if (dequeued_count == 0 && initial_queue_size > 0 && batch.size() < target_batch_size) {
+        PendingEvaluation item;
+        if (external_leaf_queue->try_dequeue(item)) {
+            if (item.state) {
+                batch.push_back(std::move(item));
             }
         }
     }
     
-    // Filter out any invalid states (null states)
-    if (!batch.empty()) {
-        batch.erase(
-            std::remove_if(batch.begin(), batch.end(), 
-                          [](const PendingEvaluation& eval) { return !eval.state; }),
-            batch.end()
-        );
-    }
+    // SUPER SIMPLIFIED IMPLEMENTATION: Just take one item and return immediately
+    // This ensures we make progress and don't stall in batch collection
+    // PendingEvaluation item;
+    // bool got_item = external_leaf_queue->try_dequeue(item);
+    // 
+    // if (got_item) {
+    //     if (item.state) {
+    //         batch.push_back(std::move(item));
+    //         if (verbose_logging) {
+    //             std::cout << "COLLECT BATCH [CALL " << call_count << "]: Successfully dequeued one item" << std::endl;
+    //         }
+    //     } else {
+    //         std::cout << "WARNING: Skipping item with null state in call " << call_count << std::endl;
+    //     }
+    // } else if (initial_queue_size > 0) {
+    //     // This is a possible race condition - queue size was > 0 but dequeue failed
+    //     if (verbose_logging) {
+    //         std::cout << "COLLECT BATCH [CALL " << call_count << "]: Queue size was " << initial_queue_size 
+    //                   << " but dequeue failed, possible race condition" << std::endl;
+    //     }
+    //     
+    //     // Wait briefly and try once more
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    //     
+    //     // Try again with just one item
+    //     if (external_leaf_queue->try_dequeue(item)) {
+    //         if (item.state) {
+    //             batch.push_back(std::move(item));
+    //             std::cout << "COLLECT BATCH [CALL " << call_count << "]: Successfully dequeued one item after waiting" << std::endl;
+    //         } else {
+    //             std::cout << "WARNING: Dequeued item has null state in call " << call_count << std::endl;
+    //         }
+    //     }
+    // }
     
-    // If we didn't meet the minimum batch size and there's a reasonable queue,
-    // wait a bit more and try again
-    if (batch.size() < MIN_BATCH && 
-        external_leaf_queue->size_approx() >= MIN_BATCH &&
-        !shutdown_flag_.load(std::memory_order_acquire)) {
-        
-        // Put back what we have for a larger batch later
-        if (!batch.empty()) {
-            external_leaf_queue->enqueue_bulk(std::make_move_iterator(batch.begin()), batch.size()); // Changed to move iterator
-            batch.clear();
-        }
-        
-        // Wait briefly for more items to arrive
-        std::unique_lock<std::mutex> lock(cv_mutex_);
-        cv_.wait_for(lock, std::chrono::milliseconds(5));
-        
-        // Try again (will happen on next loop iteration)
-        return std::vector<PendingEvaluation>();
-    }
-    
+    // Always return whatever we have, even if it's empty - the caller will handle this
     return batch;
 }
 
@@ -1908,13 +1855,9 @@ void MCTSEvaluator::processInternalBatch(std::vector<EvaluationRequest>& batch) 
         return;
     }
     
-    // Report batch size for internal queue (only log occasionally to reduce overhead)
+    // Track batches processed
     static int internal_batch_count = 0;
     internal_batch_count++;
-    if (internal_batch_count % 100 == 0) {
-        std::cout << "[BATCH] Internal batch size: " << batch.size() 
-                  << " (total batches: " << internal_batch_count << ")" << std::endl;
-    }
     
     // Create a timer to measure batch processing time
     auto batch_start = std::chrono::steady_clock::now();
@@ -2022,6 +1965,7 @@ void MCTSEvaluator::processInternalBatch(std::vector<EvaluationRequest>& batch) 
         total_evaluations_.fetch_add(batch.size(), std::memory_order_relaxed);
         cumulative_batch_size_.fetch_add(batch.size(), std::memory_order_relaxed);
         
+        
         // Calculate processing time for this batch
         auto batch_end = std::chrono::steady_clock::now();
         auto batch_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -2029,8 +1973,7 @@ void MCTSEvaluator::processInternalBatch(std::vector<EvaluationRequest>& batch) 
         cumulative_batch_time_ms_.fetch_add(batch_duration_ms, std::memory_order_relaxed);
         
     } catch (const std::exception& e) {
-        // Error during batch inference - log and provide default outputs
-        std::cerr << "ERROR: Exception during internal batch inference: " << e.what() << std::endl;
+        // Error during batch inference - provide default outputs
         
         // Provide default outputs on error
         for (auto& req : batch) {

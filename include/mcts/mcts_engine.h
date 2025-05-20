@@ -33,6 +33,9 @@ struct ALPHAZERO_API MCTSSettings {
     // Neural network batch size - optimized for GPU efficiency
     int batch_size = 256;  // Larger batch for better GPU utilization
     
+    // Maximum batch size per collection - controls responsiveness vs efficiency
+    int max_collection_batch_size = 32;  // Default to moderate batch size for balance
+    
     // Neural network batch timeout - reduced for better responsiveness
     std::chrono::milliseconds batch_timeout = std::chrono::milliseconds(5);  // Shorter timeout for leaf parallelization
     
@@ -439,6 +442,7 @@ private:
     std::atomic<bool> workers_active_{false};
     
     // Removed mutex destruction flags - no longer needed with lock-free approach
+    std::function<void()> external_queue_notify_fn_; 
     
     // Flag to enable memory pool for GameState cloning
     bool game_state_pool_enabled_;

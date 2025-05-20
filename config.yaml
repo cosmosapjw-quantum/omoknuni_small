@@ -2,29 +2,37 @@
 # Optimized for Ryzen 5900X + RTX 3060 Ti
 
 # Game settings
-game: gomoku
+game: gomoku  # Options: gomoku, chess, go
 board_size: 15
 
+# AlphaZero pipeline settings
+num_iterations: 10  # Number of iterations for full AlphaZero training
+
 # Self-play settings
-self_play_games_per_generation: 400
-self_play_num_parallel_games: 12
-self_play_num_mcts_engines: 12
+self_play_games_per_generation: 4
+self_play_num_parallel_games: 4
+self_play_max_moves: 0
+self_play_temperature_threshold: 30  # Move number after which temperature is reduced
+self_play_high_temperature: 1.0  # Temperature for early moves (exploration)
+self_play_low_temperature: 0.1  # Temperature for later moves (exploitation)
 
 # GPU-optimized MCTS settings  
 mcts_simulations: 400 
 mcts_num_threads: 12  
-mcts_batch_size: 64  
-mcts_batch_timeout_ms: 50 
+mcts_batch_size: 64
+mcts_max_collection_batch_size: 16  # Controls maximum batch size per collection (balance responsiveness vs efficiency)
+mcts_batch_timeout_ms: 20
 mcts_max_concurrent_simulations: 512
 mcts_exploration_constant: 1.4
 mcts_virtual_loss: 1
 mcts_add_dirichlet_noise: true
 mcts_dirichlet_alpha: 0.3
 mcts_dirichlet_epsilon: 0.25
+mcts_temperature: 1.0  # Base temperature for move selection
 
-# Leaf parallelization settings
+# Root parallelization settings (replaces multiple MCTS engines)
 mcts_use_root_parallelization: false
-mcts_num_root_workers: 1
+mcts_num_root_workers: 1  # Disabled to avoid cloning issues
 
 # Progressive widening (helps with batching)
 mcts_use_progressive_widening: true
@@ -40,6 +48,14 @@ mcts_use_transposition_table: true
 mcts_transposition_table_size_mb: 256
 
 # Neural network settings
+network_type: resnet  # Options: resnet, ddw_randwire
+use_gpu: true
+model_path: models/model.pt
+model_input_channels: 17
+model_num_res_blocks: 12
+model_num_filters: 128
+
+# Training settings
 training_batch_size: 512  # Large training batch for GPU
 training_learning_rate: 0.01
 training_weight_decay: 0.0001
@@ -47,23 +63,27 @@ training_num_epochs: 10
 training_window_size: 1000000
 training_sample_size: 50000
 training_save_frequency: 10
+train_num_workers: 4  # Number of data loading workers
+train_lr_step_size: 10  # Number of epochs before learning rate reduction
+train_lr_gamma: 0.1  # Learning rate decay factor
 
-# Evaluation settings
+# Evaluation/Arena settings
+enable_evaluation: true  # Whether to evaluate new model against previous best
+arena_num_games: 50  # Number of games to play in evaluation
+arena_num_parallel_games: 8  # Number of parallel evaluation games
+arena_num_threads: 4  # Number of threads per engine for evaluation
+arena_num_simulations: 400  # Number of MCTS simulations for evaluation
+arena_temperature: 0.1  # Temperature for move selection in evaluation
+arena_win_rate_threshold: 0.55  # New model must win this % to become champion
 evaluation_games: 100
 evaluation_mcts_simulations: 400
 evaluation_mcts_batch_size: 256
 evaluation_threshold: 0.55
 
-# Enable GPU memory optimization
+# GPU memory optimization
 gpu_memory_optimization: true
 gpu_pinned_memory: true
 gpu_async_transfers: true
-
-# Model settings
-model_path: models/model.pt
-model_input_channels: 17
-model_num_res_blocks: 12
-model_num_filters: 128
 
 # OpenMP settings
 omp_num_threads: 20
@@ -71,15 +91,24 @@ omp_affinity: close  # Keep threads on same NUMA node
 
 # Output settings  
 self_play_output_dir: data/self_play_games
-self_play_output_format: json
+self_play_output_format: json  # Options: json, binary
 
 # Game-specific settings
+# Gomoku settings
 gomoku_board_size: 15
 gomoku_win_length: 5
 gomoku_use_renju: false
 gomoku_use_omok: false  
 gomoku_use_pro_long_opening: false
 
+# Chess settings
+chess_use_chess960: false  # Whether to use Chess960 (Fischer Random Chess)
+
+# Go settings
+go_komi: 7.5  # Komi (compensation points for white)
+go_chinese_rules: true  # Use Chinese rules (vs Japanese)
+go_enforce_superko: true  # Enforce super-ko rule
+
 # Debug settings
-debug_level: 0
+debug_level: 0  # 0=none, 1=info, 2=debug, 3=verbose
 enable_profiling: false

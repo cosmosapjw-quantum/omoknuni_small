@@ -15,10 +15,31 @@ namespace mcts {
 
 void MCTSEvaluator::batchCollectorLoop() {
     // Main loop for collecting batches and submitting to inference workers
+    auto last_status_time = std::chrono::steady_clock::now();
+    int iteration_count = 0;
+    int total_batches_collected = 0;
+    int total_states_processed = 0;
     
     while (!shutdown_flag_.load(std::memory_order_acquire)) {
+        iteration_count++;
+        
         // Different logic for external vs internal queues
         if (use_external_queues_) {
+            // More frequent status reports during startup
+            auto now = std::chrono::steady_clock::now();
+            bool should_report = 
+                (iteration_count < 100 && iteration_count % 10 == 0) || // Every 10 iterations during first 100 iterations
+                (iteration_count % 100 == 0) || // Then every 100 iterations
+                (std::chrono::duration_cast<std::chrono::seconds>(now - last_status_time).count() >= 1); // And at least every second
+                
+            // Periodically log detailed batch statistics
+            if (should_report) {
+                std::cout << "[BATCH_STATS] Total batches: " << total_batches_.load(std::memory_order_relaxed)
+                          << ", Avg size: " << getAverageBatchSize() 
+                          << ", Total states: " << total_evaluations_.load(std::memory_order_relaxed)
+                          << ", Target batch: " << batch_size_ << std::endl;
+            }
+            
             if (!leaf_queue_ptr_) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 continue;
@@ -30,16 +51,22 @@ void MCTSEvaluator::batchCollectorLoop() {
             // Check queue size
             size_t queue_size = external_leaf_queue->size_approx();
             
-            // Determine collection parameters based on queue size
-            size_t target_batch_size = std::min(batch_size_, queue_size);
-            size_t min_batch = std::min(min_batch_size_, target_batch_size / 2);
+            if (should_report) {
+                last_status_time = now;
+            }
             
-            // Only process if we have at least minimum batch size or have waited long enough
-            if (queue_size >= min_batch) {
+            // Use adaptable batch size based on settings
+            // This allows balancing between responsiveness and efficiency
+            size_t target_batch_size = std::min(batch_size_, max_collection_batch_size_);
+            
+            // If there are items in the queue, always process them immediately
+            if (queue_size > 0) {
                 // Collect batch from external queue
                 auto batch = collectExternalBatch(target_batch_size);
                 
                 if (!batch.empty()) {
+                    total_batches_collected++;
+                    
                     // Create a new batch for inference
                     BatchForInference inference_batch;
                     inference_batch.batch_id = batch_counter_.fetch_add(1, std::memory_order_relaxed);
@@ -53,84 +80,41 @@ void MCTSEvaluator::batchCollectorLoop() {
                     for (auto& eval : inference_batch.pending_evals) {
                         if (eval.state) {
                             inference_batch.states.push_back(eval.state->clone());
+                            total_states_processed++;
                         }
                     }
                     
                     // Enqueue batch for inference if we have states
                     if (!inference_batch.states.empty()) {
+                                  
                         inference_queue_.enqueue(std::move(inference_batch));
                         pending_inference_batches_.fetch_add(1, std::memory_order_relaxed);
                         
-                        // Notify inference workers
+                        // Notify inference workers - IMPORTANT: notify ALL workers
                         {
                             std::lock_guard<std::mutex> lock(inference_mutex_);
-                            inference_cv_.notify_one();
+                            inference_cv_.notify_all();  // Notify ALL waiting threads
                         }
                     }
                 } else {
-                    // No items collected, wait a bit
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                }
-            } else if (queue_size > 0) {
-                // Not enough for a full batch, wait a bit to collect more
-                // Use condition variable with a short timeout
-                std::unique_lock<std::mutex> lock(cv_mutex_);
-                auto wait_pred = [this, min_batch, external_leaf_queue]() {
-                    return shutdown_flag_.load(std::memory_order_acquire) || 
-                           external_leaf_queue->size_approx() >= min_batch;
-                };
-                
-                // Wait for more items or timeout
-                cv_.wait_for(lock, timeout_, wait_pred);
-                
-                // After timeout, process whatever we have if above minimum
-                queue_size = external_leaf_queue->size_approx();
-                if (queue_size >= min_batch) {
-                    auto batch = collectExternalBatch(batch_size_);
-                    
-                    if (!batch.empty()) {
-                        // Create a new batch for inference
-                        BatchForInference inference_batch;
-                        inference_batch.batch_id = batch_counter_.fetch_add(1, std::memory_order_relaxed);
-                        inference_batch.created_time = std::chrono::steady_clock::now();
-                        inference_batch.pending_evals = std::move(batch);
-                        
-                        // Extract states for inference
-                        inference_batch.states.reserve(inference_batch.pending_evals.size());
-                        
-                        // Convert states for neural network
-                        for (auto& eval : inference_batch.pending_evals) {
-                            if (eval.state) {
-                                inference_batch.states.push_back(eval.state->clone());
-                            }
-                        }
-                        
-                        // Enqueue batch for inference if we have states
-                        if (!inference_batch.states.empty()) {
-                            inference_queue_.enqueue(std::move(inference_batch));
-                            pending_inference_batches_.fetch_add(1, std::memory_order_relaxed);
-                            
-                            // Notify inference workers
-                            {
-                                std::lock_guard<std::mutex> lock(inference_mutex_);
-                                inference_cv_.notify_one();
-                            }
-                        }
-                    }
+                    // No items collected, wait a very short time to avoid spinning
+                    std::this_thread::sleep_for(std::chrono::microseconds(100));
                 }
             } else {
-                // No items at all, wait for notification
+                // No items in queue, wait for notification
                 std::unique_lock<std::mutex> lock(cv_mutex_);
                 auto wait_pred = [this, external_leaf_queue]() {
                     return shutdown_flag_.load(std::memory_order_acquire) || 
                            external_leaf_queue->size_approx() > 0;
                 };
                 
-                cv_.wait_for(lock, std::chrono::milliseconds(5), wait_pred);
+                // Use very short timeout to ensure we check frequently
+                cv_.wait_for(lock, std::chrono::milliseconds(1), wait_pred);
             }
         } else {
             // Internal queue mode
             size_t queue_size = request_queue_.size_approx();
+            
             
             // Same logic as external queue but using internal queue and internal batch collection
             if (queue_size >= min_batch_size_) {
@@ -172,23 +156,35 @@ void MCTSEvaluator::batchCollectorLoop() {
 
 void MCTSEvaluator::inferenceWorkerLoop() {
     // Neural network inference worker thread
+    auto last_status_time = std::chrono::steady_clock::now();
+    int iteration_count = 0;
     
     while (!shutdown_flag_.load(std::memory_order_acquire)) {
+        // Periodically report status (more frequent during startup)
+        iteration_count++;
+        auto now = std::chrono::steady_clock::now();
+        bool should_report = 
+            (iteration_count < 100 && iteration_count % 10 == 0) || // Every 10 iterations during first 100 iterations
+            (std::chrono::duration_cast<std::chrono::seconds>(now - last_status_time).count() >= 1); // Then every second
+            
+        if (should_report) {
+            last_status_time = now;
+        }
+        
         // Try to get a batch from the inference queue
         BatchForInference batch;
-        
         bool dequeued = inference_queue_.try_dequeue(batch);
         
         if (!dequeued) {
-            // No batch available, wait for notification
+            // No batch available, wait for notification but with a very short timeout
             std::unique_lock<std::mutex> lock(inference_mutex_);
             auto wait_pred = [this]() {
                 return shutdown_flag_.load(std::memory_order_acquire) || 
                        inference_queue_.size_approx() > 0;
             };
             
-            // Wait with a timeout - helps prevent deadlocks if notification is missed
-            inference_cv_.wait_for(lock, std::chrono::milliseconds(5), wait_pred);
+            // Wait with a very short timeout - frequent checks to prevent deadlocks
+            inference_cv_.wait_for(lock, std::chrono::milliseconds(1), wait_pred);
             continue;
         }
         
@@ -207,6 +203,7 @@ void MCTSEvaluator::inferenceWorkerLoop() {
             // Update metrics
             size_t batch_size = batch.states.size();
             auto batch_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            
             
             // Create result batch
             BatchInferenceResult result_batch;

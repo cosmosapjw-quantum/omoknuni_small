@@ -1,632 +1,776 @@
-# Optimizing MCTS with Leaf Parallelization: Performance Breakthrough Plan
+<todo_list>
+1. Implement Aggressive Batching Strategy (High Priority)
+   - Extend minimum batch size threshold based on queue depth
+   - Add dynamic timeout management for batch collection
 
-## The bottleneck trio: thread congestion, starved GPU, scattered search
+2. Optimize Thread-Local Batch Accumulation (High Priority)
+   - Refactor thread_local_batch management in traverseTree()
+   - Implement batch flushing policies based on size/time thresholds
+   - Add thread coordination for combining small batches
 
-Your Monte Carlo Tree Search (MCTS) implementation shows three classic symptoms of a suboptimal parallel architecture: low CPU utilization (40%), extremely poor GPU usage (20%), and minimal neural network batch sizes (1-3). These symptoms stem from fundamental issues in the current leaf parallelization approach that's causing your Gomoku, Chess, and Go engine to underperform.
+3. Reduce Synchronization Overhead (Medium Priority)
+   - Replace condition variables with more efficient notification
+   - Optimize mutex usage in MCTSEvaluator
+   - Implement lock-free batch submission where possible
 
-The good news? These issues are fixable through incremental optimization. By addressing synchronization bottlenecks, restructuring your neural network pipeline, and improving memory management, we can dramatically increase performance without rewriting the entire system.
+4. Improve Work Distribution (Medium Priority)
+   - Implement work-stealing approach across threads
+   - Optimize virtual loss parameters for better path diversity
+   - Balance tree traversal with evaluation processing
 
-## Root causes behind your performance problems
+5. Optimize Memory Management (Medium Priority)
+   - Improve cache locality for batch processing
+   - Optimize state cloning with thread-local caching
+   - Reduce transposition table overhead during high-throughput phases
 
-### 1. Neural Network Batch Processing Deficiencies
+6. Implement Pipeline-Based Processing (Medium Priority)
+   - Create separate stages for collection, preprocessing, inference, and distribution
+   - Add prefetching for improved throughput
+   - Implement asynchronous batch submission
 
-Your implementation likely uses what I'll call "request-based evaluation" - each leaf node immediately requests a neural network evaluation when it's created, resulting in:
+7. Benchmark and Profile (Ongoing)
+   - Add instrumentation to track batch sizes
+   - Monitor GPU utilization during different phases
+   - Identify contention points in parallel execution
+</todo_list>
 
-- Single-position evaluations (batch size = 1)
-- Excessive CPU-GPU transfers for small data chunks
-- GPU spending most time idle or in setup mode
-- Poor coordination between tree expansion and evaluation
+<optimization_scheme>
+## Phase 1: Improve Batch Collection (Immediate Impact)
 
-**Key code pattern causing the problem:**
+### Step 1: Modify batch collection parameters
 ```cpp
-// Current problematic pattern (synchronous, unbatched evaluation)
-void expandNode(Node* node) {
-    // Create child nodes...
-    for (Node* child : node->children) {
-        NNEvaluation result = neuralNetwork->evaluate(child->state);  // Immediate, single evaluation
-        child->value = result.value;
-        child->policy = result.policy;
+// In MCTSEvaluator constructor
+void MCTSEvaluator::MCTSEvaluator(...) {
+    // More aggressive minimal batch size thresholds
+    min_batch_size_ = std::max(size_t(32), batch_size_ / 2);  // Increase from current small value
+    
+    // Larger batch wait time based on queue depth
+    additional_wait_time_ = std::chrono::milliseconds(20);  // Increase from 5ms
+}
+```
+
+### Step 2: Implement dynamic timeout based on queue depth
+```cpp
+std::vector<PendingEvaluation> MCTSEvaluator::collectExternalBatch(size_t target_size) {
+    auto* queue = static_cast<moodycamel::ConcurrentQueue<PendingEvaluation>*>(leaf_queue_ptr_);
+    size_t queue_size = queue->size_approx();
+    
+    // Dynamically adjust timeout based on queue depth
+    std::chrono::milliseconds wait_time;
+    if (queue_size < target_size / 4) {
+        wait_time = std::chrono::milliseconds(5);  // Small queue - short wait
+    } else if (queue_size < target_size / 2) {
+        wait_time = std::chrono::milliseconds(15); // Medium queue - moderate wait
+    } else {
+        wait_time = std::chrono::milliseconds(30); // Large queue - longer wait for fuller batches
+    }
+    
+    // Collect batch with new timeout
+    // ...rest of implementation...
+}
+```
+
+### Step 3: Optimize thread-local batch collection in MCTSEngine
+```cpp
+// In MCTSEngine::traverseTree
+void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
+    // Thread-local batch with configurable flush thresholds
+    thread_local std::vector<PendingEvaluation> thread_batch;
+    thread_local int flush_counter = 0;
+    
+    // Larger minimum batch size before flushing (previously just a few items)
+    const size_t BATCH_FLUSH_THRESHOLD = 32;
+    const int MAX_FLUSH_DELAY = 100;  // Max iterations before forced flush
+    
+    // ... tree traversal logic ...
+    
+    // Add to thread-local batch
+    thread_batch.push_back(std::move(pending));
+    flush_counter++;
+    
+    // Only flush when we have enough items or waited too long
+    bool should_flush = (thread_batch.size() >= BATCH_FLUSH_THRESHOLD) || 
+                         (flush_counter >= MAX_FLUSH_DELAY && !thread_batch.empty());
+    
+    if (should_flush) {
+        // Use bulk enqueue for better performance
+        leaf_queue_.enqueue_bulk(
+            std::make_move_iterator(thread_batch.begin()),
+            thread_batch.size());
+        
+        // Reset state
+        thread_batch.clear();
+        flush_counter = 0;
     }
 }
 ```
 
-### 2. Thread Synchronization Bottlenecks
+## Phase 2: Optimize Evaluator Pipeline (Medium-Term)
 
-The leaf parallelization approach has several synchronization issues:
-
-- Global tree locks during updates create contention
-- Threads waiting at synchronization points instead of working
-- Sequential portions of the algorithm limiting parallel speedup
-- Inefficient work distribution across threads
-- Excessive context switching due to poor load balancing
-
-**Key areas of contention:**
+### Step 1: Refactor MCTSEvaluator for pipelined operation
 ```cpp
-// Problematic global lock patterns
-std::mutex treeMutex;  // Global mutex for the entire tree
-
-void updateNode(Node* node, float result) {
-    std::lock_guard<std::mutex> lock(treeMutex);  // Locks the entire tree
-    // Update node statistics...
-}
-```
-
-### 3. Memory Management Inefficiencies
-
-Your implementation likely suffers from:
-
-- Frequent dynamic memory allocation/deallocation
-- Cache coherence problems due to scattered node allocation
-- False sharing when threads update adjacent memory
-- Memory fragmentation as the search progresses
-- Allocator lock contention during node creation
-
-**Common memory pattern causing problems:**
-```cpp
-// Inefficient memory allocation
-Node* createNode() {
-    return new Node();  // Individual allocation for each node
-}
-
-void deleteNode(Node* node) {
-    delete node;  // Individual deallocation
-}
-```
-
-## Incremental optimization roadmap
-
-### Phase 1: Quick Wins (1-2 weeks)
-
-#### 1. Implement Neural Network Batch Collection
-
-**Change:** Replace single-inference calls with a batched approach using a queue.
-
-```cpp
-// New batch collection approach
-class BatchCollector {
-private:
-    std::vector<GameState> states;
-    std::vector<Node*> nodes;
-    std::mutex mutex;
-    const int TARGET_BATCH_SIZE = 32;
+// Create processing stages
+struct EvaluatorPipeline {
+    // Collection stage - thread-safe concurrent queue
+    moodycamel::ConcurrentQueue<PendingEvaluation> collection_queue;
     
-public:
-    void addEvaluation(Node* node, const GameState& state) {
-        std::lock_guard<std::mutex> lock(mutex);
-        states.push_back(state);
-        nodes.push_back(node);
-        
-        if (states.size() >= TARGET_BATCH_SIZE) {
-            processBatch();
-        }
-    }
+    // Preprocessing stage - group and prepare batches
+    moodycamel::ConcurrentQueue<BatchForInference> preprocessing_queue;
     
-    void processBatch() {
-        if (states.empty()) return;
-        
-        std::vector<NNEvaluation> results = neuralNetwork->evaluateBatch(states);
-        
-        for (size_t i = 0; i < results.size(); i++) {
-            nodes[i]->applyEvaluation(results[i]);
-        }
-        
-        states.clear();
-        nodes.clear();
-    }
+    // GPU inference stage
+    moodycamel::ConcurrentQueue<BatchInferenceResult> inference_queue;
     
-    ~BatchCollector() {
-        // Process any remaining evaluations
-        processBatch();
-    }
+    // Result distribution stage
+    moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>> distribution_queue;
 };
 ```
 
-**Expected benefit:** Increase batch sizes from 1-3 to 16-32, improving GPU utilization to 50-60%.  
-**Complexity:** Medium  
-
-#### 2. Implement Thread Pool for MCTS Simulations
-
-**Change:** Replace ad-hoc thread creation with a managed thread pool.
-
+### Step 2: Implement adaptive batch sizing
 ```cpp
-class MCTSThreadPool {
-private:
-    std::vector<std::thread> workers;
-    std::queue<std::function<void()>> tasks;
-    std::mutex queueMutex;
-    std::condition_variable condition;
-    bool stop;
+// In batchCollectorLoop
+void MCTSEvaluator::batchCollectorLoop() {
+    // Track historical performance metrics
+    static std::deque<float> recent_throughputs;
+    static std::deque<size_t> recent_batch_sizes;
+    const size_t METRICS_HISTORY = 10;
     
-public:
-    MCTSThreadPool(size_t threads) : stop(false) {
-        for (size_t i = 0; i < threads; ++i) {
-            workers.emplace_back([this] {
-                while (true) {
-                    std::function<void()> task;
-                    {
-                        std::unique_lock<std::mutex> lock(queueMutex);
-                        condition.wait(lock, [this] { 
-                            return stop || !tasks.empty(); 
-                        });
-                        
-                        if (stop && tasks.empty()) return;
-                        task = std::move(tasks.front());
-                        tasks.pop();
-                    }
-                    task();
-                }
-            });
+    // Periodically update batch size based on performance
+    if (total_batches_ % 50 == 0 && !recent_throughputs.empty()) {
+        // Calculate recent average throughput
+        float avg_throughput = std::accumulate(recent_throughputs.begin(), 
+                                              recent_throughputs.end(), 0.0f) / 
+                               recent_throughputs.size();
+                               
+        // Find batch size that gave best throughput
+        auto best_it = std::max_element(recent_throughputs.begin(), recent_throughputs.end());
+        size_t best_batch_size = recent_batch_sizes[std::distance(recent_throughputs.begin(), best_it)];
+        
+        // Adjust batch size target (increase if we're below optimal)
+        if (batch_size_ < best_batch_size) {
+            batch_size_ = std::min(batch_size_ * 1.2, best_batch_size * 1.5);
         }
+        
+        // Also update min_batch_size_ proportionally
+        min_batch_size_ = std::max(size_t(16), batch_size_ / 4);
     }
     
-    template<class F>
-    void enqueue(F&& f) {
-        {
-            std::unique_lock<std::mutex> lock(queueMutex);
-            tasks.emplace(std::forward<F>(f));
-        }
-        condition.notify_one();
-    }
-    
-    ~MCTSThreadPool() {
-        {
-            std::unique_lock<std::mutex> lock(queueMutex);
-            stop = true;
-        }
-        condition.notify_all();
-        for (std::thread& worker : workers) {
-            worker.join();
-        }
-    }
-};
+    // ... rest of batch collection loop ...
+}
 ```
 
-**Expected benefit:** Increase CPU utilization to 70%, reduce thread creation overhead.  
-**Complexity:** Low  
+## Phase 3: Enhance Parallelism Coordination (Long-Term)
 
-#### 3. Implement Memory Pool for Nodes
-
-**Change:** Replace dynamic memory allocation with a pre-allocated node pool.
-
+### Step 1: Implement work stealing for better thread utilization
 ```cpp
-class NodePool {
-private:
-    std::vector<Node> nodeStorage;
-    std::vector<int> freeList;
-    std::mutex mutex;
+// In MCTSEngine::runSearch
+// Create per-thread work queues with atomic size indicators
+std::vector<moodycamel::ConcurrentQueue<std::shared_ptr<MCTSNode>>> thread_work_queues(num_threads);
+std::vector<std::atomic<size_t>> queue_sizes(num_threads);
+
+// In tree traversal:
+int tid = omp_get_thread_num();
+size_t my_queue_size = queue_sizes[tid].load(std::memory_order_relaxed);
+
+// Try work stealing if my queue is empty
+if (my_queue_size == 0) {
+    // Find thread with most pending work
+    int max_tid = 0;
+    size_t max_size = 0;
     
-public:
-    NodePool(size_t initialSize = 10000) : nodeStorage(initialSize) {
-        // Initialize free list
-        freeList.reserve(initialSize);
-        for (int i = initialSize - 1; i >= 0; --i) {
-            freeList.push_back(i);
-        }
-    }
-    
-    Node* allocate() {
-        std::lock_guard<std::mutex> lock(mutex);
-        if (freeList.empty()) {
-            // Expand pool
-            size_t oldSize = nodeStorage.size();
-            size_t newSize = oldSize * 2;
-            nodeStorage.resize(newSize);
-            
-            freeList.reserve(newSize - oldSize);
-            for (size_t i = newSize - 1; i >= oldSize; --i) {
-                freeList.push_back(i);
+    for (int i = 0; i < num_threads; i++) {
+        if (i != tid) {
+            size_t size = queue_sizes[i].load(std::memory_order_relaxed);
+            if (size > max_size) {
+                max_size = size;
+                max_tid = i;
             }
         }
-        
-        int index = freeList.back();
-        freeList.pop_back();
-        nodeStorage[index].reset(); // Prepare node for use
-        return &nodeStorage[index];
     }
     
-    void deallocate(Node* node) {
-        std::lock_guard<std::mutex> lock(mutex);
-        int index = node - &nodeStorage[0]; // Calculate index
-        freeList.push_back(index);
-    }
-};
-```
-
-**Expected benefit:** Reduce memory allocation contention, improve cache coherence.  
-**Complexity:** Medium  
-
-### Phase 2: Medium-Term Improvements (2-4 weeks)
-
-#### 4. Implement Virtual Loss
-
-**Change:** Add virtual losses to prevent threads from exploring the same paths.
-
-```cpp
-class Node {
-public:
-    std::atomic<int> visits{0};
-    std::atomic<float> value{0.0f};
-    std::atomic<int> virtualLoss{0};
-    
-    float getUCTScore(float c_puct, int parentVisits) const {
-        int totalVisits = visits.load(std::memory_order_relaxed);
-        int virtualVisits = virtualLoss.load(std::memory_order_relaxed);
+    // Try to steal half of their work
+    if (max_size > 4) {
+        size_t to_steal = max_size / 2;
+        std::shared_ptr<MCTSNode> stolen_node;
         
-        // Virtual loss decreases UCT score temporarily
-        float exploitationTerm = value.load(std::memory_order_relaxed) / 
-                                (totalVisits + virtualVisits + 1e-8f);
-        
-        float explorationTerm = c_puct * std::sqrt(log(parentVisits) / 
-                                                  (totalVisits + virtualVisits + 1e-8f));
-        
-        return exploitationTerm + explorationTerm;
-    }
-    
-    void addVirtualLoss() {
-        virtualLoss.fetch_add(1, std::memory_order_relaxed);
-    }
-    
-    void removeVirtualLoss() {
-        virtualLoss.fetch_sub(1, std::memory_order_relaxed);
-    }
-};
-
-// Usage in selection:
-Node* selectLeafNode(Node* root) {
-    Node* node = root;
-    while (!node->isLeaf()) {
-        Node* selected = nullptr;
-        float bestScore = -std::numeric_limits<float>::infinity();
-        
-        for (Node* child : node->children) {
-            // Add virtual loss before evaluation
-            child->addVirtualLoss();
-            
-            float score = child->getUCTScore(C_PUCT, node->visits.load());
-            if (score > bestScore) {
-                bestScore = score;
-                selected = child;
+        for (size_t i = 0; i < to_steal; i++) {
+            if (thread_work_queues[max_tid].try_dequeue(stolen_node)) {
+                thread_work_queues[tid].enqueue(stolen_node);
+                queue_sizes[max_tid].fetch_sub(1, std::memory_order_relaxed);
+                queue_sizes[tid].fetch_add(1, std::memory_order_relaxed);
             }
         }
-        
-        node = selected;
-    }
-    return node;
-}
-
-// In backpropagation:
-void backpropagate(Node* leaf, float result) {
-    Node* node = leaf;
-    while (node != nullptr) {
-        node->removeVirtualLoss(); // Remove virtual loss
-        node->visits.fetch_add(1, std::memory_order_relaxed);
-        // Update value...
-        node = node->parent;
     }
 }
 ```
 
-**Expected benefit:** Improve tree exploration diversity, reducing thread clustering.  
-**Complexity:** Medium  
-
-#### 5. Implement Lock-Free Node Statistics Updates
-
-**Change:** Replace mutex-based updates with atomic operations.
-
+### Step 2: Implement priority-based processing for critical paths
 ```cpp
-void updateNodeStats(Node* node, float result) {
-    // Use atomic operations instead of mutexes
-    int oldVisits = node->visits.load(std::memory_order_relaxed);
-    int newVisits = oldVisits + 1;
-    node->visits.store(newVisits, std::memory_order_relaxed);
+// Track tree statistics dynamically
+void MCTSNode::updateImportance() {
+    // Calculate node importance based on:
+    // 1. Visits relative to siblings
+    // 2. Value estimate relative to parent
+    // 3. Distance from root
+    // 4. Unexplored children ratio
     
-    // Incremental average update
-    float oldValue = node->value.load(std::memory_order_relaxed);
-    float newValue = oldValue + (result - oldValue) / newVisits;
-    
-    // Use CAS loop for floating-point update
-    while (!node->value.compare_exchange_weak(
-        oldValue, newValue, 
-        std::memory_order_relaxed, 
-        std::memory_order_relaxed)) {
-        
-        // If CAS failed, recalculate with updated oldValue
-        newValue = oldValue + (result - oldValue) / newVisits;
+    float visits_ratio = 0.0f;
+    auto parent = getParent();
+    if (parent) {
+        int my_visits = visit_count_.load(std::memory_order_relaxed);
+        int parent_visits = parent->visit_count_.load(std::memory_order_relaxed);
+        visits_ratio = parent_visits > 0 ? static_cast<float>(my_visits) / parent_visits : 0.0f;
     }
+    
+    // Higher importance = higher priority for expansion
+    importance_ = visits_ratio * 0.5f + 
+                 (1.0f - std::abs(getValue())) * 0.3f +
+                 (1.0f / (1 + getDepth())) * 0.2f;
+}
+
+// Use importance during selection
+std::shared_ptr<MCTSNode> MCTSNode::selectChild(...) {
+    // ... existing PUCT logic ...
+    
+    // Apply importance bonus to score
+    scores[i] += children_[i]->importance_ * 0.1f;
+}
+```
+</optimization_scheme>
+
+<parallelization_improvements>
+## 1. Thread Synchronization Optimization
+
+### Replace condition variables with lock-free notification
+```cpp
+// In MCTSEvaluator
+// Replace cv_mutex_ and cv_ with atomic notification system
+std::atomic<bool> evaluator_needs_work_{false};
+std::atomic<uint64_t> work_notification_counter_{0};
+
+// Instead of cv_.notify_one()
+void notifyEvaluatorWork() {
+    evaluator_needs_work_.store(true, std::memory_order_release);
+    work_notification_counter_.fetch_add(1, std::memory_order_release);
+}
+
+// Instead of cv_.wait()
+void waitForWork() {
+    uint64_t last_counter = work_notification_counter_.load(std::memory_order_acquire);
+    
+    // Exponential backoff waiting
+    for (int spin = 0; spin < 1000 && !evaluator_needs_work_.load(std::memory_order_acquire); spin++) {
+        // Short spin wait first
+        _mm_pause(); // Intel pause instruction for spin-wait loop
+    }
+    
+    // Check if work notification occurred during spin
+    if (work_notification_counter_.load(std::memory_order_acquire) != last_counter) {
+        evaluator_needs_work_.store(false, std::memory_order_release);
+        return; // Work was notified
+    }
+    
+    // Fall back to sleep for longer waits
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 ```
 
-**Expected benefit:** Eliminate lock contention during backpropagation.  
-**Complexity:** High  
+## 2. Deadlock Prevention
 
-#### 6. Implement Asynchronous Neural Network Evaluation
-
-**Change:** Decouple tree search from neural network evaluation using a producer-consumer pattern.
-
+### Hierarchical locking protocol
 ```cpp
-class AsyncNNEvaluator {
+// Define lock order to prevent deadlocks
+enum LockPriority {
+    EVALUATOR_LOCK = 0,
+    ENGINE_LOCK = 1,
+    NODE_LOCK = 2,
+    TT_LOCK = 3
+};
+
+// Use in all mutex acquisitions to enforce consistent ordering
+template<typename Mutex>
+void acquireLock(Mutex& mutex, LockPriority priority) {
+    #ifdef DEBUG
+    thread_local std::vector<LockPriority> held_locks;
+    
+    // Verify lock ordering
+    for (auto held : held_locks) {
+        if (held >= priority) {
+            std::cerr << "LOCK ORDER VIOLATION: Trying to acquire " << priority 
+                      << " while holding " << held << std::endl;
+            assert(false);
+        }
+    }
+    
+    held_locks.push_back(priority);
+    #endif
+    
+    mutex.lock();
+}
+
+template<typename Mutex>
+void releaseLock(Mutex& mutex, LockPriority priority) {
+    mutex.unlock();
+    
+    #ifdef DEBUG
+    thread_local std::vector<LockPriority> held_locks;
+    held_locks.pop_back();
+    #endif
+}
+```
+
+## 3. Lock Contention Reduction
+
+### Fine-grained locking in MCTSNode
+```cpp
+// Replace expansion_mutex_ with multiple specialized mutexes
+class MCTSNode {
 private:
-    struct EvalRequest {
-        Node* node;
-        GameState state;
-        std::promise<NNEvaluation> promise;
+    // Separate mutex for expansion vs. statistics updates
+    mutable std::mutex expansion_mutex_;
+    mutable std::mutex children_mutex_;
+    
+    // Use a readers-writer lock for statistics
+    // to allow concurrent reads with exclusive writes
+    mutable std::shared_mutex stats_mutex_;
+};
+
+// During selectChild:
+{
+    std::shared_lock<std::shared_mutex> lock(stats_mutex_);
+    // Read statistics safely with shared lock
+}
+
+// During update:
+{
+    std::unique_lock<std::shared_mutex> lock(stats_mutex_);
+    // Update statistics safely with exclusive lock
+}
+```
+
+## 4. Race Condition Prevention
+
+### Atomic operations for safe state transitions
+```cpp
+// Add proper state transitions in MCTSNode
+class MCTSNode {
+private:
+    // Node state tracking
+    enum class NodeState {
+        NEW,
+        EXPANDING,
+        EXPANDED,
+        EVALUATING,
+        EVALUATED,
+        BACKPROPAGATING
     };
     
-    std::queue<EvalRequest> requestQueue;
-    std::mutex queueMutex;
-    std::condition_variable queueCV;
-    std::thread workerThread;
-    bool running = true;
-    
-    // Neural network model
-    std::unique_ptr<NeuralNetwork> neuralNetwork;
-    
-    void processingLoop() {
-        std::vector<GameState> batch;
-        std::vector<std::promise<NNEvaluation>> promises;
-        std::vector<Node*> nodes;
-        
-        while (running) {
-            // Collect batch
-            {
-                std::unique_lock<std::mutex> lock(queueMutex);
-                queueCV.wait_for(lock, std::chrono::milliseconds(5), [this]{
-                    return !requestQueue.empty() || !running;
-                });
-                
-                if (!running) break;
-                
-                // Collect up to MAX_BATCH_SIZE requests
-                while (!requestQueue.empty() && batch.size() < MAX_BATCH_SIZE) {
-                    EvalRequest request = std::move(requestQueue.front());
-                    requestQueue.pop();
-                    
-                    batch.push_back(request.state);
-                    promises.push_back(std::move(request.promise));
-                    nodes.push_back(request.node);
-                }
-            }
-            
-            if (!batch.empty()) {
-                // Process batch
-                std::vector<NNEvaluation> results = neuralNetwork->evaluateBatch(batch);
-                
-                // Fulfill promises
-                for (size_t i = 0; i < results.size(); i++) {
-                    promises[i].set_value(results[i]);
-                }
-                
-                batch.clear();
-                promises.clear();
-                nodes.clear();
-            }
-        }
-    }
-    
-public:
-    AsyncNNEvaluator(const std::string& modelPath) {
-        neuralNetwork = std::make_unique<NeuralNetwork>(modelPath);
-        workerThread = std::thread(&AsyncNNEvaluator::processingLoop, this);
-    }
-    
-    ~AsyncNNEvaluator() {
-        running = false;
-        queueCV.notify_all();
-        if (workerThread.joinable()) {
-            workerThread.join();
-        }
-    }
-    
-    std::future<NNEvaluation> evaluateAsync(Node* node, const GameState& state) {
-        EvalRequest request;
-        request.node = node;
-        request.state = state;
-        std::future<NNEvaluation> future = request.promise.get_future();
-        
-        {
-            std::lock_guard<std::mutex> lock(queueMutex);
-            requestQueue.push(std::move(request));
-        }
-        
-        queueCV.notify_one();
-        return future;
-    }
+    std::atomic<NodeState> state_{NodeState::NEW};
 };
-```
 
-**Expected benefit:** Maximize GPU utilization (80%+) by ensuring a steady evaluation pipeline.  
-**Complexity:** High  
+// Safe state transitions with expected previous state
+bool MCTSNode::transitionState(NodeState expected, NodeState desired) {
+    return state_.compare_exchange_strong(expected, desired, 
+                                          std::memory_order_acq_rel);
+}
 
-### Phase 3: Long-Term Architectural Changes (1-2 months)
-
-#### 7. Tree Parallelization with Virtual Loss
-
-**Change:** Replace leaf parallelization with tree parallelization for better scaling.
-
-```cpp
-class TreeParallelMCTS {
-public:
-    void runSearch(int numSimulations) {
-        threadPool.runParallel([this](int threadId) {
-            for (int i = 0; i < numSimulationsPerThread; i++) {
-                // Selection - with virtual loss
-                Node* selected = selectNode(rootNode);
-                
-                // Expansion
-                if (selected->visits.load() > 0 || selected == rootNode) {
-                    if (!selected->isTerminal()) {
-                        expandNode(selected);
-                        selected = selectRandomChild(selected);
-                    }
-                }
-                
-                // Evaluation - using async NN service
-                float value;
-                if (selected->isTerminal()) {
-                    value = selected->getTerminalValue();
-                } else {
-                    auto future = nnService->evaluateAsync(selected, selected->state);
-                    
-                    // Do other useful work while waiting
-                    
-                    // Get the result
-                    NNEvaluation result = future.get();
-                    value = result.value;
-                }
-                
-                // Backpropagation - with virtual loss removal
-                backpropagate(selected, value);
-            }
-        }, numThreads);
-    }
-};
-```
-
-**Expected benefit:** Better scaling with thread count, higher CPU utilization (90%+).  
-**Complexity:** Very High  
-
-#### 8. Implement Progressive Widening/Unpruning
-
-**Change:** Focus search on promising moves initially, expanding to more moves as confidence increases.
-
-```cpp
-std::vector<Move> Node::getAvailableMoves() {
-    std::vector<Move> allMoves = state.generateLegalMoves();
-    
-    // Progressive widening - consider more moves as we gather more statistics
-    if (visits.load() < PROGRESSIVE_WIDENING_THRESHOLD) {
-        // Sort moves by policy from neural network
-        std::sort(allMoves.begin(), allMoves.end(), 
-                 [this](const Move& a, const Move& b) {
-                     return policy[a.index] > policy[b.index];
-                 });
-        
-        // Only consider top N moves initially
-        int movesToConsider = std::max(MIN_MOVES_TO_CONSIDER, 
-                                      (int)(std::sqrt(visits.load()) * WIDENING_FACTOR));
-        
-        if (allMoves.size() > movesToConsider) {
-            allMoves.resize(movesToConsider);
-        }
+// Use in expansion
+bool MCTSNode::tryExpand() {
+    NodeState expected = NodeState::NEW;
+    if (!transitionState(expected, NodeState::EXPANDING)) {
+        return false; // Already being expanded
     }
     
-    return allMoves;
+    // Safe to expand now
+    try {
+        // Expand...
+        transitionState(NodeState::EXPANDING, NodeState::EXPANDED);
+        return true;
+    } catch (...) {
+        // Roll back on error
+        transitionState(NodeState::EXPANDING, NodeState::NEW);
+        throw;
+    }
 }
 ```
 
-**Expected benefit:** Reduce effective branching factor, increasing search depth by 20-30%.  
-**Complexity:** Medium  
+## 5. Memory Management Improvements
 
-#### 9. NUMA-Aware Thread Allocation and Memory Management
-
-**Change:** For multi-socket systems, implement NUMA awareness in thread and memory allocation.
-
+### Thread-local memory pools for leaf node states
 ```cpp
-class NUMAAwareMCTS {
-private:
-    // Thread pools for each NUMA node
-    std::vector<std::unique_ptr<ThreadPool>> numaThreadPools;
+// Thread-local state cache for efficient reuse
+void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
+    // Thread-local state cache
+    thread_local std::vector<std::shared_ptr<core::IGameState>> state_cache;
+    const size_t MAX_CACHE_SIZE = 32;
     
-    // Node pools for each NUMA node
-    std::vector<std::unique_ptr<NodePool>> numaNodePools;
-    
-public:
-    NUMAAwareMCTS() {
-        int numNodes = getNumaNodeCount();
-        
-        for (int i = 0; i < numNodes; i++) {
-            numaThreadPools.push_back(std::make_unique<ThreadPool>(
-                getNumCoresInNode(i), i));
+    // When cloning state for evaluation
+    std::shared_ptr<core::IGameState> getClonedState(const core::IGameState& source) {
+        if (!state_cache.empty()) {
+            // Reuse cached state
+            auto state = std::move(state_cache.back());
+            state_cache.pop_back();
             
-            numaNodePools.push_back(std::make_unique<NodePool>(
-                INITIAL_POOL_SIZE, i));
+            // Copy source into cached state efficiently
+            state->copyFrom(source);
+            return state;
         }
+        
+        // No cached state available, create new one
+        return source.clone();
     }
     
-    void runSearch(int numSimulations) {
-        // Distribute simulations across NUMA nodes
-        int simulationsPerNode = numSimulations / numaThreadPools.size();
-        
-        std::vector<std::future<void>> futures;
-        for (size_t nodeId = 0; nodeId < numaThreadPools.size(); nodeId++) {
-            futures.push_back(numaThreadPools[nodeId]->enqueue([=]() {
-                // Run simulations using node-local memory pool
-                NodePool& nodePool = *numaNodePools[nodeId];
-                
-                for (int i = 0; i < simulationsPerNode; i++) {
-                    runSimulation(nodePool);
-                }
-            }));
+    // When finishing evaluation, return state to cache
+    void recycleState(std::shared_ptr<core::IGameState> state) {
+        if (state_cache.size() < MAX_CACHE_SIZE) {
+            state_cache.push_back(std::move(state));
         }
-        
-        // Wait for completion
-        for (auto& future : futures) {
-            future.wait();
-        }
+        // Otherwise let it be destroyed
     }
-};
+}
 ```
 
-**Expected benefit:** Reduce cross-socket memory access latency, improving scaling on multi-socket systems.  
-**Complexity:** High  
+### Optimized batch memory management
+```cpp
+// In MCTSEvaluator
+// Pre-allocate batch vectors to avoid resizing
+BatchForInference createBatch(size_t expected_size) {
+    BatchForInference batch;
+    batch.states.reserve(expected_size);
+    batch.pending_evals.reserve(expected_size);
+    return batch;
+}
 
-#### 10. Multi-GPU Support
+// Reuse batch objects with a pool
+thread_local std::vector<BatchForInference> batch_pool;
+const size_t MAX_POOL_SIZE = 4;
 
-**Change:** Extend neural network evaluation to use multiple GPUs in parallel.
+BatchForInference getBatchFromPool(size_t size) {
+    if (!batch_pool.empty()) {
+        auto batch = std::move(batch_pool.back());
+        batch_pool.pop_back();
+        
+        // Clear but keep capacity
+        batch.states.clear();
+        batch.pending_evals.clear();
+        
+        // Ensure sufficient capacity 
+        batch.states.reserve(size);
+        batch.pending_evals.reserve(size);
+        
+        return batch;
+    }
+    
+    return createBatch(size);
+}
+
+void returnBatchToPool(BatchForInference batch) {
+    if (batch_pool.size() < MAX_POOL_SIZE) {
+        batch_pool.push_back(std::move(batch));
+    }
+}
+```
+</parallelization_improvements>
+
+<gpu_throughput_scenario>
+# High-Throughput GPU Batching Scenario
+
+## Current Situation
+- GPU utilization at 20%
+- Batch sizes of only 1-3 nodes
+- Frequent small inference calls
+- Premature batch submission with aggressive timeouts
+
+## Target Scenario
+- GPU utilization at 80-95%
+- Batch sizes of 64-256 nodes
+- Inference calls consolidated into fewer, larger batches
+- Optimized memory transfers and batch management
+
+## Implementation Strategy
+
+### 1. Create a Three-Tier Batching Pipeline
 
 ```cpp
-class MultiGPUEvaluator {
+// Key components
+class BatchingSystem {
 private:
-    std::vector<std::unique_ptr<NeuralNetwork>> networks;
-    std::atomic<int> nextGPU{0};
+    // Thread-local micro-batches (size 1-16)
+    struct ThreadLocalBatch {
+        std::vector<PendingEvaluation> items;
+        std::chrono::steady_clock::time_point last_update;
+        int consecutive_updates = 0;
+    };
     
-public:
-    MultiGPUEvaluator(const std::string& modelPath, int numGPUs) {
-        for (int i = 0; i < numGPUs; i++) {
-            networks.push_back(std::make_unique<NeuralNetwork>(modelPath, i));
-        }
-    }
+    // Aggregated mini-batches (size 16-64)
+    moodycamel::ConcurrentQueue<PendingEvaluation> mini_batch_queue;
     
-    std::vector<NNEvaluation> evaluateBatch(const std::vector<GameState>& states) {
-        // Use round-robin GPU assignment
-        int gpu = nextGPU.fetch_add(1, std::memory_order_relaxed) % networks.size();
-        return networks[gpu]->evaluateBatch(states);
-    }
+    // Full GPU batches (size 64-256)
+    moodycamel::ConcurrentQueue<BatchForInference> full_batch_queue;
+    
+    // Stats for adaptive sizing
+    std::atomic<size_t> items_in_thread_batches_{0};
+    std::atomic<size_t> micro_batch_flushes_{0};
+    std::atomic<size_t> mini_batch_flushes_{0};
+    
+    // Thread-local batches
+    static thread_local ThreadLocalBatch thread_batch;
 };
 ```
 
-**Expected benefit:** Linear scaling of neural network throughput with GPU count.  
-**Complexity:** High  
+### 2. Implement Staged Batch Collection
 
-## Expected performance improvements
+```cpp
+// 1. Thread-local collection during tree traversal
+void MCTSEngine::traverseTree(std::shared_ptr<MCTSNode> root) {
+    // ... existing traversal logic ...
+    
+    // Add pending evaluation to thread-local batch
+    if (leaf->tryMarkForEvaluation()) {
+        // Create evaluation
+        PendingEvaluation eval = createPendingEval(leaf, path);
+        
+        // Add to thread-local batch
+        BatchingSystem::thread_batch.items.push_back(std::move(eval));
+        BatchingSystem::thread_batch.consecutive_updates++;
+        items_in_thread_batches_.fetch_add(1, std::memory_order_relaxed);
+        
+        // Criteria for flushing micro-batch to mini-batch queue:
+        // 1. Reached size threshold (16)
+        // 2. Had consecutive updates without seeing other nodes
+        // 3. Not flushed in >= 10ms
+        auto now = std::chrono::steady_clock::now();
+        bool size_threshold = thread_batch.items.size() >= 16;
+        bool update_threshold = thread_batch.consecutive_updates >= 64;
+        bool time_threshold = (now - thread_batch.last_update) >= std::chrono::milliseconds(10);
+        
+        if (size_threshold || update_threshold || (time_threshold && !thread_batch.items.empty())) {
+            // Flush to mini-batch queue
+            mini_batch_queue.enqueue_bulk(
+                std::make_move_iterator(thread_batch.items.begin()),
+                thread_batch.items.size());
+                
+            thread_batch.items.clear();
+            thread_batch.consecutive_updates = 0;
+            thread_batch.last_update = now;
+            micro_batch_flushes_.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+}
 
-### After Phase 1 (1-2 weeks):
-- CPU utilization: 40% → 70%
-- GPU utilization: 20% → 50-60%
-- Batch size: 1-3 → 16-32
-- Overall speed: 2.5x improvement
+// 2. Mini-batch collection worker thread
+void BatchingSystem::miniBatchCollector() {
+    std::vector<PendingEvaluation> collected_items;
+    collected_items.reserve(256); // Reserve max batch size
+    
+    while (!shutdown) {
+        // Dynamic batch sizing based on pending items
+        size_t target_batch_size;
+        size_t items_pending = items_in_thread_batches_.load(std::memory_order_relaxed);
+        
+        if (items_pending > 512) {
+            // Many items in pipeline - go for max size
+            target_batch_size = 256;
+            max_wait_time = std::chrono::milliseconds(20); // Wait longer for fuller batches
+        } else if (items_pending > 128) {
+            // Moderate pipeline - balance size vs latency
+            target_batch_size = 128;
+            max_wait_time = std::chrono::milliseconds(10);
+        } else {
+            // Few items - prioritize getting something to GPU
+            target_batch_size = 64;
+            max_wait_time = std::chrono::milliseconds(5);
+        }
+        
+        // Collect from mini-batch queue
+        size_t dequeued = mini_batch_queue.try_dequeue_bulk(
+            std::back_inserter(collected_items),
+            target_batch_size);
+            
+        if (dequeued == 0) {
+            // Nothing available yet, wait briefly
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+        
+        // If we got a good batch size or waited long enough, proceed
+        auto collection_time = std::chrono::steady_clock::now();
+        bool has_min_size = collected_items.size() >= 64;
+        bool waited_enough = false;
+        
+        while (!has_min_size && !waited_enough) {
+            // Try to collect more items to reach min size
+            size_t more_items = mini_batch_queue.try_dequeue_bulk(
+                std::back_inserter(collected_items),
+                target_batch_size - collected_items.size());
+                
+            if (more_items > 0) {
+                has_min_size = collected_items.size() >= 64;
+            } else {
+                // Check if we've waited long enough
+                waited_enough = (std::chrono::steady_clock::now() - collection_time) >= max_wait_time;
+                
+                if (!waited_enough) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                }
+            }
+        }
+        
+        if (!collected_items.empty()) {
+            // Create a full batch for GPU inference
+            BatchForInference batch;
+            batch.batch_id = next_batch_id++;
+            batch.created_time = std::chrono::steady_clock::now();
+            
+            // Move collected items to batch
+            batch.pending_evals = std::move(collected_items);
+            collected_items.clear();
+            collected_items.reserve(256);
+            
+            // Prepare states for inference
+            batch.states.reserve(batch.pending_evals.size());
+            for (auto& eval : batch.pending_evals) {
+                if (eval.state) {
+                    batch.states.push_back(std::move(eval.state->clone()));
+                }
+            }
+            
+            // Submit full batch to GPU queue
+            full_batch_queue.enqueue(std::move(batch));
+            mini_batch_flushes_.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+}
+```
 
-### After Phase 2 (3-6 weeks):
-- CPU utilization: 70% → 85%
-- GPU utilization: 50-60% → 80%
-- Batch size: 16-32 → 32-64
-- Overall speed: 5x improvement
+### 3. Optimize Neural Network Inference
 
-### After Phase 3 (3-4 months):
-- CPU utilization: 85% → 95%
-- GPU utilization: 80% → 95%
-- Batch size: 32-64 → 64-128
-- Overall speed: 8-10x improvement
-- Ability to scale across multiple GPUs and machines
+```cpp
+// Dedicated inference worker
+void BatchingSystem::inferenceWorker() {
+    // Inference state tracking
+    size_t consecutive_small_batches = 0;
+    size_t consecutive_large_batches = 0;
+    float last_gpu_utilization = 0.0f;
+    
+    // Initialize CUDA streams for overlapping operations
+    cudaStream_t compute_stream;
+    cudaStream_t transfer_stream;
+    cudaStreamCreate(&compute_stream);
+    cudaStreamCreate(&transfer_stream);
+    
+    while (!shutdown) {
+        // Try to get a batch
+        BatchForInference batch;
+        if (!full_batch_queue.try_dequeue(batch)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+        
+        // Start GPU profiling
+        cudaEvent_t start, stop;
+        cudaEventCreate(&start);
+        cudaEventCreate(&stop);
+        cudaEventRecord(start, compute_stream);
+        
+        // Perform inference
+        auto results = inference_fn_(batch.states);
+        
+        // Record completion
+        cudaEventRecord(stop, compute_stream);
+        cudaEventSynchronize(stop);
+        
+        // Calculate elapsed time
+        float milliseconds = 0;
+        cudaEventElapsedTime(&milliseconds, start, stop);
+        
+        // Estimate GPU utilization based on timing
+        last_gpu_utilization = estimateGpuUtilization(milliseconds, batch.states.size());
+        
+        // Track batch size patterns
+        if (batch.states.size() < 64) {
+            consecutive_small_batches++;
+            consecutive_large_batches = 0;
+        } else {
+            consecutive_large_batches++;
+            consecutive_small_batches = 0;
+        }
+        
+        // Adaptive batch size adjustment
+        if (consecutive_small_batches > 5 && last_gpu_utilization < 0.5f) {
+            // Multiple small batches with low GPU util - increase target batch size
+            target_batch_size = std::min(target_batch_size * 1.5f, 256.0f);
+            LOG_INFO("Increasing target batch size to {}", target_batch_size);
+        } else if (consecutive_large_batches > 5 && last_gpu_utilization > 0.9f) {
+            // GPU is saturated with large batches - current size is good
+            LOG_INFO("GPU well utilized at batch size {}", batch.states.size());
+        }
+        
+        // Return results
+        processInferenceResults(results, batch);
+    }
+    
+    // Cleanup
+    cudaStreamDestroy(compute_stream);
+    cudaStreamDestroy(transfer_stream);
+}
 
-## Implementation sequence and validation
+// Estimate GPU utilization based on timing and complexity
+float BatchingSystem::estimateGpuUtilization(float milliseconds, size_t batch_size) {
+    // Simple model based on batch size and time
+    // Assumes linear relationship with some overhead
+    const float OVERHEAD_MS = 0.5f;
+    const float TIME_PER_ITEM_MS = 0.1f;  // Adjust based on your model
+    
+    float expected_compute_time = OVERHEAD_MS + (batch_size * TIME_PER_ITEM_MS);
+    float utilization = std::min(milliseconds / expected_compute_time, 1.0f);
+    
+    return utilization;
+}
+```
 
-1. Start with the batch collection optimization as it addresses the most severe issue (low GPU utilization)
-2. Implement the thread pool and memory pool optimizations to reduce thread and memory contention
-3. Measure performance improvements after each change using:
-   - Nodes visited per second
-   - Average batch size
-   - CPU/GPU utilization
-   - Game strength against fixed opponents
+### 4. Performance Measurement and Reporting
 
-By following this incremental plan, you'll progressively unlock your MCTS implementation's potential, transforming it from an underperforming system to a high-efficiency search engine capable of fully utilizing your hardware.
+```cpp
+// Periodic performance reporting
+void BatchingSystem::reportPerformance() {
+    static auto last_report = std::chrono::steady_clock::now();
+    static size_t last_batches = 0;
+    static size_t last_inferences = 0;
+    
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_report).count();
+    
+    if (elapsed >= 10) {  // Report every 10 seconds
+        size_t total_batches = batch_counter_.load(std::memory_order_relaxed);
+        size_t total_inferences = inference_counter_.load(std::memory_order_relaxed);
+        
+        size_t new_batches = total_batches - last_batches;
+        size_t new_inferences = total_inferences - last_inferences;
+        
+        float avg_batch_size = new_batches > 0 ? static_cast<float>(new_inferences) / new_batches : 0.0f;
+        float inferences_per_sec = static_cast<float>(new_inferences) / elapsed;
+        
+        LOG_INFO("GPU Throughput: {} batches, {} evals, avg batch size {:.1f}, {:.1f} evals/sec", 
+                 new_batches, new_inferences, avg_batch_size, inferences_per_sec);
+        
+        // Update last values
+        last_report = now;
+        last_batches = total_batches;
+        last_inferences = total_inferences;
+    }
+}
+```
+
+## Expected Outcomes
+
+With this implementation, we should see:
+
+1. **Batch Size Increase**: Average batch sizes growing from 1-3 to 64-256
+2. **GPU Utilization**: Increasing from 20% to 80-95%
+3. **Overall Throughput**: 5-10x improvement in evaluations per second
+4. **Memory Efficiency**: Better memory usage with pooling and reuse
+5. **Latency Control**: Small impact on latency due to intelligent batch formation
+6. **Scalability**: Better scaling with more cores due to reduced contention
+
+The three-tier batching system allows for efficient batch collection without excessive synchronization, while the adaptive sizing ensures optimal GPU utilization across different hardware and model configurations.
+</gpu_throughput_scenario>

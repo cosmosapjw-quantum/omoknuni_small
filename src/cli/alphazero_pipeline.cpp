@@ -234,10 +234,18 @@ std::vector<selfplay::GameData> AlphaZeroPipeline::runSelfPlay(const std::string
         settings.mcts_settings.dirichlet_alpha = config_.mcts_dirichlet_alpha;
         settings.mcts_settings.dirichlet_epsilon = config_.mcts_dirichlet_epsilon;
         settings.mcts_settings.batch_size = config_.mcts_batch_size;
+        settings.mcts_settings.max_collection_batch_size = config_.mcts_max_collection_batch_size;
         settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
         
         settings.num_parallel_games = config_.self_play_num_parallel_games;
-        settings.num_mcts_engines = config_.self_play_num_mcts_engines;
+        
+        // Configure root parallelization instead of multiple engines
+        settings.mcts_settings.use_root_parallelization = true;
+        
+        // Calculate reasonable number of root workers based on threads and parallel games
+        int available_cores = std::thread::hardware_concurrency();
+        int cores_per_game = std::max(1, available_cores / config_.self_play_num_parallel_games);
+        settings.mcts_settings.num_root_workers = cores_per_game;
         settings.max_moves = config_.self_play_max_moves;
         settings.temperature_threshold = config_.self_play_temperature_threshold;
         settings.high_temperature = config_.self_play_high_temperature;
@@ -270,23 +278,23 @@ std::vector<selfplay::GameData> AlphaZeroPipeline::runSelfPlay(const std::string
 float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData>& games, const std::string& iteration_dir) {
     try {
         // Print CUDA memory info at start
-        if (torch::cuda::is_available()) {
+        if (torch::cuda::is_available() && config_.use_gpu) {
             std::cout << "Training start - CUDA memory info:" << std::endl;
             for (int dev = 0; dev < torch::cuda::device_count(); dev++) {
-                std::cout << "  Device " << dev << ": " 
-                          << "allocated=" << c10::cuda::CUDACachingAllocator::getDeviceStats(dev).allocated_bytes[static_cast<size_t>(0)].current << " bytes, "
-                          << "reserved=" << c10::cuda::CUDACachingAllocator::getDeviceStats(dev).reserved_bytes[static_cast<size_t>(0)].current << " bytes" << std::endl;
-                
-                try {
-                    size_t allocated_memory = c10::cuda::CUDACachingAllocator::getDeviceStats(dev).allocated_bytes[static_cast<size_t>(0)].current;
-                    size_t total_memory = at::cuda::getDeviceProperties(dev)->totalGlobalMem;
-                    //size_t estimated_free = total_memory - allocated_memory;
-                    
-                    //std::cout << "Total memory: " << total_memory / (1024 * 1024) << " MB" << std::endl;
-                    //std::cout << "Available memory: " << available_memory / (1024 * 1024) << " MB" << std::endl;
-                } catch (...) {
-                    std::cout << "  Error getting detailed memory stats" << std::endl;
+                size_t free_memory_bytes = 0;
+                size_t total_memory_bytes = 0;
+                cudaError_t cuda_status = cudaSetDevice(dev);
+                if (cuda_status != cudaSuccess) {
+                    std::cerr << "Error setting CUDA device " << dev << ": " << cudaGetErrorString(cuda_status) << std::endl;
+                    continue;
                 }
+                cuda_status = cudaMemGetInfo(&free_memory_bytes, &total_memory_bytes);
+                if (cuda_status != cudaSuccess) {
+                    std::cerr << "Error getting CUDA memory info for device " << dev << ": " << cudaGetErrorString(cuda_status) << std::endl;
+                    continue;
+                }
+
+                std::cout << "GPU " << dev << " Memory: Free = " << free_memory_bytes / (1024 * 1024) << " MB, Total = " << total_memory_bytes / (1024*1024) << " MB" << std::endl;
             }
         }
     
@@ -1149,6 +1157,10 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
             
             if (mcts["batch_size"]) {
                 config.mcts_batch_size = mcts["batch_size"].as<int>();
+            }
+            
+            if (mcts["max_collection_batch_size"]) {
+                config.mcts_max_collection_batch_size = mcts["max_collection_batch_size"].as<int>();
             }
             
             if (mcts["exploration_constant"]) {

@@ -23,7 +23,10 @@ protected:
         // Configure settings with minimal requirements for test
         selfplay::SelfPlaySettings settings;
         settings.num_parallel_games = 1;  // Use just 1 worker for test
-        settings.num_mcts_engines = 1;    // Use just 1 engine for test
+        
+        // Configure root parallelization instead of multiple engines
+        settings.mcts_settings.use_root_parallelization = true;
+        settings.mcts_settings.num_root_workers = 1;  // Single root worker for test
         settings.mcts_settings.num_simulations = 10; // Use few simulations for speed
         settings.mcts_settings.num_threads = 1;  // Use 1 thread
         settings.mcts_settings.batch_size = 1;   // Process one state at a time
@@ -113,7 +116,10 @@ TEST_F(SelfPlayManagerTest, GenerateGamesParallel) {
         // Set parallel games in settings
         selfplay::SelfPlaySettings settings = manager->getSettings();
         settings.num_parallel_games = 2;  // Use 2 parallel threads
-        settings.num_mcts_engines = 2;    // Use 2 engines
+        
+        // Configure root parallelization instead of multiple engines
+        settings.mcts_settings.use_root_parallelization = true;
+        settings.mcts_settings.num_root_workers = 2;  // Use 2 root workers for parallel testing
         settings.mcts_settings.num_simulations = 5; // Use very few simulations for speed
         settings.mcts_settings.num_threads = 1;     // Keep thread count minimal
         settings.mcts_settings.batch_size = 1;      // Single batch size
