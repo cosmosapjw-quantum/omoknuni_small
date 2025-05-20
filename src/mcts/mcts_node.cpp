@@ -69,21 +69,65 @@ MCTSNode::~MCTSNode() {
 }
 
 std::shared_ptr<MCTSNode> MCTSNode::selectChild(float exploration_factor, bool use_rave, float rave_constant) {
+    static int selection_counter = 0;
+    selection_counter++;
+    bool debug_trace = (selection_counter <= 50 || selection_counter % 100 == 0);
+    
     float best_score = -std::numeric_limits<float>::infinity();
     std::shared_ptr<MCTSNode> best_child = nullptr;
+    
+    if (debug_trace) {
+        std::cout << "MCTSNode::selectChild - Selecting from " << children_.size() << " children, counter=" << selection_counter << std::endl;
+    }
     
     float exploration_param = exploration_factor * 
         std::sqrt(static_cast<float>(visit_count_.load(std::memory_order_relaxed)));
     
     const size_t num_children = children_.size();
     
+    // Count nodes with pending evaluations
+    int pending_eval_count = 0;
+    if (debug_trace) {
+        for (const auto& child : children_) {
+            if (child && (child->isBeingEvaluated() || child->hasPendingEvaluation())) {
+                pending_eval_count++;
+            }
+        }
+        std::cout << "  Total children: " << num_children << ", pending_eval: " << pending_eval_count << std::endl;
+    }
+    
+    // CRITICAL FIX: If all children are pending evaluation and we're early in search,
+    // allow selection of a pending child to break potential deadlock
+    bool force_selection = false;
+    if (selection_counter < 200) {
+        for (const auto& child : children_) {
+            if (child && !(child->isBeingEvaluated() || child->hasPendingEvaluation())) {
+                // If at least one child is not being evaluated, we don't need to force
+                break;
+            }
+            force_selection = true;
+        }
+    }
+    
+    if (force_selection && debug_trace) {
+        std::cout << "⚠️ CRITICAL FIX: All children are pending evaluation, forcing selection to prevent deadlock" << std::endl;
+    }
+    
     // For many children, use OpenMP parallelization
     if (num_children > 32) {
         std::vector<float> scores(num_children);
+        std::vector<bool> skip_child(num_children, false);
         
         #pragma omp parallel for schedule(static)
         for (size_t i = 0; i < num_children; ++i) {
             auto& child = children_[i];
+            
+            // Skip children with pending evaluations UNLESS we need to force selection
+            if (!force_selection && (child->isBeingEvaluated() || child->hasPendingEvaluation())) {
+                skip_child[i] = true;
+                scores[i] = -std::numeric_limits<float>::infinity();
+                continue;
+            }
             
             // Get stats (thread-safe reads)
             int child_visits = child->visit_count_.load(std::memory_order_relaxed);
@@ -111,15 +155,32 @@ std::shared_ptr<MCTSNode> MCTSNode::selectChild(float exploration_factor, bool u
         
         // Find best child sequentially
         for (size_t i = 0; i < num_children; ++i) {
+            if (skip_child[i]) continue;
+            
             if (scores[i] > best_score) {
                 best_score = scores[i];
                 best_child = children_[i];
             }
         }
+        
+        // CRITICAL FIX: If no valid child found but force_selection is enabled, pick first child
+        if (!best_child && force_selection && !children_.empty()) {
+            std::cout << "🚨 FORCED SELECTION: All children are pending eval, choosing first available" << std::endl;
+            best_child = children_[0];
+            // Don't clear evaluation flag yet - allow the MCTS engine to handle this
+        }
     } else {
         // For few children, use sequential processing
         for (size_t i = 0; i < num_children; ++i) {
             auto& child = children_[i];
+            
+            // Skip children with pending evaluations UNLESS we need to force selection
+            if (!force_selection && (child->isBeingEvaluated() || child->hasPendingEvaluation())) {
+                if (debug_trace) {
+                    std::cout << "  Child " << i << " skipped (pending/being evaluated)" << std::endl;
+                }
+                continue;
+            }
             
             // Get stats (thread-safe reads)
             int child_visits = child->visit_count_.load(std::memory_order_relaxed);
@@ -144,11 +205,31 @@ std::shared_ptr<MCTSNode> MCTSNode::selectChild(float exploration_factor, bool u
             
             float score = exploitation + exploration;
             
+            if (debug_trace) {
+                std::cout << "  Child " << i << ": Q=" << exploitation 
+                         << ", visits=" << effective_visits 
+                         << ", UCB=" << score 
+                         << ", pending=" << (child->hasPendingEvaluation() ? "yes" : "no")
+                         << ", being_eval=" << (child->isBeingEvaluated() ? "yes" : "no")
+                         << std::endl;
+            }
+            
             if (score > best_score) {
                 best_score = score;
                 best_child = child;
             }
         }
+        
+        // CRITICAL FIX: If no valid child found but force_selection is enabled, pick first child
+        if (!best_child && force_selection && !children_.empty()) {
+            std::cout << "🚨 FORCED SELECTION: All children are pending eval, choosing first available" << std::endl;
+            best_child = children_[0];
+            // Don't clear evaluation flag yet - allow the MCTS engine to handle this
+        }
+    }
+    
+    if (debug_trace) {
+        std::cout << "  Selected child: " << (best_child ? "found" : "nullptr") << std::endl;
     }
     
     return best_child;

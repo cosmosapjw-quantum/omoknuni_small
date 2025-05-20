@@ -213,13 +213,40 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
         throw std::runtime_error("Failed to start evaluator");
     }
     
-    // Run the search
+    // CRITICAL FIX: Check for evaluator and batch accumulator
+    std::cout << "⚠️ CRITICAL DEBUG: MCTSEngine::search - Checking evaluator initialization status" << std::endl;
+    if (!evaluator_) {
+        std::cout << "❌ CRITICAL ERROR: MCTSEngine::search - Evaluator is null! Cannot proceed with search." << std::endl;
+        throw std::runtime_error("Evaluator is null - cannot search");
+    }
+    
+    // Check if batch accumulator exists and is running
+    BatchAccumulator* accumulator = evaluator_->getBatchAccumulator();
+    if (!accumulator) {
+        std::cout << "❌ CRITICAL ERROR: MCTSEngine::search - Batch accumulator is null!" << std::endl;
+    } else {
+        bool accumulator_running = accumulator->isRunning();
+        std::cout << "⚠️ CRITICAL DEBUG: MCTSEngine::search - Batch accumulator exists and is " 
+                 << (accumulator_running ? "running" : "NOT running") << std::endl;
+        
+        // Ensure accumulator is running
+        if (!accumulator_running) {
+            std::cout << "⚠️ CRITICAL FIX: MCTSEngine::search - Starting batch accumulator" << std::endl;
+            accumulator->start();
+        }
+    }
+    
+    // Run the search with enhanced error handling
     try {
+        std::cout << "⚠️ CRITICAL DEBUG: MCTSEngine::search - Starting runSearch with state " << &state << std::endl;
         runSearch(state);
+        std::cout << "✅ MCTSEngine::search - runSearch completed successfully" << std::endl;
     } catch (const std::exception& e) {
+        std::cout << "❌ CRITICAL ERROR: MCTSEngine::search - Exception during runSearch: " << e.what() << std::endl;
         safelyStopEvaluator();
         throw;
     } catch (...) {
+        std::cout << "❌ CRITICAL ERROR: MCTSEngine::search - Unknown exception during runSearch" << std::endl;
         safelyStopEvaluator();
         throw std::runtime_error("Unknown error during search");
     }

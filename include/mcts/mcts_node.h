@@ -97,6 +97,12 @@ public:
     void markEvaluationPending();
     void clearPendingEvaluation();
     
+    // CRITICAL FIX: Added method to clear both evaluation flags at once for stuck nodes
+    void clearAllEvaluationFlags() {
+        evaluation_in_progress_ = false;  // Directly clear the in-progress flag
+        clearPendingEvaluation();         // Use existing method for pending flag
+    }
+    
     // New methods required by mcts_taskflow_engine
     float getPrior() const { return prior_probability_; }
     void setPrior(float prior) { prior_probability_ = prior; }

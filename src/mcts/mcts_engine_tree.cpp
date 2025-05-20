@@ -76,9 +76,34 @@ std::shared_ptr<MCTSNode> MCTSEngine::traverseTreeForLeaf(std::shared_ptr<MCTSNo
     
     std::shared_ptr<MCTSNode> current = node;
     
+    // Add counters to track traversal progress and detect potential issues
+    static int traversal_count = 0;
+    traversal_count++;
+    int depth = 0;
+    
     while (current && !current->isLeaf() && !current->isTerminal()) {
+        depth++;
+        
+        // ENHANCED: Log traversal status in early iterations
+        bool debug_traversal = (traversal_count <= 50 || traversal_count % 100 == 0);
+        if (debug_traversal) {
+            std::cout << "TreeTraversal #" << traversal_count << " at depth " << depth 
+                     << ", visits=" << current->getVisitCount()
+                     << ", pending=" << (current->hasPendingEvaluation() ? "yes" : "no")
+                     << ", being_eval=" << (current->isBeingEvaluated() ? "yes" : "no")
+                     << std::endl;
+        }
+        
+        // CRITICAL FIX: Allow traversal through nodes with pending evaluation 
+        // during early iterations to break potential deadlocks
+        bool allow_pending_traversal = (traversal_count < 100) && (depth < 5);
+        
         // Check if current node has pending evaluation
-        if (current->hasPendingEvaluation()) {
+        if (current->hasPendingEvaluation() && !allow_pending_traversal) {
+            if (debug_traversal) {
+                std::cout << "TreeTraversal: Stopping at node with pending evaluation (depth=" << depth << ")" << std::endl;
+            }
+            
             // Remove virtual loss from path since we're not going deeper
             for (auto& node_in_path : path) {
                 node_in_path->removeVirtualLoss(settings_.virtual_loss);
@@ -93,6 +118,11 @@ std::shared_ptr<MCTSNode> MCTSEngine::traverseTreeForLeaf(std::shared_ptr<MCTSNo
             settings_.exploration_constant, settings_.use_rave, settings_.rave_constant);
         
         if (!selected_child) {
+            if (debug_traversal) {
+                std::cout << "TreeTraversal: No child selected at depth " << depth 
+                         << ", treating parent as leaf" << std::endl;
+            }
+            
             // If no child is selected, remove virtual loss from parent and return parent as leaf
             parent_for_selection->removeVirtualLoss(settings_.virtual_loss);
             break;  
@@ -116,47 +146,126 @@ std::shared_ptr<MCTSNode> MCTSEngine::traverseTreeForLeaf(std::shared_ptr<MCTSNo
 // Main tree traversal method with safety checks
 std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> 
 MCTSEngine::selectLeafNode(std::shared_ptr<MCTSNode> root) {
+    static int leaf_selection_counter = 0;
+    leaf_selection_counter++;
+    bool detailed_logging = (leaf_selection_counter <= 50 || leaf_selection_counter % 20 == 0);
+    
+    if (detailed_logging) {
+        std::cout << "🌲 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                 << "] Starting leaf selection with root " << (root ? root.get() : nullptr) << std::endl;
+    }
+    
     std::vector<std::shared_ptr<MCTSNode>> path;
     
     if (!root) {
-        std::cerr << "MCTSEngine::selectLeafNode - ERROR: Root node is null!" << std::endl;
+        std::cerr << "❌ MCTSEngine::selectLeafNode - ERROR: Root node is null!" << std::endl;
         return {nullptr, path};
+    }
+    
+    // Log root node state
+    if (detailed_logging) {
+        std::cout << "🔍 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                 << "] Root node state: isLeaf=" << (root->isLeaf() ? "yes" : "no")
+                 << ", isTerminal=" << (root->isTerminal() ? "yes" : "no")
+                 << ", hasPendingEvaluation=" << (root->hasPendingEvaluation() ? "yes" : "no")
+                 << ", isBeingEvaluated=" << (root->isBeingEvaluated() ? "yes" : "no")
+                 << ", visitCount=" << root->getVisitCount()
+                 << ", children=" << root->getChildren().size()
+                 << std::endl;
     }
     
     // Ensure root node is expanded before traversal
     if (root->isLeaf() && !root->isTerminal() && !root->hasPendingEvaluation() && !root->isBeingEvaluated()) {
-        std::cout << "MCTSEngine::selectLeafNode - Root node is an unexpanded leaf, expanding first" << std::endl;
-        expandNonTerminalLeaf(root);
+        std::cout << "🌱 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                 << "] Root node is an unexpanded leaf, expanding first" << std::endl;
+        
+        bool expansion_success = expandNonTerminalLeaf(root);
+        
+        if (detailed_logging) {
+            std::cout << "🌱 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                     << "] Root expansion " << (expansion_success ? "succeeded" : "failed")
+                     << ", children after expansion: " << root->getChildren().size() 
+                     << std::endl;
+        }
     }
     
     path.push_back(root);
     
     // If root is already a leaf, return it directly
     if (root->isLeaf() || root->isTerminal()) {
+        if (detailed_logging) {
+            std::cout << "🍃 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                     << "] Root itself is " << (root->isLeaf() ? "a leaf" : "terminal") 
+                     << ", returning directly" << std::endl;
+        }
         return {root, path};
     }
     
     // Traverse the tree to find a leaf node
+    if (detailed_logging) {
+        std::cout << "🔍 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                 << "] Traversing tree from root to find leaf node..." << std::endl;
+    }
+    
     auto leaf = traverseTreeForLeaf(root, path);
+    
+    // Log traversal result
+    if (detailed_logging) {
+        std::cout << "🔍 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                 << "] Tree traversal result: leaf=" << (leaf ? leaf.get() : nullptr)
+                 << ", path_length=" << path.size() << std::endl;
+        
+        if (leaf) {
+            std::cout << "  - Leaf state: isLeaf=" << (leaf->isLeaf() ? "yes" : "no")
+                     << ", isTerminal=" << (leaf->isTerminal() ? "yes" : "no")
+                     << ", hasPendingEvaluation=" << (leaf->hasPendingEvaluation() ? "yes" : "no")
+                     << ", isBeingEvaluated=" << (leaf->isBeingEvaluated() ? "yes" : "no")
+                     << ", visitCount=" << leaf->getVisitCount()
+                     << ", children=" << leaf->getChildren().size()
+                     << std::endl;
+        }
+    }
     
     // If leaf is null, it means we encountered a node with pending evaluation
     if (!leaf) {
+        if (detailed_logging) {
+            std::cout << "⚠️ MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                     << "] Encountered node with pending evaluation during traversal, returning nullptr" 
+                     << std::endl;
+        }
         return {nullptr, path};
     }
     
     // CRITICAL FIX: If we found a leaf that is NOT terminal, try expanding it
     if (leaf->isLeaf() && !leaf->isTerminal() && !leaf->hasPendingEvaluation() && !leaf->isBeingEvaluated()) {
-        std::cout << "MCTSEngine::selectLeafNode - Found unexpanded non-terminal leaf node, expanding" << std::endl;
+        if (detailed_logging) {
+            std::cout << "🌱 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                     << "] Found unexpanded non-terminal leaf node " << leaf.get() 
+                     << ", attempting to expand" << std::endl;
+        }
         
         // Try to expand the node
-        if (expandNonTerminalLeaf(leaf)) {
+        bool expansion_success = expandNonTerminalLeaf(leaf);
+        
+        if (detailed_logging) {
+            std::cout << "🌱 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                     << "] Leaf expansion " << (expansion_success ? "succeeded" : "failed")
+                     << ", children after expansion: " << leaf->getChildren().size() 
+                     << std::endl;
+        }
+        
+        if (expansion_success) {
             // For unexpanded non-terminal leaves, we have two options:
             // 1. Return the leaf for evaluation directly (original behavior)
             // 2. Select a child and continue down the tree (more exploration)
             
             // CRITICAL FIX: Evaluate the leaf node directly on first expansion
             // This ensures we get network evaluation results for this new part of the tree
-            std::cout << "MCTSEngine::selectLeafNode - Returning expanded leaf for direct evaluation" << std::endl;
+            if (detailed_logging) {
+                std::cout << "🏆 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                         << "] Returning expanded leaf " << leaf.get() 
+                         << " for direct evaluation" << std::endl;
+            }
             return {leaf, path};
             
             /* Original behavior - commented out
@@ -176,6 +285,75 @@ MCTSEngine::selectLeafNode(std::shared_ptr<MCTSNode> root) {
             }
             */
         }
+    }
+    
+    // CRITICAL FIX: More aggressive handling of stuck nodes and evaluation
+    static std::unordered_map<MCTSNode*, int> stuck_nodes_counter;
+    
+    // If we didn't find a leaf, that's a major issue
+    if (!leaf) {
+        std::cout << "⚠️ CRITICAL WARNING: MCTSEngine::selectLeafNode - No leaf found! This should not happen." << std::endl;
+        return {nullptr, path};
+    }
+    
+    // Print more info about the leaf
+    std::cout << "⚠️ CRITICAL INFO: MCTSEngine::selectLeafNode - Leaf details:"
+              << "\n  - Node address: " << leaf.get()
+              << "\n  - Is terminal: " << (leaf->isTerminal() ? "yes" : "no")
+              << "\n  - Is leaf: " << (leaf->isLeaf() ? "yes" : "no")
+              << "\n  - Has pending eval: " << (leaf->hasPendingEvaluation() ? "yes" : "no")
+              << "\n  - Is being evaluated: " << (leaf->isBeingEvaluated() ? "yes" : "no")
+              << "\n  - Visit count: " << leaf->getVisitCount()
+              << "\n  - Has children: " << (leaf->hasChildren() ? "yes" : "no")
+              << std::endl;
+    
+    // ULTRA CRITICAL FIX: Always clear evaluation flags to avoid stalling, then re-evaluate
+    // This is a workaround for nodes that might be stuck in evaluation state
+    if (leaf->hasPendingEvaluation() || leaf->isBeingEvaluated()) {
+        stuck_nodes_counter[leaf.get()]++;
+        
+        // If this node has been seen as stuck, clear its flags
+        // Lower the threshold from 10 to 3 for faster clearing
+        if (stuck_nodes_counter[leaf.get()] > 3) {
+            std::cout << "⚠️ CRITICAL FIX: MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                     << "] Leaf " << leaf.get() << " appears stuck in evaluation state for "
+                     << stuck_nodes_counter[leaf.get()] << " iterations. Aggressively clearing flags."
+                     << std::endl;
+            
+            // Force clear both flags
+            leaf->clearAllEvaluationFlags();
+            
+            // Reset counter
+            stuck_nodes_counter[leaf.get()] = 0;
+        }
+    } else {
+        // Reset counter for nodes that aren't stuck
+        stuck_nodes_counter[leaf.get()] = 0;
+    }
+    
+    // CRITICAL FIX: Always try to mark non-terminal nodes for evaluation, regardless of previous status
+    if (!leaf->isTerminal()) {
+        bool marked = safelyMarkNodeForEvaluation(leaf);
+        std::cout << "⚠️ CRITICAL FIX: MCTSEngine::selectLeafNode - [#" << leaf_selection_counter
+                 << "] Aggressively " << (marked ? "marked" : "tried to mark") << " leaf for evaluation." << std::endl;
+        
+        // If the node couldn't be marked, something might be wrong - clear flags and try again
+        if (!marked) {
+            std::cout << "⚠️ CRITICAL WARNING: MCTSEngine::selectLeafNode - Failed to mark node for evaluation." << std::endl;
+            leaf->clearAllEvaluationFlags();
+            
+            // Try again after clearing
+            marked = safelyMarkNodeForEvaluation(leaf);
+            std::cout << "⚠️ CRITICAL FIX: MCTSEngine::selectLeafNode - [#" << leaf_selection_counter
+                     << "] After clearing flags: " << (marked ? "successfully" : "still failed to") 
+                     << " mark leaf for evaluation." << std::endl;
+        }
+    }
+    
+    if (detailed_logging) {
+        std::cout << "🏆 MCTSEngine::selectLeafNode - [#" << leaf_selection_counter 
+                 << "] Returning leaf " << (leaf ? leaf.get() : nullptr)
+                 << " with path of length " << path.size() << std::endl;
     }
     
     return {leaf, path};

@@ -50,6 +50,9 @@ private:
     std::atomic<size_t> batch_timeouts_{0};
     std::atomic<size_t> optimal_batches_{0};
     
+    // Count of consecutive empty iterations for deadlock detection
+    std::atomic<int> consecutive_empty_iterations_{0};
+    
     // Timestamp when batch started accumulating
     std::chrono::steady_clock::time_point batch_start_time_;
     

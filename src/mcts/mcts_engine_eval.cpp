@@ -189,6 +189,7 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
         
         // Evaluate with the neural network
         if (settings_.num_threads == 0) { // SERIAL MODE
+            std::cout << "🔍 MCTSEngine::expandAndEvaluate - Using SERIAL MODE for evaluation" << std::endl;
             auto state_clone_serial = cloneGameState(leaf->getState());
             if (!state_clone_serial) {
                 throw std::runtime_error("Failed to clone state for evaluation");
@@ -206,7 +207,31 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                 return 0.0f;
             }
         } else { // PARALLEL MODE (queue for evaluation)
+            static std::atomic<int> eval_attempt_counter{0};
+            static std::atomic<int> eval_success_counter{0};
+            static std::atomic<int> eval_failure_counter{0};
+            
+            int attempt_id = eval_attempt_counter.fetch_add(1, std::memory_order_relaxed);
+            bool log_detail = (attempt_id < 10 || attempt_id % 20 == 0); // More frequent logging for early attempts
+            
+            if (log_detail) {
+                std::cout << "🔍 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                         << "] PARALLEL MODE using " << (use_shared_queues_ ? "shared" : "local") << " queues" 
+                         << ", success_rate: " << (attempt_id > 0 ? (eval_success_counter.load() * 100.0 / attempt_id) : 0.0) << "%" 
+                         << ", fail_rate: " << (attempt_id > 0 ? (eval_failure_counter.load() * 100.0 / attempt_id) : 0.0) << "%" 
+                         << std::endl;
+            }
+            
             bool can_evaluate = safelyMarkNodeForEvaluation(leaf);
+            
+            if (log_detail) {
+                std::cout << "🔍 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                         << "] Can evaluate node: " << (can_evaluate ? "YES" : "NO") 
+                         << ", leaf node addr: " << leaf.get()
+                         << ", isBeingEvalulated: " << (leaf->isBeingEvaluated() ? "yes" : "no")
+                         << ", hasPendingEvaluation: " << (leaf->hasPendingEvaluation() ? "yes" : "no")
+                         << std::endl;
+            }
             
             if (can_evaluate) {
                 auto state_clone_parallel = cloneGameState(leaf->getState());
@@ -226,46 +251,117 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                 
                 // Enqueue for evaluation, with retry if using shared queue
                 if (use_shared_queues_ && shared_leaf_queue_) {
-                    for (int attempt = 0; attempt < 3 && !queue_success; attempt++) {
-                        if (attempt > 0) {
-                            // Re-create pending for move if previous attempt failed
-                            pending.node = leaf;
-                            pending.path = path;
-                            pending.state = cloneGameState(leaf->getState());
-                            if (!pending.state) {
-                                leaf->clearEvaluationFlag();
-                                throw std::runtime_error("Re-clone failed for enqueue retry");
-                            }
-                            pending.batch_id = batch_counter_.load();
-                            pending.request_id = total_leaves_generated_.load();
+                    // CRITICAL DEBUGGING: Check the batch accumulator
+                    if (evaluator_) {
+                        auto* batch_acc = evaluator_->getBatchAccumulator();
+                        if (log_detail) {
+                            std::cout << "🧩 MCTSEngine::expandAndEvaluate - [#" << attempt_id
+                                     << "] Batch accumulator exists: " << (batch_acc ? "YES" : "NO")
+                                     << ", running: " << (batch_acc && batch_acc->isRunning() ? "YES" : "NO")
+                                     << std::endl;
                         }
                         
-                        queue_success = shared_leaf_queue_->enqueue(std::move(pending));
-                        
-                        if (!queue_success && attempt < 2) {
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        // CRITICAL FIX: Try using the batch accumulator directly if it exists
+                        if (batch_acc && batch_acc->isRunning()) {
+                            // Direct submission to batch accumulator
+                            if (log_detail) {
+                                std::cout << "🚀 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                         << "] Directly adding leaf to BatchAccumulator" << std::endl;
+                            }
+                            
+                            batch_acc->addEvaluation(std::move(pending));
+                            queue_success = true; // Assume success with direct addition
+                        }
+                    }
+                    
+                    // Fallback to shared queue if batch accumulator approach didn't work
+                    if (!queue_success) {
+                        for (int attempt = 0; attempt < 3 && !queue_success; attempt++) {
+                            if (log_detail) {
+                                std::cout << "📩 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                         << "] Attempt " << attempt << " to enqueue to shared queue" << std::endl;
+                            }
+                            
+                            if (attempt > 0) {
+                                // Re-create pending for move if previous attempt failed
+                                pending.node = leaf;
+                                pending.path = path;
+                                pending.state = cloneGameState(leaf->getState());
+                                if (!pending.state) {
+                                    leaf->clearEvaluationFlag();
+                                    throw std::runtime_error("Re-clone failed for enqueue retry");
+                                }
+                                pending.batch_id = batch_counter_.load();
+                                pending.request_id = total_leaves_generated_.load();
+                            }
+                            
+                            queue_success = shared_leaf_queue_->enqueue(std::move(pending));
+                            
+                            if (log_detail) {
+                                std::cout << "📩 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                         << "] Shared queue enqueue " << (queue_success ? "SUCCEEDED" : "FAILED") << std::endl;
+                            }
+                            
+                            if (!queue_success && attempt < 2) {
+                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                            }
                         }
                     }
                     
                     if (queue_success && external_queue_notify_fn_) {
+                        if (log_detail) {
+                            std::cout << "🔔 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                     << "] Calling external queue notify function" << std::endl;
+                        }
                         external_queue_notify_fn_();
                     }
                 } else {
+                    if (log_detail) {
+                        std::cout << "📩 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                 << "] Enqueueing to local leaf queue" << std::endl;
+                    }
+                    
                     queue_success = leaf_queue_.enqueue(std::move(pending));
                     
+                    if (log_detail) {
+                        std::cout << "📩 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                 << "] Local queue enqueue " << (queue_success ? "SUCCEEDED" : "FAILED") << std::endl;
+                    }
+                    
                     if (queue_success && evaluator_) {
+                        if (log_detail) {
+                            std::cout << "🔔 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                     << "] Notifying evaluator of leaf availability" << std::endl;
+                        }
                         evaluator_->notifyLeafAvailable();
                     }
                 }
                 
                 if (!queue_success) {
                     leaf->clearEvaluationFlag();
+                    eval_failure_counter.fetch_add(1, std::memory_order_relaxed);
+                    
+                    if (log_detail) {
+                        std::cout << "❌ MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                 << "] FAILED to enqueue leaf for evaluation, cleared flag" << std::endl;
+                    }
                 } else {
                     pending_evaluations_.fetch_add(1, std::memory_order_acq_rel);
                     leaf->applyVirtualLoss(settings_.virtual_loss);
+                    eval_success_counter.fetch_add(1, std::memory_order_relaxed);
+                    
+                    if (log_detail) {
+                        std::cout << "✅ MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                 << "] Successfully enqueued leaf for evaluation, applied virtual loss" << std::endl;
+                    }
                 }
             } else {
                 leaf->applyVirtualLoss(settings_.virtual_loss);
+                
+                if (log_detail) {
+                    std::cout << "⚠️ MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                             << "] Node cannot be evaluated (already being evaluated), applied virtual loss" << std::endl;
+                }
             }
             return 0.0f; 
         }

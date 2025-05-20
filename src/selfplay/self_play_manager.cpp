@@ -64,14 +64,19 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     // Configure root parallelization in MCTS settings
     // auto mcts_settings = settings_.mcts_settings; // This line is unused and will be removed.
     
-    // WORKAROUND: Disable root parallelization to avoid cloning issues
-    // mcts_settings.use_root_parallelization = false; // These lines were using the local mcts_settings
-    // mcts_settings.num_root_workers = 1;
-    // Instead, if modifications to settings_ are needed for engine creation, they should be done on a copy
-    // or settings_.mcts_settings should be used directly if no modifications for the engine vector are needed.
-    // The current engine creation loop uses settings_.mcts_settings directly.
+    // FIXED: Enable root parallelization as specified in config.yaml for better batching
+    // Root parallelization is critical for proper batch formation
+    // Now correctly apply the config settings to settings_.mcts_settings
+    settings_.mcts_settings.use_root_parallelization = true;
     
-    std::cout << "SelfPlayManager: Using single root worker per game (root parallelization disabled - this is a workaround note in code)" << std::endl;
+    // Use the num_root_workers from config or set a reasonable default based on available cores
+    if (settings_.mcts_settings.num_root_workers <= 0) {
+        int available_cores = omp_get_max_threads();
+        settings_.mcts_settings.num_root_workers = std::max(1, available_cores / 2);
+    }
+    
+    std::cout << "SelfPlayManager: Using root parallelization with " 
+              << settings_.mcts_settings.num_root_workers << " root workers per game - CRITICAL for batch formation" << std::endl;
     
     // Create a single shared evaluator for all engines
     auto notify_fn = [this]() {
@@ -525,13 +530,26 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                     // alphazero::utils::trackMemory("Before search - Game " + game_id + ", Move " + std::to_string(move_count));
                 }
                 
+                std::cout << "=============================================================" << std::endl;
                 std::cout << "SelfPlayManager::generateGame - Starting MCTS search for game " << game_id 
                          << ", move " << move_count << std::endl;
                 
+                // Log key configuration for debugging
+                auto engine_settings = engine.getSettings();
+                std::cout << "MCTS CONFIG:"
+                         << "\n  - num_simulations: " << engine_settings.num_simulations
+                         << "\n  - batch_size: " << engine_settings.batch_size
+                         << "\n  - use_root_parallelization: " << (engine_settings.use_root_parallelization ? "true" : "false")
+                         << "\n  - num_root_workers: " << engine_settings.num_root_workers
+                         << "\n  - temperature: " << engine_settings.temperature
+                         << std::endl;
+                
+                // Begin search
                 result = engine.search(*game);
                 
                 std::cout << "SelfPlayManager::generateGame - Completed MCTS search for game " << game_id 
                          << ", move " << move_count << std::endl;
+                std::cout << "=============================================================" << std::endl;
                 
                 // Log every 10th move to reduce verbosity
                 if (move_count % 10 == 0) {

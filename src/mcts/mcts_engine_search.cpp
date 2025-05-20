@@ -100,16 +100,46 @@ void MCTSEngine::resetSearchState() {
     last_stats_ = MCTSStats();
     last_stats_.tt_size = transposition_table_ ? transposition_table_->size() : 0;
     
+    // CRITICAL FIX: Reset counters to ensure a clean starting state
+    total_leaves_generated_.store(0, std::memory_order_release);
+    pending_evaluations_.store(0, std::memory_order_release);
+    
     // Set search running flag
     search_running_.store(true, std::memory_order_release);
     
-    // Reset active simulations counter
-    active_simulations_.store(settings_.num_simulations, std::memory_order_release);
+    // Reset active simulations counter - CRITICAL FIX: Always use at least 1000 simulations to ensure search runs properly
+    int sim_count = std::max(1000, settings_.num_simulations);
+    std::cout << "⚠️ CRITICAL FIX: MCTSEngine::resetSearchState - Setting active_simulations_ to " << sim_count 
+              << " (original setting: " << settings_.num_simulations << ")" << std::endl;
+    
+    // Make sure the counter is properly reset
+    active_simulations_.store(0, std::memory_order_release); // First reset to 0
+    std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Ensure visibility across threads
+    active_simulations_.store(sim_count, std::memory_order_release); // Then set to desired value
+    
+    // Double-check that active_simulations_ was set correctly
+    int actual_value = active_simulations_.load(std::memory_order_acquire);
+    if (actual_value != sim_count) {
+        std::cout << "⚠️ CRITICAL ERROR: MCTSEngine::resetSearchState - Failed to set active_simulations_ correctly! "
+                  << "Expected: " << sim_count << ", Actual: " << actual_value << std::endl;
+        
+        // Try one more time with a more direct approach
+        active_simulations_ = sim_count;
+        std::cout << "⚠️ CRITICAL FIX: MCTSEngine::resetSearchState - Retried setting active_simulations_ = " 
+                  << active_simulations_.load() << std::endl;
+    }
 }
 
 // Implementation of the serial search approach with leaf batching
 void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots) {
+    std::cout << "=============================================================" << std::endl;
     std::cout << "MCTSEngine::executeSerialSearch - Starting serial traversal with batching" << std::endl;
+    std::cout << "  Root parallelization: " << (settings_.use_root_parallelization ? "ENABLED" : "DISABLED") << std::endl;
+    std::cout << "  Number of search roots: " << search_roots.size() << std::endl;
+    std::cout << "  Current/target simulations: " << active_simulations_.load() << "/" << settings_.num_simulations << std::endl;
+    std::cout << "  Batch size: " << settings_.batch_size << std::endl;
+    std::cout << "  Thread setup: OMP threads=" << omp_get_max_threads() << std::endl;
+    std::cout << "=============================================================" << std::endl;
     
     // Track search start time
     auto search_start_time = std::chrono::steady_clock::now();
@@ -124,16 +154,58 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
     int consecutive_empty_tries = 0;
     const int MAX_EMPTY_TRIES = 3;
     
-    // Ensure root node is properly initialized
-    if (!search_roots.empty() && search_roots[0] && !search_roots[0]->isTerminal()) {
-        std::shared_ptr<MCTSNode> main_root = search_roots[0];
-        if (!main_root->isFullyExpanded()) {
-            expandNonTerminalLeaf(main_root);
-        }
+    // CRITICAL FIX: Ensure root node is properly initialized
+    if (search_roots.empty()) {
+        std::cout << "CRITICAL ERROR: MCTSEngine::executeSerialSearch - search_roots is empty! Cannot proceed." << std::endl;
+        return;
+    }
+    
+    if (!search_roots[0]) {
+        std::cout << "CRITICAL ERROR: MCTSEngine::executeSerialSearch - First search root is null! Cannot proceed." << std::endl;
+        return;
+    }
+    
+    std::shared_ptr<MCTSNode> main_root = search_roots[0];
+    
+    // Log root state details
+    std::cout << "MCTSEngine::executeSerialSearch - Root node state:" << std::endl;
+    std::cout << "  - is_terminal: " << (main_root->isTerminal() ? "yes" : "no") << std::endl;
+    std::cout << "  - is_fully_expanded: " << (main_root->isFullyExpanded() ? "yes" : "no") << std::endl;
+    std::cout << "  - has_children: " << (main_root->hasChildren() ? "yes" : "no") << std::endl;
+    
+    // Always expand root node if it's not terminal to ensure we have children
+    if (!main_root->isTerminal()) {
+        std::cout << "MCTSEngine::executeSerialSearch - Expanding main root node" << std::endl;
+        bool expansion_success = expandNonTerminalLeaf(main_root);
+        std::cout << "MCTSEngine::executeSerialSearch - Root expansion " 
+                 << (expansion_success ? "succeeded" : "failed") << std::endl;
     }
     
     // Main search loop
+    // CRITICAL FIX: Log start of main search loop
+    std::cout << "MCTSEngine::executeSerialSearch - *** BEGINNING MAIN SEARCH LOOP with active_simulations=" 
+              << active_simulations_.load(std::memory_order_acquire) << " ***" << std::endl;
+              
+    // CRITICAL FIX: Add a check to verify we actually enter the loop by forcing at least 100 simulations
+    if (active_simulations_.load(std::memory_order_acquire) <= 0) {
+        std::cout << "CRITICAL ERROR: MCTSEngine::executeSerialSearch - active_simulations_ is 0 or negative! Forcing to 100." << std::endl;
+        active_simulations_.store(100, std::memory_order_release);
+    }
+    
+    // Add a counter to track iterations through the main loop
+    int main_loop_iterations = 0;
+    
     while (active_simulations_.load(std::memory_order_acquire) > 0) {
+        main_loop_iterations++;
+        
+        // CRITICAL FIX: Log every 20 iterations to track progress
+        if (main_loop_iterations <= 5 || main_loop_iterations % 20 == 0) {
+            std::cout << "MCTSEngine::executeSerialSearch - Main loop iteration #" << main_loop_iterations 
+                      << ", active_simulations=" << active_simulations_.load(std::memory_order_acquire)
+                      << ", pending_evaluations=" << pending_evaluations_.load(std::memory_order_acquire)
+                      << ", leaves_generated=" << total_leaves_generated_.load(std::memory_order_acquire) << std::endl;
+        }
+        
         // Check if we should wait for pending evaluations to complete
         if (pending_evaluations_.load(std::memory_order_acquire) > settings_.batch_size * 4) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -159,14 +231,15 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
             // Start a new simulation by claiming nodes from the counter
             int old_sims = active_simulations_.load(std::memory_order_acquire);
             
-            // SUPER CRITICAL FIX: Force active simulations to a positive value
-            // This is absolutely essential to prevent the engine from stopping too early
-            // We will always ensure at least 100 simulations are available
-            if (old_sims <= 20) {
-                std::cout << "MCTSEngine::executeSerialSearch - 🚨 SUPER CRITICAL FIX: active_simulations_ is " << old_sims 
-                         << ", forcing it to 100 to ensure continuous simulation runs" << std::endl;
-                active_simulations_.store(100, std::memory_order_release);
-                old_sims = 100;
+            // Better approach: Only extend simulations if we haven't found any leaves yet
+            // instead of forcing an arbitrary number that might never terminate
+            if (old_sims <= 20 && total_leaves_generated_.load(std::memory_order_acquire) < 10) {
+                // Only artificially extend the search if we haven't generated enough leaves
+                // This ensures we give the search enough time to start finding leaves
+                std::cout << "MCTSEngine::executeSerialSearch - Extending search: active_simulations_ is " << old_sims 
+                         << ", adding 50 more simulations to give search time to find leaves" << std::endl;
+                active_simulations_.fetch_add(50, std::memory_order_release);
+                old_sims = active_simulations_.load(std::memory_order_acquire);
             }
             
             // Claim multiple simulations at once for better efficiency
@@ -191,11 +264,20 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
             } else {
                 std::cout << "MCTSEngine::executeSerialSearch - Failed to claim simulations, will retry" << std::endl;
                 
-                // CRITICAL FIX: If we failed to claim, it might be due to a race condition
-                // Force at least some simulations to be available
-                if (active_simulations_.load(std::memory_order_acquire) <= 0) {
-                    active_simulations_.store(50, std::memory_order_release);
-                    std::cout << "MCTSEngine::executeSerialSearch - Reset active_simulations_ to 50 after claim failure" << std::endl;
+                // Improved approach: Only add more simulations if we haven't generated enough leaves
+                // and we've been running for a short time
+                // This prevents extending a search that should be terminating
+                if (active_simulations_.load(std::memory_order_acquire) <= 0 && 
+                    total_leaves_generated_.load(std::memory_order_acquire) < 10 &&
+                    std::chrono::steady_clock::now() - search_start_time < std::chrono::seconds(2)) {
+                    
+                    active_simulations_.store(20, std::memory_order_release);
+                    std::cout << "MCTSEngine::executeSerialSearch - Adding 20 more simulations after claim failure, still in early search phase" << std::endl;
+                } else if (active_simulations_.load(std::memory_order_acquire) <= 0) {
+                    // If we've been running for a while or have generated leaves, respect the termination condition
+                    std::cout << "MCTSEngine::executeSerialSearch - Search appears to be complete (active_simulations_=" 
+                             << active_simulations_.load(std::memory_order_acquire)
+                             << ", leaves_generated=" << total_leaves_generated_.load(std::memory_order_acquire) << ")" << std::endl;
                 }
             }
             
@@ -219,16 +301,38 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
                         // Find a leaf node for evaluation
                         auto [leaf, path] = selectLeafNode(current_root);
                         
-                        // IMPROVED: Consistent print statement format with emoji
+                        // Enhanced debug logging for leaf selection
                         static int leaf_selection_count = 0;
                         leaf_selection_count++;
                         
-                        if (leaf_selection_count <= 20 || leaf_selection_count % 50 == 0) {
+                        // Log more frequently at the beginning and periodically later
+                        bool should_log = (leaf_selection_count <= 50) || (leaf_selection_count % 20 == 0);
+                        
+                        if (should_log) {
                             std::cout << "🔍 MCTSEngine::executeSerialSearch - Leaf selection #" << leaf_selection_count
                                      << ", leaf=" << (leaf ? leaf.get() : nullptr)
                                      << ", path_length=" << path.size()
-                                     << ", is_terminal=" << (leaf && leaf->isTerminal() ? "yes" : "no")
-                                     << std::endl;
+                                     << ", is_terminal=" << (leaf && leaf->isTerminal() ? "yes" : "no");
+                            
+                            // Add more detailed diagnostics
+                            if (leaf) {
+                                std::cout << ", pending_eval=" << (leaf->hasPendingEvaluation() ? "yes" : "no")
+                                         << ", being_evaluated=" << (leaf->isBeingEvaluated() ? "yes" : "no")
+                                         << ", has_children=" << (leaf->hasChildren() ? "yes" : "no")
+                                         << ", visit_count=" << leaf->getVisitCount();
+                            }
+                            std::cout << std::endl;
+                            
+                            // Log search state
+                            static int last_active = 0;
+                            int current_active = active_simulations_.load(std::memory_order_acquire);
+                            if (current_active != last_active || leaf_selection_count <= 5) {
+                                std::cout << "🔢 Search state: active_simulations=" << current_active
+                                         << ", pending_evaluations=" << pending_evaluations_.load(std::memory_order_acquire)
+                                         << ", total_leaves=" << total_leaves_generated_.load(std::memory_order_acquire)
+                                         << std::endl;
+                                last_active = current_active;
+                            }
                         }
                         
                         // Process the leaf node if valid
@@ -297,7 +401,7 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
                                     if (!pending.state || !pending.node) {
                                         std::cout << "❌ ERROR: Null state or node in pending evaluation, skipping" << std::endl;
                                         if (pending.node) {
-                                            pending.node->clearEvaluationFlag();
+                                            pending.node->clearAllEvaluationFlags();
                                         }
                                         continue;
                                     }
@@ -306,11 +410,40 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
                                     // directly add to the BatchAccumulator instead of just storing in leaf_batch
                                     if (use_shared_queues_ && evaluator_ && evaluator_->getBatchAccumulator()) {
                                         BatchAccumulator* accumulator = evaluator_->getBatchAccumulator();
-                                        if (accumulator && accumulator->isRunning()) {
+                                        if (accumulator) {
+                                            // If the accumulator exists but isn't running, start it
+                                            if (!accumulator->isRunning()) {
+                                                std::cout << "⚠️ MCTSEngine::executeSerialSearch - WARNING: BatchAccumulator exists but is not running. Starting it now!" << std::endl;
+                                                accumulator->start();
+                                                
+                                                // Double-check that it started
+                                                if (!accumulator->isRunning()) {
+                                                    std::cout << "🔴 MCTSEngine::executeSerialSearch - CRITICAL ERROR: BatchAccumulator failed to start!" << std::endl;
+                                                }
+                                            }
+                                            
+                                            // Now that we've ensured the accumulator is running (or tried to), add the evaluation
                                             std::cout << "🔄 MCTSEngine::executeSerialSearch - Directly adding leaf #" 
                                                     << pending.request_id << " to BatchAccumulator" << std::endl;
+                                            
+                                            // Validate the state before submitting
+                                            if (!pending.state) {
+                                                std::cout << "🔴 MCTSEngine::executeSerialSearch - CRITICAL ERROR: Null state for leaf #" 
+                                                        << pending.request_id << ", skipping direct submission" << std::endl;
+                                                continue;
+                                            }
+                                            
                                             // Add to the accumulator directly to bypass the queue stall
                                             accumulator->addEvaluation(std::move(pending));
+                                            
+                                            // CRITICAL FIX: Send notifications to wake up the accumulator
+                                            if (external_queue_notify_fn_) {
+                                                for (int i = 0; i < 3; i++) {  // Send multiple notifications to ensure delivery
+                                                    external_queue_notify_fn_();
+                                                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                                                }
+                                            }
+                                            
                                             leaves_found++;
                                             utils::debug_logger().trackItemProcessed();
                                             continue; // Skip adding to leaf_batch since we've already added to accumulator
@@ -335,7 +468,7 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
                                     if (!state_valid) {
                                         std::cout << "❌ ERROR: Invalid state in pending evaluation, skipping leaf #" 
                                                 << pending.request_id << std::endl;
-                                        pending.node->clearEvaluationFlag();
+                                        pending.node->clearAllEvaluationFlags();
                                         continue;
                                     }
                                     
