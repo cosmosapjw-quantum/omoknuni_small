@@ -417,4 +417,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_taskflow_engine.cpp.o: \
  /usr/include/c++/13/shared_mutex \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
- /home/cosmos/omoknuni_small/include/nn/neural_network.h
+ /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
+ /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h

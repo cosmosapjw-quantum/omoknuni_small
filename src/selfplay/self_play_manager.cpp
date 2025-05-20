@@ -76,6 +76,12 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     // Create a single shared evaluator for all engines
     auto notify_fn = [this]() {
         // Wake up the shared evaluator when there's work to do
+        static std::atomic<long long> notify_count_selfplay_manager(0);
+        long long current_notify_count = notify_count_selfplay_manager.fetch_add(1, std::memory_order_relaxed);
+        if (current_notify_count < 20 || current_notify_count % 100 == 0) { // Log frequently at start, then less often
+            std::cout << "SELFPLAY_MANAGER (notify_fn): Called (count: " << current_notify_count 
+                      << "). Notifying shared_evaluator_@" << static_cast<void*>(shared_evaluator_.get()) << std::endl;
+        }
         if (shared_evaluator_) {
             shared_evaluator_->notifyLeafAvailable();
         }
@@ -92,8 +98,44 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     );
     
     // Configure the shared evaluator to use the shared queues
+    // CRITICAL FIX: Implement the correct queue setup for the shared evaluator
+    std::cout << "SelfPlayManager: Setting up shared queues for evaluator at addresses leaf_queue=" 
+              << (void*)&shared_leaf_queue_ << ", result_queue=" << (void*)&shared_result_queue_ << std::endl;
+    
+    // Configure batch parameters first before setting external queues
+    // CRITICAL FIX: Override with more aggressive batch parameters to prevent stalling
+    mcts::BatchParameters batch_params;
+    // Use smaller batch sizes for more responsive processing
+    batch_params.optimal_batch_size = 64;  // Reduced from default (often 256)
+    batch_params.minimum_viable_batch_size = 1;  // Process even single items
+    batch_params.minimum_fallback_batch_size = 1;  // Ensure we always process what we have
+    batch_params.max_wait_time = std::chrono::milliseconds(1);  // Extremely short wait time
+    batch_params.additional_wait_time = std::chrono::milliseconds(1);  // No additional waiting
+    
+    // Set batch parameters first
+    shared_evaluator_->setBatchParameters(batch_params);
+    
+    // Then set external queues
     shared_evaluator_->setExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
+    
+    // Verify that batch accumulator is created
+    if (auto* batch_accumulator = shared_evaluator_->getBatchAccumulator()) {
+        std::cout << "SelfPlayManager: Batch accumulator exists, isRunning=" 
+                  << (batch_accumulator->isRunning() ? "yes" : "no") << std::endl;
+        
+        // Ensure the accumulator is started
+        if (!batch_accumulator->isRunning()) {
+            std::cout << "SelfPlayManager: Starting batch accumulator..." << std::endl;
+            batch_accumulator->start();
+        }
+    } else {
+        std::cout << "SelfPlayManager: WARNING: Batch accumulator is null!" << std::endl;
+    }
+    
+    // Start the shared evaluator
     shared_evaluator_->start();
+    
+    std::cout << "SelfPlayManager: Shared evaluator configured and started" << std::endl;
     
     // Create a single MCTS engine with root parallelization
     // try {
@@ -122,7 +164,33 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         try {
             auto engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
             if (engine) {
+                // Set up batch parameters first
+                // CRITICAL FIX: Use the same aggressive batch parameters for each engine
+                mcts::BatchParameters batch_params;
+                // Use smaller batch sizes for more responsive processing
+                batch_params.optimal_batch_size = 64;  // Reduced from default (often 256)
+                batch_params.minimum_viable_batch_size = 1;  // Process even single items
+                batch_params.minimum_fallback_batch_size = 1;  // Ensure we always process what we have
+                batch_params.max_wait_time = std::chrono::milliseconds(1);  // Extremely short wait time
+                batch_params.additional_wait_time = std::chrono::milliseconds(1);  // No additional waiting
+                batch_params.max_collection_batch_size = 32;  // Reasonable collection size
+                
+                // Configure the evaluator with batch parameters
+                if (auto* evaluator = engine->getEvaluator()) {
+                    evaluator->setBatchParameters(batch_params);
+                } else {
+                    std::cerr << "Engine " << i << " has null evaluator" << std::endl;
+                }
+                
+                // Set up shared external queues
                 engine->setSharedExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
+                
+                std::cout << "Engine " << i << " configured with batch params: optimal=" 
+                          << batch_params.optimal_batch_size 
+                          << ", min_viable=" << batch_params.minimum_viable_batch_size
+                          << ", min_fallback=" << batch_params.minimum_fallback_batch_size
+                          << ", max_wait=" << batch_params.max_wait_time.count() << "ms" 
+                          << std::endl;
                 engines_.push_back(std::move(engine));
             } else {
                 throw std::runtime_error("Engine creation failed - null engine in loop");
@@ -457,7 +525,13 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                     // alphazero::utils::trackMemory("Before search - Game " + game_id + ", Move " + std::to_string(move_count));
                 }
                 
+                std::cout << "SelfPlayManager::generateGame - Starting MCTS search for game " << game_id 
+                         << ", move " << move_count << std::endl;
+                
                 result = engine.search(*game);
+                
+                std::cout << "SelfPlayManager::generateGame - Completed MCTS search for game " << game_id 
+                         << ", move " << move_count << std::endl;
                 
                 // Log every 10th move to reduce verbosity
                 if (move_count % 10 == 0) {

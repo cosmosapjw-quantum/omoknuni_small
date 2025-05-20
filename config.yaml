@@ -18,21 +18,28 @@ self_play_low_temperature: 0.1  # Temperature for later moves (exploitation)
 
 # GPU-optimized MCTS settings  
 mcts_simulations: 400 
-mcts_num_threads: 12  
-mcts_batch_size: 64
-mcts_max_collection_batch_size: 16  # Controls maximum batch size per collection (balance responsiveness vs efficiency)
-mcts_batch_timeout_ms: 20
+mcts_num_threads: 12
+
+# Batch handling parameters - OPTIMIZED FOR BATCHING
+mcts_batch_size: 64  # The optimal target batch size
+mcts_min_viable_batch_size: 32  # Minimum batch size threshold for waiting (50% of optimal)
+mcts_min_fallback_batch_size: 16  # Absolute minimum batch size after timeout (25% of optimal)
+mcts_max_collection_batch_size: 64  # Set equal to batch_size for maximum collection
+mcts_batch_timeout_ms: 100  # Longer timeout for better batch formation (100ms is a good balance)
+mcts_additional_wait_ms: 25  # Slightly increased for better batch completion
+
+# Other MCTS parameters
 mcts_max_concurrent_simulations: 512
 mcts_exploration_constant: 1.4
-mcts_virtual_loss: 1
+mcts_virtual_loss: 3  # Increased to better prevent thread collisions
 mcts_add_dirichlet_noise: true
 mcts_dirichlet_alpha: 0.3
 mcts_dirichlet_epsilon: 0.25
 mcts_temperature: 1.0  # Base temperature for move selection
 
 # Root parallelization settings (replaces multiple MCTS engines)
-mcts_use_root_parallelization: false
-mcts_num_root_workers: 1  # Disabled to avoid cloning issues
+mcts_use_root_parallelization: true  # Enabled for better parallelism - CRITICAL for batch formation
+mcts_num_root_workers: 4  # Set to match number of parallel games
 
 # Progressive widening (helps with batching)
 mcts_use_progressive_widening: true

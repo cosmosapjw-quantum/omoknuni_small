@@ -280,6 +280,10 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: \
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
  /usr/include/c++/13/climits \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
+ /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
+ /home/cosmos/omoknuni_small/include/mcts/adaptive_backoff.h \
  /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
  /usr/include/c++/13/fstream /usr/include/c++/13/bits/codecvt.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
@@ -295,6 +299,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o: \
  /usr/include/c++/13/bits/stl_tree.h /usr/include/c++/13/bits/stl_map.h \
  /usr/include/c++/13/bits/stl_multimap.h \
  /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
+ /home/cosmos/omoknuni_small/include/utils/debug_logger.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h \

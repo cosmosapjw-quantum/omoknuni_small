@@ -1,0 +1,308 @@
+#include "mcts/mcts_engine.h"
+#include "mcts/mcts_node.h"
+#include "mcts/mcts_evaluator.h"
+#include "utils/debug_monitor.h"
+#include <iostream>
+#include <random>
+#include <numeric>
+
+namespace alphazero {
+namespace mcts {
+
+// Add Dirichlet noise to root node policy for exploration
+void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
+    if (!root) {
+        return;
+    }
+    
+    // Expand root node if it's not already expanded
+    if (root->isLeaf() && !root->isTerminal()) {
+        root->expand(settings_.use_progressive_widening,
+                   settings_.progressive_widening_c,
+                   settings_.progressive_widening_k);
+        
+        if (root->getChildren().empty()) {
+            return;  // No children to add noise to
+        }
+        
+        // Get prior probabilities for the root node
+        try {
+            auto state_clone = cloneGameState(root->getState());
+            if (settings_.num_threads == 0) {
+                std::vector<std::unique_ptr<core::IGameState>> states;
+                states.push_back(std::unique_ptr<core::IGameState>(state_clone->clone().release()));
+                auto outputs = evaluator_->getInferenceFunction()(states);
+                if (!outputs.empty()) {
+                    root->setPriorProbabilities(outputs[0].policy);
+                } else {
+                    int action_space_size = root->getState().getActionSpaceSize();
+                    root->setPriorProbabilities(createDefaultPolicy(action_space_size));
+                }
+            } else {
+                // Convert shared_ptr to unique_ptr for evaluator
+                auto unique_clone = std::unique_ptr<core::IGameState>(state_clone->clone().release());
+                auto future = evaluator_->evaluateState(root, std::move(unique_clone));
+                auto status = future.wait_for(std::chrono::seconds(2));
+                if (status == std::future_status::ready) {
+                    auto result = future.get();
+                    root->setPriorProbabilities(result.policy);
+                } else {
+                    // Timed out, use uniform policy
+                    int action_space_size = root->getState().getActionSpaceSize();
+                    root->setPriorProbabilities(createDefaultPolicy(action_space_size));
+                }
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "ERROR: Exception getting prior probabilities for root: " << e.what() << std::endl;
+            
+            // On error, use uniform policy
+            int action_space_size = root->getState().getActionSpaceSize();
+            root->setPriorProbabilities(createDefaultPolicy(action_space_size));
+        }
+    }
+    
+    if (root->getChildren().empty()) {
+        return;  // No children to add noise to
+    }
+    
+    // Generate Dirichlet noise
+    std::gamma_distribution<float> gamma(settings_.dirichlet_alpha, 1.0f);
+    std::vector<float> noise;
+    noise.reserve(root->getChildren().size());
+    
+    for (size_t i = 0; i < root->getChildren().size(); ++i) {
+        noise.push_back(gamma(random_engine_));
+    }
+    
+    // Normalize noise
+    float sum = std::accumulate(noise.begin(), noise.end(), 0.0f);
+    if (sum > 0.0f) {
+        for (auto& n : noise) {
+            n /= sum;
+        }
+    } else {
+        // If sum is zero, use uniform noise
+        float uniform_noise = 1.0f / noise.size();
+        std::fill(noise.begin(), noise.end(), uniform_noise);
+    }
+    
+    // Apply noise to children's prior probabilities
+    for (size_t i = 0; i < root->getChildren().size(); ++i) {
+        std::shared_ptr<MCTSNode> child = root->getChildren()[i];
+        float prior = child->getPriorProbability();
+        float noisy_prior = (1.0f - settings_.dirichlet_epsilon) * prior + 
+                          settings_.dirichlet_epsilon * noise[i];
+        child->setPriorProbability(noisy_prior);
+    }
+}
+
+// Process results from pending evaluations
+void MCTSEngine::processEvaluationResults() {
+    // This method handles evaluation results when using shared queues
+    if (!use_shared_queues_ || !shared_result_queue_) {
+        return;
+    }
+    
+    std::pair<NetworkOutput, PendingEvaluation> result;
+    int processed = 0;
+    
+    // Process all available results
+    while (shared_result_queue_->try_dequeue(result)) {
+        auto& output = result.first;
+        auto& eval = result.second;
+        
+        if (eval.node) {
+            try {
+                eval.node->setPriorProbabilities(output.policy);
+                backPropagate(eval.path, output.value);
+                eval.node->clearEvaluationFlag();
+                processed++;
+            } catch (const std::exception& e) {
+                std::cerr << "ERROR processing evaluation result: " << e.what() << std::endl;
+                // Try to clean up even if processing fails
+                try { eval.node->clearEvaluationFlag(); } catch (...) {}
+            } catch (...) {
+                std::cerr << "ERROR: Unknown exception processing evaluation result" << std::endl;
+                // Try to clean up even if processing fails
+                try { eval.node->clearEvaluationFlag(); } catch (...) {}
+            }
+        }
+        
+        pending_evaluations_.fetch_sub(1, std::memory_order_acq_rel);
+    }
+    
+    if (processed > 0) {
+        std::cout << "MCTSEngine::processEvaluationResults - Processed " << processed << " results" << std::endl;
+    }
+}
+
+// Expand and evaluate a node
+float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::vector<std::shared_ptr<MCTSNode>>& path) {
+    if (!leaf) {
+        std::cerr << "MCTSEngine::expandAndEvaluate - Called with NULL leaf!" << std::endl;
+        return 0.0f;
+    }
+
+    // Get diagnostic information about the leaf state
+    uint64_t leaf_state_hash = 0;
+    try {
+        leaf_state_hash = leaf->getState().getHash();
+    } catch (...) {
+        std::cerr << "MCTSEngine::expandAndEvaluate - Could not get hash for logging" << std::endl;
+    }
+
+    // Handle terminal states
+    if (leaf->isTerminal()) {
+        try {
+            auto result = leaf->getState().getGameResult();
+            float value = 0.0f;
+            if (result == core::GameResult::WIN_PLAYER1) {
+                value = leaf->getState().getCurrentPlayer() == 1 ? 1.0f : -1.0f;
+            } else if (result == core::GameResult::WIN_PLAYER2) {
+                value = leaf->getState().getCurrentPlayer() == 2 ? 1.0f : -1.0f;
+            }
+            return value;
+        } catch (const std::exception& e) {
+            std::cerr << "Error evaluating terminal state: " << e.what() << std::endl;
+            return 0.0f;
+        }
+    }
+    
+    // Expand the leaf node
+    try {
+        leaf->expand(settings_.use_progressive_widening, 
+                    settings_.progressive_widening_c, 
+                    settings_.progressive_widening_k);
+        
+        // Store in transposition table if enabled
+        if (use_transposition_table_ && transposition_table_) {
+            try {
+                transposition_table_->store(leaf_state_hash, std::weak_ptr<MCTSNode>(leaf), path.size());
+            } catch (const std::exception& e) {
+                std::cerr << "Transposition table store failed: " << e.what() << std::endl;
+            }
+        }
+        
+        if (leaf->getChildren().empty()) {
+            return 0.0f; 
+        }
+        
+        // Evaluate with the neural network
+        if (settings_.num_threads == 0) { // SERIAL MODE
+            auto state_clone_serial = cloneGameState(leaf->getState());
+            if (!state_clone_serial) {
+                throw std::runtime_error("Failed to clone state for evaluation");
+            }
+            std::vector<std::unique_ptr<core::IGameState>> states_serial;
+            states_serial.push_back(std::unique_ptr<core::IGameState>(state_clone_serial->clone().release()));
+            
+            auto outputs = evaluator_->getInferenceFunction()(states_serial); 
+            if (!outputs.empty()) {
+                leaf->setPriorProbabilities(outputs[0].policy);
+                return outputs[0].value;
+            } else {
+                int action_space_size = leaf->getState().getActionSpaceSize();
+                leaf->setPriorProbabilities(createDefaultPolicy(action_space_size));
+                return 0.0f;
+            }
+        } else { // PARALLEL MODE (queue for evaluation)
+            bool can_evaluate = safelyMarkNodeForEvaluation(leaf);
+            
+            if (can_evaluate) {
+                auto state_clone_parallel = cloneGameState(leaf->getState());
+                if (!state_clone_parallel) {
+                    leaf->clearEvaluationFlag();
+                    throw std::runtime_error("Failed to clone state for evaluation");
+                }
+                
+                PendingEvaluation pending;
+                pending.node = leaf;
+                pending.path = path; 
+                pending.state = state_clone_parallel; 
+                pending.batch_id = batch_counter_.fetch_add(1, std::memory_order_relaxed);
+                pending.request_id = total_leaves_generated_.fetch_add(1, std::memory_order_relaxed);
+                
+                bool queue_success = false;
+                
+                // Enqueue for evaluation, with retry if using shared queue
+                if (use_shared_queues_ && shared_leaf_queue_) {
+                    for (int attempt = 0; attempt < 3 && !queue_success; attempt++) {
+                        if (attempt > 0) {
+                            // Re-create pending for move if previous attempt failed
+                            pending.node = leaf;
+                            pending.path = path;
+                            pending.state = cloneGameState(leaf->getState());
+                            if (!pending.state) {
+                                leaf->clearEvaluationFlag();
+                                throw std::runtime_error("Re-clone failed for enqueue retry");
+                            }
+                            pending.batch_id = batch_counter_.load();
+                            pending.request_id = total_leaves_generated_.load();
+                        }
+                        
+                        queue_success = shared_leaf_queue_->enqueue(std::move(pending));
+                        
+                        if (!queue_success && attempt < 2) {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        }
+                    }
+                    
+                    if (queue_success && external_queue_notify_fn_) {
+                        external_queue_notify_fn_();
+                    }
+                } else {
+                    queue_success = leaf_queue_.enqueue(std::move(pending));
+                    
+                    if (queue_success && evaluator_) {
+                        evaluator_->notifyLeafAvailable();
+                    }
+                }
+                
+                if (!queue_success) {
+                    leaf->clearEvaluationFlag();
+                } else {
+                    pending_evaluations_.fetch_add(1, std::memory_order_acq_rel);
+                    leaf->applyVirtualLoss(settings_.virtual_loss);
+                }
+            } else {
+                leaf->applyVirtualLoss(settings_.virtual_loss);
+            }
+            return 0.0f; 
+        }
+    } catch (const std::bad_alloc& e) {
+        std::cerr << "Memory allocation error during expansion/evaluation" << std::endl;
+        // Try to clean up the node's evaluation flag
+        if (leaf && leaf->isBeingEvaluated()) {
+            leaf->clearEvaluationFlag();
+        }
+        
+        // On error, try to set a fallback policy
+        try {
+            if (leaf) {
+                int action_space_size = leaf->getState().getActionSpaceSize();
+                leaf->setPriorProbabilities(createDefaultPolicy(action_space_size));
+            }
+        } catch (...) {}
+        
+        return 0.0f;
+    } catch (const std::exception& e) {
+        std::cerr << "Error during expansion/evaluation: " << e.what() << std::endl;
+        // Try to clean up the node's evaluation flag
+        if (leaf && leaf->isBeingEvaluated()) {
+            leaf->clearEvaluationFlag();
+        }
+        
+        // On error, try to set a fallback policy
+        try {
+            if (leaf) {
+                int action_space_size = leaf->getState().getActionSpaceSize();
+                leaf->setPriorProbabilities(createDefaultPolicy(action_space_size));
+            }
+        } catch (...) {}
+        
+        return 0.0f;
+    }
+}
+
+} // namespace mcts
+} // namespace alphazero

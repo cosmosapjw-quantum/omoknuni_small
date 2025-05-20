@@ -265,8 +265,19 @@ public:
         settings.mcts_settings.add_dirichlet_noise = config_.mcts_add_dirichlet_noise;
         settings.mcts_settings.dirichlet_alpha = config_.mcts_dirichlet_alpha;
         settings.mcts_settings.dirichlet_epsilon = config_.mcts_dirichlet_epsilon;
+        
+        // Legacy batch settings for backward compatibility
         settings.mcts_settings.batch_size = config_.mcts_batch_size;
         settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        settings.mcts_settings.max_collection_batch_size = config_.mcts_max_collection_batch_size;
+        
+        // Optimized batch parameters
+        settings.mcts_settings.batch_params.optimal_batch_size = config_.mcts_batch_size;
+        settings.mcts_settings.batch_params.minimum_viable_batch_size = config_.mcts_min_viable_batch_size;
+        settings.mcts_settings.batch_params.minimum_fallback_batch_size = config_.mcts_min_fallback_batch_size;
+        settings.mcts_settings.batch_params.max_collection_batch_size = config_.mcts_max_collection_batch_size;
+        settings.mcts_settings.batch_params.max_wait_time = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        settings.mcts_settings.batch_params.additional_wait_time = std::chrono::milliseconds(config_.mcts_additional_wait_ms);
         
         settings.num_parallel_games = config_.self_play_num_parallel_games;
         // Configure root parallelization instead of multiple engines
@@ -412,8 +423,19 @@ public:
         arena_settings.mcts_settings.exploration_constant = config_.mcts_exploration_constant;
         arena_settings.mcts_settings.temperature = config_.arena_temperature;
         arena_settings.mcts_settings.add_dirichlet_noise = false; // No noise in arena games
+        
+        // Legacy batch parameters for backward compatibility
         arena_settings.mcts_settings.batch_size = config_.mcts_batch_size;
         arena_settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        arena_settings.mcts_settings.max_collection_batch_size = config_.mcts_max_collection_batch_size;
+        
+        // Setup optimized batch parameters
+        arena_settings.mcts_settings.batch_params.optimal_batch_size = config_.mcts_batch_size;
+        arena_settings.mcts_settings.batch_params.minimum_viable_batch_size = config_.mcts_min_viable_batch_size;
+        arena_settings.mcts_settings.batch_params.minimum_fallback_batch_size = config_.mcts_min_fallback_batch_size;
+        arena_settings.mcts_settings.batch_params.max_collection_batch_size = config_.mcts_max_collection_batch_size;
+        arena_settings.mcts_settings.batch_params.max_wait_time = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        arena_settings.mcts_settings.batch_params.additional_wait_time = std::chrono::milliseconds(config_.mcts_additional_wait_ms);
         
         arena_settings.num_parallel_games = config_.arena_num_parallel_games;
         
@@ -560,8 +582,23 @@ private:
         // MCTS settings
         config.mcts_num_simulations = get_value("mcts_num_simulations", 800);
         config.mcts_num_threads = get_value("mcts_num_threads", 8);
+        
+        // Batch parameters
         config.mcts_batch_size = get_value("mcts_batch_size", 64);
-        config.mcts_batch_timeout_ms = get_value("mcts_batch_timeout_ms", 20);
+        
+        // Default to 75% of batch size
+        config.mcts_min_viable_batch_size = get_value("mcts_min_viable_batch_size",
+            static_cast<int>(config.mcts_batch_size * 0.75));
+        
+        // Default to 30% of batch size
+        config.mcts_min_fallback_batch_size = get_value("mcts_min_fallback_batch_size",
+            static_cast<int>(config.mcts_batch_size * 0.3));
+        
+        config.mcts_max_collection_batch_size = get_value("mcts_max_collection_batch_size", 32);
+        config.mcts_batch_timeout_ms = get_value("mcts_batch_timeout_ms", 50);
+        config.mcts_additional_wait_ms = get_value("mcts_additional_wait_ms", 10);
+        
+        // Other MCTS parameters
         config.mcts_exploration_constant = get_value("mcts_exploration_constant", 1.5f);
         config.mcts_temperature = get_value("mcts_temperature", 1.0f);
         config.mcts_add_dirichlet_noise = get_value("mcts_add_dirichlet_noise", true);
@@ -629,8 +666,16 @@ private:
         // MCTS settings
         dict["mcts_num_simulations"] = config.mcts_num_simulations;
         dict["mcts_num_threads"] = config.mcts_num_threads;
+        
+        // Batch parameters
         dict["mcts_batch_size"] = config.mcts_batch_size;
+        dict["mcts_min_viable_batch_size"] = config.mcts_min_viable_batch_size;
+        dict["mcts_min_fallback_batch_size"] = config.mcts_min_fallback_batch_size;
+        dict["mcts_max_collection_batch_size"] = config.mcts_max_collection_batch_size;
         dict["mcts_batch_timeout_ms"] = config.mcts_batch_timeout_ms;
+        dict["mcts_additional_wait_ms"] = config.mcts_additional_wait_ms;
+        
+        // Other MCTS parameters
         dict["mcts_exploration_constant"] = config.mcts_exploration_constant;
         dict["mcts_temperature"] = config.mcts_temperature;
         dict["mcts_add_dirichlet_noise"] = config.mcts_add_dirichlet_noise;

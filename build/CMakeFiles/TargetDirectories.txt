@@ -45,6 +45,7 @@
 /home/cosmos/omoknuni_small/build/CMakeFiles/mcts_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/all_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/mcts_openmp_benchmark.dir
+/home/cosmos/omoknuni_small/build/CMakeFiles/shared_queue_test.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/package.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/package_source.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/test.dir

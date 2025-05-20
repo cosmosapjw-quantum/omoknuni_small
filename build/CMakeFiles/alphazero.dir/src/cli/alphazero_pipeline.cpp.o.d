@@ -288,6 +288,9 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: \
  /usr/include/c++/13/climits \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
  /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
+ /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
  /home/cosmos/omoknuni_small/include/training/training_data_manager.h \
  /home/cosmos/omoknuni_small/include/training/dataset.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \

@@ -107,6 +107,7 @@ public:
     std::shared_ptr<MCTSNode> getMostVisitedChild() const;
     bool needsEvaluation() const { return !is_expanded_ && !isTerminal(); }
     void markEvaluationInProgress() { evaluation_in_progress_ = true; }
+    bool hasChildren() const { return !children_.empty(); }
 
 private:
     // Mutable mutex for const methods that need synchronization

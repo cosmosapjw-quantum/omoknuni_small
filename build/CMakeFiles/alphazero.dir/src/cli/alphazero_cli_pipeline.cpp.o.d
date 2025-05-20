@@ -299,6 +299,9 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /usr/include/c++/13/climits \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
  /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
+ /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
  /home/cosmos/omoknuni_small/include/cli/cli_manager.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \

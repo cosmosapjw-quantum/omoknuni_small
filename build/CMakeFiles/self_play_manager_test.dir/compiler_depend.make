@@ -8,11 +8,14 @@ CMakeFiles/self_play_manager_test.dir/tests/selfplay/self_play_manager_test.cpp.
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
   /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
+  /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
+  /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
   /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
+  /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
@@ -5333,18 +5336,6 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /usr/include/x86_64-linux-gnu/bits/types/timer_t.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/hardshrink_meta.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/adaptive_avg_pool3d_backward.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/batch_norm_backward_elemt_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/hardshrink_backward_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/logical_or.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/prod_meta.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/gru_cell_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/datasets/chunk.h:
@@ -5459,8 +5450,6 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fmod.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/hardshrink_backward_ops.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/clip_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/mish_native.h:
@@ -5484,6 +5473,10 @@ lib/Release/libTracyClient.so.0.11.0:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fbgemm_pack_gemm_matrix_fp16_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_add_batch_dim_ops.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/time_t.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/flip_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/replication_pad1d_ops.h:
 
@@ -5993,9 +5986,9 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cos.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_sin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cumsum_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_sin.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/transforms/stack.h:
 
@@ -6298,12 +6291,6 @@ lib/Release/libTracyClient.so.0.11.0:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/prelu_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/binary_cross_entropy_ops.h:
-
-/usr/include/x86_64-linux-gnu/bits/timex.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/binary_cross_entropy_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/quantize_per_channel_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/binary_cross_entropy_backward.h:
 
@@ -6739,6 +6726,12 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/adaptive_avg_pool3d_native.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/adaptive_avg_pool3d_backward.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/batch_norm_backward_elemt_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/hardshrink_meta.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/exp2.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/angle.h:
@@ -6903,10 +6896,6 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/searchsorted.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_csc_tensor_args_native.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cumprod_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cudnn_grid_sampler.h:
@@ -7022,10 +7011,6 @@ lib/Release/libTracyClient.so.0.11.0:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_upsample_bicubic2d_aa_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_shifted_chebyshev_polynomial_w.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_upsample_bicubic2d_aa_meta.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/not_equal.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_upsample_bicubic2d_aa_backward_ops.h:
 
@@ -7337,21 +7322,13 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_test_autograd_multiple_dispatch_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_neg_ops.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/addmm.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_rfftn_ops.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_test_ambiguous_defaults_ops.h:
 
-/usr/include/c++/13/bits/ostream.tcc:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_masked_scale_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/atanh_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/bitwise_not_meta.h:
-
-/usr/include/regex.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_transform_bias_rescale_qkv_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_mul.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/quantized_rnn_tanh_cell.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_make_dual_copy.h:
 
@@ -7470,18 +7447,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_addcdiv.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_histogramdd_from_bin_cts.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/blackman_window_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/c10/util/bit_cast.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/arctanh.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/fbgemm_linear_quantize_weight_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/lcm_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_entr_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fake_quantize_per_channel_affine_ops.h:
 
@@ -7807,8 +7772,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/logaddexp_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/addmm.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_linalg_det_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/broadcast_tensors_ops.h:
@@ -8081,10 +8044,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/addmv_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dyn_quant_pack_4bit_weight.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/CheckMemoryFormat.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/unfold_backward.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/detach.h:
@@ -8233,13 +8192,9 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_scaled_dot_product_efficient_attention_backward_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypeProperties.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/avg_pool2d_backward_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_erfc_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_from_padded_and_nested_example_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/replication_pad2d_meta.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/multilabel_margin_loss_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/core/dynamic_type.h:
 
@@ -8285,17 +8240,21 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_batch_norm_impl_index_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_ihfft2_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/dispatch/OperatorEntry.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_autocast_to_reduced_precision_native.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_debug_has_internal_overlap_ops.h:
 
 /usr/include/c++/13/bits/new_allocator.h:
 
 /usr/include/c++/13/bits/shared_ptr_base.h:
+
+/usr/include/x86_64-linux-gnu/bits/timex.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/binary_cross_entropy_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/quantize_per_channel_native.h:
+
+/home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/native_dropout_backward.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/diag_embed_native.h:
 
@@ -8408,12 +8367,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_erfc_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/softshrink.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_neg.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_compressed_tensor_unsafe.h:
-
-/opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/ir/scope.h:
 
 /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h:
 
@@ -8541,15 +8494,15 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/type_as_native.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_use_cudnn_rnn_flatten_weight_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/geometric_native.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/core/boxing/impl/WrapFunctionIntoRuntimeFunctor.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/runtime/graph_executor.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/core/enum_type.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_use_cudnn_rnn_flatten_weight_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/geometric_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/group_norm_native.h:
 
@@ -8570,6 +8523,10 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/matmul_backward.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/square.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_add_batch_dim_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/fft.h:
 
@@ -8619,9 +8576,19 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_aminmax.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_csr_sum.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cslt_sparse_mm_search.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/nested_to_padded_tensor_ops.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_shifted_chebyshev_polynomial_w_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_aminmax_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/batch_norm_gather_stats_with_counts_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/to.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dimI_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/TensorBase.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cummax_helper_ops.h:
 
@@ -8651,23 +8618,19 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/Dispatch.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cdist_forward_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_trunc.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/histogramdd_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/enum_tag.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/glu_jvp_ops.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/BlasBackend.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/hardswish_backward_ops.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/atanh_native.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_padded_dense_to_jagged_forward.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/ir/graph_node_list.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_csr_sum.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/nested_to_padded_tensor_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_addmm_activation_native.h:
 
@@ -8693,22 +8656,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/view_copy.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/to_sparse_csr_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/ivalue_inl.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_asin_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_csr_sum_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_linalg_solve_ex.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/sum_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/cross_entropy_loss.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fused_sgd_native.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/logsumexp_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_irfft2_ops.h:
@@ -8723,15 +8670,119 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypePropertiesRegistry.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_legendre_polynomial_p_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/isreal_native.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/EmptyTensor.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/is_vulkan_available_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/scaled_dot_product_attention_ops.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cdist_forward_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_upsample_bicubic2d_aa_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/not_equal.h:
+
+/home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_autocast_to_full_precision.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_solve_triangular.h:
+
+/usr/include/gtest/internal/gtest-param-util.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cudnn_rnn_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/nonzero_static.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_use_cudnn_rnn_flatten_weight_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/index_add.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_conv_depthwise2d_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/nll_loss_backward_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/tensor_split.h:
+
+/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/nn/functional/instancenorm.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_chunk_cat_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ROCmFABackend.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/detail/MAIAHooksInterface.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/reflection_pad2d_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_ctc_loss_backward_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_pow_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_convert_indices_from_csr_to_coo.h:
+
+/usr/include/c++/13/bits/locale_facets.tcc:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_matrix_norm_native.h:
+
+/home/cosmos/omoknuni_small/include/nn/resnet_model.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/xor.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/div_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_ifftshift_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/conv_transpose3d.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/StorageUtils.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/class_type.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ParallelOpenMP.h:
+
+/opt/libtorch-2.7.0-cu128/include/c10/util/overflows.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dyn_quant_pack_4bit_weight_native.h:
+
+/usr/include/x86_64-linux-gnu/bits/signum-generic.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/count_nonzero_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/adaptive_max_pool2d_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/blob.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/Config.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/dot.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/col2im.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_lu_solve.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_bsr_tensor_args_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_resize_output.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/igammac_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/mean_native.h:
+
+/usr/include/c++/13/atomic:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/to_sparse_bsr.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_broadcast_to_copy_native.h:
+
+/home/cosmos/omoknuni_small/include/mcts/node_tracker.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_embedding_bag_dense_backward.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/upsample_bilinear2d_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/core/Scalar.h:
 
@@ -8777,6 +8828,34 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/FuncTorchTLS.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/TensorNames.h:
+
+/opt/libtorch-2.7.0-cu128/include/c10/util/Half-inl.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/cudnn_affine_grid_generator_backward_ops.h:
+
+/home/cosmos/omoknuni_small/include/mcts/transposition_table.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/DeviceAccelerator.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_bsc_tensor_unsafe_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/std_mean.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_bsc_tensor_args_ops.h:
+
+/home/cosmos/omoknuni_small/include/core/igamestate.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_cond_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/sinc.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/VariableHooksInterface.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/fbgemm_linear_quantize_weight_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/lcm_native.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_efficientzerotensor_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/diagonal_scatter_native.h:
@@ -8795,29 +8874,23 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_shifted_chebyshev_polynomial_w_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_legendre_polynomial_p_native.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_maximum.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/isreal_native.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/split_with_sizes_copy_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cslt_sparse_mm_search.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_neg_view_copy.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_shifted_chebyshev_polynomial_w_native.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_chebyshev_polynomial_w_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_aminmax_native.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_embedding_bag_per_sample_weights_backward_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/batch_norm_gather_stats_with_counts_ops.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/nonzero_numpy_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/to.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_batch_norm_impl_index_backward_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dimI_native.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/det_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/core/TensorBase.h:
-
-/home/cosmos/omoknuni_small/include/mcts/node_tracker.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_embedding_bag_dense_backward.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/upsample_bilinear2d_ops.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Byte.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_scaled_dot_product_flash_attention_for_cpu_backward.h:
 
@@ -8833,60 +8906,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_hermite_polynomial_h_meta.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_convert_indices_from_csr_to_coo.h:
-
-/usr/include/c++/13/bits/locale_facets.tcc:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_matrix_norm_native.h:
-
-/home/cosmos/omoknuni_small/include/nn/resnet_model.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/xor.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/div_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_ifftshift_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/conv_transpose3d.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/StorageUtils.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/class_type.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ParallelOpenMP.h:
-
-/opt/libtorch-2.7.0-cu128/include/c10/util/overflows.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_embedding_bag_per_sample_weights_backward_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/nonzero_numpy_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_batch_norm_impl_index_backward_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Byte.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/det_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dyn_quant_pack_4bit_weight_native.h:
-
-/usr/include/x86_64-linux-gnu/bits/signum-generic.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/dot.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/col2im.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_lu_solve.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_bsr_tensor_args_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_resize_output.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/igammac_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/mean_native.h:
-
-/usr/include/c++/13/atomic:
-
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/utils/variadic.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/elu_backward.h:
@@ -8896,16 +8915,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/full_like_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_lstsq_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_bsc_tensor_args_ops.h:
-
-/home/cosmos/omoknuni_small/include/core/igamestate.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_cond_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/sinc.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/VariableHooksInterface.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_adaptive_avg_pool3d_native.h:
 
@@ -8936,6 +8945,8 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/unsafe_chunk.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_efficient_attention_backward_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fill_mem_eff_dropout_mask_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_eigvals.h:
 
@@ -8978,58 +8989,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/detach_copy.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/silu_backward_meta.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_maximum.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/split_with_sizes_copy_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/equal_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_standard_gamma_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dyn_quant_matmul_4bit_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fill_mem_eff_dropout_mask_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_neg_view_copy.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_chebyshev_polynomial_w_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cudnn_rnn_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/count_nonzero_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/adaptive_max_pool2d_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/Config.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/blob.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/nonzero_static.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_use_cudnn_rnn_flatten_weight_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/index_add.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_conv_depthwise2d_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/nll_loss_backward_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/tensor_split.h:
-
-/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/nn/functional/instancenorm.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_chunk_cat_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ROCmFABackend.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/detail/MAIAHooksInterface.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/reflection_pad2d_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_ctc_loss_backward_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_pow_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/full_like.h:
 
@@ -9111,19 +9070,49 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/isin_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/cudnn_affine_grid_generator_backward_ops.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_ihfft2_native.h:
 
-/home/cosmos/omoknuni_small/include/mcts/transposition_table.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/core/dispatch/OperatorEntry.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/DeviceAccelerator.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_autocast_to_reduced_precision_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_bsc_tensor_unsafe_ops.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypeProperties.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/std_mean.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_erfc_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/TensorNames.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_from_padded_and_nested_example_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/c10/util/Half-inl.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/replication_pad2d_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/enum_tag.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/glu_jvp_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/equal_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dyn_quant_matmul_4bit_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_standard_gamma_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fused_sgd_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/to_sparse_csr_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/ivalue_inl.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_asin_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_csr_sum_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_linalg_solve_ex.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/sum_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/cross_entropy_loss.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_trunc.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/histogramdd_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_eig.h:
 
@@ -9227,6 +9216,16 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Half.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_transform_bias_rescale_qkv_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_mul.h:
+
+/home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h:
+
+/usr/include/x86_64-linux-gnu/c++/13/bits/cxxabi_tweaks.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/ne_native.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/detail/HPUHooksInterface.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/rsub_native.h:
@@ -9326,10 +9325,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_exp_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_add_relu_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/avg_pool2d_backward_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/multilabel_margin_loss_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/allclose_native.h:
 
@@ -9449,10 +9444,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cummin_helper.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_add_batch_dim_native.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
-
 /usr/include/c++/13/tr1/modified_bessel_func.tcc:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/core/boxing/OperatorKernel.h:
@@ -9514,12 +9505,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/argmax_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_ldl_solve_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_autocast_to_full_precision.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_solve_triangular.h:
-
-/usr/include/gtest/internal/gtest-param-util.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Double_ops.h:
 
@@ -9617,9 +9602,9 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_clamp_max.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/arctan2_ops.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/retain_grad.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/arctan2_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_atan_ops.h:
 
@@ -9731,6 +9716,12 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_embedding_bag_per_sample_weights_backward_native.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/arctanh.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/CheckMemoryFormat.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dyn_quant_pack_4bit_weight.h:
+
 /opt/libtorch-2.7.0-cu128/include/c10/util/C++17.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cholesky_solve_helper_native.h:
@@ -9738,6 +9729,28 @@ _deps/mimalloc-src/include/mimalloc.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_chunk_cat.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/upsample_nearest1d_backward_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_neg.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_compressed_tensor_unsafe.h:
+
+/opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/ir/scope.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/blackman_window_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/c10/util/bit_cast.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_entr_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_neg_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_rfftn_ops.h:
+
+/usr/include/c++/13/bits/ostream.tcc:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/bitwise_not_meta.h:
+
+/usr/include/regex.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_norm.h:
 
@@ -9843,13 +9856,13 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/sparse_csr_tensor_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_add_relu.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_scaled_modified_bessel_k1.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_test_ambiguous_defaults_native.h:
 
 /usr/include/gtest/gtest_pred_impl.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_add_relu.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/special_scaled_modified_bessel_k1.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/gt_native.h:
 
@@ -10327,9 +10340,9 @@ lib/Release/libmimalloc.a:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/isfinite_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/elu_meta.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_test_serialization_subcmul_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/elu_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_semi_structured_mm_ops.h:
 
@@ -10364,12 +10377,6 @@ lib/Release/libmimalloc.a:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/amin_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/core/symbol.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_masked_scale_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_test_ambiguous_defaults_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/quantized_rnn_tanh_cell.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/gelu_native.h:
 
@@ -11108,6 +11115,18 @@ lib/Release/libmimalloc.a:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_standard_gamma_grad.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/signbit_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/hardshrink_backward_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/logical_or.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/prod_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/hardshrink_backward_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_csc_tensor_args_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/searchsorted.h:
 
 /usr/include/c++/13/bits/locale_facets.h:
 
@@ -12623,8 +12642,6 @@ lib/Release/libmimalloc.a:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/native_dropout.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/native_dropout_backward.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/native_dropout_backward_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/native_dropout_native.h:
@@ -12658,10 +12675,6 @@ lib/Release/libmimalloc.a:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_prelu_kernel_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_i1.h:
-
-/usr/include/x86_64-linux-gnu/c++/13/bits/cxxabi_tweaks.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/ne_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/ne_ops.h:
 
@@ -13141,6 +13154,10 @@ lib/Release/libmimalloc.a:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/randint_like.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/randint_like_native.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_ifftn_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/randint_like_ops.h:
@@ -13196,10 +13213,6 @@ lib/Release/libmimalloc.a:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/reflection_pad1d_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/c10/macros/cmake_macros.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/flip_ops.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/time_t.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/reflection_pad1d_ops.h:
 
@@ -15352,10 +15365,6 @@ lib/Release/libmimalloc.a:
 /usr/include/c++/13/new:
 
 /usr/include/c++/13/numeric:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/randint_like_native.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
 
 /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h:
 

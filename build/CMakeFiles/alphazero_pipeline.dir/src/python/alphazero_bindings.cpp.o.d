@@ -457,6 +457,9 @@ CMakeFiles/alphazero_pipeline.dir/src/python/alphazero_bindings.cpp.o: \
  /usr/include/c++/13/climits \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
  /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
+ /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \

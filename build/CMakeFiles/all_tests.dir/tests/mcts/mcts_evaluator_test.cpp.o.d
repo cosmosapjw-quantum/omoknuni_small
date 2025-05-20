@@ -280,6 +280,9 @@ CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: \
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
  /usr/include/c++/13/climits \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
+ /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
  /usr/include/c++/13/iomanip /usr/include/c++/13/locale \

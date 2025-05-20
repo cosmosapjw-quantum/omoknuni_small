@@ -39,6 +39,9 @@ find_package(OpenMP REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=1")
 add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=1)
 
+# Add debug flags for batch analysis
+add_compile_definitions(DEBUG_BATCH_PROCESSING=1)
+
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -637,8 +640,16 @@ set(MCTS_SOURCES
     src/mcts/mcts_node_pool.cpp
     src/mcts/evaluation_types.cpp
     src/mcts/mcts_evaluator.cpp
-    src/mcts/mcts_evaluator_thread_functions.cpp
-    src/mcts/mcts_engine.cpp
+    src/mcts/mcts_evaluator_concurrent.cpp
+    src/mcts/batch_accumulator.cpp
+    src/mcts/mcts_pipeline.cpp
+    src/mcts/mcts_engine_main.cpp
+    src/mcts/mcts_engine_utils.cpp
+    src/mcts/mcts_engine_tree.cpp
+    src/mcts/mcts_engine_eval.cpp
+    src/mcts/mcts_engine_common.cpp
+    src/mcts/mcts_engine_search.cpp
+    src/mcts/mcts_engine_methods.cpp
     src/mcts/mcts_taskflow_engine.cpp
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
@@ -1049,8 +1060,6 @@ option(ENABLE_RMM "Enable RAPIDS Memory Manager" ON)
 if(ENABLE_RMM AND WITH_TORCH AND CUDA_FOUND)
     message(STATUS "Setting up RAPIDS Memory Manager (RMM)...")
     
-    # Since user has already installed RMM, force-enable it
-    message(STATUS "User has confirmed RMM is installed, enabling RMM support")
     target_compile_definitions(alphazero PUBLIC USE_RAPIDS_RMM)
     
     # Try to find and link against system RMM library
@@ -1380,6 +1389,23 @@ if(BUILD_TESTS)
             INSTALL_RPATH_USE_LINK_PATH TRUE
         )
     endif()
+    
+    # Add shared queue test as a standalone executable
+    add_executable(shared_queue_test tests/mcts/shared_queue_test.cpp)
+    target_link_libraries(shared_queue_test PRIVATE alphazero GTest::gtest GTest::gtest_main pthread)
+    if(WITH_TORCH AND WITH_CUDA)
+        target_compile_definitions(shared_queue_test PRIVATE WITH_CUDA)
+    endif()
+    # Set rpath for shared queue test
+    set_target_properties(shared_queue_test PROPERTIES
+        INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${Torch_LIB_DIR}"
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+    )
+    
+    # Add the shared queue test to CTest with a timeout
+    add_test(NAME shared_queue_test COMMAND shared_queue_test)
+    set_tests_properties(shared_queue_test PROPERTIES TIMEOUT 10)  # 10 second timeout
     
     # Accept shared library for GTest
     if(TARGET GTest::gtest)

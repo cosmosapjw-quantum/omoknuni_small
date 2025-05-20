@@ -9,11 +9,14 @@ CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_t
  /home/cosmos/omoknuni_small/include/core/igamestate.h
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h
+ /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
+ /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h

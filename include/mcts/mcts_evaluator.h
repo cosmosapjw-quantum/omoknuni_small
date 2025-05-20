@@ -17,11 +17,15 @@
 #include "mcts/mcts_node.h"
 #include "core/export_macros.h"
 #include "mcts/mcts_engine.h"
+#include "mcts/batch_accumulator.h"
+#include "mcts/concurrent_pipeline_buffer.h"
 
 #include <moodycamel/concurrentqueue.h>
 
 namespace alphazero {
 namespace mcts {
+
+// BatchParameters is now defined in mcts_engine.h
 
 // Structure for batched inference jobs
 struct BatchForInference {
@@ -46,8 +50,8 @@ public:
         const std::vector<std::unique_ptr<core::IGameState>>&)>;
     
     MCTSEvaluator(InferenceFunction inference_fn, 
-                 size_t batch_size = 16, 
-                 std::chrono::milliseconds timeout = std::chrono::milliseconds(5),
+                 size_t batch_size = 256, 
+                 std::chrono::milliseconds timeout = std::chrono::milliseconds(50),
                  size_t num_inference_threads = 1);
     
     ~MCTSEvaluator();
@@ -78,6 +82,12 @@ public:
     // Notify that a leaf is available in the external queue
     void notifyLeafAvailable();
     
+    // Clear all pending batches and reset batch state
+    void clearPendingBatches();
+    
+    // Pipeline parallelism methods - made public for MCTSEngine access
+    void addToPipelineBatch(PendingEvaluation&& eval);
+    
     // Set external queues for direct batch processing
     void setExternalQueues(void* leaf_queue, void* result_queue, std::function<void()> result_notify_callback = nullptr) {
         std::lock_guard<std::mutex> lock(queue_mutex_);
@@ -95,17 +105,35 @@ public:
         std::cout << "MCTSEvaluator::setExternalQueues - External queues configured successfully" << std::endl;
     }
     
-    // Set the maximum batch size for collection
+    // Set the batch parameters
+    void setBatchParameters(const BatchParameters& params);
+    
+    // Get current batch parameters
+    BatchParameters getBatchParameters() const;
+    
+    // Legacy API for backward compatibility
     void setMaxCollectionBatchSize(size_t size) {
-        max_collection_batch_size_ = size;
+        batch_params_.optimal_batch_size = size;
+        batch_params_.minimum_viable_batch_size = size * 3 / 4;
+        batch_params_.minimum_fallback_batch_size = size / 3;
+        
+        if (batch_accumulator_) {
+            batch_accumulator_->updateParameters(
+                batch_params_.optimal_batch_size,
+                batch_params_.minimum_viable_batch_size,
+                batch_params_.max_wait_time
+            );
+        }
+    }
+    
+    // Get the batch accumulator for direct interaction
+    BatchAccumulator* getBatchAccumulator() const {
+        return batch_accumulator_.get();
     }
     
 private:
     // Main batch collector thread function
     void batchCollectorLoop();
-    
-    // Maximum batch size for collection (controls responsiveness vs efficiency)
-    size_t max_collection_batch_size_ = 32;
     
     // NN inference worker thread function
     void inferenceWorkerLoop();
@@ -132,9 +160,18 @@ private:
     // wait times to reduce CPU usage when waiting
     void waitWithBackoff(std::function<bool()> predicate, std::chrono::milliseconds max_wait_time);
     
+    // Pipeline parallelism methods (moved to public section)
+    void swapPipelineBuffers();
+    std::vector<PendingEvaluation> getActivePipelineBatch();
+    bool processPipelineBatch();
+    void pipelineProcessorLoop();
+    
     // Missing declarations
     void evaluationLoop();
     void processBatches();
+    void processExternalQueue();
+    void processInternalQueue();
+    void processBatchWithAccumulator(std::vector<PendingEvaluation> batch);
     
     // Neural network inference function
     InferenceFunction inference_fn_;
@@ -143,6 +180,16 @@ private:
     size_t batch_size_;
     size_t original_batch_size_;  // Store original for adaptation
     std::chrono::milliseconds timeout_;
+    
+    // Standardized batch parameters
+    BatchParameters batch_params_;
+    
+    // Central batch accumulator for efficient batching
+    std::unique_ptr<BatchAccumulator> batch_accumulator_;
+    
+    // Pipeline parallelism for overlapped collection and evaluation
+    // Lock-free double-buffering for batch processing
+    ConcurrentPipelineBuffer<PendingEvaluation> pipeline_buffer_;
     
     // Queue for collecting evaluation requests
     moodycamel::ConcurrentQueue<EvaluationRequest> request_queue_;
@@ -174,7 +221,7 @@ private:
     std::atomic<size_t> full_batches_{0};
     std::atomic<size_t> partial_batches_{0};
     
-    // Batch processing parameters
+    // Legacy batch processing parameters - kept for backwards compatibility
     size_t min_batch_size_{4};  // Minimum batch size to process
     size_t optimal_batch_size_{16}; // Target batch size for best performance
     

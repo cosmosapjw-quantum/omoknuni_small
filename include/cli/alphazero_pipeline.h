@@ -46,9 +46,16 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     // MCTS settings
     int mcts_num_simulations = 800;
     int mcts_num_threads = 8;
-    int mcts_batch_size = 64;
+    
+    // Batch parameters
+    int mcts_batch_size = 64;  // Optimal target batch size
+    int mcts_min_viable_batch_size = 48;  // Minimum batch size threshold (~75% of optimal)
+    int mcts_min_fallback_batch_size = 20;  // Minimum acceptable batch size (~30% of optimal)
     int mcts_max_collection_batch_size = 32; // Controls batch size for leaf collection
-    int mcts_batch_timeout_ms = 20;
+    int mcts_batch_timeout_ms = 50;  // Increased for better batch formation
+    int mcts_additional_wait_ms = 10;  // Additional wait time after reaching viable size
+    
+    // Other MCTS parameters
     float mcts_exploration_constant = 1.5f;
     float mcts_temperature = 1.0f;
     bool mcts_add_dirichlet_noise = true;

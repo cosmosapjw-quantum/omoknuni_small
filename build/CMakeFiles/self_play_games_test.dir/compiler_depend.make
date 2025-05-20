@@ -8,11 +8,14 @@ CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test
   /home/cosmos/omoknuni_small/include/core/game_export.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
+  /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
+  /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
   /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
+  /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h \
@@ -635,6 +638,12 @@ lib/Release/libalphazero.so:
 
 /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
 
+/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
+
+/usr/include/x86_64-linux-gnu/bits/wchar2.h:
+
+/usr/include/x86_64-linux-gnu/bits/fp-logb.h:
+
 /usr/include/c++/13/locale:
 
 /usr/include/x86_64-linux-gnu/bits/mathcalls.h:
@@ -646,8 +655,6 @@ lib/Release/libalphazero.so:
 /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h:
 
 /usr/include/c++/13/bits/functexcept.h:
-
-/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 
 /usr/include/c++/13/bits/stl_construct.h:
 
@@ -676,10 +683,6 @@ lib/Release/libalphazero.so:
 /usr/include/x86_64-linux-gnu/bits/wchar2-decl.h:
 
 /usr/include/c++/13/bits/erase_if.h:
-
-/usr/include/c++/13/bits/stringfwd.h:
-
-/usr/include/c++/13/bits/this_thread_sleep.h:
 
 /usr/include/c++/13/bits/shared_ptr.h:
 
@@ -731,6 +734,8 @@ lib/Release/libalphazero.so:
 
 /usr/include/c++/13/bits/fs_ops.h:
 
+/usr/include/c++/13/bits/this_thread_sleep.h:
+
 /usr/include/c++/13/bits/invoke.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/error_t.h:
@@ -744,6 +749,20 @@ lib/Release/libalphazero.so:
 /home/cosmos/omoknuni_small/tests/integration/games/self_play_games_test.cpp:
 
 /usr/include/errno.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
+
+/usr/include/c++/13/bits/node_handle.h:
+
+/lib64/ld-linux-x86-64.so.2:
+
+/usr/include/c++/13/bits/fs_path.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
+
+/usr/include/c++/13/bits/charconv.h:
+
+/usr/include/c++/13/cstdio:
 
 /usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
 
@@ -795,26 +814,6 @@ lib/Release/libalphazero.so:
 
 /usr/include/c++/13/algorithm:
 
-/usr/include/c++/13/backward/binders.h:
-
-/usr/include/c++/13/bits/uniform_int_dist.h:
-
-/usr/include/c++/13/bits/locale_classes.tcc:
-
-/usr/include/c++/13/bits/unique_lock.h:
-
-/usr/include/c++/13/mutex:
-
-/usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
-
-/usr/include/c++/13/bits/charconv.h:
-
-/lib64/ld-linux-x86-64.so.2:
-
-/usr/include/c++/13/bits/fs_path.h:
-
-/usr/include/c++/13/cstdio:
-
 /usr/include/c++/13/cstdint:
 
 /usr/include/c++/13/cstdlib:
@@ -823,17 +822,11 @@ lib/Release/libalphazero.so:
 
 /usr/include/c++/13/bits/ptr_traits.h:
 
-/usr/include/c++/13/bits/stl_uninitialized.h:
-
-/usr/include/c++/13/bits/new_allocator.h:
-
-/usr/include/c++/13/bits/atomic_base.h:
-
-/usr/include/c++/13/bits/uses_allocator_args.h:
-
-/home/cosmos/omoknuni_small/include/mcts/mcts_node.h:
+/home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h:
 
 /usr/include/c++/13/bits/predefined_ops.h:
+
+/home/cosmos/omoknuni_small/include/mcts/mcts_node.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
 
@@ -855,25 +848,73 @@ lib/Release/libalphazero.so:
 
 concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
-/usr/include/x86_64-linux-gnu/bits/long-double.h:
+/home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h:
 
-/usr/include/c++/13/bits/algorithmfwd.h:
+/usr/include/c++/13/ext/alloc_traits.h:
 
-/usr/include/x86_64-linux-gnu/bits/wchar2.h:
-
-/usr/include/x86_64-linux-gnu/bits/fp-logb.h:
-
-/usr/include/c++/13/bits/alloc_traits.h:
-
-/usr/include/c++/13/bits/concept_check.h:
-
-/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
-
-/usr/include/c++/13/bits/node_handle.h:
+/usr/include/c++/13/new:
 
 /usr/include/ctype.h:
 
+/usr/local/cuda/lib64/libnvToolsExt.so:
+
+/usr/include/c++/13/bits/stl_queue.h:
+
+/usr/include/c++/13/bits/requires_hosted.h:
+
+/usr/include/x86_64-linux-gnu/bits/floatn-common.h:
+
+/usr/include/c++/13/bits/atomic_lockfree_defines.h:
+
+/usr/include/x86_64-linux-gnu/asm/errno.h:
+
+/usr/include/c++/13/bits/memoryfwd.h:
+
+/usr/include/c++/13/bits/fs_fwd.h:
+
+/usr/include/x86_64-linux-gnu/bits/setjmp.h:
+
+/usr/include/time.h:
+
+/home/cosmos/omoknuni_small/include/utils/gamestate_pool.h:
+
+/home/cosmos/omoknuni_small/include/mcts/mcts_engine.h:
+
+/home/cosmos/omoknuni_small/include/core/igamestate.h:
+
+/usr/include/assert.h:
+
 /usr/include/c++/13/backward/auto_ptr.h:
+
+/usr/include/c++/13/bits/stl_uninitialized.h:
+
+/usr/include/c++/13/bits/new_allocator.h:
+
+/usr/include/c++/13/bits/atomic_base.h:
+
+/usr/include/c++/13/bits/uses_allocator_args.h:
+
+/home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h:
+
+/usr/include/c++/13/bits/deque.tcc:
+
+/usr/include/x86_64-linux-gnu/bits/endian.h:
+
+/usr/include/c++/13/bits/locale_conv.h:
+
+/usr/include/c++/13/bits/istream.tcc:
+
+/home/cosmos/omoknuni_small/include/nn/neural_network.h:
+
+/usr/include/c++/13/bits/exception_ptr.h:
+
+/usr/include/x86_64-linux-gnu/c++/13/bits/ctype_inline.h:
+
+/usr/include/c++/13/bits/std_function.h:
+
+/usr/include/c++/13/bits/char_traits.h:
+
+/usr/include/c++/13/bits/hashtable_policy.h:
 
 /usr/include/c++/13/bits/refwrap.h:
 
@@ -889,33 +930,21 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/c++/13/tr1/riemann_zeta.tcc:
 
-/usr/include/c++/13/bits/memoryfwd.h:
+/usr/include/c++/13/bits/stringfwd.h:
 
-/usr/include/c++/13/bits/fs_fwd.h:
+/usr/include/c++/13/backward/binders.h:
 
-/usr/include/x86_64-linux-gnu/bits/setjmp.h:
+/usr/include/c++/13/bits/uniform_int_dist.h:
 
-/usr/include/time.h:
+/usr/include/c++/13/bits/locale_classes.tcc:
 
-/home/cosmos/omoknuni_small/include/utils/gamestate_pool.h:
+/usr/include/x86_64-linux-gnu/bits/long-double.h:
 
-/home/cosmos/omoknuni_small/include/mcts/mcts_engine.h:
+/usr/include/c++/13/bits/algorithmfwd.h:
 
-/usr/include/assert.h:
+/usr/include/c++/13/bits/alloc_traits.h:
 
-/home/cosmos/omoknuni_small/include/core/igamestate.h:
-
-/usr/local/cuda/lib64/libnvToolsExt.so:
-
-/usr/include/c++/13/bits/stl_queue.h:
-
-/usr/include/c++/13/bits/requires_hosted.h:
-
-/usr/include/x86_64-linux-gnu/bits/floatn-common.h:
-
-/usr/include/c++/13/bits/atomic_lockfree_defines.h:
-
-/usr/include/x86_64-linux-gnu/asm/errno.h:
+/usr/include/c++/13/bits/concept_check.h:
 
 /usr/include/c++/13/bit:
 
@@ -947,29 +976,9 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/alloca.h:
 
-/usr/include/c++/13/bits/locale_conv.h:
-
-/usr/include/c++/13/bits/istream.tcc:
-
-/home/cosmos/omoknuni_small/include/nn/neural_network.h:
-
-/usr/include/c++/13/bits/exception_ptr.h:
-
-/usr/include/x86_64-linux-gnu/c++/13/bits/ctype_inline.h:
-
-/usr/include/c++/13/bits/std_function.h:
-
-/usr/include/c++/13/bits/char_traits.h:
-
-/usr/include/c++/13/bits/hashtable_policy.h:
-
 /usr/include/x86_64-linux-gnu/bits/endianness.h:
 
 /usr/include/c++/13/bits/chrono.h:
-
-/usr/include/c++/13/bits/deque.tcc:
-
-/usr/include/x86_64-linux-gnu/bits/endian.h:
 
 /usr/include/c++/13/bits/cxxabi_forced.h:
 
@@ -1004,6 +1013,10 @@ _deps/mimalloc-src/include/mimalloc.h:
 /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
 
 /usr/include/c++/13/sstream:
+
+/usr/include/c++/13/bits/unique_lock.h:
+
+/usr/include/c++/13/mutex:
 
 /usr/include/c++/13/optional:
 
@@ -1070,10 +1083,6 @@ _deps/mimalloc-src/include/mimalloc.h:
 /usr/include/c++/13/ext/aligned_buffer.h:
 
 /usr/include/locale.h:
-
-/usr/include/c++/13/ext/alloc_traits.h:
-
-/usr/include/c++/13/new:
 
 /usr/include/c++/13/ext/concurrence.h:
 
@@ -1150,6 +1159,10 @@ _deps/mimalloc-src/include/mimalloc.h:
 /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
 
 /usr/include/c++/13/string:
+
+/usr/include/x86_64-linux-gnu/bits/iscanonical.h:
+
+/usr/include/c++/13/string_view:
 
 /usr/include/features-time64.h:
 
@@ -1242,7 +1255,3 @@ lib/Release/libTracyClient.so.0.11.0:
 /usr/include/x86_64-linux-gnu/bits/cpu-set.h:
 
 /usr/include/x86_64-linux-gnu/bits/fp-fast.h:
-
-/usr/include/c++/13/string_view:
-
-/usr/include/x86_64-linux-gnu/bits/iscanonical.h:

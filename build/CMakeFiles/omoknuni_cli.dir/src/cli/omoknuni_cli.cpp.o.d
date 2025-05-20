@@ -5041,5 +5041,8 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o: \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
+ /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
+ /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
  /home/cosmos/omoknuni_small/include/evaluation/model_evaluator.h \
  /home/cosmos/omoknuni_small/include/cli/alphazero_pipeline.h

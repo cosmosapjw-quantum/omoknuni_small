@@ -803,6 +803,19 @@ mcts_openmp_benchmark/fast:
 .PHONY : mcts_openmp_benchmark/fast
 
 #=============================================================================
+# Target rules for targets named shared_queue_test
+
+# Build rule for target.
+shared_queue_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 shared_queue_test
+.PHONY : shared_queue_test
+
+# fast build rule for target.
+shared_queue_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/shared_queue_test.dir/build.make CMakeFiles/shared_queue_test.dir/build
+.PHONY : shared_queue_test/fast
+
+#=============================================================================
 # Target rules for targets named mimalloc-static
 
 # Build rule for target.
@@ -1190,6 +1203,30 @@ src/games/gomoku/gomoku_state.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_state.cpp.s
 .PHONY : src/games/gomoku/gomoku_state.cpp.s
 
+src/mcts/batch_accumulator.o: src/mcts/batch_accumulator.cpp.o
+.PHONY : src/mcts/batch_accumulator.o
+
+# target to build an object file
+src/mcts/batch_accumulator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.o
+.PHONY : src/mcts/batch_accumulator.cpp.o
+
+src/mcts/batch_accumulator.i: src/mcts/batch_accumulator.cpp.i
+.PHONY : src/mcts/batch_accumulator.i
+
+# target to preprocess a source file
+src/mcts/batch_accumulator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.i
+.PHONY : src/mcts/batch_accumulator.cpp.i
+
+src/mcts/batch_accumulator.s: src/mcts/batch_accumulator.cpp.s
+.PHONY : src/mcts/batch_accumulator.s
+
+# target to generate assembly for a file
+src/mcts/batch_accumulator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.s
+.PHONY : src/mcts/batch_accumulator.cpp.s
+
 src/mcts/evaluation_types.o: src/mcts/evaluation_types.cpp.o
 .PHONY : src/mcts/evaluation_types.o
 
@@ -1214,29 +1251,173 @@ src/mcts/evaluation_types.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.s
 .PHONY : src/mcts/evaluation_types.cpp.s
 
-src/mcts/mcts_engine.o: src/mcts/mcts_engine.cpp.o
-.PHONY : src/mcts/mcts_engine.o
+src/mcts/mcts_engine_common.o: src/mcts/mcts_engine_common.cpp.o
+.PHONY : src/mcts/mcts_engine_common.o
 
 # target to build an object file
-src/mcts/mcts_engine.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o
-.PHONY : src/mcts/mcts_engine.cpp.o
+src/mcts/mcts_engine_common.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_common.cpp.o
+.PHONY : src/mcts/mcts_engine_common.cpp.o
 
-src/mcts/mcts_engine.i: src/mcts/mcts_engine.cpp.i
-.PHONY : src/mcts/mcts_engine.i
+src/mcts/mcts_engine_common.i: src/mcts/mcts_engine_common.cpp.i
+.PHONY : src/mcts/mcts_engine_common.i
 
 # target to preprocess a source file
-src/mcts/mcts_engine.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.i
-.PHONY : src/mcts/mcts_engine.cpp.i
+src/mcts/mcts_engine_common.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_common.cpp.i
+.PHONY : src/mcts/mcts_engine_common.cpp.i
 
-src/mcts/mcts_engine.s: src/mcts/mcts_engine.cpp.s
-.PHONY : src/mcts/mcts_engine.s
+src/mcts/mcts_engine_common.s: src/mcts/mcts_engine_common.cpp.s
+.PHONY : src/mcts/mcts_engine_common.s
 
 # target to generate assembly for a file
-src/mcts/mcts_engine.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.s
-.PHONY : src/mcts/mcts_engine.cpp.s
+src/mcts/mcts_engine_common.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_common.cpp.s
+.PHONY : src/mcts/mcts_engine_common.cpp.s
+
+src/mcts/mcts_engine_eval.o: src/mcts/mcts_engine_eval.cpp.o
+.PHONY : src/mcts/mcts_engine_eval.o
+
+# target to build an object file
+src/mcts/mcts_engine_eval.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_eval.cpp.o
+.PHONY : src/mcts/mcts_engine_eval.cpp.o
+
+src/mcts/mcts_engine_eval.i: src/mcts/mcts_engine_eval.cpp.i
+.PHONY : src/mcts/mcts_engine_eval.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_eval.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_eval.cpp.i
+.PHONY : src/mcts/mcts_engine_eval.cpp.i
+
+src/mcts/mcts_engine_eval.s: src/mcts/mcts_engine_eval.cpp.s
+.PHONY : src/mcts/mcts_engine_eval.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_eval.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_eval.cpp.s
+.PHONY : src/mcts/mcts_engine_eval.cpp.s
+
+src/mcts/mcts_engine_main.o: src/mcts/mcts_engine_main.cpp.o
+.PHONY : src/mcts/mcts_engine_main.o
+
+# target to build an object file
+src/mcts/mcts_engine_main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.o
+.PHONY : src/mcts/mcts_engine_main.cpp.o
+
+src/mcts/mcts_engine_main.i: src/mcts/mcts_engine_main.cpp.i
+.PHONY : src/mcts/mcts_engine_main.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.i
+.PHONY : src/mcts/mcts_engine_main.cpp.i
+
+src/mcts/mcts_engine_main.s: src/mcts/mcts_engine_main.cpp.s
+.PHONY : src/mcts/mcts_engine_main.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.s
+.PHONY : src/mcts/mcts_engine_main.cpp.s
+
+src/mcts/mcts_engine_methods.o: src/mcts/mcts_engine_methods.cpp.o
+.PHONY : src/mcts/mcts_engine_methods.o
+
+# target to build an object file
+src/mcts/mcts_engine_methods.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o
+.PHONY : src/mcts/mcts_engine_methods.cpp.o
+
+src/mcts/mcts_engine_methods.i: src/mcts/mcts_engine_methods.cpp.i
+.PHONY : src/mcts/mcts_engine_methods.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_methods.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.i
+.PHONY : src/mcts/mcts_engine_methods.cpp.i
+
+src/mcts/mcts_engine_methods.s: src/mcts/mcts_engine_methods.cpp.s
+.PHONY : src/mcts/mcts_engine_methods.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_methods.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.s
+.PHONY : src/mcts/mcts_engine_methods.cpp.s
+
+src/mcts/mcts_engine_search.o: src/mcts/mcts_engine_search.cpp.o
+.PHONY : src/mcts/mcts_engine_search.o
+
+# target to build an object file
+src/mcts/mcts_engine_search.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o
+.PHONY : src/mcts/mcts_engine_search.cpp.o
+
+src/mcts/mcts_engine_search.i: src/mcts/mcts_engine_search.cpp.i
+.PHONY : src/mcts/mcts_engine_search.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_search.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.i
+.PHONY : src/mcts/mcts_engine_search.cpp.i
+
+src/mcts/mcts_engine_search.s: src/mcts/mcts_engine_search.cpp.s
+.PHONY : src/mcts/mcts_engine_search.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_search.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.s
+.PHONY : src/mcts/mcts_engine_search.cpp.s
+
+src/mcts/mcts_engine_tree.o: src/mcts/mcts_engine_tree.cpp.o
+.PHONY : src/mcts/mcts_engine_tree.o
+
+# target to build an object file
+src/mcts/mcts_engine_tree.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_tree.cpp.o
+.PHONY : src/mcts/mcts_engine_tree.cpp.o
+
+src/mcts/mcts_engine_tree.i: src/mcts/mcts_engine_tree.cpp.i
+.PHONY : src/mcts/mcts_engine_tree.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_tree.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_tree.cpp.i
+.PHONY : src/mcts/mcts_engine_tree.cpp.i
+
+src/mcts/mcts_engine_tree.s: src/mcts/mcts_engine_tree.cpp.s
+.PHONY : src/mcts/mcts_engine_tree.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_tree.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_tree.cpp.s
+.PHONY : src/mcts/mcts_engine_tree.cpp.s
+
+src/mcts/mcts_engine_utils.o: src/mcts/mcts_engine_utils.cpp.o
+.PHONY : src/mcts/mcts_engine_utils.o
+
+# target to build an object file
+src/mcts/mcts_engine_utils.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.o
+.PHONY : src/mcts/mcts_engine_utils.cpp.o
+
+src/mcts/mcts_engine_utils.i: src/mcts/mcts_engine_utils.cpp.i
+.PHONY : src/mcts/mcts_engine_utils.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_utils.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.i
+.PHONY : src/mcts/mcts_engine_utils.cpp.i
+
+src/mcts/mcts_engine_utils.s: src/mcts/mcts_engine_utils.cpp.s
+.PHONY : src/mcts/mcts_engine_utils.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_utils.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.s
+.PHONY : src/mcts/mcts_engine_utils.cpp.s
 
 src/mcts/mcts_evaluator.o: src/mcts/mcts_evaluator.cpp.o
 .PHONY : src/mcts/mcts_evaluator.o
@@ -1262,29 +1443,29 @@ src/mcts/mcts_evaluator.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.s
 .PHONY : src/mcts/mcts_evaluator.cpp.s
 
-src/mcts/mcts_evaluator_thread_functions.o: src/mcts/mcts_evaluator_thread_functions.cpp.o
-.PHONY : src/mcts/mcts_evaluator_thread_functions.o
+src/mcts/mcts_evaluator_concurrent.o: src/mcts/mcts_evaluator_concurrent.cpp.o
+.PHONY : src/mcts/mcts_evaluator_concurrent.o
 
 # target to build an object file
-src/mcts/mcts_evaluator_thread_functions.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.o
-.PHONY : src/mcts/mcts_evaluator_thread_functions.cpp.o
+src/mcts/mcts_evaluator_concurrent.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.o
+.PHONY : src/mcts/mcts_evaluator_concurrent.cpp.o
 
-src/mcts/mcts_evaluator_thread_functions.i: src/mcts/mcts_evaluator_thread_functions.cpp.i
-.PHONY : src/mcts/mcts_evaluator_thread_functions.i
+src/mcts/mcts_evaluator_concurrent.i: src/mcts/mcts_evaluator_concurrent.cpp.i
+.PHONY : src/mcts/mcts_evaluator_concurrent.i
 
 # target to preprocess a source file
-src/mcts/mcts_evaluator_thread_functions.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.i
-.PHONY : src/mcts/mcts_evaluator_thread_functions.cpp.i
+src/mcts/mcts_evaluator_concurrent.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.i
+.PHONY : src/mcts/mcts_evaluator_concurrent.cpp.i
 
-src/mcts/mcts_evaluator_thread_functions.s: src/mcts/mcts_evaluator_thread_functions.cpp.s
-.PHONY : src/mcts/mcts_evaluator_thread_functions.s
+src/mcts/mcts_evaluator_concurrent.s: src/mcts/mcts_evaluator_concurrent.cpp.s
+.PHONY : src/mcts/mcts_evaluator_concurrent.s
 
 # target to generate assembly for a file
-src/mcts/mcts_evaluator_thread_functions.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.s
-.PHONY : src/mcts/mcts_evaluator_thread_functions.cpp.s
+src/mcts/mcts_evaluator_concurrent.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.s
+.PHONY : src/mcts/mcts_evaluator_concurrent.cpp.s
 
 src/mcts/mcts_node.o: src/mcts/mcts_node.cpp.o
 .PHONY : src/mcts/mcts_node.o
@@ -1381,6 +1562,30 @@ src/mcts/mcts_node_pool.s: src/mcts/mcts_node_pool.cpp.s
 src/mcts/mcts_node_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.s
 .PHONY : src/mcts/mcts_node_pool.cpp.s
+
+src/mcts/mcts_pipeline.o: src/mcts/mcts_pipeline.cpp.o
+.PHONY : src/mcts/mcts_pipeline.o
+
+# target to build an object file
+src/mcts/mcts_pipeline.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_pipeline.cpp.o
+.PHONY : src/mcts/mcts_pipeline.cpp.o
+
+src/mcts/mcts_pipeline.i: src/mcts/mcts_pipeline.cpp.i
+.PHONY : src/mcts/mcts_pipeline.i
+
+# target to preprocess a source file
+src/mcts/mcts_pipeline.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_pipeline.cpp.i
+.PHONY : src/mcts/mcts_pipeline.cpp.i
+
+src/mcts/mcts_pipeline.s: src/mcts/mcts_pipeline.cpp.s
+.PHONY : src/mcts/mcts_pipeline.s
+
+# target to generate assembly for a file
+src/mcts/mcts_pipeline.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_pipeline.cpp.s
+.PHONY : src/mcts/mcts_pipeline.cpp.s
 
 src/mcts/mcts_taskflow_engine.o: src/mcts/mcts_taskflow_engine.cpp.o
 .PHONY : src/mcts/mcts_taskflow_engine.o
@@ -2324,6 +2529,30 @@ tests/mcts/mcts_optimization_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.s
 .PHONY : tests/mcts/mcts_optimization_test.cpp.s
 
+tests/mcts/shared_queue_test.o: tests/mcts/shared_queue_test.cpp.o
+.PHONY : tests/mcts/shared_queue_test.o
+
+# target to build an object file
+tests/mcts/shared_queue_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/shared_queue_test.dir/build.make CMakeFiles/shared_queue_test.dir/tests/mcts/shared_queue_test.cpp.o
+.PHONY : tests/mcts/shared_queue_test.cpp.o
+
+tests/mcts/shared_queue_test.i: tests/mcts/shared_queue_test.cpp.i
+.PHONY : tests/mcts/shared_queue_test.i
+
+# target to preprocess a source file
+tests/mcts/shared_queue_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/shared_queue_test.dir/build.make CMakeFiles/shared_queue_test.dir/tests/mcts/shared_queue_test.cpp.i
+.PHONY : tests/mcts/shared_queue_test.cpp.i
+
+tests/mcts/shared_queue_test.s: tests/mcts/shared_queue_test.cpp.s
+.PHONY : tests/mcts/shared_queue_test.s
+
+# target to generate assembly for a file
+tests/mcts/shared_queue_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/shared_queue_test.dir/build.make CMakeFiles/shared_queue_test.dir/tests/mcts/shared_queue_test.cpp.s
+.PHONY : tests/mcts/shared_queue_test.cpp.s
+
 tests/mcts/transposition_integration_test.o: tests/mcts/transposition_integration_test.cpp.o
 .PHONY : tests/mcts/transposition_integration_test.o
 
@@ -2507,6 +2736,7 @@ help:
 	@echo "... omoknuni_cli"
 	@echo "... self_play_games_test"
 	@echo "... self_play_manager_test"
+	@echo "... shared_queue_test"
 	@echo "... training_data_manager_test"
 	@echo "... transposition_integration_test"
 	@echo "... transposition_table_test"
@@ -2552,18 +2782,39 @@ help:
 	@echo "... src/games/gomoku/gomoku_state.o"
 	@echo "... src/games/gomoku/gomoku_state.i"
 	@echo "... src/games/gomoku/gomoku_state.s"
+	@echo "... src/mcts/batch_accumulator.o"
+	@echo "... src/mcts/batch_accumulator.i"
+	@echo "... src/mcts/batch_accumulator.s"
 	@echo "... src/mcts/evaluation_types.o"
 	@echo "... src/mcts/evaluation_types.i"
 	@echo "... src/mcts/evaluation_types.s"
-	@echo "... src/mcts/mcts_engine.o"
-	@echo "... src/mcts/mcts_engine.i"
-	@echo "... src/mcts/mcts_engine.s"
+	@echo "... src/mcts/mcts_engine_common.o"
+	@echo "... src/mcts/mcts_engine_common.i"
+	@echo "... src/mcts/mcts_engine_common.s"
+	@echo "... src/mcts/mcts_engine_eval.o"
+	@echo "... src/mcts/mcts_engine_eval.i"
+	@echo "... src/mcts/mcts_engine_eval.s"
+	@echo "... src/mcts/mcts_engine_main.o"
+	@echo "... src/mcts/mcts_engine_main.i"
+	@echo "... src/mcts/mcts_engine_main.s"
+	@echo "... src/mcts/mcts_engine_methods.o"
+	@echo "... src/mcts/mcts_engine_methods.i"
+	@echo "... src/mcts/mcts_engine_methods.s"
+	@echo "... src/mcts/mcts_engine_search.o"
+	@echo "... src/mcts/mcts_engine_search.i"
+	@echo "... src/mcts/mcts_engine_search.s"
+	@echo "... src/mcts/mcts_engine_tree.o"
+	@echo "... src/mcts/mcts_engine_tree.i"
+	@echo "... src/mcts/mcts_engine_tree.s"
+	@echo "... src/mcts/mcts_engine_utils.o"
+	@echo "... src/mcts/mcts_engine_utils.i"
+	@echo "... src/mcts/mcts_engine_utils.s"
 	@echo "... src/mcts/mcts_evaluator.o"
 	@echo "... src/mcts/mcts_evaluator.i"
 	@echo "... src/mcts/mcts_evaluator.s"
-	@echo "... src/mcts/mcts_evaluator_thread_functions.o"
-	@echo "... src/mcts/mcts_evaluator_thread_functions.i"
-	@echo "... src/mcts/mcts_evaluator_thread_functions.s"
+	@echo "... src/mcts/mcts_evaluator_concurrent.o"
+	@echo "... src/mcts/mcts_evaluator_concurrent.i"
+	@echo "... src/mcts/mcts_evaluator_concurrent.s"
 	@echo "... src/mcts/mcts_node.o"
 	@echo "... src/mcts/mcts_node.i"
 	@echo "... src/mcts/mcts_node.s"
@@ -2576,6 +2827,9 @@ help:
 	@echo "... src/mcts/mcts_node_pool.o"
 	@echo "... src/mcts/mcts_node_pool.i"
 	@echo "... src/mcts/mcts_node_pool.s"
+	@echo "... src/mcts/mcts_pipeline.o"
+	@echo "... src/mcts/mcts_pipeline.i"
+	@echo "... src/mcts/mcts_pipeline.s"
 	@echo "... src/mcts/mcts_taskflow_engine.o"
 	@echo "... src/mcts/mcts_taskflow_engine.i"
 	@echo "... src/mcts/mcts_taskflow_engine.s"
@@ -2690,6 +2944,9 @@ help:
 	@echo "... tests/mcts/mcts_optimization_test.o"
 	@echo "... tests/mcts/mcts_optimization_test.i"
 	@echo "... tests/mcts/mcts_optimization_test.s"
+	@echo "... tests/mcts/shared_queue_test.o"
+	@echo "... tests/mcts/shared_queue_test.i"
+	@echo "... tests/mcts/shared_queue_test.s"
 	@echo "... tests/mcts/transposition_integration_test.o"
 	@echo "... tests/mcts/transposition_integration_test.i"
 	@echo "... tests/mcts/transposition_integration_test.s"

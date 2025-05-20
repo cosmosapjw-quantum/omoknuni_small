@@ -29,8 +29,16 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_pipeline.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_tree.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_eval.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_common.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_taskflow_engine.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o \
@@ -154,9 +162,25 @@ CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_thread_functions.cpp.o:
+CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/mcts_engine.cpp.o:
+CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_pipeline.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_tree.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_eval.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_common.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_taskflow_engine.cpp.o:
 

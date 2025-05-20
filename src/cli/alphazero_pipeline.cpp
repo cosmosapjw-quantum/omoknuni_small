@@ -233,9 +233,19 @@ std::vector<selfplay::GameData> AlphaZeroPipeline::runSelfPlay(const std::string
         settings.mcts_settings.add_dirichlet_noise = config_.mcts_add_dirichlet_noise;
         settings.mcts_settings.dirichlet_alpha = config_.mcts_dirichlet_alpha;
         settings.mcts_settings.dirichlet_epsilon = config_.mcts_dirichlet_epsilon;
+        
+        // Legacy parameters (kept for backward compatibility)
         settings.mcts_settings.batch_size = config_.mcts_batch_size;
         settings.mcts_settings.max_collection_batch_size = config_.mcts_max_collection_batch_size;
         settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        
+        // Setup optimized batch parameters
+        settings.mcts_settings.batch_params.optimal_batch_size = config_.mcts_batch_size;
+        settings.mcts_settings.batch_params.minimum_viable_batch_size = config_.mcts_min_viable_batch_size;
+        settings.mcts_settings.batch_params.minimum_fallback_batch_size = config_.mcts_min_fallback_batch_size;
+        settings.mcts_settings.batch_params.max_collection_batch_size = config_.mcts_max_collection_batch_size;
+        settings.mcts_settings.batch_params.max_wait_time = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        settings.mcts_settings.batch_params.additional_wait_time = std::chrono::milliseconds(config_.mcts_additional_wait_ms);
         
         settings.num_parallel_games = config_.self_play_num_parallel_games;
         
@@ -825,8 +835,19 @@ bool AlphaZeroPipeline::evaluateNewModel(const std::string& iteration_dir) {
         arena_settings.mcts_settings.exploration_constant = config_.mcts_exploration_constant;
         arena_settings.mcts_settings.temperature = config_.arena_temperature;
         arena_settings.mcts_settings.add_dirichlet_noise = false; // No noise in arena games
+        
+        // Legacy parameters (kept for backward compatibility)
         arena_settings.mcts_settings.batch_size = config_.mcts_batch_size;
         arena_settings.mcts_settings.batch_timeout = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        arena_settings.mcts_settings.max_collection_batch_size = config_.mcts_max_collection_batch_size;
+        
+        // Setup optimized batch parameters
+        arena_settings.mcts_settings.batch_params.optimal_batch_size = config_.mcts_batch_size;
+        arena_settings.mcts_settings.batch_params.minimum_viable_batch_size = config_.mcts_min_viable_batch_size;
+        arena_settings.mcts_settings.batch_params.minimum_fallback_batch_size = config_.mcts_min_fallback_batch_size;
+        arena_settings.mcts_settings.batch_params.max_collection_batch_size = config_.mcts_max_collection_batch_size;
+        arena_settings.mcts_settings.batch_params.max_wait_time = std::chrono::milliseconds(config_.mcts_batch_timeout_ms);
+        arena_settings.mcts_settings.batch_params.additional_wait_time = std::chrono::milliseconds(config_.mcts_additional_wait_ms);
         
         arena_settings.num_parallel_games = config_.arena_num_parallel_games;
         arena_settings.num_mcts_engines = config_.arena_num_mcts_engines;
@@ -1074,6 +1095,37 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
             config.board_size = yaml["board_size"].as<int>();
         }
         
+        // Parse top-level MCTS batch parameters (outside the mcts section)
+        if (yaml["mcts_batch_size"]) {
+            config.mcts_batch_size = yaml["mcts_batch_size"].as<int>();
+        }
+        
+        if (yaml["mcts_min_viable_batch_size"]) {
+            config.mcts_min_viable_batch_size = yaml["mcts_min_viable_batch_size"].as<int>();
+        } else {
+            // Set default to 75% of batch size
+            config.mcts_min_viable_batch_size = static_cast<int>(config.mcts_batch_size * 0.75);
+        }
+        
+        if (yaml["mcts_min_fallback_batch_size"]) {
+            config.mcts_min_fallback_batch_size = yaml["mcts_min_fallback_batch_size"].as<int>();
+        } else {
+            // Set default to 30% of batch size
+            config.mcts_min_fallback_batch_size = static_cast<int>(config.mcts_batch_size * 0.3);
+        }
+        
+        if (yaml["mcts_max_collection_batch_size"]) {
+            config.mcts_max_collection_batch_size = yaml["mcts_max_collection_batch_size"].as<int>();
+        }
+        
+        if (yaml["mcts_batch_timeout_ms"]) {
+            config.mcts_batch_timeout_ms = yaml["mcts_batch_timeout_ms"].as<int>();
+        }
+        
+        if (yaml["mcts_additional_wait_ms"]) {
+            config.mcts_additional_wait_ms = yaml["mcts_additional_wait_ms"].as<int>();
+        }
+        
         // Parse directory settings
         if (yaml["model_dir"]) {
             config.model_dir = yaml["model_dir"].as<std::string>();
@@ -1159,8 +1211,30 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
                 config.mcts_batch_size = mcts["batch_size"].as<int>();
             }
             
+            if (mcts["min_viable_batch_size"]) {
+                config.mcts_min_viable_batch_size = mcts["min_viable_batch_size"].as<int>();
+            } else {
+                // Set default to 75% of batch size
+                config.mcts_min_viable_batch_size = static_cast<int>(config.mcts_batch_size * 0.75);
+            }
+            
+            if (mcts["min_fallback_batch_size"]) {
+                config.mcts_min_fallback_batch_size = mcts["min_fallback_batch_size"].as<int>();
+            } else {
+                // Set default to 30% of batch size
+                config.mcts_min_fallback_batch_size = static_cast<int>(config.mcts_batch_size * 0.3);
+            }
+            
             if (mcts["max_collection_batch_size"]) {
                 config.mcts_max_collection_batch_size = mcts["max_collection_batch_size"].as<int>();
+            }
+            
+            if (mcts["batch_timeout_ms"]) {
+                config.mcts_batch_timeout_ms = mcts["batch_timeout_ms"].as<int>();
+            }
+            
+            if (mcts["additional_wait_ms"]) {
+                config.mcts_additional_wait_ms = mcts["additional_wait_ms"].as<int>();
             }
             
             if (mcts["exploration_constant"]) {
@@ -1181,10 +1255,6 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
             
             if (mcts["temperature"]) {
                 config.mcts_temperature = mcts["temperature"].as<float>();
-            }
-            
-            if (mcts["batch_timeout_ms"]) {
-                config.mcts_batch_timeout_ms = mcts["batch_timeout_ms"].as<int>();
             }
         }
         

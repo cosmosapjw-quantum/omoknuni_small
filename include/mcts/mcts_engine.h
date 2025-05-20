@@ -23,12 +23,39 @@ namespace mcts {
 
 class MCTSEvaluator; // Added forward declaration
 
+// Standardized batch parameters to ensure consistent batch handling across components
+struct ALPHAZERO_API BatchParameters {
+    // The optimal target batch size for GPU efficiency
+    size_t optimal_batch_size = 256;
+    
+    // The minimum acceptable batch size (~75% of optimal)
+    size_t minimum_viable_batch_size = 192;
+    
+    // The absolute minimum batch size to process after timeout (~30% of optimal)
+    size_t minimum_fallback_batch_size = 64;
+    
+    // Limits the number of items per collection to maintain responsiveness
+    size_t max_collection_batch_size = 32;
+    
+    // Maximum time to wait for optimal batch formation
+    std::chrono::milliseconds max_wait_time = std::chrono::milliseconds(50);
+    
+    // Time to wait after reaching minimum viable batch before processing
+    std::chrono::milliseconds additional_wait_time = std::chrono::milliseconds(10);
+};
+
 struct ALPHAZERO_API MCTSSettings {
     // Number of simulations to run
     int num_simulations = 800;
     
     // Number of worker threads - should match physical cores for best performance
     int num_threads = 12;  // Optimized for Ryzen 5900X (12 cores)
+    
+    // Standardized batch parameters for consistent batch handling across components
+    BatchParameters batch_params;
+    
+    // These parameters are kept for backward compatibility
+    // They will be used to initialize the batch_params if not explicitly set
     
     // Neural network batch size - optimized for GPU efficiency
     int batch_size = 256;  // Larger batch for better GPU utilization
@@ -76,6 +103,27 @@ struct ALPHAZERO_API MCTSSettings {
     bool use_rave = true;
     float rave_constant = 3000.0f;  // Constant for RAVE weight calculation
     
+    // Constructor to initialize batch parameters from legacy settings
+    MCTSSettings() {
+        syncBatchParametersFromLegacy();
+    }
+    
+    // Method to synchronize batch parameters from legacy settings
+    void syncBatchParametersFromLegacy() {
+        batch_params.optimal_batch_size = batch_size;
+        batch_params.minimum_viable_batch_size = std::max(static_cast<size_t>(batch_size * 0.75), static_cast<size_t>(64));
+        batch_params.minimum_fallback_batch_size = std::max(static_cast<size_t>(batch_size * 0.3), static_cast<size_t>(16));
+        batch_params.max_collection_batch_size = max_collection_batch_size;
+        batch_params.max_wait_time = batch_timeout;
+        batch_params.additional_wait_time = std::chrono::milliseconds(10);
+    }
+    
+    // Method to update legacy settings from batch parameters for backward compatibility
+    void syncLegacyFromBatchParameters() {
+        batch_size = batch_params.optimal_batch_size;
+        max_collection_batch_size = batch_params.max_collection_batch_size;
+        batch_timeout = batch_params.max_wait_time;
+    }
 };
 
 struct ALPHAZERO_API MCTSStats {
@@ -305,42 +353,43 @@ public:
     };
     
 private:
-    // Internal search method
+    // Core MCTS algorithm methods
     void runSearch(const core::IGameState& state);
-    
-    // Run a single simulation
+    void initializeGameStatePool(const core::IGameState& state);
+    void resetSearchState();
+    void executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
     void runSimulation(std::shared_ptr<MCTSNode> root);
-    
-    // Select leaf node for expansion
     std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> selectLeafNode(std::shared_ptr<MCTSNode> root);
-    
-    // Expand and evaluate a leaf node
     float expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::vector<std::shared_ptr<MCTSNode>>& path);
-    
-    // Back up value through the tree
     void backPropagate(std::vector<std::shared_ptr<MCTSNode>>& path, float value);
     
-    // Process pending evaluations in the tree
+    // Search tree management
+    std::shared_ptr<MCTSNode> createRootNode(const core::IGameState& state);
+    std::vector<std::shared_ptr<MCTSNode>> createSearchRoots(std::shared_ptr<MCTSNode> main_root, int num_roots);
+    void setupBatchParameters();
+    void processEvaluationResults();
+    void aggregateRootParallelResults(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
     void processPendingEvaluations(std::shared_ptr<MCTSNode> root);
-    
-    // Convert tree to action probabilities
     std::vector<float> getActionProbabilities(std::shared_ptr<MCTSNode> root, float temperature);
     
-    // Add Dirichlet noise to root node policy
+    // Tree traversal helpers
+    std::shared_ptr<MCTSNode> traverseTreeForLeaf(std::shared_ptr<MCTSNode> node, std::vector<std::shared_ptr<MCTSNode>>& path);
+    bool handleTranspositionMatch(std::shared_ptr<MCTSNode>& node, std::shared_ptr<MCTSNode>& parent);
+    bool expandNonTerminalLeaf(std::shared_ptr<MCTSNode>& leaf);
+    
+    // Utility functions
+    bool safeGameStateValidation(const core::IGameState& state);
+    std::vector<float> createDefaultPolicy(int action_space_size);
+    bool safelyMarkNodeForEvaluation(std::shared_ptr<MCTSNode> node);
     void addDirichletNoise(std::shared_ptr<MCTSNode> root);
     
-    // OpenMP-based parallel search
+    // Parallelization strategies
     void runOpenMPSearch();
-    
-    // Root parallel search - run multiple MCTS trees in parallel
     void runRootParallelSearch();
-    
-    // Combine results from multiple root nodes
     void combineRootResults(const std::vector<std::shared_ptr<MCTSNode>>& root_nodes);
+    void executeSingleSimulation(std::shared_ptr<MCTSNode> root, std::vector<PendingEvaluation>& thread_local_batch);
     
-    // Single simulation execution 
-    void executeSingleSimulation(std::shared_ptr<MCTSNode> root,
-                                std::vector<PendingEvaluation>& thread_local_batch);
+    // Worker thread methods
     void resultDistributorWorker();
     void traverseTree(std::shared_ptr<MCTSNode> root);
     
