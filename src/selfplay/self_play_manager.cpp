@@ -108,14 +108,21 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
               << (void*)&shared_leaf_queue_ << ", result_queue=" << (void*)&shared_result_queue_ << std::endl;
     
     // Configure batch parameters first before setting external queues
-    // CRITICAL FIX: Override with more aggressive batch parameters to prevent stalling
+    // Configure batch parameters for efficient GPU utilization
     mcts::BatchParameters batch_params;
-    // Use smaller batch sizes for more responsive processing
-    batch_params.optimal_batch_size = 64;  // Reduced from default (often 256)
-    batch_params.minimum_viable_batch_size = 1;  // Process even single items
-    batch_params.minimum_fallback_batch_size = 1;  // Ensure we always process what we have
-    batch_params.max_wait_time = std::chrono::milliseconds(1);  // Extremely short wait time
-    batch_params.additional_wait_time = std::chrono::milliseconds(1);  // No additional waiting
+    // Use batch size from settings with reasonable minimums
+    batch_params.optimal_batch_size = settings_.mcts_settings.batch_size;
+    // Set min viable size to ~75% of target size, but at least 16
+    batch_params.minimum_viable_batch_size = std::max(16UL, batch_params.optimal_batch_size * 3 / 4);
+    // Set fallback size to ~25% of target size, but at least 8
+    batch_params.minimum_fallback_batch_size = std::max(8UL, batch_params.optimal_batch_size / 4);
+    // Use timeout from settings for responsiveness, with reasonable minimums
+    batch_params.max_wait_time = std::max(
+        std::chrono::milliseconds(50), 
+        settings_.mcts_settings.batch_timeout
+    );
+    // Very short additional wait time to balance responsiveness and efficiency
+    batch_params.additional_wait_time = std::chrono::milliseconds(10);
     
     // Set batch parameters first
     shared_evaluator_->setBatchParameters(batch_params);
@@ -170,15 +177,23 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
             auto engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
             if (engine) {
                 // Set up batch parameters first
-                // CRITICAL FIX: Use the same aggressive batch parameters for each engine
+                // Use consistent and efficient batch parameters for each engine
                 mcts::BatchParameters batch_params;
-                // Use smaller batch sizes for more responsive processing
-                batch_params.optimal_batch_size = 64;  // Reduced from default (often 256)
-                batch_params.minimum_viable_batch_size = 1;  // Process even single items
-                batch_params.minimum_fallback_batch_size = 1;  // Ensure we always process what we have
-                batch_params.max_wait_time = std::chrono::milliseconds(1);  // Extremely short wait time
-                batch_params.additional_wait_time = std::chrono::milliseconds(1);  // No additional waiting
-                batch_params.max_collection_batch_size = 32;  // Reasonable collection size
+                // Use batch size from settings
+                batch_params.optimal_batch_size = settings_.mcts_settings.batch_size;
+                // Set min viable size to ~75% of target size, but at least 16
+                batch_params.minimum_viable_batch_size = std::max(16UL, batch_params.optimal_batch_size * 3 / 4);
+                // Set fallback size to ~25% of target size, but at least 8
+                batch_params.minimum_fallback_batch_size = std::max(8UL, batch_params.optimal_batch_size / 4);
+                // Use timeout from settings with reasonable minimum
+                batch_params.max_wait_time = std::max(
+                    std::chrono::milliseconds(50), 
+                    settings_.mcts_settings.batch_timeout
+                );
+                // Moderate additional wait time
+                batch_params.additional_wait_time = std::chrono::milliseconds(10);
+                // Collection batch size set to optimal batch size
+                batch_params.max_collection_batch_size = batch_params.optimal_batch_size;
                 
                 // Configure the evaluator with batch parameters
                 if (auto* evaluator = engine->getEvaluator()) {
@@ -545,10 +560,44 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                          << std::endl;
                 
                 // Begin search
+                auto search_start_time = std::chrono::steady_clock::now();
+                
+                // Add diagnostic logging before search to track batch metrics
+                if (auto* evaluator = engine.getEvaluator()) {
+                    if (auto* batch_acc = evaluator->getBatchAccumulator()) {
+                        auto [avg_batch, total_batches, timeouts, optimal] = batch_acc->getStats();
+                        std::cout << "📊 BATCH METRICS BEFORE SEARCH: avg_size=" << avg_batch
+                                << ", total_batches=" << total_batches
+                                << ", timeouts=" << timeouts
+                                << ", optimal_batches=" << optimal << std::endl;
+                    }
+                }
+                
+                // Run the search
                 result = engine.search(*game);
                 
+                auto search_end_time = std::chrono::steady_clock::now();
+                auto search_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    search_end_time - search_start_time).count();
+                
+                // Add diagnostic logging after search to track batch metrics
+                if (auto* evaluator = engine.getEvaluator()) {
+                    if (auto* batch_acc = evaluator->getBatchAccumulator()) {
+                        auto [avg_batch, total_batches, timeouts, optimal] = batch_acc->getStats();
+                        std::cout << "📊 BATCH METRICS AFTER SEARCH: avg_size=" << avg_batch
+                                << ", total_batches=" << total_batches
+                                << ", timeouts=" << timeouts
+                                << ", optimal_batches=" << optimal << std::endl;
+                    }
+                    
+                    // Get evaluator stats
+                    std::cout << "🔢 EVALUATOR STATS: avg_batch_size=" << evaluator->getAverageBatchSize()
+                            << ", avg_latency=" << evaluator->getAverageBatchLatency().count() << "ms"
+                            << ", total_evals=" << evaluator->getTotalEvaluations() << std::endl;
+                }
+                
                 std::cout << "SelfPlayManager::generateGame - Completed MCTS search for game " << game_id 
-                         << ", move " << move_count << std::endl;
+                         << ", move " << move_count << " in " << search_duration << "ms" << std::endl;
                 std::cout << "=============================================================" << std::endl;
                 
                 // Log every 10th move to reduce verbosity

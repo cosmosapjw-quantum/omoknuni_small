@@ -107,26 +107,37 @@ void MCTSEngine::resetSearchState() {
     // Set search running flag
     search_running_.store(true, std::memory_order_release);
     
-    // Reset active simulations counter - CRITICAL FIX: Always use at least 1000 simulations to ensure search runs properly
-    int sim_count = std::max(1000, settings_.num_simulations);
-    std::cout << "⚠️ CRITICAL FIX: MCTSEngine::resetSearchState - Setting active_simulations_ to " << sim_count 
-              << " (original setting: " << settings_.num_simulations << ")" << std::endl;
+    // Reset active simulations counter with a reasonable simulation count
+    // Use the configured number of simulations but ensure a minimum to prevent stalling
+    int sim_count = std::max(500, settings_.num_simulations);
+    std::cout << "MCTSEngine::resetSearchState - Setting active_simulations_ to " << sim_count 
+              << " (from config value: " << settings_.num_simulations << ")" << std::endl;
     
-    // Make sure the counter is properly reset
+    // Make sure the counter is properly reset using a reliable sequence
     active_simulations_.store(0, std::memory_order_release); // First reset to 0
-    std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Ensure visibility across threads
+    std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Short memory barrier
     active_simulations_.store(sim_count, std::memory_order_release); // Then set to desired value
     
     // Double-check that active_simulations_ was set correctly
     int actual_value = active_simulations_.load(std::memory_order_acquire);
     if (actual_value != sim_count) {
-        std::cout << "⚠️ CRITICAL ERROR: MCTSEngine::resetSearchState - Failed to set active_simulations_ correctly! "
+        std::cout << "⚠️ WARNING: MCTSEngine::resetSearchState - Failed to set active_simulations_ correctly! "
                   << "Expected: " << sim_count << ", Actual: " << actual_value << std::endl;
         
-        // Try one more time with a more direct approach
+        // Try with a direct assignment and memory fence
         active_simulations_ = sim_count;
-        std::cout << "⚠️ CRITICAL FIX: MCTSEngine::resetSearchState - Retried setting active_simulations_ = " 
-                  << active_simulations_.load() << std::endl;
+        std::atomic_thread_fence(std::memory_order_seq_cst);
+        
+        // Verify again
+        actual_value = active_simulations_.load(std::memory_order_acquire);
+        std::cout << "MCTSEngine::resetSearchState - After retry: active_simulations_ = " 
+                  << actual_value << std::endl;
+    }
+    
+    // Verify that we have a positive number of simulations
+    if (active_simulations_.load(std::memory_order_acquire) <= 0) {
+        std::cout << "⚠️ CRITICAL ERROR: Active simulations count is still <= 0! Forcing to " << sim_count << std::endl;
+        active_simulations_.store(sim_count, std::memory_order_seq_cst);
     }
 }
 
@@ -406,47 +417,77 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
                                         continue;
                                     }
                                     
-                                    // CRITICAL FIX: If using external evaluator with BatchAccumulator,
-                                    // directly add to the BatchAccumulator instead of just storing in leaf_batch
+                                    // Direct submission to batch accumulator is the preferred approach for optimal batching
+                                    // It bypasses the leaf queue which can be a bottleneck
                                     if (use_shared_queues_ && evaluator_ && evaluator_->getBatchAccumulator()) {
                                         BatchAccumulator* accumulator = evaluator_->getBatchAccumulator();
                                         if (accumulator) {
-                                            // If the accumulator exists but isn't running, start it
+                                            // Always verify accumulator is running
                                             if (!accumulator->isRunning()) {
-                                                std::cout << "⚠️ MCTSEngine::executeSerialSearch - WARNING: BatchAccumulator exists but is not running. Starting it now!" << std::endl;
+                                                std::cout << "⚠️ MCTSEngine::executeSerialSearch - BatchAccumulator exists but is not running. Starting it now!" << std::endl;
                                                 accumulator->start();
                                                 
-                                                // Double-check that it started
+                                                // Give it a moment to initialize
+                                                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                                                
+                                                // Verify it started successfully
                                                 if (!accumulator->isRunning()) {
                                                     std::cout << "🔴 MCTSEngine::executeSerialSearch - CRITICAL ERROR: BatchAccumulator failed to start!" << std::endl;
+                                                } else {
+                                                    std::cout << "✅ MCTSEngine::executeSerialSearch - Successfully started BatchAccumulator" << std::endl;
                                                 }
                                             }
                                             
-                                            // Now that we've ensured the accumulator is running (or tried to), add the evaluation
-                                            std::cout << "🔄 MCTSEngine::executeSerialSearch - Directly adding leaf #" 
-                                                    << pending.request_id << " to BatchAccumulator" << std::endl;
+                                            // Log direct submission (only log initial ones or periodically)
+                                            if (pending.request_id < 10 || pending.request_id % 50 == 0) {
+                                                std::cout << "📥 MCTSEngine::executeSerialSearch - Adding leaf #" 
+                                                        << pending.request_id 
+                                                        << " to BatchAccumulator (running: " 
+                                                        << (accumulator->isRunning() ? "yes" : "no") << ")" << std::endl;
+                                            }
                                             
-                                            // Validate the state before submitting
+                                            // Extra validation before submission
                                             if (!pending.state) {
-                                                std::cout << "🔴 MCTSEngine::executeSerialSearch - CRITICAL ERROR: Null state for leaf #" 
-                                                        << pending.request_id << ", skipping direct submission" << std::endl;
+                                                std::cout << "❌ MCTSEngine::executeSerialSearch - Null state for leaf #" 
+                                                        << pending.request_id << ", skipping submission" << std::endl;
                                                 continue;
                                             }
                                             
-                                            // Add to the accumulator directly to bypass the queue stall
-                                            accumulator->addEvaluation(std::move(pending));
-                                            
-                                            // CRITICAL FIX: Send notifications to wake up the accumulator
-                                            if (external_queue_notify_fn_) {
-                                                for (int i = 0; i < 3; i++) {  // Send multiple notifications to ensure delivery
-                                                    external_queue_notify_fn_();
-                                                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                                }
+                                            if (!pending.node) {
+                                                std::cout << "❌ MCTSEngine::executeSerialSearch - Null node for leaf #" 
+                                                        << pending.request_id << ", skipping submission" << std::endl;
+                                                continue;
                                             }
                                             
+                                            // Add to accumulator with move semantics
+                                            accumulator->addEvaluation(std::move(pending));
+                                            
+                                            // Always notify after adding to ensure processing starts immediately
+                                            if (external_queue_notify_fn_) {
+                                                external_queue_notify_fn_();
+                                                // Send a second notification after a tiny delay to catch any race conditions
+                                                std::this_thread::sleep_for(std::chrono::microseconds(100));
+                                                external_queue_notify_fn_();
+                                            }
+                                            
+                                            // Count as found and track
                                             leaves_found++;
                                             utils::debug_logger().trackItemProcessed();
-                                            continue; // Skip adding to leaf_batch since we've already added to accumulator
+                                            
+                                            // Update total leaves submitted for tracking
+                                            static std::atomic<int> total_leaves_submitted{0};
+                                            int leaves_so_far = total_leaves_submitted.fetch_add(1, std::memory_order_relaxed) + 1;
+                                            
+                                            // Log submission milestones
+                                            if (leaves_so_far == 1 || leaves_so_far == 10 || 
+                                                leaves_so_far == 100 || leaves_so_far % 500 == 0) {
+                                                std::cout << "🎯 MCTSEngine::executeSerialSearch - MILESTONE: " 
+                                                        << leaves_so_far << " total leaves submitted to BatchAccumulator" 
+                                                        << std::endl;
+                                            }
+                                            
+                                            // Skip adding to leaf_batch since we already added directly
+                                            continue;
                                         }
                                     }
                                     
