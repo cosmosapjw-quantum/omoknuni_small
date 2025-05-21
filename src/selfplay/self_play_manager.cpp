@@ -64,10 +64,9 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     // Configure root parallelization in MCTS settings
     // auto mcts_settings = settings_.mcts_settings; // This line is unused and will be removed.
     
-    // FIXED: Enable root parallelization as specified in config.yaml for better batching
-    // Root parallelization is critical for proper batch formation
-    // Now correctly apply the config settings to settings_.mcts_settings
-    settings_.mcts_settings.use_root_parallelization = true;
+    // FIXED: Use root parallelization setting from config instead of hardcoding
+    // Keep the original setting from the provided configuration
+    // settings_.mcts_settings.use_root_parallelization is already set from config
     
     // Use the num_root_workers from config or set a reasonable default based on available cores
     if (settings_.mcts_settings.num_root_workers <= 0) {
@@ -165,60 +164,45 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     //     throw std::runtime_error("Failed to create MCTS engine: " + std::string(e.what()));
     // }
 
-    // Determine the number of engines based on parallel games setting or available cores
-    num_engines_resolved_ = settings_.num_parallel_games > 0 ? settings_.num_parallel_games : omp_get_max_threads();
-    num_engines_resolved_ = std::max(1, num_engines_resolved_); // Ensure at least one engine
+    // CRITICAL FIX: Use single shared engine for all parallel games
+    // This enables proper batch accumulation across all threads
+    std::cout << "SelfPlayManager: Creating single shared MCTS engine for optimal batching..." << std::endl;
     
-    std::cout << "SelfPlayManager: Initializing " << num_engines_resolved_ << " MCTS engine(s) for parallel games." << std::endl;
-
-    engines_.reserve(num_engines_resolved_);
-    for (int i = 0; i < num_engines_resolved_; ++i) {
-        try {
-            auto engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
-            if (engine) {
-                // Set up batch parameters first
-                // Use consistent and efficient batch parameters for each engine
-                mcts::BatchParameters batch_params;
-                // Use batch size from settings
-                batch_params.optimal_batch_size = settings_.mcts_settings.batch_size;
-                // Set min viable size to ~75% of target size, but at least 16
-                batch_params.minimum_viable_batch_size = std::max(16UL, batch_params.optimal_batch_size * 3 / 4);
-                // Set fallback size to ~25% of target size, but at least 8
-                batch_params.minimum_fallback_batch_size = std::max(8UL, batch_params.optimal_batch_size / 4);
-                // Use timeout from settings with reasonable minimum
-                batch_params.max_wait_time = std::max(
-                    std::chrono::milliseconds(50), 
-                    settings_.mcts_settings.batch_timeout
-                );
-                // Moderate additional wait time
-                batch_params.additional_wait_time = std::chrono::milliseconds(10);
-                // Collection batch size set to optimal batch size
-                batch_params.max_collection_batch_size = batch_params.optimal_batch_size;
-                
-                // Configure the evaluator with batch parameters
-                if (auto* evaluator = engine->getEvaluator()) {
-                    evaluator->setBatchParameters(batch_params);
-                } else {
-                    std::cerr << "Engine " << i << " has null evaluator" << std::endl;
-                }
-                
-                // Set up shared external queues
-                engine->setSharedExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
-                
-                std::cout << "Engine " << i << " configured with batch params: optimal=" 
-                          << batch_params.optimal_batch_size 
-                          << ", min_viable=" << batch_params.minimum_viable_batch_size
-                          << ", min_fallback=" << batch_params.minimum_fallback_batch_size
-                          << ", max_wait=" << batch_params.max_wait_time.count() << "ms" 
-                          << std::endl;
-                engines_.push_back(std::move(engine));
-            } else {
-                throw std::runtime_error("Engine creation failed - null engine in loop");
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "ERROR creating MCTS engine instance " << i << ": " << e.what() << std::endl;
-            throw std::runtime_error("Failed to create MCTS engine instance: " + std::string(e.what()));
+    try {
+        // Create one shared engine that all threads will use
+        auto shared_engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
+        
+        // CRITICAL FIX: Set up batch parameters for optimal performance
+        mcts::BatchParameters batch_params;
+        batch_params.optimal_batch_size = settings_.mcts_settings.batch_size;
+        batch_params.minimum_viable_batch_size = std::max(16UL, batch_params.optimal_batch_size * 3 / 4);
+        batch_params.minimum_fallback_batch_size = std::max(8UL, batch_params.optimal_batch_size / 4);
+        batch_params.max_wait_time = std::max(std::chrono::milliseconds(50), settings_.mcts_settings.batch_timeout);
+        batch_params.additional_wait_time = std::chrono::milliseconds(10);
+        batch_params.max_collection_batch_size = batch_params.optimal_batch_size;
+        
+        // Configure the shared engine with batch parameters
+        if (auto* evaluator = shared_engine->getEvaluator()) {
+            evaluator->setBatchParameters(batch_params);
+        } else {
+            throw std::runtime_error("Shared engine has null evaluator");
         }
+        
+        // Set up shared external queues for the single engine
+        shared_engine->setSharedExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
+        
+        std::cout << "SelfPlayManager: Shared engine configured with batch params: optimal=" 
+                  << batch_params.optimal_batch_size 
+                  << ", min_viable=" << batch_params.minimum_viable_batch_size
+                  << ", target=" << batch_params.optimal_batch_size << std::endl;
+        
+        // Store the single shared engine (all threads will use this one)
+        engines_.clear();
+        engines_.push_back(std::move(shared_engine));
+        
+    } catch (const std::exception& e) {
+        std::cerr << "ERROR creating shared MCTS engine: " << e.what() << std::endl;
+        throw std::runtime_error("Failed to create shared MCTS engine: " + std::string(e.what()));
     }
     std::cout << "SelfPlayManager: Created " << engines_.size() << " MCTS engine(s) sharing one evaluator." << std::endl;
 
@@ -344,11 +328,12 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     for (int i = 0; i < num_games; i++) {
         // Thread ID for debugging
         int thread_id = omp_get_thread_num();
-        mcts::MCTSEngine& current_engine = *engines_[thread_id % engines_.size()];
+        // CRITICAL FIX: All threads use the single shared engine for optimal batching
+        mcts::MCTSEngine& current_engine = *engines_[0];
         
         #pragma omp critical(debug_print)
         {
-            std::cout << "Thread " << thread_id << " starting game " << i << " using engine " << (thread_id % engines_.size()) << std::endl;
+            std::cout << "Thread " << thread_id << " starting game " << i << " using shared engine" << std::endl;
         }
         
         // Periodic memory cleanup per thread
@@ -1063,9 +1048,9 @@ void alphazero::selfplay::SelfPlayManager::updateSettings(const alphazero::selfp
     settings_ = settings;
     
     // Update MCTS settings in the engines
-    // Make sure root parallelization is enabled for maximum performance
+    // Use the configured root parallelization setting instead of hardcoding
     auto mcts_settings_update = settings_.mcts_settings; // Use a new variable to avoid confusion
-    mcts_settings_update.use_root_parallelization = true;
+    // mcts_settings_update.use_root_parallelization already set from config
     
     // Adjust num_root_workers based on available cores and parallel games
     const int available_cores_update = omp_get_max_threads(); // Use a new variable

@@ -1128,6 +1128,13 @@ if(WITH_TORCH)
     # Always build the CLI with TORCH
     add_executable(omoknuni_cli src/cli/omoknuni_cli.cpp)
 
+    # Set RPATH to find shared libraries relative to executable location
+    set_target_properties(omoknuni_cli PROPERTIES
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
+    )
+
     # Link against alphazero, yaml-cpp, and Torch
     target_link_libraries(omoknuni_cli PRIVATE
         alphazero
@@ -1257,6 +1264,13 @@ if(BUILD_TESTS)
 
     function(make_test name)
         add_executable(${name} ${ARGN})
+
+        # Set RPATH to find shared libraries relative to executable location  
+        set_target_properties(${name} PROPERTIES
+            INSTALL_RPATH_USE_LINK_PATH TRUE
+            BUILD_WITH_INSTALL_RPATH TRUE
+            INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
+        )
 
         # Set GTest linkage definition based on actual library type
         if(GTEST_IS_SHARED)

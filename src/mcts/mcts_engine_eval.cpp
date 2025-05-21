@@ -249,62 +249,39 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                 
                 bool queue_success = false;
                 
-                // Enqueue for evaluation, with retry if using shared queue
+                // Enqueue for evaluation using shared queue for proper batch accumulation
                 if (use_shared_queues_ && shared_leaf_queue_) {
-                    // CRITICAL DEBUGGING: Check the batch accumulator
-                    if (evaluator_) {
-                        auto* batch_acc = evaluator_->getBatchAccumulator();
+                    // CRITICAL FIX: Use shared queue for proper batch collection
+                    // The BatchAccumulator works best when batchCollectorLoop can collect multiple 
+                    // evaluations at once from the shared queue, rather than receiving them one by one
+                    for (int attempt = 0; attempt < 3 && !queue_success; attempt++) {
                         if (log_detail) {
-                            std::cout << "🧩 MCTSEngine::expandAndEvaluate - [#" << attempt_id
-                                     << "] Batch accumulator exists: " << (batch_acc ? "YES" : "NO")
-                                     << ", running: " << (batch_acc && batch_acc->isRunning() ? "YES" : "NO")
-                                     << std::endl;
+                            std::cout << "📩 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                     << "] Attempt " << attempt << " to enqueue to shared queue" << std::endl;
                         }
                         
-                        // CRITICAL FIX: Try using the batch accumulator directly if it exists
-                        if (batch_acc && batch_acc->isRunning()) {
-                            // Direct submission to batch accumulator
-                            if (log_detail) {
-                                std::cout << "🚀 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
-                                         << "] Directly adding leaf to BatchAccumulator" << std::endl;
+                        if (attempt > 0) {
+                            // Re-create pending for move if previous attempt failed
+                            pending.node = leaf;
+                            pending.path = path;
+                            pending.state = cloneGameState(leaf->getState());
+                            if (!pending.state) {
+                                leaf->clearEvaluationFlag();
+                                throw std::runtime_error("Re-clone failed for enqueue retry");
                             }
-                            
-                            batch_acc->addEvaluation(std::move(pending));
-                            queue_success = true; // Assume success with direct addition
+                            pending.batch_id = batch_counter_.load();
+                            pending.request_id = total_leaves_generated_.load();
                         }
-                    }
-                    
-                    // Fallback to shared queue if batch accumulator approach didn't work
-                    if (!queue_success) {
-                        for (int attempt = 0; attempt < 3 && !queue_success; attempt++) {
-                            if (log_detail) {
-                                std::cout << "📩 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
-                                         << "] Attempt " << attempt << " to enqueue to shared queue" << std::endl;
-                            }
-                            
-                            if (attempt > 0) {
-                                // Re-create pending for move if previous attempt failed
-                                pending.node = leaf;
-                                pending.path = path;
-                                pending.state = cloneGameState(leaf->getState());
-                                if (!pending.state) {
-                                    leaf->clearEvaluationFlag();
-                                    throw std::runtime_error("Re-clone failed for enqueue retry");
-                                }
-                                pending.batch_id = batch_counter_.load();
-                                pending.request_id = total_leaves_generated_.load();
-                            }
-                            
-                            queue_success = shared_leaf_queue_->enqueue(std::move(pending));
-                            
-                            if (log_detail) {
-                                std::cout << "📩 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
-                                         << "] Shared queue enqueue " << (queue_success ? "SUCCEEDED" : "FAILED") << std::endl;
-                            }
-                            
-                            if (!queue_success && attempt < 2) {
-                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            }
+                        
+                        queue_success = shared_leaf_queue_->enqueue(std::move(pending));
+                        
+                        if (log_detail) {
+                            std::cout << "📩 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
+                                     << "] Shared queue enqueue " << (queue_success ? "SUCCEEDED" : "FAILED") << std::endl;
+                        }
+                        
+                        if (!queue_success && attempt < 2) {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
                         }
                     }
                     

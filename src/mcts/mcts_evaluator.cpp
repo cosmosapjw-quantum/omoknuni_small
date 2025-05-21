@@ -68,17 +68,17 @@ MCTSEvaluator::MCTSEvaluator(InferenceFunction inference_fn,
     
     // Initialize the standardized batch parameters
     batch_params_.optimal_batch_size = batch_size_;
-    batch_params_.minimum_viable_batch_size = std::max(size_t(batch_size_ * 0.75), size_t(64));
-    batch_params_.minimum_fallback_batch_size = std::max(size_t(batch_size_ * 0.3), size_t(16));
-    batch_params_.max_wait_time = timeout_;
-    batch_params_.additional_wait_time = std::chrono::milliseconds(10);
+    batch_params_.minimum_viable_batch_size = std::max(size_t(batch_size_ * 0.25), size_t(8));  // Much more aggressive: 25% vs 75%
+    batch_params_.minimum_fallback_batch_size = std::max(size_t(batch_size_ * 0.125), size_t(1));  // Allow even tiny batches
+    batch_params_.max_wait_time = std::chrono::milliseconds(30);  // Shorter timeout for responsiveness  
+    batch_params_.additional_wait_time = std::chrono::milliseconds(5);
     
     // Initialize the pipeline buffer with optimal batch size
     // Configure pipeline buffer target batch size instead of recreating
     pipeline_buffer_.setTargetBatchSize(batch_params_.optimal_batch_size);
     
-    // Set min batch size to optimize GPU usage (reduced from 75% to 25% for faster batching)
-    min_batch_size_ = std::max(size_t(batch_size_ * 0.25), size_t(16));  // Wait for 25% batch or min 16
+    // Set min batch size to optimize GPU usage (much more aggressive for startup)
+    min_batch_size_ = std::max(size_t(batch_size_ * 0.125), size_t(4));  // Wait for 12.5% batch or min 4
     
     // Set optimal batch size for GPU efficiency
     optimal_batch_size_ = std::min(size_t(batch_size_ * 0.75), size_t(128));
@@ -96,30 +96,18 @@ MCTSEvaluator::MCTSEvaluator(InferenceFunction inference_fn,
     // CRITICAL FIX: Start the batch accumulator immediately in the constructor
     // This ensures it's ready to receive items as soon as the evaluator is created
     if (batch_accumulator_) {
-        std::cout << "MCTSEvaluator::constructor - Starting batch accumulator with optimal_size=" 
-                 << batch_params_.optimal_batch_size << ", min_viable=" 
-                 << batch_params_.minimum_viable_batch_size << ", max_wait=" 
-                 << batch_params_.max_wait_time.count() << "ms" << std::endl;
         batch_accumulator_->start();
         
         if (!batch_accumulator_->isRunning()) {
-            std::cout << "ERROR: MCTSEvaluator::constructor - Failed to start batch accumulator" << std::endl;
             // Try again with more explicit error handling
             try {
                 batch_accumulator_->stop(); // Make sure it's not in an inconsistent state
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 batch_accumulator_->start();
-                std::cout << "MCTSEvaluator::constructor - Second attempt to start batch accumulator: " 
-                         << (batch_accumulator_->isRunning() ? "SUCCESS" : "FAILED") << std::endl;
             } catch (const std::exception& e) {
-                std::cout << "ERROR: MCTSEvaluator::constructor - Exception during batch accumulator restart: " 
-                         << e.what() << std::endl;
+                // Ignore startup errors
             }
-        } else {
-            std::cout << "SUCCESS: MCTSEvaluator::constructor - BatchAccumulator started successfully" << std::endl;
         }
-    } else {
-        std::cout << "ERROR: MCTSEvaluator::constructor - Failed to create batch accumulator" << std::endl;
     }
 }
 
@@ -158,10 +146,6 @@ MCTSEvaluator::~MCTSEvaluator() {
             } catch (...) {
                 // Promise might already be fulfilled or broken
             }
-        }
-        
-        if (cleared_count > 0) {
-            // Cleared residual requests
         }
         
         // Release any resources and memory
@@ -233,7 +217,6 @@ void MCTSEvaluator::start() {
         // Ensure the batch accumulator is running (already started in constructor)
         if (batch_accumulator_ && !batch_accumulator_->isRunning()) {
             batch_accumulator_->start();
-            std::cout << "MCTSEvaluator::start - Started batch accumulator" << std::endl;
         }
         
         // Initialize pipeline buffer
@@ -242,13 +225,25 @@ void MCTSEvaluator::start() {
         // Start the batch collector thread first - handles legacy path
         batch_collector_thread_ = std::thread(&MCTSEvaluator::batchCollectorLoop, this);
         
-        // Start the inference worker threads
-        for (size_t i = 0; i < num_inference_threads_; ++i) {
-            // Assign one thread for pipeline processing, the rest for regular inference
-            if (i == 0) {
-                inference_worker_threads_.emplace_back(&MCTSEvaluator::pipelineProcessorLoop, this);
-            } else {
+        // CRITICAL FIX: Start the main processing thread based on configuration
+        if (use_external_queues_) {
+            // For external queues, use the main evaluation loop which includes batch collection
+            inference_worker_threads_.emplace_back(&MCTSEvaluator::evaluationLoop, this);
+            
+            // Start additional inference worker threads if needed
+            for (size_t i = 1; i < num_inference_threads_; ++i) {
                 inference_worker_threads_.emplace_back(&MCTSEvaluator::inferenceWorkerLoop, this);
+            }
+        } else {
+            // For internal queues, use the traditional approach
+            // Start the inference worker threads
+            for (size_t i = 0; i < num_inference_threads_; ++i) {
+                // Assign one thread for pipeline processing, the rest for regular inference
+                if (i == 0) {
+                    inference_worker_threads_.emplace_back(&MCTSEvaluator::pipelineProcessorLoop, this);
+                } else {
+                    inference_worker_threads_.emplace_back(&MCTSEvaluator::inferenceWorkerLoop, this);
+                }
             }
         }
         
@@ -553,27 +548,7 @@ size_t MCTSEvaluator::getTotalEvaluations() const {
 }
 
 void MCTSEvaluator::notifyLeafAvailable() {
-    static std::atomic<long long> notify_count_evaluator(0);
-    long long current_notify_count = notify_count_evaluator.fetch_add(1, std::memory_order_relaxed);
-    bool is_external = use_external_queues_; // Direct access for non-atomic bool
-
-    if (current_notify_count < 20 || current_notify_count % 100 == 0) { // Log frequently at start, then less often
-        std::cout << "MCTSEVALUATOR (notifyLeafAvailable @" << static_cast<void*>(this) 
-                  << "): Called (count: " << current_notify_count << ", external_mode: " << is_external 
-                  << "). Notifying internal CV." << std::endl;
-    }
-
-    // For external queues, we should immediately notify all waiting threads
-    // to ensure responsive processing
     if (use_external_queues_) {
-        // Get current queue sizes for diagnostics
-        size_t leaf_queue_size = 0;
-        if (leaf_queue_ptr_) {
-            auto* external_leaf_queue = static_cast<moodycamel::ConcurrentQueue<PendingEvaluation>*>(leaf_queue_ptr_);
-            leaf_queue_size = external_leaf_queue->size_approx();
-        }
-        
-        // Always notify all waiting threads when using external queues
         cv_.notify_all();
         batch_ready_cv_.notify_all();
         inference_cv_.notify_all();
@@ -581,34 +556,29 @@ void MCTSEvaluator::notifyLeafAvailable() {
         return;
     }
     
-    // For internal queues, batch notifications for efficiency
+    // For internal queues, balance between immediate notification and batching
+    // to avoid excessive CPU usage from too many context switches
     static std::atomic<int> notification_count{0};
     static std::atomic<std::chrono::steady_clock::time_point> last_notify_time{std::chrono::steady_clock::now()};
     
-    notification_count.fetch_add(1, std::memory_order_relaxed);
+    int old_count = notification_count.fetch_add(1, std::memory_order_relaxed);
     
     // Only notify if we have accumulated enough notifications or enough time has passed
     auto now = std::chrono::steady_clock::now();
     auto last_time = last_notify_time.load(std::memory_order_relaxed);
     auto time_since_last = std::chrono::duration_cast<std::chrono::microseconds>(now - last_time).count();
     
-    int count = notification_count.load(std::memory_order_relaxed);
-    bool should_notify = false;
+    bool is_first = (old_count == 0);
+    bool accumulated_enough = (old_count + 1 >= 4);
+    bool waited_enough = (time_since_last > 1000);
     
-    // Get the configured batch size for better notification batching
-    size_t target_batch = batch_size_ / 2;  // Notify when we have half a batch
-    
-    // Notify if we have enough pending notifications or if enough time has passed
-    if (count >= static_cast<int>(target_batch) || time_since_last > 2000) { // Target batch size or 2ms
-        // Try to reset the counter
-        if (notification_count.compare_exchange_strong(count, 0, std::memory_order_relaxed)) {
-            last_notify_time.store(now, std::memory_order_relaxed);
-            should_notify = true;
-        }
-    }
+    bool should_notify = is_first || accumulated_enough || waited_enough;
     
     if (should_notify) {
-        cv_.notify_all(); // Notify all waiting threads
+        int expected = old_count + 1;
+        notification_count.compare_exchange_strong(expected, 0, std::memory_order_relaxed);
+        last_notify_time.store(now, std::memory_order_relaxed);
+        cv_.notify_all();
     }
 }
 
@@ -623,7 +593,9 @@ bool MCTSEvaluator::processBatch() {
         
         if (!leaf_queue_ptr_ || !result_queue_ptr_) {
             static int null_queue_count = 0;
-            if (null_queue_count < 10) {}
+            if (null_queue_count < 10) {
+                null_queue_count++;
+            }
             return false;
         }
         
@@ -660,7 +632,6 @@ bool MCTSEvaluator::processBatch() {
             max_wait = std::chrono::milliseconds(15);
         }
         
-        // Removed periodic logging for performance
         
         const size_t OPTIMAL_BATCH = batch_size_;  // Target batch size
         
@@ -668,14 +639,11 @@ bool MCTSEvaluator::processBatch() {
         // Pre-allocate vector with the desired size to avoid issues with data() on empty vector
         evaluations.resize(OPTIMAL_BATCH);
         size_t initial_dequeued = external_leaf_queue->try_dequeue_bulk(evaluations.data(), OPTIMAL_BATCH);
-        evaluations.resize(initial_dequeued);  // Shrink to actual size dequeued
-        // Dequeued initial batch
+        evaluations.resize(initial_dequeued);
         
         // Phase 2: If below minimum, wait briefly for more
         if (evaluations.size() < MIN_BATCH) {
             auto deadline = std::chrono::steady_clock::now() + max_wait;
-            // Wait briefly for more items if below minimum
-            // std::cout << "BATCH: Batch size " << evaluations.size() << " < min " << MIN_BATCH << ", waiting up to " << max_wait.count() << "ms" << std::endl;
             
             while (std::chrono::steady_clock::now() < deadline && 
                    evaluations.size() < OPTIMAL_BATCH &&
@@ -687,47 +655,26 @@ bool MCTSEvaluator::processBatch() {
                 size_t dequeued = external_leaf_queue->try_dequeue_bulk(temp_batch.data(), remaining);
                 
                 if (dequeued > 0) {
-                    // evaluations.insert(evaluations.end(), std::make_move_iterator(temp_batch.begin()), std::make_move_iterator(temp_batch.begin() + dequeued));
-                    // size_t old_size = evaluations.size(); // Unused variable
                     for (size_t i = 0; i < dequeued; ++i) {
                         evaluations.push_back(std::move(temp_batch[i]));
                     }
-                    // Added more items to batch
                 } else {
-                    // CRITICAL FIX: Break early if queue is empty and we have at least one item
-                    // This prevents deadlock when engine stops producing
                     if (external_leaf_queue->size_approx() == 0 && evaluations.size() > 0) {
                         break;
                     }
                     std::this_thread::yield();
                 }
             }
-            
-            // Final batch ready for processing
         }
         
-        // Only process if we have items
         if (evaluations.empty()) {
-            // CRITICAL DEBUG: Log when we return false due to empty queue
-            static int empty_count = 0;
-            if (empty_count < 10) {
-                // int evaluator_id = reinterpret_cast<uintptr_t>(this) & 0xFFFF; // Unused
-                }
             return false;
         }
         
-        // Report batch size for external queue processing
         static int external_batch_count = 0;
-        if (external_batch_count % 100 == 0) {
-            // [BATCH] Track external batch size and count
-        }
         external_batch_count++;
         
-        // Track memory periodically
         static int batch_count = 0;
-        if (batch_count % 10 == 0) {
-            // alphazero::utils::trackMemory("Evaluator batch #" + std::to_string(batch_count));
-        }
         batch_count++;
         
         try {
@@ -754,11 +701,7 @@ bool MCTSEvaluator::processBatch() {
                         if (unique_clone) {
                             states.push_back(std::move(unique_clone));
                             valid_indices.push_back(i);
-                        } else {
-                            // WARNING: Failed to clone state at index i, skipping
                         }
-                    } else {
-                        // WARNING: Null state in parallel evaluation at index i, skipping
                     }
                 }
             } else {
@@ -769,11 +712,7 @@ bool MCTSEvaluator::processBatch() {
                         if (unique_clone) {
                             states.push_back(std::move(unique_clone));
                             valid_indices.push_back(i);
-                        } else {
-                            // WARNING: Failed to clone state at index i, skipping
                         }
-                    } else {
-                        // WARNING: Null state in evaluation at index i, skipping
                     }
                 }
             }
@@ -785,13 +724,6 @@ bool MCTSEvaluator::processBatch() {
             
             // Perform inference
             std::vector<NetworkOutput> results = inference_fn_(states);
-            
-            // Log successful inference with actual batch size
-            static int total_inferences = 0;
-            total_inferences++;
-            if (total_inferences % 100 == 0) {
-                // [BATCH] Track neural net inference count
-            }
             
             // Pair results with original evaluations based on valid indices
             if (results.size() == states.size()) {
@@ -820,12 +752,10 @@ bool MCTSEvaluator::processBatch() {
                         std::move(evaluations[original_index])
                     ));
                 }
-                
                 // Update statistics
                 total_batches_.fetch_add(1, std::memory_order_relaxed);
                 total_evaluations_.fetch_add(results.size(), std::memory_order_relaxed);
                 cumulative_batch_size_.fetch_add(results.size(), std::memory_order_relaxed);
-                
                 
                 // Notify the engine that results are available
                 if (result_notify_callback_) {
@@ -838,7 +768,6 @@ bool MCTSEvaluator::processBatch() {
                 return false;
             }
         } catch (const std::exception& e) {
-            // Error processing external batch
             return false;
         }
     }
@@ -853,8 +782,9 @@ bool MCTSEvaluator::processBatch() {
     return true;
 }
 
+// evaluationLoop is now implemented in mcts_evaluator_concurrent.cpp
+
 void MCTSEvaluator::processBatches() {
-    // MCTSEvaluator::processBatches worker thread started
     
     // For MCTSEngine integration with batch queue - use proper types
     using NetworkOutput = mcts::NetworkOutput;
@@ -906,13 +836,8 @@ void MCTSEvaluator::processBatches() {
                     // Force GPU memory cleanup if using CUDA
                     if (torch::cuda::is_available()) {
                         try {
-                            // First synchronize all CUDA streams to ensure operations are complete
                             torch::cuda::synchronize();
-                            
-                            // Clear CUDA cache to free memory
                             c10::cuda::CUDACachingAllocator::emptyCache();
-                            
-                            // CUDA memory cache emptied
                             
                             // Print memory stats for debugging during periodic cleanup
                             if (is_cleanup_time || is_external_idle) {
@@ -922,31 +847,22 @@ void MCTSEvaluator::processBatches() {
                                     cudaMemGetInfo(&free, &total);
                                     size_t used_mb = (total - free) / 1048576;
                                     
-                                    // MEMORY LEAK WARNING: if used memory exceeds threshold, force aggressive cleanup
-                                    if (used_mb > 7500) { // 7.5GB threshold for 8GB GPUs
-                                        // WARNING: GPU memory usage critical
-                                        
-                                        // Force synchronize all streams and empty cache
+                                    if (used_mb > 7500) {
                                         for (int i = 0; i < 3; i++) {
                                             torch::cuda::synchronize();
                                             c10::cuda::CUDACachingAllocator::emptyCache();
                                             std::this_thread::sleep_for(std::chrono::milliseconds(10));
                                         }
-                                    } else {
-                                        // GPU memory status logged
                                     }
                                 }
                             }
                         } catch (const std::exception& e) {
-                            // Error during CUDA cleanup
                         }
                     }
                     
                     if (is_cleanup_time) {
                         last_cleanup_time = current_time;
                         
-                        // Reset the state tracking counters periodically
-                        // to avoid using stale data for decisions
                         peak_batch_size = 0;
                         recent_batch_times.clear();
                         recent_batch_sizes.clear();
@@ -969,13 +885,9 @@ void MCTSEvaluator::processBatches() {
                         
                         // See if we need to adjust min_batch_size
                         if (avg_size < batch_size_ * 0.5f && min_batch_size_ > 1) {
-                            // Batches are usually small, reduce min_batch_size
                             min_batch_size_ = std::max(static_cast<size_t>(1), min_batch_size_ - 1);
-                            // Reducing min_batch_size
                         } else if (avg_size >= batch_size_ * 0.8f && avg_time < timeout_.count() * 0.3f) {
-                            // Batches are filling well and processing is fast, increase min_batch_size
                             min_batch_size_ = std::min(batch_size_, min_batch_size_ + 1);
-                            // Increasing min_batch_size
                         }
                     }
                     
@@ -1005,11 +917,6 @@ void MCTSEvaluator::processBatches() {
                 }
                 
                 if (use_external_queue) {
-                    // Debug print when using external queue
-                    static int external_queue_usage_count = 0;
-                    if (external_queue_usage_count++ < 10) {
-                        // [EVALUATOR] Using external queue with queue pointer and leaf_queue_ptr_
-                    }
                     
                     // Collect batch directly from leaf queue
                     std::vector<PendingEvaluation> evaluations;
@@ -1249,9 +1156,6 @@ void MCTSEvaluator::processBatches() {
                 // bool should_log_detail = total_batches_.load(std::memory_order_relaxed) % 20 == 0; // Unused
                 size_t batch_count_stat = total_batches_.load(std::memory_order_relaxed) + 1; // Renamed from batch_count to avoid conflict
                 
-                // Log internal batch size periodically  
-                if (total_batches_.load(std::memory_order_relaxed) % 10 == 0) {
-                    }
                 
                 // Processing batch
                 
@@ -1913,8 +1817,6 @@ void MCTSEvaluator::clearPendingBatches() {
         result_cv_.notify_all();
     }
     
-    // Log the action
-    std::cout << "MCTSEvaluator::clearPendingBatches - Cleared all pending evaluations" << std::endl;
 }
 
 void MCTSEvaluator::processInternalBatch(std::vector<EvaluationRequest>& batch) {

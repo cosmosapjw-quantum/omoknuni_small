@@ -8,9 +8,9 @@ board_size: 15
 # AlphaZero pipeline settings
 num_iterations: 10  # Number of iterations for full AlphaZero training
 
-# Self-play settings
-self_play_games_per_generation: 4
-self_play_num_parallel_games: 4
+# Self-play settings  
+self_play_games_per_generation: 1
+self_play_num_parallel_games: 8  # Multiple games share the single engine for optimal batching
 self_play_max_moves: 0
 self_play_temperature_threshold: 30  # Move number after which temperature is reduced
 self_play_high_temperature: 1.0  # Temperature for early moves (exploration)
@@ -38,8 +38,8 @@ mcts_dirichlet_epsilon: 0.25
 mcts_temperature: 1.0  # Base temperature for move selection
 
 # Root parallelization settings (replaces multiple MCTS engines)
-mcts_use_root_parallelization: true  # Enabled for better parallelism - CRITICAL for batch formation
-mcts_num_root_workers: 4  # Set to match number of parallel games
+mcts_use_root_parallelization: true  # CRITICAL: Enables shared engine architecture for optimal batch formation
+mcts_num_root_workers: 8  # Number of worker threads for the shared engine
 
 # Progressive widening (helps with batching)
 mcts_use_progressive_widening: true

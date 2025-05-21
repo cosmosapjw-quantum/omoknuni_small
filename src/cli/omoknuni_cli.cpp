@@ -356,8 +356,8 @@ int main(int argc, char** argv) {
                     self_play_settings.mcts_settings = mcts_settings;
                     self_play_settings.num_parallel_games = num_parallel_games;
                     
-                    // Ensure root parallelization is enabled with proper number of workers
-                    self_play_settings.mcts_settings.use_root_parallelization = true;
+                    // Use root parallelization setting from config
+                    self_play_settings.mcts_settings.use_root_parallelization = use_root_parallelization;
                     self_play_settings.mcts_settings.num_root_workers = num_root_workers;
                     self_play_settings.max_moves = max_moves;
                     self_play_settings.temperature_threshold = temperature_threshold;

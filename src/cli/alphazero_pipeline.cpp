@@ -249,8 +249,8 @@ std::vector<selfplay::GameData> AlphaZeroPipeline::runSelfPlay(const std::string
         
         settings.num_parallel_games = config_.self_play_num_parallel_games;
         
-        // Configure root parallelization instead of multiple engines
-        settings.mcts_settings.use_root_parallelization = true;
+        // Use configured root parallelization setting
+        // settings.mcts_settings.use_root_parallelization already set from configuration
         
         // Calculate reasonable number of root workers based on threads and parallel games
         int available_cores = std::thread::hardware_concurrency();

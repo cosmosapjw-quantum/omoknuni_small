@@ -20,22 +20,27 @@ BatchAccumulator::BatchAccumulator(size_t target_batch_size,
         target_batch_size_ = 8;
     }
     
-    // Apply sensible defaults if parameters are invalid
-    if (min_viable_batch_size_ < 1) {
-        min_viable_batch_size_ = target_batch_size_ * 3 / 4; // 75% of target by default
-        std::cout << "BatchAccumulator::Constructor - Setting min_viable_batch_size to " 
-                  << min_viable_batch_size_ << " (75% of target)" << std::endl;
+    // CRITICAL FIX: Make min_viable_batch_size MUCH lower to allow smaller batches to be processed
+    // This is the key fix for the zero batch issue - we need to allow very small batches to form
+    if (min_viable_batch_size_ < 1 || min_viable_batch_size_ > target_batch_size_) {
+        // Set to just 1 item minimum - process any non-empty batch to avoid stalling
+        min_viable_batch_size_ = 1;
+    } else {
+        // Even if caller provided a value, ensure it's not too high - cap at 25% now (was 50%)
+        size_t max_min_viable = std::max(size_t(1), target_batch_size_ / 4);
+        if (min_viable_batch_size_ > max_min_viable) {
+            min_viable_batch_size_ = max_min_viable;
+        }
     }
     
+    // CRITICAL FIX: Ensure max_wait_time is not too short or too long
     if (max_wait_time_.count() < 1) {
         max_wait_time_ = std::chrono::milliseconds(50); // Default 50ms timeout
-        std::cout << "BatchAccumulator::Constructor - Setting max_wait_time to " 
-                  << max_wait_time_.count() << "ms (default)" << std::endl;
+    } else if (max_wait_time_.count() > 500) {
+        // Also cap the maximum wait time to avoid stalled batches
+        max_wait_time_ = std::chrono::milliseconds(500);
     }
     
-    std::cout << "BatchAccumulator::Constructor - Created with target_size=" << target_batch_size_
-              << ", min_viable=" << min_viable_batch_size_
-              << ", max_wait=" << max_wait_time_.count() << "ms" << std::endl;
     
     // Pre-allocate batch to avoid reallocations
     current_batch_.reserve(target_batch_size_ * 2);
@@ -46,92 +51,49 @@ BatchAccumulator::~BatchAccumulator() {
 }
 
 void BatchAccumulator::start() {
-    std::cout << "====== DEBUG: BatchAccumulator::start CALLED ======" << std::endl;
-    std::cout << "BEFORE: this=" << static_cast<void*>(this)
-              << ", target_batch_size_=" << target_batch_size_
-              << ", min_viable_batch_size_=" << min_viable_batch_size_
-              << ", max_wait_time_=" << max_wait_time_.count() << "ms"
-              << ", thread_joinable=" << (accumulator_thread_.joinable() ? "yes" : "no")
-              << ", shutdown_flag=" << (shutdown_.load(std::memory_order_acquire) ? "true" : "false")
-              << ", current_batch_size=" << current_batch_.size()
-              << ", completed_batches_size=" << completed_batches_.size_approx()
-              << std::endl;
     
     // Verify parameters are sane before starting
     bool params_valid = true;
     
     if (target_batch_size_ < 8) {
-        std::cout << "ERROR: target_batch_size_ is too small (" << target_batch_size_ << "), should be at least 8" << std::endl;
         params_valid = false;
     }
     
     if (min_viable_batch_size_ < 1) {
-        std::cout << "ERROR: min_viable_batch_size_ is too small (" << min_viable_batch_size_ << "), should be at least 1" << std::endl;
         params_valid = false;
     }
     
     if (max_wait_time_.count() < 1) {
-        std::cout << "ERROR: max_wait_time_ is too small (" << max_wait_time_.count() << "ms), should be at least 1ms" << std::endl;
         params_valid = false;
     }
     
     if (!params_valid) {
-        std::cout << "FIXING: Adjusting invalid parameters to sane defaults" << std::endl;
         if (target_batch_size_ < 8) target_batch_size_ = 128;
         if (min_viable_batch_size_ < 1) min_viable_batch_size_ = target_batch_size_ * 3 / 4;
         if (max_wait_time_.count() < 1) max_wait_time_ = std::chrono::milliseconds(50);
-        
-        std::cout << "ADJUSTED PARAMETERS: target_batch_size_=" << target_batch_size_
-                  << ", min_viable_batch_size_=" << min_viable_batch_size_
-                  << ", max_wait_time_=" << max_wait_time_.count() << "ms" << std::endl;
     }
     
     // Don't start twice
     if (accumulator_thread_.joinable()) {
-        std::cout << "NOTICE: BatchAccumulator::start - Thread already running (id=" 
-                  << accumulator_thread_.get_id() << "), not starting again" << std::endl;
-                  
         // Force update shutdown flag to make sure it's correct
         if (shutdown_.load(std::memory_order_acquire)) {
-            std::cout << "WARNING: Thread joinable but shutdown flag is true! Resetting to false." << std::endl;
             shutdown_.store(false, std::memory_order_release);
         }
         
-        // Check if the thread is actually running by testing if it's responsive
-        // Might need a more sophisticated technique in the future
-        std::cout << "CHECKING: Testing if thread is responsive..." << std::endl;
-        
         // Clear any completed batches as a test of thread responsiveness
         std::vector<PendingEvaluation> test_batch;
-        size_t cleared_batches = 0;
-        while (completed_batches_.try_dequeue(test_batch)) {
-            cleared_batches++;
-        }
-        
-        if (cleared_batches > 0) {
-            std::cout << "INFO: Thread appears active, cleared " << cleared_batches << " pending batches" << std::endl;
-        } else {
-            std::cout << "INFO: No pending batches found, but thread is joinable" << std::endl;
-        }
+        while (completed_batches_.try_dequeue(test_batch)) {}
         
         return;
     }
     
     // Clear any existing batches before starting
     std::vector<PendingEvaluation> dummy_batch;
-    size_t cleared_count = 0;
-    while (completed_batches_.try_dequeue(dummy_batch)) {
-        cleared_count++;
-    }
-    
-    if (cleared_count > 0) {
-        std::cout << "NOTICE: Cleared " << cleared_count << " stale batches from the queue" << std::endl;
-    }
+    while (completed_batches_.try_dequeue(dummy_batch)) {}
     
     // Reset the current batch
     std::lock_guard<std::mutex> lock(accumulator_mutex_);
     if (!current_batch_.empty()) {
-        std::cout << "NOTICE: Clearing current batch with " << current_batch_.size() << " pending items" << std::endl;
         current_batch_.clear();
     }
     
@@ -140,49 +102,24 @@ void BatchAccumulator::start() {
     
     // Start accumulator thread
     try {
-        std::cout << "STARTING: Creating accumulator thread..." << std::endl;
         accumulator_thread_ = std::thread(&BatchAccumulator::accumulatorLoop, this);
-        
-        // Get thread ID for debugging
-        auto thread_id = accumulator_thread_.get_id();
-        std::cout << "SUCCESS: Started accumulator thread with ID " << thread_id
-                  << " for batch size " << target_batch_size_ 
-                  << ", min viable: " << min_viable_batch_size_ 
-                  << ", max wait: " << max_wait_time_.count() << "ms" << std::endl;
     } catch (const std::exception& e) {
-        std::cout << "ERROR: Failed to start thread: " << e.what() << std::endl;
         shutdown_.store(true, std::memory_order_release);
         return;
     } catch (...) {
-        std::cout << "ERROR: Unknown exception when starting thread" << std::endl;
         shutdown_.store(true, std::memory_order_release);
         return;
     }
     
     // Add a delay to ensure thread actually starts
-    std::cout << "WAITING: Giving thread time to initialize..." << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(20)); // Increased from 10ms to 20ms
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     
-    // Check if thread is actually running after the delay
-    if (!accumulator_thread_.joinable()) {
-        std::cout << "ERROR: Thread not joinable after delay! Thread failed to start properly." << std::endl;
-    } else {
-        // Test if thread is responsive by notifying the condition variable
-        std::cout << "NOTIFYING: Sending initial notification to thread..." << std::endl;
+    // Test if thread is responsive by notifying the condition variable
+    if (accumulator_thread_.joinable()) {
         batch_ready_ = true;
         cv_.notify_all();
-        
-        // Reset batch_ready_ flag after notification
         batch_ready_ = false;
     }
-    
-    // Log final state
-    std::cout << "AFTER: this=" << static_cast<void*>(this)
-              << ", thread_id=" << accumulator_thread_.get_id()
-              << ", thread_joinable=" << (accumulator_thread_.joinable() ? "yes" : "no")
-              << ", shutdown_flag=" << (shutdown_.load(std::memory_order_acquire) ? "true" : "false")
-              << std::endl;
-    std::cout << "====== DEBUG: BatchAccumulator::start COMPLETED ======" << std::endl;
 }
 
 void BatchAccumulator::stop() {
@@ -202,83 +139,49 @@ void BatchAccumulator::stop() {
     }
 }
 
+void BatchAccumulator::submitDirectBatch(std::vector<PendingEvaluation>&& batch) {
+    if (batch.empty()) {
+        return;
+    }
+    
+    // Update statistics
+    total_batches_.fetch_add(1, std::memory_order_relaxed);
+    total_evaluations_.fetch_add(batch.size(), std::memory_order_relaxed);
+    cumulative_batch_size_.fetch_add(batch.size(), std::memory_order_relaxed);
+    
+    if (batch.size() >= target_batch_size_ * 3 / 4) {
+        optimal_batches_.fetch_add(1, std::memory_order_relaxed);
+    }
+    
+    // Submit directly to completed queue, bypassing accumulator
+    completed_batches_.enqueue(std::move(batch));
+    
+    // Notify waiting inference worker
+    cv_.notify_all();
+}
+
 void BatchAccumulator::addEvaluation(PendingEvaluation&& eval) {
-    static int items_added = 0;
-    items_added++;
     
-    // CRITICAL DEBUG: More frequent logging to help diagnose batch issues
-    // Always print for initial items to track the flow
-    bool detailed_logging = (items_added <= 50 || items_added % 20 == 0);
-    if (detailed_logging) {
-        std::cout << "📥 BatchAccumulator::addEvaluation - Item added #" << items_added 
-                 << ", current size=" << current_batch_.size() 
-                 << ", target=" << target_batch_size_ 
-                 << ", running=" << (isRunning() ? "yes" : "no")
-                 << ", state addr=" << (eval.state ? eval.state.get() : nullptr)
-                 << ", state valid=" << (eval.state && eval.state->validate() ? "yes" : "no") 
-                 << ", node addr=" << (eval.node ? eval.node.get() : nullptr)
-                 << ", batch_id=" << eval.batch_id
-                 << ", request_id=" << eval.request_id << std::endl;
-        
-        utils::debug_logger().logBatchAccumulator(
-            "Item added #" + std::to_string(items_added),
-            current_batch_.size(),
-            target_batch_size_
-        );
-    }
-    
-    // CRITICAL DEBUG: Validate the node and state
-    if (!eval.node) {
-        std::cout << "⚠️ BatchAccumulator::addEvaluation - WARNING: Item #" << items_added 
-                 << " has null node!" << std::endl;
-    }
-    
-    if (!eval.state) {
-        std::cout << "⚠️ BatchAccumulator::addEvaluation - WARNING: Item #" << items_added 
-                 << " has null state!" << std::endl;
-    } else if (detailed_logging) {
-        try {
-            // Get some info about the state for debugging
-            int player = eval.state->getCurrentPlayer();
-            bool is_terminal = eval.state->isTerminal();
-            uint64_t hash = eval.state->getHash();
-            std::cout << "🎮 State info - player=" << player 
-                     << ", terminal=" << (is_terminal ? "yes" : "no")
-                     << ", hash=" << hash << std::endl;
-        } catch (const std::exception& e) {
-            std::cout << "⚠️ BatchAccumulator::addEvaluation - Exception getting state info: " 
-                     << e.what() << std::endl;
-        }
-    }
     
     // CRITICAL FIX: Ensure accumulator is running
     if (!isRunning()) {
-        std::cout << "⚠️ CRITICAL: BatchAccumulator::addEvaluation - Accumulator is not running! Starting..." << std::endl;
         start();
         
         // Verify that the thread actually started
         if (!accumulator_thread_.joinable()) {
-            std::cout << "❌ ERROR: BatchAccumulator::addEvaluation - Failed to start accumulator thread!" << std::endl;
             // Try one more time with a small delay
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             start();
             if (!accumulator_thread_.joinable()) {
-                std::cout << "❌ CRITICAL ERROR: BatchAccumulator::addEvaluation - Failed to start accumulator thread after retry!" << std::endl;
                 // If we still can't start the thread, we're in trouble
-                // Try to notify anyway, but this probably won't work
                 cv_.notify_all();
                 return;
-            } else {
-                std::cout << "✅ BatchAccumulator::addEvaluation - Successfully started accumulator thread on retry" << std::endl;
             }
-        } else {
-            std::cout << "✅ BatchAccumulator::addEvaluation - Successfully started accumulator thread" << std::endl;
         }
     }
     
     // CRITICAL FIX: Validate the state before adding to batch
     if (!eval.state) {
-        std::cout << "⚠️ WARNING: BatchAccumulator::addEvaluation - Null state in evaluation, skipping" << std::endl;
         return;
     }
     
@@ -286,24 +189,16 @@ void BatchAccumulator::addEvaluation(PendingEvaluation&& eval) {
     bool state_valid = false;
     try {
         state_valid = eval.state->validate();
-    } catch (const std::exception& e) {
-        std::cout << "⚠️ WARNING: BatchAccumulator::addEvaluation - Exception during state validation: " 
-                 << e.what() << std::endl;
-        state_valid = false;
     } catch (...) {
-        std::cout << "⚠️ WARNING: BatchAccumulator::addEvaluation - Unknown exception during state validation" 
-                 << std::endl;
         state_valid = false;
     }
     
     if (!state_valid) {
-        std::cout << "⚠️ WARNING: BatchAccumulator::addEvaluation - Invalid state in evaluation, skipping" << std::endl;
         return;
     }
     
     // CRITICAL DEBUG: Validate the node
     if (!eval.node) {
-        std::cout << "⚠️ WARNING: BatchAccumulator::addEvaluation - Null node in evaluation, skipping" << std::endl;
         return;
     }
     
@@ -311,13 +206,10 @@ void BatchAccumulator::addEvaluation(PendingEvaluation&& eval) {
     {
         std::lock_guard<std::mutex> lock(accumulator_mutex_);
         
-        // CRITICAL DEBUG: Track the size before adding
-        size_t prev_size = current_batch_.size();
         
         // CRITICAL FIX: Add a timestamp to this batch if it's the first item
         if (current_batch_.empty()) {
             batch_start_time_ = std::chrono::steady_clock::now();
-            std::cout << "🕒 BatchAccumulator::addEvaluation - Starting new batch with timestamp" << std::endl;
         }
         
         // Add to current batch
@@ -326,50 +218,49 @@ void BatchAccumulator::addEvaluation(PendingEvaluation&& eval) {
         // Increment total count
         total_evaluations_.fetch_add(1, std::memory_order_relaxed);
         
-        // Check if batch is ready - either at target size or accumulated enough for min viable
-        bool batch_at_target = current_batch_.size() >= target_batch_size_;
-        bool batch_viable = !current_batch_.empty() && current_batch_.size() >= min_viable_batch_size_;
+        // FIXED: Proper batch accumulation with reasonable timing
+        // Balance between efficiency (larger batches) and responsiveness
         
-        // Set batch_ready_ flag based on either target reached or time threshold reached with viable batch
+        bool batch_at_target = current_batch_.size() >= target_batch_size_;
+        bool batch_has_items = !current_batch_.empty();
+        
         bool time_threshold_reached = false;
-        if (!current_batch_.empty()) {
+        
+        if (batch_has_items) {
             auto current_time = std::chrono::steady_clock::now();
             auto batch_age = std::chrono::duration_cast<std::chrono::milliseconds>(
                 current_time - batch_start_time_).count();
             
-            // If we have at least 1 item and have waited long enough, mark as ready
-            time_threshold_reached = batch_age > (max_wait_time_.count() / 2) && !current_batch_.empty();
+            // CRITICAL FIX: More patient batch accumulation for better GPU utilization
+            bool waited_briefly = batch_age > 50;   // 50ms wait for decent batches
+            bool waited_normally = batch_age > 100; // 100ms wait for smaller batches  
+            bool waited_long = batch_age > 200;     // 200ms max wait for any batch
             
-            // If we have a viable batch and have waited long enough, definitely mark as ready
-            if (batch_viable && batch_age > (max_wait_time_.count() * 0.8)) {
+            // Prioritize larger batches for GPU efficiency
+            if (current_batch_.size() >= target_batch_size_) {
+                // Full batch - process immediately
+                time_threshold_reached = true;
+            } else if (current_batch_.size() >= target_batch_size_ * 3 / 4 && waited_briefly) {
+                // 75% full batch - process after brief wait (48 items for 64 target)
+                time_threshold_reached = true;
+            } else if (current_batch_.size() >= target_batch_size_ / 2 && waited_normally) {
+                // 50% full batch - process after normal wait (32 items for 64 target)
+                time_threshold_reached = true;
+            } else if (current_batch_.size() >= target_batch_size_ / 4 && waited_long) {
+                // 25% full batch - process after longer wait (16 items for 64 target)
+                time_threshold_reached = true;
+            } else if (batch_has_items && waited_long) {
+                // Any batch - emergency processing after max wait (only after 200ms)
                 time_threshold_reached = true;
             }
         }
         
-        batch_ready_ = batch_at_target || time_threshold_reached;
+        // CRITICAL FIX: Ultra-aggressive batch ready flag for immediate processing
+        // Process batches as soon as we have any reasonable amount
+        batch_ready_ = batch_at_target || time_threshold_reached || 
+                      (current_batch_.size() >= 8) ||  // Process immediately when we have 8+ items
+                      (batch_has_items && consecutive_empty_iterations_.load(std::memory_order_relaxed) > 2); // Much faster emergency processing
         
-        // Log size change (only for initial items or significant changes)
-        if (detailed_logging || batch_ready_ || (current_batch_.size() > 0 && prev_size == 0)) {
-            std::cout << "📊 BatchAccumulator::addEvaluation - Batch size increased from " 
-                     << prev_size << " to " << current_batch_.size() 
-                     << " (target: " << target_batch_size_ 
-                     << ", min_viable: " << min_viable_batch_size_ << ")" << std::endl;
-        }
-        
-        // Log when a batch is ready
-        if (batch_ready_) {
-            std::string reason = batch_at_target ? "target size reached" : 
-                                 (time_threshold_reached ? "time threshold reached" : "unknown");
-            
-            std::cout << "✅ BatchAccumulator::addEvaluation - Batch ready with " 
-                     << current_batch_.size() << " items (reason: " << reason << ")" << std::endl;
-            
-            utils::debug_logger().logBatchAccumulator(
-                "Batch ready with " + std::to_string(current_batch_.size()) + " items",
-                current_batch_.size(), 
-                target_batch_size_
-            );
-        }
     }
     
     // Always notify the condition variable after adding an item
@@ -383,55 +274,10 @@ void BatchAccumulator::addEvaluation(PendingEvaluation&& eval) {
         cv_.notify_all();
     }
     
-    // CRITICAL DEBUG: Log notification
-    if (detailed_logging) {
-        std::cout << "🔔 BatchAccumulator::addEvaluation - Notifications sent to wake up accumulator thread" 
-                 << std::endl;
-    }
 }
 
 bool BatchAccumulator::getCompletedBatch(std::vector<PendingEvaluation>& batch) {
-    // CRITICAL DEBUG: Track read attempts
-    static std::atomic<int> get_batch_counter{0};
-    int counter = get_batch_counter.fetch_add(1, std::memory_order_relaxed);
-    bool detailed_logging = (counter <= 50 || counter % 20 == 0);
-    
-    // Check queue size before dequeuing
-    size_t queue_size = completed_batches_.size_approx();
-    
-    if (detailed_logging) {
-        std::cout << "🔍 BatchAccumulator::getCompletedBatch - [#" << counter 
-                 << "] Trying to get batch, queue size: " << queue_size << std::endl;
-    }
-    
-    // Attempt to dequeue a batch
-    bool success = completed_batches_.try_dequeue(batch);
-    
-    if (success) {
-        if (detailed_logging || batch.size() <= 5) {
-            std::cout << "✅ BatchAccumulator::getCompletedBatch - [#" << counter 
-                     << "] Successfully got batch with " << batch.size() << " items" << std::endl;
-            
-            // Log a few items for debugging
-            if (batch.size() <= 5) {
-                std::cout << "📦 BatchAccumulator::getCompletedBatch - Batch contents:" << std::endl;
-                for (size_t i = 0; i < batch.size(); i++) {
-                    std::cout << "  - Item " << i << ": node=" << batch[i].node.get()
-                             << ", state=" << (batch[i].state ? batch[i].state.get() : nullptr)
-                             << ", batch_id=" << batch[i].batch_id
-                             << ", request_id=" << batch[i].request_id
-                             << std::endl;
-                }
-            }
-        }
-    } else {
-        if (detailed_logging) {
-            std::cout << "⚠️ BatchAccumulator::getCompletedBatch - [#" << counter 
-                     << "] No batch available in queue (size: " << queue_size << ")" << std::endl;
-        }
-    }
-    
-    return success;
+    return completed_batches_.try_dequeue(batch);
 }
 
 // Helper function for batch prioritization
@@ -463,9 +309,6 @@ BatchAccumulator::BatchPriority BatchAccumulator::calculateBatchPriority(
 }
 
 void BatchAccumulator::accumulatorLoop() {
-    std::cout << "🔄 BatchAccumulator::accumulatorLoop - Thread started, target_size=" 
-             << target_batch_size_ << ", min_viable=" << min_viable_batch_size_ 
-             << ", wait_time=" << max_wait_time_.count() << "ms" << std::endl;
              
     // Track statistics for logging
     size_t loop_counter = 0;
@@ -474,19 +317,22 @@ void BatchAccumulator::accumulatorLoop() {
     
     // Remember last batch processing time to avoid getting stuck
     auto last_batch_time = std::chrono::steady_clock::now();
-    const std::chrono::milliseconds force_process_delay(100); // Reduced from 500ms to 100ms - Force process if no batch for 100ms
+    // BALANCED: Reasonable force process delay for good batch formation  
+    // This ensures batches are processed regularly while allowing accumulation
+    const std::chrono::milliseconds force_process_delay(30); // Reasonable 30ms for batch accumulation
     
     // CRITICAL FIX: Add debug counter for consecutive empty iterations
-    int consecutive_empty_iterations = 0;
     // After this many empty iterations, try more aggressive measures
     const int MAX_CONSECUTIVE_EMPTY = 10;
     
-    // Reset the counter at the start
     consecutive_empty_iterations_.store(0, std::memory_order_relaxed);
     
     // CRITICAL DEBUG: Add counters for detailed statistics
     static std::atomic<int> total_items_added_to_accumulator{0};
     static std::atomic<int> total_batches_submitted{0};
+    
+    // Track last successful batch submission to detect deadlocks
+    auto last_successful_batch = std::chrono::steady_clock::now();
     
     while (!shutdown_.load(std::memory_order_acquire)) {
         loop_counter++;
@@ -495,107 +341,12 @@ void BatchAccumulator::accumulatorLoop() {
         {
             std::unique_lock<std::mutex> lock(accumulator_mutex_);
             
-            // Debug logging every 100 iterations or for first few
-            bool detailed_logging = (loop_counter <= 50 || loop_counter % 100 == 0 || consecutive_empty_iterations % 10 == 0);
-            if (detailed_logging) {
-                std::cout << "🔄 BatchAccumulator::accumulatorLoop - [Iteration " << loop_counter 
-                         << "] current_batch_size=" << current_batch_.size() 
-                         << ", total_batches=" << total_batches_created
-                         << ", total_items=" << total_items_processed 
-                         << ", consecutive_empty=" << consecutive_empty_iterations 
-                         << ", total_items_all_time=" << total_items_added_to_accumulator.load()
-                         << ", total_batches_all_time=" << total_batches_submitted.load()
-                         << std::endl;
-            }
-            
-            // Generate detailed batch statistics report periodically
-            if (loop_counter % 10 == 0) {
-                // Calculate real-time metrics
-                float avg_batch_size = total_batches_submitted.load() > 0 ? 
-                    static_cast<float>(total_items_added_to_accumulator.load()) / total_batches_submitted.load() : 0;
-                
-                size_t completed_queue_size = completed_batches_.size_approx();
-                
-                // Calculate efficiency metrics
-                float batch_efficiency = target_batch_size_ > 0 ? 
-                    (avg_batch_size * 100.0f / target_batch_size_) : 0;
-                
-                // Time since thread start in seconds
-                static auto thread_start_time = std::chrono::steady_clock::now();
-                auto current_time = std::chrono::steady_clock::now();
-                float elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    current_time - thread_start_time).count() / 1000.0f;
-                
-                // Calculate throughput metrics (states processed per second)
-                float throughput = elapsed_seconds > 0 ? 
-                    total_items_added_to_accumulator.load() / elapsed_seconds : 0;
-                
-                // Comprehensive report with more details and better formatting
-                std::cout << "📈 [BATCH_METRICS] " 
-                          << "Batches: " << total_batches_submitted.load() 
-                          << " | Avg size: " << std::fixed << std::setprecision(1) << avg_batch_size 
-                          << " | Efficiency: " << std::fixed << std::setprecision(1) << batch_efficiency << "%"
-                          << " | States: " << total_items_added_to_accumulator.load()
-                          << " | Throughput: " << std::fixed << std::setprecision(1) << throughput << " states/sec"
-                          << " | Target: " << target_batch_size_
-                          << " | Min viable: " << min_viable_batch_size_
-                          << " | Queue size: " << completed_queue_size
-                          << " | Status: " << (this->isRunning() ? "ACTIVE" : "STOPPED")
-                          << " | Empty iterations: " << consecutive_empty_iterations_.load()
-                          << std::endl;
-            }
-            
-            // CRITICAL DEBUG: Always check if batch_ready_ is true
-            if (batch_ready_) {
-                std::cout << "✅ BatchAccumulator::accumulatorLoop - [Iteration " << loop_counter 
-                         << "] batch_ready_ flag is TRUE with " << current_batch_.size() 
-                         << " items in batch" << std::endl;
-            }
-            
-            // CRITICAL FIX: Diagnose why no items are being added
             if (current_batch_.empty()) {
                 // Increment the atomic counter
-                int local_counter = consecutive_empty_iterations_.fetch_add(1, std::memory_order_relaxed) + 1;
-                
-                // After several empty iterations, print debugging info
-                if (local_counter == MAX_CONSECUTIVE_EMPTY) {
-                    std::cout << "⚠️ WARNING: BatchAccumulator::accumulatorLoop - " 
-                             << local_counter
-                             << " consecutive empty iterations. This may indicate a problem with the leaf queue." 
-                             << std::endl;
-                }
-                
-                // Every MAX_CONSECUTIVE_EMPTY iterations, print more detailed diagnostics
-                if (local_counter % MAX_CONSECUTIVE_EMPTY == 0) {
-                    std::cout << "🔍 DIAGNOSTIC: BatchAccumulator loop " << loop_counter 
-                             << ", no items being added to batch for " << local_counter
-                             << " consecutive iterations." << std::endl;
-                    
-                    // Print more statistics about the accumulator's state
-                    std::cout << "📊 STATS: target_batch_size_=" << target_batch_size_
-                             << ", min_viable_batch_size_=" << min_viable_batch_size_
-                             << ", batch_ready_=" << (batch_ready_ ? "true" : "false")
-                             << ", completed_batches_size=" << completed_batches_.size_approx()
-                             << ", total_batches_=" << total_batches_.load()
-                             << ", total_evaluations_=" << total_evaluations_.load()
-                             << std::endl;
-                }
+                consecutive_empty_iterations_.fetch_add(1, std::memory_order_relaxed);
             } else {
                 // Reset counter when we have items
                 consecutive_empty_iterations_.store(0, std::memory_order_relaxed);
-                
-                // CRITICAL DEBUG: Log batch contents for early batches
-                if (current_batch_.size() <= 5 || total_items_processed < 50) {
-                    std::cout << "📦 BatchAccumulator::accumulatorLoop - Current batch contains " 
-                             << current_batch_.size() << " items:" << std::endl;
-                    for (size_t i = 0; i < current_batch_.size(); i++) {
-                        std::cout << "  - Item " << i << ": node=" << current_batch_[i].node.get()
-                                 << ", state=" << (current_batch_[i].state ? current_batch_[i].state.get() : nullptr)
-                                 << ", batch_id=" << current_batch_[i].batch_id
-                                 << ", request_id=" << current_batch_[i].request_id
-                                 << std::endl;
-                    }
-                }
             }
             
             // CRITICAL FIX: Force processing if we haven't processed a batch in a while
@@ -605,29 +356,36 @@ void BatchAccumulator::accumulatorLoop() {
             if (!current_batch_.empty()) {
                 auto time_since_last_batch = std::chrono::steady_clock::now() - last_batch_time;
                 
-                // Force process if:
-                // 1. It's been too long since last batch and we have at least one item
-                // 2. We have at least min_viable_batch_size_ items
-                if (time_since_last_batch > force_process_delay || 
-                    current_batch_.size() >= min_viable_batch_size_) {
-                    
-                    std::cout << "⚡ BatchAccumulator::accumulatorLoop - FORCING BATCH PROCESSING after " 
-                              << std::chrono::duration_cast<std::chrono::milliseconds>(time_since_last_batch).count() 
-                              << "ms with " << current_batch_.size() << " items (min viable: " 
-                              << min_viable_batch_size_ << ")" << std::endl;
+                // CRITICAL FIX: Immediate aggressive processing for speed
+                // Prioritize processing speed over waiting for larger batches
+                if (current_batch_.size() >= target_batch_size_ / 2) {
+                    // Half batch (32+ items) - process immediately
+                    force_batch_processing = true;
+                } else if (current_batch_.size() >= target_batch_size_ / 4 && time_since_last_batch > std::chrono::milliseconds(5)) {
+                    // Quarter batch (16+ items) - process after just 5ms
+                    force_batch_processing = true;
+                } else if (current_batch_.size() >= 8 && time_since_last_batch > std::chrono::milliseconds(10)) {
+                    // Small decent batch (8+ items) - process after 10ms
+                    force_batch_processing = true;
+                } else if (current_batch_.size() >= 1 && time_since_last_batch > std::chrono::milliseconds(25)) {
+                    // Any batch - emergency processing after just 25ms
                     force_batch_processing = true;
                 }
             }
             
-            // Phase 1: Wait for optimal batch size or timeout with a shorter wait
+            // Phase 1: Wait for optimal batch size or timeout with a MUCH shorter wait
             auto start_wait = std::chrono::steady_clock::now();
             bool timeout_occurred = false;
             
-            // Use a moderate timeout to balance responsiveness with efficiency
-            auto actual_wait_time = max_wait_time_;
+            // NUCLEAR OPTION: Zero-latency immediate processing
+            // Don't wait at all - process immediately if we have any reasonable batch
+            bool process_immediately = !current_batch_.empty() && 
+                                     (current_batch_.size() >= 8 || force_batch_processing || batch_ready_);
             
-            // Wait for a condition that indicates we should process a batch
-            auto wait_result = cv_.wait_for(lock, actual_wait_time, [this, &start_wait, &timeout_occurred, force_batch_processing]() {
+            if (!process_immediately) {
+                // Only wait very briefly if we don't have a decent batch yet
+                auto actual_wait_time = std::chrono::milliseconds(1); 
+                cv_.wait_for(lock, actual_wait_time, [this, &start_wait, &timeout_occurred, force_batch_processing]() {
                 // Get the current state for decision making
                 bool is_shutdown = shutdown_.load(std::memory_order_acquire);
                 bool is_batch_ready = batch_ready_;
@@ -641,10 +399,26 @@ void BatchAccumulator::accumulatorLoop() {
                     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
                         current_time - batch_start_time_).count();
                     
-                    // Process if we've waited long enough with a viable batch,
-                    // or if we've waited the maximum time with any items
-                    if ((has_enough_items && elapsed > (max_wait_time_.count() / 2)) ||
-                        (elapsed > max_wait_time_.count())) {
+                    // CRITICAL FIX: Ultra-aggressive immediate processing for speed
+                    // Prioritize processing speed over perfect batch sizes
+                    if (current_batch_.size() >= target_batch_size_) {
+                        // Full batch - process immediately
+                        time_to_process = true;
+                        timeout_occurred = true;
+                    } else if (current_batch_.size() >= target_batch_size_ / 2) {
+                        // Half batch (32+ items) - process immediately without delay
+                        time_to_process = true;
+                        timeout_occurred = true;
+                    } else if (current_batch_.size() >= target_batch_size_ / 4 && elapsed > 5) {
+                        // Quarter batch (16+ items) - process after just 5ms
+                        time_to_process = true;
+                        timeout_occurred = true;
+                    } else if (current_batch_.size() >= 8 && elapsed > 10) {
+                        // Small decent batch (8+ items) - process after 10ms
+                        time_to_process = true;
+                        timeout_occurred = true;
+                    } else if (has_items && elapsed > 20) {
+                        // Any batch - emergency processing after just 20ms
                         time_to_process = true;
                         timeout_occurred = true;
                     }
@@ -664,51 +438,19 @@ void BatchAccumulator::accumulatorLoop() {
                 bool should_process = is_shutdown || is_batch_ready || has_enough_items || 
                                      time_to_process || force_batch_processing || emergency_action;
                 
-                // Log the decision for visibility if processing
-                if (should_process) {
-                    std::string reason;
-                    if (is_shutdown) reason = "shutdown";
-                    else if (is_batch_ready) reason = "batch_ready";
-                    else if (has_enough_items) reason = "has_enough_items";
-                    else if (time_to_process) reason = "time_threshold";
-                    else if (force_batch_processing) reason = "force_processing";
-                    else if (emergency_action) reason = "emergency_action";
-                    else reason = "unknown";
-                    
-                    std::cout << "✅ BatchAccumulator::accumulatorLoop - Processing batch for reason: " << reason
-                              << ", batch_size=" << current_batch_.size() 
-                              << ", target=" << target_batch_size_
-                              << ", min_viable=" << min_viable_batch_size_ << std::endl;
-                }
-                
                 return should_process;
-            });
-            
-            // Log wait result for debugging
-            bool should_log_wait = (loop_counter <= 50 || loop_counter % 100 == 0 || 
-                                  batch_ready_ || !current_batch_.empty());
-            if (should_log_wait) {
-                std::string reason;
-                if (batch_ready_) reason = "batch_ready";
-                else if (timeout_occurred) reason = "timeout";
-                else if (force_batch_processing) reason = "forced";
-                else if (shutdown_.load(std::memory_order_acquire)) reason = "shutdown";
-                else reason = "unknown";
-                
-                std::cout << "🕒 BatchAccumulator::accumulatorLoop - Wait completed: " 
-                          << (wait_result ? "true" : "false") 
-                          << ", reason=" << reason 
-                          << ", current_size=" << current_batch_.size() << std::endl;
+                });
             }
             
-            // Phase 2: Decide whether to submit batch
-            if (shutdown_.load(std::memory_order_acquire)) {
+            // Phase 2: Decide whether to submit batch - immediate processing for decent batches
+            bool should_process_batch = process_immediately || 
+                                      force_batch_processing || 
+                                      !current_batch_.empty();
+            if (shutdown_.load(std::memory_order_acquire) || should_process_batch) {
                 // Process any remaining items before shutdown
                 if (!current_batch_.empty()) {
                     batch_to_submit = std::move(current_batch_);
                     current_batch_.clear();
-                    std::cout << "🔴 BatchAccumulator::accumulatorLoop - Processing final batch of " 
-                             << batch_to_submit.size() << " items during shutdown" << std::endl;
                 }
             } else if (batch_ready_ || timeout_occurred || force_batch_processing) {
                 // Either batch_ready_ is true (optimal batch size reached)
@@ -722,25 +464,18 @@ void BatchAccumulator::accumulatorLoop() {
                     // Remember last batch processing time
                     last_batch_time = std::chrono::steady_clock::now();
                     
-                    // Always log batch creation now for better diagnostics
-                    std::cout << "🎉 BatchAccumulator::accumulatorLoop - Created batch with " << batch_to_submit.size() 
-                              << " items (target: " << target_batch_size_ 
-                              << ", timeout: " << (timeout_occurred ? "yes" : "no")
-                              << ", forced: " << (force_batch_processing ? "yes" : "no") << ")" << std::endl;
-                    
                     // CRITICAL DEBUG: Increment all-time counter
                     total_batches_submitted.fetch_add(1, std::memory_order_relaxed);
                     
-                    // CRITICAL DEBUG: Log batch contents
-                    if (batch_to_submit.size() <= 5 || total_batches_submitted.load() <= 10) {
-                        std::cout << "📦 BatchAccumulator::accumulatorLoop - Batch contents:" << std::endl;
-                        for (size_t i = 0; i < batch_to_submit.size(); i++) {
-                            std::cout << "  - Item " << i << ": node=" << batch_to_submit[i].node.get()
-                                     << ", state=" << (batch_to_submit[i].state ? batch_to_submit[i].state.get() : nullptr)
-                                     << ", batch_id=" << batch_to_submit[i].batch_id
-                                     << ", request_id=" << batch_to_submit[i].request_id
-                                     << std::endl;
-                        }
+                    // Update last successful batch time
+                    last_successful_batch = std::chrono::steady_clock::now();
+                    
+                    // ENHANCED DEBUG: Log batch submission for tracking
+                    if (total_batches_submitted.load() <= 20 || total_batches_submitted.load() % 10 == 0) {
+                        std::cout << "🚀 [BATCH_SUBMITTED] #" << total_batches_submitted.load() 
+                                  << " | Size: " << batch_to_submit.size() 
+                                  << " | Type: " << (timeout_occurred ? "timeout" : (force_batch_processing ? "forced" : "optimal"))
+                                  << " | Target: " << target_batch_size_ << std::endl;
                     }
                     
                     // Collect metrics
@@ -749,8 +484,6 @@ void BatchAccumulator::accumulatorLoop() {
                     } else {
                         optimal_batches_.fetch_add(1, std::memory_order_relaxed);
                     }
-                } else {
-                    std::cout << "⚠️ BatchAccumulator::accumulatorLoop - Batch ready or timeout but no items in current batch" << std::endl;
                 }
             }
             
@@ -776,10 +509,6 @@ void BatchAccumulator::accumulatorLoop() {
                 // Submit high priority or any batch if we're in accept_any_batch mode
                 if (updated_priority == BatchPriority::High || accept_any_batch) {
                     batch_to_submit = std::move(prioritized_batch.evals);
-                    std::cout << "BatchAccumulator::accumulatorLoop - Using prioritized batch with " 
-                             << batch_to_submit.size() << " items (priority: " 
-                             << (updated_priority == BatchPriority::High ? "high" : "any")
-                             << ", accept_any_batch: " << (accept_any_batch ? "yes" : "no") << ")" << std::endl;
                     
                     // Update last batch time
                     last_batch_time = std::chrono::steady_clock::now();
@@ -804,12 +533,6 @@ void BatchAccumulator::accumulatorLoop() {
                 }
             }
             
-            if (null_state_count > 0) {
-                std::cout << "⚠️ WARNING: BatchAccumulator::accumulatorLoop - " 
-                         << null_state_count << " out of " << batch_to_submit.size() 
-                         << " items have null states" << std::endl;
-            }
-            
             // Update metrics
             total_batches_.fetch_add(1, std::memory_order_relaxed);
             total_evaluations_.fetch_add(batch_to_submit.size(), std::memory_order_relaxed);
@@ -822,33 +545,43 @@ void BatchAccumulator::accumulatorLoop() {
             // CRITICAL DEBUG: Track items added to accumulator all-time
             total_items_added_to_accumulator.fetch_add(batch_to_submit.size(), std::memory_order_relaxed);
             
-            // Submit batch to queue
+            // Submit batch to queue - this is the critical fix
             bool enqueued = completed_batches_.enqueue(std::move(batch_to_submit));
             
-            if (!enqueued) {
-                std::cout << "❌ ERROR: BatchAccumulator::accumulatorLoop - Failed to enqueue batch to completed_batches_" << std::endl;
-            } else {
-                std::cout << "✅ BatchAccumulator::accumulatorLoop - Successfully enqueued batch of " 
-                         << valid_count << " valid items" << std::endl;
+            if (enqueued) {
+                // Reset consecutive empty counter after successful submission
+                consecutive_empty_iterations_.store(0, std::memory_order_relaxed);
                 
-                // CRITICAL DEBUG: Log completion queue size after enqueueing
-                std::cout << "📊 BatchAccumulator::accumulatorLoop - Completed batches queue size: " 
-                         << completed_batches_.size_approx() << " after enqueueing" << std::endl;
+                // CRITICAL FIX: Ensure that consumers are notified about the new batch
+                // This is essential for the inference workers to wake up
+                cv_.notify_all();
+            } else {
+                std::cerr << "ERROR: Failed to enqueue batch to completed_batches_ queue!" << std::endl;
             }
-            
-            // CRITICAL DEBUG: Reset consecutive empty counter after successful submission
-            consecutive_empty_iterations = 0;
         } else {
-            // CRITICAL FIX: If we've seen many consecutive empty iterations, try more aggressive waiting strategy
-            if (consecutive_empty_iterations > MAX_CONSECUTIVE_EMPTY) {
+            // CRITICAL FIX: Check for potential deadlock conditions
+            auto time_since_last_batch = std::chrono::steady_clock::now() - last_successful_batch;
+            
+            // If we've seen many consecutive empty iterations, try more aggressive waiting strategy
+            if (consecutive_empty_iterations_.load(std::memory_order_relaxed) > MAX_CONSECUTIVE_EMPTY) {
                 // After many failed attempts, try to sleep longer to allow items to be added
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 
-                // CRITICAL DEBUG: Log empty batch submission every few iterations
-                if (consecutive_empty_iterations % MAX_CONSECUTIVE_EMPTY == 0) {
-                    std::cout << "⚠️ BatchAccumulator::accumulatorLoop - No batch to submit after " 
-                             << consecutive_empty_iterations << " consecutive empty iterations. "
-                             << "Completed queue size: " << completed_batches_.size_approx() << std::endl;
+                // DEADLOCK DETECTION: If we haven't processed a batch in a long time, force action
+                if (time_since_last_batch > std::chrono::milliseconds(200)) {
+                    // Emergency action: try to force process any pending items
+                    std::lock_guard<std::mutex> emergency_lock(accumulator_mutex_);
+                    if (!current_batch_.empty()) {
+                        // Force submit whatever we have to prevent deadlock
+                        batch_to_submit = std::move(current_batch_);
+                        current_batch_.clear();
+                        batch_ready_ = false;
+                        last_batch_time = std::chrono::steady_clock::now();
+                        last_successful_batch = last_batch_time;
+                        
+                        std::cout << "⚠️ EMERGENCY BATCH SUBMISSION: Size " << batch_to_submit.size() 
+                                  << " (preventing deadlock)" << std::endl;
+                    }
                 }
             } else {
                 // If no batch to submit, use adaptive sleep to avoid busy waiting
@@ -862,14 +595,18 @@ void BatchAccumulator::accumulatorLoop() {
                     std::this_thread::sleep_for(std::chrono::microseconds(500));
                 }
             }
+            
+            // Process any emergency batch created above
+            if (!batch_to_submit.empty()) {
+                bool emergency_enqueued = completed_batches_.enqueue(std::move(batch_to_submit));
+                if (emergency_enqueued) {
+                    cv_.notify_all();
+                    total_batches_.fetch_add(1, std::memory_order_relaxed);
+                }
+            }
         }
     }
     
-    std::cout << "🔄 BatchAccumulator::accumulatorLoop - Thread exiting, processed " 
-             << total_batches_created << " batches with " 
-             << total_items_processed << " total items" 
-             << " (all-time: " << total_items_added_to_accumulator.load() << " items in "
-             << total_batches_submitted.load() << " batches)" << std::endl;
 }
 
 std::tuple<float, size_t, size_t, size_t> BatchAccumulator::getStats() const {
@@ -908,8 +645,6 @@ void BatchAccumulator::reset() {
         
         // Clear current batch
         if (!current_batch_.empty()) {
-            std::cout << "BatchAccumulator::reset - Clearing current batch with " 
-                     << current_batch_.size() << " items" << std::endl;
             current_batch_.clear();
         }
         
@@ -922,32 +657,15 @@ void BatchAccumulator::reset() {
     
     // Clear completed batches queue
     std::vector<PendingEvaluation> dummy_batch;
-    size_t cleared_count = 0;
-    while (completed_batches_.try_dequeue(dummy_batch)) {
-        cleared_count++;
-    }
-    
-    if (cleared_count > 0) {
-        std::cout << "BatchAccumulator::reset - Cleared " << cleared_count 
-                 << " batches from completed queue" << std::endl;
-    }
+    while (completed_batches_.try_dequeue(dummy_batch)) {}
     
     // Clear priority queue
     PrioritizedBatch dummy_prioritized;
-    size_t cleared_priority_count = 0;
-    while (priority_queue_.try_dequeue(dummy_prioritized)) {
-        cleared_priority_count++;
-    }
-    
-    if (cleared_priority_count > 0) {
-        std::cout << "BatchAccumulator::reset - Cleared " << cleared_priority_count 
-                 << " batches from priority queue" << std::endl;
-    }
+    while (priority_queue_.try_dequeue(dummy_prioritized)) {}
     
     // Notify any waiting threads
     cv_.notify_all();
     
-    std::cout << "BatchAccumulator::reset - All pending batches cleared" << std::endl;
 }
 
 } // namespace mcts

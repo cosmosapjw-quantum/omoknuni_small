@@ -98,6 +98,13 @@ public:
     void addEvaluation(PendingEvaluation&& eval);
     
     /**
+     * @brief Submit a pre-formed batch directly to completed queue
+     * 
+     * @param batch Pre-formed batch to submit directly
+     */
+    void submitDirectBatch(std::vector<PendingEvaluation>&& batch);
+    
+    /**
      * @brief Add multiple evaluations at once
      * 
      * @tparam Iterator Iterator type for the evaluations collection
