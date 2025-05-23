@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "bin/Release/go_tests"
+			"path" : "bin/Release/all_tests"
 		}
 	],
 	"backtrace" : 2,
@@ -18,9 +18,9 @@
 			"set_target_properties",
 			"include",
 			"add_compile_options",
+			"target_compile_definitions",
 			"add_compile_definitions",
-			"add_definitions",
-			"target_compile_definitions"
+			"add_definitions"
 		],
 		"files" : 
 		[
@@ -45,25 +45,25 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 1381,
+				"line" : 1395,
 				"parent" : 0
 			},
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 1273,
+				"line" : 1277,
 				"parent" : 1
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 1290,
+				"line" : 1294,
 				"parent" : 1
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 1313,
+				"line" : 1310,
 				"parent" : 1
 			},
 			{
@@ -85,13 +85,13 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 734,
+				"line" : 738,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 748,
+				"line" : 752,
 				"parent" : 0
 			},
 			{
@@ -161,19 +161,19 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 751,
+				"line" : 755,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 768,
+				"line" : 772,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 951,
+				"line" : 955,
 				"parent" : 0
 			},
 			{
@@ -188,13 +188,13 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 991,
+				"line" : 995,
 				"parent" : 0
 			},
 			{
 				"command" : 4,
 				"file" : 0,
-				"line" : 987,
+				"line" : 991,
 				"parent" : 0
 			},
 			{
@@ -220,13 +220,13 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 1043,
+				"line" : 1047,
 				"parent" : 0
 			},
 			{
 				"command" : 4,
 				"file" : 0,
-				"line" : 1065,
+				"line" : 1069,
 				"parent" : 0
 			},
 			{
@@ -279,41 +279,53 @@
 			{
 				"command" : 8,
 				"file" : 0,
-				"line" : 43,
-				"parent" : 0
-			},
-			{
-				"command" : 9,
-				"file" : 0,
-				"line" : 328,
-				"parent" : 0
-			},
-			{
-				"command" : 10,
-				"file" : 0,
-				"line" : 1286,
+				"line" : 1313,
 				"parent" : 1
 			},
 			{
 				"command" : 8,
 				"file" : 0,
+				"line" : 1311,
+				"parent" : 1
+			},
+			{
+				"command" : 9,
+				"file" : 0,
+				"line" : 43,
+				"parent" : 0
+			},
+			{
+				"command" : 10,
+				"file" : 0,
+				"line" : 328,
+				"parent" : 0
+			},
+			{
+				"command" : 8,
+				"file" : 0,
+				"line" : 1290,
+				"parent" : 1
+			},
+			{
+				"command" : 9,
+				"file" : 0,
 				"line" : 105,
 				"parent" : 0
 			},
 			{
-				"command" : 9,
+				"command" : 10,
 				"file" : 0,
 				"line" : 322,
 				"parent" : 0
 			},
 			{
-				"command" : 8,
+				"command" : 9,
 				"file" : 0,
 				"line" : 614,
 				"parent" : 0
 			},
 			{
-				"command" : 8,
+				"command" : 9,
 				"file" : 0,
 				"line" : 40,
 				"parent" : 0
@@ -361,10 +373,18 @@
 			[
 				{
 					"backtrace" : 44,
-					"define" : "DEBUG_BATCH_PROCESSING=1"
+					"define" : "BUILDING_TEST_SUITE"
 				},
 				{
 					"backtrace" : 45,
+					"define" : "CUSTOM_MAIN_USED"
+				},
+				{
+					"backtrace" : 46,
+					"define" : "DEBUG_BATCH_PROCESSING=1"
+				},
+				{
+					"backtrace" : 47,
 					"define" : "ENABLE_CUDA_FALLBACK=1"
 				},
 				{
@@ -372,7 +392,7 @@
 					"define" : "FMT_SHARED"
 				},
 				{
-					"backtrace" : 46,
+					"backtrace" : 48,
 					"define" : "GTEST_LINKED_AS_SHARED_LIBRARY=0"
 				},
 				{
@@ -408,7 +428,7 @@
 					"define" : "THRUST_IGNORE_ABI_NAMESPACE_ERROR"
 				},
 				{
-					"backtrace" : 47,
+					"backtrace" : 49,
 					"define" : "TORCH_USE_CUDA=1"
 				},
 				{
@@ -432,7 +452,7 @@
 					"define" : "USE_C10D_NCCL"
 				},
 				{
-					"backtrace" : 48,
+					"backtrace" : 50,
 					"define" : "USE_CUDNN=1"
 				},
 				{
@@ -444,7 +464,7 @@
 					"define" : "USE_MIMALLOC"
 				},
 				{
-					"backtrace" : 49,
+					"backtrace" : 51,
 					"define" : "USE_OPENMP"
 				},
 				{
@@ -464,7 +484,7 @@
 					"define" : "WITH_TORCH"
 				},
 				{
-					"backtrace" : 50,
+					"backtrace" : 52,
 					"define" : "_GLIBCXX_USE_CXX11_ABI=1"
 				}
 			],
@@ -531,7 +551,25 @@
 			},
 			"sourceIndexes" : 
 			[
-				0
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18
 			]
 		}
 	],
@@ -550,7 +588,7 @@
 			"id" : "TracyClient::@5312c6e87bd9d431bdc8"
 		}
 	],
-	"id" : "go_tests::@6890427a1f51a3e7e1df",
+	"id" : "all_tests::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -589,17 +627,12 @@
 			},
 			{
 				"backtrace" : 4,
-				"fragment" : "/usr/lib/x86_64-linux-gnu/libgtest_main.a",
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libgmock.a",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 4,
 				"fragment" : "/usr/lib/x86_64-linux-gnu/libgtest.a",
-				"role" : "libraries"
-			},
-			{
-				"backtrace" : 4,
-				"fragment" : "/usr/lib/x86_64-linux-gnu/libgmock.a",
 				"role" : "libraries"
 			},
 			{
@@ -721,17 +754,12 @@
 				"backtrace" : 38,
 				"fragment" : "/usr/local/lib/librapids_logger.so",
 				"role" : "libraries"
-			},
-			{
-				"backtrace" : 4,
-				"fragment" : "/usr/lib/x86_64-linux-gnu/libgtest.a",
-				"role" : "libraries"
 			}
 		],
 		"language" : "CXX"
 	},
-	"name" : "go_tests",
-	"nameOnDisk" : "go_tests",
+	"name" : "all_tests",
+	"nameOnDisk" : "all_tests",
 	"paths" : 
 	{
 		"build" : ".",
@@ -743,7 +771,25 @@
 			"name" : "Source Files",
 			"sourceIndexes" : 
 			[
-				0
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18
 			]
 		}
 	],
@@ -752,7 +798,115 @@
 		{
 			"backtrace" : 2,
 			"compileGroupIndex" : 0,
+			"path" : "tests/all_tests_main.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/core/igamestate_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/core/game_export_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/games/chess/chess_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
 			"path" : "tests/games/go/go_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/games/gomoku/gomoku_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/mcts/mcts_node_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/mcts/mcts_engine_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/mcts/mcts_openmp_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/mcts/progressive_widening_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/mcts/virtual_loss_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/mcts/transposition_table_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/mcts/transposition_integration_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/cli/cli_manager_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/nn/neural_network_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/selfplay/self_play_manager_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/training/training_data_manager_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/integration/mcts_with_nn_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/integration/games/self_play_games_test.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],

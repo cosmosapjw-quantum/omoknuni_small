@@ -1,6 +1,7 @@
 // src/nn/resnet_model.cpp
 #include "nn/resnet_model.h"
 #include "utils/memory_tracker.h"
+#include "mcts/aggressive_memory_manager.h"
 #include <stdexcept>
 #include <ATen/cuda/CUDAContext.h>
 #include <c10/cuda/CUDACachingAllocator.h>
@@ -11,6 +12,8 @@
 
 namespace alphazero {
 namespace nn {
+
+// Memory tracking macros are defined globally in aggressive_memory_manager.h
 
 ResNetResidualBlock::ResNetResidualBlock(int64_t channels) {
     conv1 = torch::nn::Conv2d(torch::nn::Conv2dOptions(channels, channels, 3)
@@ -255,6 +258,11 @@ torch::Tensor ResNetModel::prepareInputTensor(
         .memory_format(torch::MemoryFormat::Contiguous)  // Ensure contiguous memory
         .pinned_memory(true);
     torch::Tensor batch_tensor_cpu = torch::empty({static_cast<int64_t>(states.size()), actual_data_channels, height, width}, cpu_options);
+    
+    // Track CPU tensor allocation
+    size_t cpu_tensor_size = batch_tensor_cpu.numel() * batch_tensor_cpu.element_size();
+    TRACK_MEMORY_ALLOC("NNCPUTensor", cpu_tensor_size);
+    
     auto tensor_alloc_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
     // std::cout << "[PREP] CPU Tensor alloc: " << tensor_alloc_duration.count() << " us." << std::endl;
     
@@ -330,6 +338,11 @@ torch::Tensor ResNetModel::prepareInputTensor(
 
             auto to_device_start_time = std::chrono::high_resolution_clock::now();
             torch::Tensor result_tensor = pinned_cpu_tensor.to(target_device, /*non_blocking=*/true);
+            
+            // Track GPU tensor allocation
+            size_t gpu_tensor_size = result_tensor.numel() * result_tensor.element_size();
+            TRACK_MEMORY_ALLOC("NNGPUTensor", gpu_tensor_size);
+            
             auto to_device_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - to_device_start_time);
             // std::cout << "[PREP] Move to " << target_device << ": " << to_device_duration.count() << " us." << std::endl;
             
@@ -461,7 +474,7 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
     
     // Track memory periodically
     static std::atomic<size_t> inference_count{0};
-    static const size_t cleanup_interval = 100;  // Clean every 100 inferences
+    static const size_t cleanup_interval = 10;  // CRITICAL FIX: Clean every 10 inferences to prevent accumulation
     
     size_t count = inference_count.fetch_add(1);
     if (count % 100 == 0) {
@@ -503,10 +516,18 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
             try {
                 auto dummy_input = torch::zeros({1, input_channels_, board_size_, board_size_}, 
                                                torch::TensorOptions().dtype(torch::kFloat32).device(model_device));
+                
+                // Track GPU warmup tensor
+                size_t warmup_tensor_size = dummy_input.numel() * dummy_input.element_size();
+                TRACK_MEMORY_ALLOC("GPUWarmupTensor", warmup_tensor_size);
+                
                 torch::NoGradGuard no_grad_warmup;
                 auto [dummy_policy, dummy_value] = this->forward(dummy_input);
                 torch::cuda::synchronize();
                 gpu_warmed_up = true;
+                
+                // Free warmup tensor memory
+                TRACK_MEMORY_FREE("GPUWarmupTensor", warmup_tensor_size);
                 
                 auto warmup_end = std::chrono::high_resolution_clock::now();
                 auto warmup_duration = std::chrono::duration_cast<std::chrono::microseconds>(warmup_end - warmup_start);
@@ -516,17 +537,10 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
             }
         }
         
-        // Initialize tensor pool if not already done
-        if (!tensor_pool_.initialized && !states.empty()) {
-            const auto& first_state = states[0];
-            if (first_state) {
-                auto tensor_data = first_state->getTensorRepresentation();
-                int64_t channels = static_cast<int64_t>(tensor_data.size());
-                // Optimized pool size for better performance
-                tensor_pool_.pool_size = 4; // Increased from 2 to 4 for better batching
-                tensor_pool_.init(/*batch_size=*/16, channels, board_size_, board_size_, model_device);  // Larger batch for efficiency
-            }
-        }
+        // CRITICAL FIX: Disable tensor pool to avoid memory retention issues
+        // The pool was causing memory to accumulate during MCTS
+        // Direct allocation is more predictable for memory management
+        tensor_pool_.initialized = false;
 
         auto prep_start = std::chrono::high_resolution_clock::now();
         std::cout << "[NN_TRACE] Starting input tensor preparation at +" 
@@ -686,6 +700,20 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
             tensor_pool_.cleanup();
             if (torch::cuda::is_available()) {
                 c10::cuda::CUDACachingAllocator::emptyCache();
+            }
+            
+            // Force aggressive cleanup
+            auto& mem_mgr = alphazero::mcts::AggressiveMemoryManager::getInstance();
+            mem_mgr.forceCleanup(alphazero::mcts::AggressiveMemoryManager::PressureLevel::WARNING);
+        }
+        
+        // Track tensor cleanup (tensors will be freed when they go out of scope)
+        if (input_tensor.defined()) {
+            size_t tensor_size = input_tensor.numel() * input_tensor.element_size();
+            if (input_tensor.is_cuda()) {
+                TRACK_MEMORY_FREE("NNGPUTensor", tensor_size);
+            } else {
+                TRACK_MEMORY_FREE("NNCPUTensor", tensor_size);
             }
         }
         

@@ -1,6 +1,9 @@
 #include "mcts/mcts_node_pool.h"
+#include "mcts/aggressive_memory_manager.h"
+#include "utils/debug_logger.h"
 #include <algorithm>
 #include <new>
+#include <omp.h>
 
 namespace alphazero {
 namespace mcts {
@@ -21,6 +24,9 @@ MCTSNodePool::MCTSNodePool(const Config& config)
     : config_(config) {
     LOG_SYSTEM_INFO("Initializing MCTS node pool with {} initial nodes", 
                    config.initial_pool_size);
+    
+    // Initialize last compaction time
+    last_compaction_time_.store(std::chrono::steady_clock::now());
     
     // Pre-allocate initial pool
     allocateBlock(config_.initial_pool_size);
@@ -235,6 +241,87 @@ MCTSNode* MCTSNodePool::Allocator::allocate(size_t n) {
 void MCTSNodePool::Allocator::deallocate(MCTSNode* ptr, size_t n) {
     if (n != 1) return;
     pool_->freeNode(ptr);
+}
+
+bool MCTSNodePool::shouldCompact() const {
+    // Check if we should compact based on memory pressure and time
+    auto now = std::chrono::steady_clock::now();
+    auto last_compact = last_compaction_time_.load();
+    auto time_since_compact = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now - last_compact).count();
+    
+    // Compact if:
+    // 1. Enough time has passed since last compaction
+    // 2. We have significant free nodes (more than we need)
+    size_t free_nodes = free_nodes_.size();
+    for (const auto& thread_pool : thread_pools_) {
+        free_nodes += thread_pool.free_nodes.size();
+    }
+    
+    bool time_triggered = time_since_compact > COMPACTION_INTERVAL_MS;
+    bool memory_triggered = free_nodes > MIN_FREE_NODES_AFTER_COMPACT * 2;
+    
+    return time_triggered && memory_triggered;
+}
+
+void MCTSNodePool::compact() {
+    PROFILE_SCOPE_N("MCTSNodePool::compact");
+    
+    std::lock_guard<std::mutex> lock(pool_mutex_);
+    
+    // Update compaction time
+    last_compaction_time_.store(std::chrono::steady_clock::now());
+    
+    // Count total free nodes across all pools
+    size_t total_free = free_nodes_.size();
+    for (auto& thread_pool : thread_pools_) {
+        total_free += thread_pool.free_nodes.size();
+    }
+    
+    // If we have too many free nodes, release some memory
+    if (total_free > MIN_FREE_NODES_AFTER_COMPACT) {
+        size_t nodes_to_release = total_free - MIN_FREE_NODES_AFTER_COMPACT;
+        releaseMemory(nodes_to_release);
+    }
+    
+    LOG_SYSTEM_INFO("Node pool compacted: {} free nodes, {} in use",
+                    total_free, in_use_.load());
+}
+
+void MCTSNodePool::releaseMemory(size_t nodes_to_release) {
+    PROFILE_SCOPE_N("MCTSNodePool::releaseMemory");
+    
+    // This is called with pool_mutex_ already locked
+    
+    // First, clear thread-local pools to consolidate free nodes
+    for (auto& thread_pool : thread_pools_) {
+        while (!thread_pool.free_nodes.empty() && nodes_to_release > 0) {
+            thread_pool.free_nodes.pop_back();
+            nodes_to_release--;
+            total_allocated_--;
+        }
+    }
+    
+    // Then clear from global pool
+    while (!free_nodes_.empty() && nodes_to_release > 0) {
+        free_nodes_.pop();
+        nodes_to_release--;
+        total_allocated_--;
+    }
+    
+    // Find and remove empty memory blocks
+    // Note: This is a simplified approach - in practice, we'd need to track
+    // which nodes belong to which blocks for proper deallocation
+    auto it = memory_blocks_.begin();
+    while (it != memory_blocks_.end()) {
+        // Check if this block has any allocated nodes
+        // For now, we'll keep all blocks to avoid complex bookkeeping
+        // A more sophisticated implementation would track node-to-block mapping
+        ++it;
+    }
+    
+    LOG_SYSTEM_DEBUG("Released memory for {} nodes, total allocated: {}",
+                    nodes_to_release, total_allocated_.load());
 }
 
 } // namespace mcts

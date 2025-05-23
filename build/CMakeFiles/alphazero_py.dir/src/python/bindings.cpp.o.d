@@ -440,6 +440,89 @@ CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o: \
  /usr/include/c++/13/bits/quoted_string.h \
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
  /usr/include/c++/13/cassert /usr/include/c++/13/climits \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_node_pool.h \
+ /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
+ /home/cosmos/omoknuni_small/include/utils/memory_allocator.h \
+ /home/cosmos/omoknuni_small/include/utils/logger.h \
+ /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
+ /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \
+ /usr/include/spdlog/fmt/fmt.h /usr/include/fmt/core.h \
+ /usr/include/fmt/format.h /usr/include/fmt/core.h \
+ /usr/include/spdlog/details/registry.h \
+ /usr/include/spdlog/details/periodic_worker.h \
+ /usr/include/spdlog/logger.h /usr/include/spdlog/details/log_msg.h \
+ /usr/include/spdlog/details/backtracer.h \
+ /usr/include/spdlog/details/log_msg_buffer.h \
+ /usr/include/spdlog/details/circular_q.h /usr/include/spdlog/version.h \
+ /usr/include/spdlog/details/synchronous_factory.h \
+ /usr/include/spdlog/sinks/stdout_color_sinks.h \
+ /usr/include/spdlog/sinks/ansicolor_sink.h \
+ /usr/include/spdlog/details/console_globals.h \
+ /usr/include/spdlog/sinks/sink.h /usr/include/spdlog/formatter.h \
+ /usr/include/spdlog/sinks/rotating_file_sink.h \
+ /usr/include/spdlog/sinks/base_sink.h \
+ /usr/include/spdlog/details/file_helper.h \
+ /usr/include/spdlog/sinks/daily_file_sink.h \
+ /usr/include/spdlog/fmt/chrono.h /usr/include/fmt/chrono.h \
+ /usr/include/fmt/format.h /usr/include/spdlog/details/os.h \
+ /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
+ /usr/include/spdlog/details/thread_pool.h \
+ /usr/include/spdlog/details/mpmc_blocking_q.h \
+ /home/cosmos/omoknuni_small/include/utils/profiler.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/Tracy.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyColor.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracySystem.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyLock.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracySystem.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyAlign.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyForceInline.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyProfiler.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_concurrentqueue.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyAlloc.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_rpmalloc.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyForceInline.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_SPSCQueue.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.h \
+ /usr/include/x86_64-linux-gnu/sys/param.h /usr/include/signal.h \
+ /usr/include/x86_64-linux-gnu/bits/signum-generic.h \
+ /usr/include/x86_64-linux-gnu/bits/signum-arch.h \
+ /usr/include/x86_64-linux-gnu/bits/types/sig_atomic_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/siginfo_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h \
+ /usr/include/x86_64-linux-gnu/bits/siginfo-arch.h \
+ /usr/include/x86_64-linux-gnu/bits/siginfo-consts.h \
+ /usr/include/x86_64-linux-gnu/bits/siginfo-consts-arch.h \
+ /usr/include/x86_64-linux-gnu/bits/types/sigval_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h \
+ /usr/include/x86_64-linux-gnu/bits/sigevent-consts.h \
+ /usr/include/x86_64-linux-gnu/bits/sigaction.h \
+ /usr/include/x86_64-linux-gnu/bits/sigcontext.h \
+ /usr/include/x86_64-linux-gnu/bits/types/stack_t.h \
+ /usr/include/x86_64-linux-gnu/sys/ucontext.h \
+ /usr/include/x86_64-linux-gnu/bits/sigstack.h \
+ /usr/include/x86_64-linux-gnu/bits/sigstksz.h \
+ /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
+ /usr/include/x86_64-linux-gnu/bits/sigthread.h \
+ /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
+ /usr/include/x86_64-linux-gnu/bits/param.h /usr/include/linux/param.h \
+ /usr/include/x86_64-linux-gnu/asm/param.h \
+ /usr/include/asm-generic/param.h /usr/include/execinfo.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyKCore.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyFastVector.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracySysPower.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracySysTime.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyQueue.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyMutex.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyProtocol.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyProfiler.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyScoped.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/TracyC.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
  /usr/include/parallel_hashmap/phmap.h \
  /usr/include/parallel_hashmap/phmap_fwd_decl.h \
@@ -450,6 +533,10 @@ CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o: \
  /usr/include/parallel_hashmap/phmap_base.h \
  /usr/include/c++/13/shared_mutex \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
+ /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
+ /usr/include/x86_64-linux-gnu/sys/resource.h \
+ /usr/include/x86_64-linux-gnu/bits/resource.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
  /home/cosmos/omoknuni_small/include/games/chess/chess_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \

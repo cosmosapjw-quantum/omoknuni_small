@@ -1,5 +1,6 @@
 #include "mcts/mcts_engine.h"
 #include "utils/advanced_memory_monitor.h"
+#include "mcts/aggressive_memory_manager.h"
 
 #ifdef WITH_TORCH
 #include <torch/torch.h>
@@ -407,11 +408,17 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
             // True serial mode with simple, direct inference - prioritize this check
             std::cout << "[MCTS_PERF] Using executeSimpleSerialSearch (num_threads <= 0)" << std::endl;
             executeSimpleSerialSearch(search_roots);
-        } else {
-            // CRITICAL FIX: Use simplified direct batching for ALL multi-threaded searches
-            std::cout << "[MCTS_PERF] ✅ Using executeSimpleBatchedSearch (direct batching, " 
+        } else if (settings_.num_threads > 1) {
+            // TRUE PARALLELIZATION: Use proper leaf parallelization
+            std::cout << "[MCTS_PERF] 🚀🚀🚀 Using executeTrueParallelSearch (TRUE leaf parallelization, " 
                       << settings_.num_threads << " threads)" << std::endl;
-            executeSimpleBatchedSearch(search_roots);
+            if (!search_roots.empty() && search_roots[0]) {
+                executeTrueParallelSearch(search_roots[0].get(), search_roots[0]->getState().clone());
+            }
+        } else {
+            // FALLBACK: Single thread mode
+            std::cout << "[MCTS_PERF] Using executeSerialSearch (single thread)" << std::endl;
+            executeSerialSearch(search_roots);
         }
         
         auto exec_end = std::chrono::steady_clock::now();

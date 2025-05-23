@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "bin/Release/core_tests"
+			"path" : "bin/Release/integration_tests"
 		}
 	],
 	"backtrace" : 2,
@@ -18,9 +18,9 @@
 			"set_target_properties",
 			"include",
 			"add_compile_options",
-			"target_compile_definitions",
 			"add_compile_definitions",
-			"add_definitions"
+			"add_definitions",
+			"target_compile_definitions"
 		],
 		"files" : 
 		[
@@ -45,25 +45,25 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 1379,
+				"line" : 1394,
 				"parent" : 0
 			},
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 1273,
+				"line" : 1277,
 				"parent" : 1
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 1290,
+				"line" : 1294,
 				"parent" : 1
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 1306,
+				"line" : 1317,
 				"parent" : 1
 			},
 			{
@@ -85,13 +85,13 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 734,
+				"line" : 738,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 748,
+				"line" : 752,
 				"parent" : 0
 			},
 			{
@@ -161,19 +161,19 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 751,
+				"line" : 755,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 768,
+				"line" : 772,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 951,
+				"line" : 955,
 				"parent" : 0
 			},
 			{
@@ -188,13 +188,13 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 991,
+				"line" : 995,
 				"parent" : 0
 			},
 			{
 				"command" : 4,
 				"file" : 0,
-				"line" : 987,
+				"line" : 991,
 				"parent" : 0
 			},
 			{
@@ -220,13 +220,13 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 1043,
+				"line" : 1047,
 				"parent" : 0
 			},
 			{
 				"command" : 4,
 				"file" : 0,
-				"line" : 1065,
+				"line" : 1069,
 				"parent" : 0
 			},
 			{
@@ -279,47 +279,41 @@
 			{
 				"command" : 8,
 				"file" : 0,
-				"line" : 1307,
-				"parent" : 1
-			},
-			{
-				"command" : 9,
-				"file" : 0,
 				"line" : 43,
 				"parent" : 0
 			},
 			{
-				"command" : 10,
+				"command" : 9,
 				"file" : 0,
 				"line" : 328,
 				"parent" : 0
 			},
 			{
-				"command" : 8,
+				"command" : 10,
 				"file" : 0,
-				"line" : 1286,
+				"line" : 1290,
 				"parent" : 1
 			},
 			{
-				"command" : 9,
+				"command" : 8,
 				"file" : 0,
 				"line" : 105,
 				"parent" : 0
 			},
 			{
-				"command" : 10,
+				"command" : 9,
 				"file" : 0,
 				"line" : 322,
 				"parent" : 0
 			},
 			{
-				"command" : 9,
+				"command" : 8,
 				"file" : 0,
 				"line" : 614,
 				"parent" : 0
 			},
 			{
-				"command" : 9,
+				"command" : 8,
 				"file" : 0,
 				"line" : 40,
 				"parent" : 0
@@ -367,14 +361,10 @@
 			[
 				{
 					"backtrace" : 44,
-					"define" : "CUSTOM_MAIN_USED"
-				},
-				{
-					"backtrace" : 45,
 					"define" : "DEBUG_BATCH_PROCESSING=1"
 				},
 				{
-					"backtrace" : 46,
+					"backtrace" : 45,
 					"define" : "ENABLE_CUDA_FALLBACK=1"
 				},
 				{
@@ -382,7 +372,7 @@
 					"define" : "FMT_SHARED"
 				},
 				{
-					"backtrace" : 47,
+					"backtrace" : 46,
 					"define" : "GTEST_LINKED_AS_SHARED_LIBRARY=0"
 				},
 				{
@@ -418,7 +408,7 @@
 					"define" : "THRUST_IGNORE_ABI_NAMESPACE_ERROR"
 				},
 				{
-					"backtrace" : 48,
+					"backtrace" : 47,
 					"define" : "TORCH_USE_CUDA=1"
 				},
 				{
@@ -442,7 +432,7 @@
 					"define" : "USE_C10D_NCCL"
 				},
 				{
-					"backtrace" : 49,
+					"backtrace" : 48,
 					"define" : "USE_CUDNN=1"
 				},
 				{
@@ -454,7 +444,7 @@
 					"define" : "USE_MIMALLOC"
 				},
 				{
-					"backtrace" : 50,
+					"backtrace" : 49,
 					"define" : "USE_OPENMP"
 				},
 				{
@@ -474,7 +464,7 @@
 					"define" : "WITH_TORCH"
 				},
 				{
-					"backtrace" : 51,
+					"backtrace" : 50,
 					"define" : "_GLIBCXX_USE_CXX11_ABI=1"
 				}
 			],
@@ -542,8 +532,7 @@
 			"sourceIndexes" : 
 			[
 				0,
-				1,
-				2
+				1
 			]
 		}
 	],
@@ -562,7 +551,7 @@
 			"id" : "TracyClient::@5312c6e87bd9d431bdc8"
 		}
 	],
-	"id" : "core_tests::@6890427a1f51a3e7e1df",
+	"id" : "integration_tests::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -601,12 +590,17 @@
 			},
 			{
 				"backtrace" : 4,
-				"fragment" : "/usr/lib/x86_64-linux-gnu/libgmock.a",
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libgtest_main.a",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 4,
 				"fragment" : "/usr/lib/x86_64-linux-gnu/libgtest.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libgmock.a",
 				"role" : "libraries"
 			},
 			{
@@ -728,12 +722,17 @@
 				"backtrace" : 38,
 				"fragment" : "/usr/local/lib/librapids_logger.so",
 				"role" : "libraries"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libgtest.a",
+				"role" : "libraries"
 			}
 		],
 		"language" : "CXX"
 	},
-	"name" : "core_tests",
-	"nameOnDisk" : "core_tests",
+	"name" : "integration_tests",
+	"nameOnDisk" : "integration_tests",
 	"paths" : 
 	{
 		"build" : ".",
@@ -746,8 +745,7 @@
 			"sourceIndexes" : 
 			[
 				0,
-				1,
-				2
+				1
 			]
 		}
 	],
@@ -756,19 +754,13 @@
 		{
 			"backtrace" : 2,
 			"compileGroupIndex" : 0,
-			"path" : "tests/core_tests_main.cpp",
+			"path" : "tests/integration/mcts_with_nn_test.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 2,
 			"compileGroupIndex" : 0,
-			"path" : "tests/core/igamestate_test.cpp",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 2,
-			"compileGroupIndex" : 0,
-			"path" : "tests/core/game_export_test.cpp",
+			"path" : "tests/integration/games/self_play_games_test.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],

@@ -1,6 +1,7 @@
 // src/mcts/mcts_node.cpp
 #include "mcts/mcts_node.h"
 #include "mcts/mcts_object_pool.h"
+#include "mcts/aggressive_memory_manager.h"
 #include <cmath>
 #include <random>
 #include <limits>
@@ -23,6 +24,9 @@ MCTSNode::MCTSNode(std::unique_ptr<core::IGameState> state_param, std::weak_ptr<
       rave_count_(0),  // Move before prior_probability_ to match header order
       rave_value_sum_(0.0f),
       prior_probability_(0.0f) {
+    
+    // Track node allocation
+    TRACK_MEMORY_ALLOC("MCTSNode", sizeof(MCTSNode));
 
 
     // Safety check - ensure we have a valid state
@@ -87,6 +91,9 @@ std::shared_ptr<MCTSNode> MCTSNode::getSharedPtr() {
 }
 
 MCTSNode::~MCTSNode() {
+    // Track node deallocation
+    TRACK_MEMORY_FREE("MCTSNode", sizeof(MCTSNode));
+    
     // Children are now shared_ptr, so they will be cleaned up automatically
     // No need for manual deletion
 }
@@ -101,7 +108,7 @@ std::shared_ptr<MCTSNode> MCTSNode::selectChild(float exploration_factor, bool u
     const size_t num_children = children_.size();
     
     // Count nodes with pending evaluations
-    int pending_eval_count = 0;
+    // int pending_eval_count = 0;  // Currently unused
     
     // Check if children are available for selection
     bool all_pending = true;
@@ -355,6 +362,11 @@ void MCTSNode::expand(bool use_progressive_widening, float cpw, float kpw) {
     
     // Reserve space for efficiency
     try {
+        // Track vector memory allocation
+        size_t children_mem = num_children_to_expand * sizeof(std::shared_ptr<MCTSNode>);
+        size_t actions_mem = num_children_to_expand * sizeof(int);
+        TRACK_MEMORY_ALLOC("MCTSNodeVectors", children_mem + actions_mem);
+        
         children_.reserve(num_children_to_expand);
         actions_.reserve(num_children_to_expand);
     } 

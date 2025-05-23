@@ -1199,6 +1199,30 @@ src/mcts/advanced_memory_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.s
 .PHONY : src/mcts/advanced_memory_pool.cpp.s
 
+src/mcts/aggressive_memory_manager.o: src/mcts/aggressive_memory_manager.cpp.o
+.PHONY : src/mcts/aggressive_memory_manager.o
+
+# target to build an object file
+src/mcts/aggressive_memory_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o
+.PHONY : src/mcts/aggressive_memory_manager.cpp.o
+
+src/mcts/aggressive_memory_manager.i: src/mcts/aggressive_memory_manager.cpp.i
+.PHONY : src/mcts/aggressive_memory_manager.i
+
+# target to preprocess a source file
+src/mcts/aggressive_memory_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.i
+.PHONY : src/mcts/aggressive_memory_manager.cpp.i
+
+src/mcts/aggressive_memory_manager.s: src/mcts/aggressive_memory_manager.cpp.s
+.PHONY : src/mcts/aggressive_memory_manager.s
+
+# target to generate assembly for a file
+src/mcts/aggressive_memory_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.s
+.PHONY : src/mcts/aggressive_memory_manager.cpp.s
+
 src/mcts/evaluation_types.o: src/mcts/evaluation_types.cpp.o
 .PHONY : src/mcts/evaluation_types.o
 
@@ -1319,6 +1343,30 @@ src/mcts/mcts_engine_memory.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.s
 .PHONY : src/mcts/mcts_engine_memory.cpp.s
 
+src/mcts/mcts_engine_memory_pressure.o: src/mcts/mcts_engine_memory_pressure.cpp.o
+.PHONY : src/mcts/mcts_engine_memory_pressure.o
+
+# target to build an object file
+src/mcts/mcts_engine_memory_pressure.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o
+.PHONY : src/mcts/mcts_engine_memory_pressure.cpp.o
+
+src/mcts/mcts_engine_memory_pressure.i: src/mcts/mcts_engine_memory_pressure.cpp.i
+.PHONY : src/mcts/mcts_engine_memory_pressure.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_memory_pressure.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.i
+.PHONY : src/mcts/mcts_engine_memory_pressure.cpp.i
+
+src/mcts/mcts_engine_memory_pressure.s: src/mcts/mcts_engine_memory_pressure.cpp.s
+.PHONY : src/mcts/mcts_engine_memory_pressure.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_memory_pressure.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.s
+.PHONY : src/mcts/mcts_engine_memory_pressure.cpp.s
+
 src/mcts/mcts_engine_methods.o: src/mcts/mcts_engine_methods.cpp.o
 .PHONY : src/mcts/mcts_engine_methods.o
 
@@ -1342,6 +1390,30 @@ src/mcts/mcts_engine_methods.s: src/mcts/mcts_engine_methods.cpp.s
 src/mcts/mcts_engine_methods.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.s
 .PHONY : src/mcts/mcts_engine_methods.cpp.s
+
+src/mcts/mcts_engine_parallel_batch.o: src/mcts/mcts_engine_parallel_batch.cpp.o
+.PHONY : src/mcts/mcts_engine_parallel_batch.o
+
+# target to build an object file
+src/mcts/mcts_engine_parallel_batch.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o
+.PHONY : src/mcts/mcts_engine_parallel_batch.cpp.o
+
+src/mcts/mcts_engine_parallel_batch.i: src/mcts/mcts_engine_parallel_batch.cpp.i
+.PHONY : src/mcts/mcts_engine_parallel_batch.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_parallel_batch.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.i
+.PHONY : src/mcts/mcts_engine_parallel_batch.cpp.i
+
+src/mcts/mcts_engine_parallel_batch.s: src/mcts/mcts_engine_parallel_batch.cpp.s
+.PHONY : src/mcts/mcts_engine_parallel_batch.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_parallel_batch.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.s
+.PHONY : src/mcts/mcts_engine_parallel_batch.cpp.s
 
 src/mcts/mcts_engine_search.o: src/mcts/mcts_engine_search.cpp.o
 .PHONY : src/mcts/mcts_engine_search.o
@@ -1414,6 +1486,30 @@ src/mcts/mcts_engine_tree.s: src/mcts/mcts_engine_tree.cpp.s
 src/mcts/mcts_engine_tree.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_tree.cpp.s
 .PHONY : src/mcts/mcts_engine_tree.cpp.s
+
+src/mcts/mcts_engine_true_parallel_search.o: src/mcts/mcts_engine_true_parallel_search.cpp.o
+.PHONY : src/mcts/mcts_engine_true_parallel_search.o
+
+# target to build an object file
+src/mcts/mcts_engine_true_parallel_search.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o
+.PHONY : src/mcts/mcts_engine_true_parallel_search.cpp.o
+
+src/mcts/mcts_engine_true_parallel_search.i: src/mcts/mcts_engine_true_parallel_search.cpp.i
+.PHONY : src/mcts/mcts_engine_true_parallel_search.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_true_parallel_search.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.i
+.PHONY : src/mcts/mcts_engine_true_parallel_search.cpp.i
+
+src/mcts/mcts_engine_true_parallel_search.s: src/mcts/mcts_engine_true_parallel_search.cpp.s
+.PHONY : src/mcts/mcts_engine_true_parallel_search.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_true_parallel_search.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.s
+.PHONY : src/mcts/mcts_engine_true_parallel_search.cpp.s
 
 src/mcts/mcts_engine_utils.o: src/mcts/mcts_engine_utils.cpp.o
 .PHONY : src/mcts/mcts_engine_utils.o
@@ -2777,6 +2873,9 @@ help:
 	@echo "... src/mcts/advanced_memory_pool.o"
 	@echo "... src/mcts/advanced_memory_pool.i"
 	@echo "... src/mcts/advanced_memory_pool.s"
+	@echo "... src/mcts/aggressive_memory_manager.o"
+	@echo "... src/mcts/aggressive_memory_manager.i"
+	@echo "... src/mcts/aggressive_memory_manager.s"
 	@echo "... src/mcts/evaluation_types.o"
 	@echo "... src/mcts/evaluation_types.i"
 	@echo "... src/mcts/evaluation_types.s"
@@ -2792,9 +2891,15 @@ help:
 	@echo "... src/mcts/mcts_engine_memory.o"
 	@echo "... src/mcts/mcts_engine_memory.i"
 	@echo "... src/mcts/mcts_engine_memory.s"
+	@echo "... src/mcts/mcts_engine_memory_pressure.o"
+	@echo "... src/mcts/mcts_engine_memory_pressure.i"
+	@echo "... src/mcts/mcts_engine_memory_pressure.s"
 	@echo "... src/mcts/mcts_engine_methods.o"
 	@echo "... src/mcts/mcts_engine_methods.i"
 	@echo "... src/mcts/mcts_engine_methods.s"
+	@echo "... src/mcts/mcts_engine_parallel_batch.o"
+	@echo "... src/mcts/mcts_engine_parallel_batch.i"
+	@echo "... src/mcts/mcts_engine_parallel_batch.s"
 	@echo "... src/mcts/mcts_engine_search.o"
 	@echo "... src/mcts/mcts_engine_search.i"
 	@echo "... src/mcts/mcts_engine_search.s"
@@ -2804,6 +2909,9 @@ help:
 	@echo "... src/mcts/mcts_engine_tree.o"
 	@echo "... src/mcts/mcts_engine_tree.i"
 	@echo "... src/mcts/mcts_engine_tree.s"
+	@echo "... src/mcts/mcts_engine_true_parallel_search.o"
+	@echo "... src/mcts/mcts_engine_true_parallel_search.i"
+	@echo "... src/mcts/mcts_engine_true_parallel_search.s"
 	@echo "... src/mcts/mcts_engine_utils.o"
 	@echo "... src/mcts/mcts_engine_utils.i"
 	@echo "... src/mcts/mcts_engine_utils.s"

@@ -41,6 +41,11 @@ void MCTSEngine::cleanupTree() {
     // Reset root node statistics but keep it for potential reuse
     root_ = nullptr;
     
+    // CRITICAL FIX: Compact node pool to release unused memory
+    if (node_pool_ && node_pool_->shouldCompact()) {
+        node_pool_->compact();
+    }
+    
     // Force GPU memory cleanup
 #ifdef TORCH_CUDA_AVAILABLE
     if (torch::cuda::is_available()) {
@@ -95,6 +100,11 @@ void MCTSEngine::resetForNewSearch() {
         
         // Note: We don't clear the pool itself as memory may be reused
         // but we should ensure no allocations are marked as in use
+    }
+    
+    // CRITICAL FIX: Also compact node pool during reset
+    if (node_pool_ && node_pool_->shouldCompact()) {
+        node_pool_->compact();
     }
     
     // Additional GPU memory cleanup

@@ -6,6 +6,7 @@
 #include <mutex>
 #include <atomic>
 #include <vector>
+#include <chrono>
 #include "mcts/mcts_node.h"
 #include "utils/memory_allocator.h"
 #include "utils/thread_local_allocator.h"
@@ -74,6 +75,11 @@ public:
     // Clear all nodes in the pool
     void clear();
     
+    // Memory management
+    void compact();  // Release unused memory blocks
+    void releaseMemory(size_t target_free_nodes);  // Release memory to reach target
+    bool shouldCompact() const;  // Check if compaction is needed
+    
     // Get pool statistics
     struct PoolStats {
         size_t total_allocated;
@@ -118,6 +124,12 @@ private:
     std::atomic<size_t> peak_usage_{0};
     std::atomic<size_t> allocations_{0};
     std::atomic<size_t> deallocations_{0};
+    
+    // Memory pressure handling
+    mutable std::atomic<std::chrono::steady_clock::time_point> last_compaction_time_;
+    static constexpr size_t COMPACTION_INTERVAL_MS = 30000;  // 30 seconds
+    static constexpr double MEMORY_PRESSURE_THRESHOLD = 0.8;  // 80% of max
+    static constexpr size_t MIN_FREE_NODES_AFTER_COMPACT = 10000;  // Keep at least this many free
     
     // Allocate a new memory block
     void allocateBlock(size_t size);

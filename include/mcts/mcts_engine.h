@@ -11,8 +11,13 @@
 #include <chrono>
 #include "mcts/mcts_node.h"
 #include "mcts/mcts_object_pool.h"
+#include "mcts/mcts_node_pool.h"
 #include "mcts/transposition_table.h"
 #include "mcts/node_tracker.h"
+#include "mcts/memory_pressure_monitor.h"
+// Removed complex components for simplified implementation
+// #include "mcts/unified_inference_server.h"
+// #include "mcts/burst_coordinator.h"
 #include "core/igamestate.h"
 #include "core/export_macros.h"
 #include "nn/neural_network.h"
@@ -397,6 +402,12 @@ private:
     // CRITICAL FIX: Simplified direct batching without complex layers
     void executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
     
+    // PROPER PARALLELIZATION: True tree parallelization with lock-free batch collection
+    void executeParallelBatchedSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
+    
+    // TRUE LEAF PARALLELIZATION: Continuous collection with centralized batching
+    void executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core::IGameState> root_state);
+    
     // Performance mode for optimization configuration
     enum class PerformanceMode {
         MaximumAccuracy,    // Prioritize quality of search over speed
@@ -614,6 +625,9 @@ public:
     // Node tracker for lock-free pending evaluation management
     std::unique_ptr<NodeTracker> node_tracker_;
     
+    // Node pool for efficient memory management
+    std::unique_ptr<MCTSNodePool> node_pool_;
+    
     
     // New optimization control variables
     std::atomic<bool> use_advanced_optimizations_{false};
@@ -630,8 +644,18 @@ public:
     // Real-time optimization worker thread
     std::thread optimization_thread_;
     
+    // Memory cleanup callback
+    void handleMemoryPressure(MemoryPressureMonitor::PressureLevel level);
+    
     // Direct inference function for serial mode (bypasses complex infrastructure)
     InferenceFunction direct_inference_fn_;
+    
+    // Memory pressure monitoring
+    std::unique_ptr<MemoryPressureMonitor> memory_pressure_monitor_;
+    
+    // Advanced components for optimized parallelization (commented out for simplification)
+    // std::unique_ptr<UnifiedInferenceServer> inference_server_;
+    // std::unique_ptr<BurstCoordinator> burst_coordinator_;
 };
 
 } // namespace mcts

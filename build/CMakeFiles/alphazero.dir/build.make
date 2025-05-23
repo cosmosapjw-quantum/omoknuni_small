@@ -660,10 +660,66 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/src/mcts/mcts_engine_memory.cpp -o CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.s
 
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o: CMakeFiles/alphazero.dir/flags.make
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o: /home/cosmos/omoknuni_small/src/mcts/mcts_engine_parallel_batch.cpp
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building CXX object CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o -MF CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o.d -o CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o -c /home/cosmos/omoknuni_small/src/mcts/mcts_engine_parallel_batch.cpp
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/src/mcts/mcts_engine_parallel_batch.cpp > CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.i
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/src/mcts/mcts_engine_parallel_batch.cpp -o CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.s
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o: CMakeFiles/alphazero.dir/flags.make
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o: /home/cosmos/omoknuni_small/src/mcts/mcts_engine_memory_pressure.cpp
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building CXX object CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o -MF CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o.d -o CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o -c /home/cosmos/omoknuni_small/src/mcts/mcts_engine_memory_pressure.cpp
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/src/mcts/mcts_engine_memory_pressure.cpp > CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.i
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/src/mcts/mcts_engine_memory_pressure.cpp -o CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.s
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o: CMakeFiles/alphazero.dir/flags.make
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o: /home/cosmos/omoknuni_small/src/mcts/mcts_engine_true_parallel_search.cpp
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building CXX object CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o -MF CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o.d -o CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o -c /home/cosmos/omoknuni_small/src/mcts/mcts_engine_true_parallel_search.cpp
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/src/mcts/mcts_engine_true_parallel_search.cpp > CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.i
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/src/mcts/mcts_engine_true_parallel_search.cpp -o CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.s
+
+CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o: CMakeFiles/alphazero.dir/flags.make
+CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o: /home/cosmos/omoknuni_small/src/mcts/aggressive_memory_manager.cpp
+CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building CXX object CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o -MF CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o.d -o CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o -c /home/cosmos/omoknuni_small/src/mcts/aggressive_memory_manager.cpp
+
+CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/src/mcts/aggressive_memory_manager.cpp > CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.i
+
+CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/src/mcts/aggressive_memory_manager.cpp -o CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.s
+
 CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o: CMakeFiles/alphazero.dir/flags.make
 CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o: /home/cosmos/omoknuni_small/src/mcts/transposition_table.cpp
 CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building CXX object CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building CXX object CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o -MF CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o.d -o CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o -c /home/cosmos/omoknuni_small/src/mcts/transposition_table.cpp
 
 CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.i: cmake_force
@@ -677,7 +733,7 @@ CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.s: cmake_force
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o: CMakeFiles/alphazero.dir/flags.make
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o: /home/cosmos/omoknuni_small/src/mcts/node_tracker.cpp
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building CXX object CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building CXX object CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o -MF CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o.d -o CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o -c /home/cosmos/omoknuni_small/src/mcts/node_tracker.cpp
 
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.i: cmake_force
@@ -691,7 +747,7 @@ CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.s: cmake_force
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o: CMakeFiles/alphazero.dir/flags.make
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o: /home/cosmos/omoknuni_small/src/cli/cli_manager.cpp
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building CXX object CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Building CXX object CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o -MF CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o.d -o CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o -c /home/cosmos/omoknuni_small/src/cli/cli_manager.cpp
 
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.i: cmake_force
@@ -705,7 +761,7 @@ CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.s: cmake_force
 CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: CMakeFiles/alphazero.dir/flags.make
 CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: /home/cosmos/omoknuni_small/src/cli/alphazero_pipeline.cpp
 CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building CXX object CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_50) "Building CXX object CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o -MF CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o.d -o CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o -c /home/cosmos/omoknuni_small/src/cli/alphazero_pipeline.cpp
 
 CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.i: cmake_force
@@ -719,7 +775,7 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.s: cmake_force
 CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: CMakeFiles/alphazero.dir/flags.make
 CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: /home/cosmos/omoknuni_small/src/cli/alphazero_cli_pipeline.cpp
 CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building CXX object CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_51) "Building CXX object CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o -MF CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o.d -o CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o -c /home/cosmos/omoknuni_small/src/cli/alphazero_cli_pipeline.cpp
 
 CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.i: cmake_force
@@ -733,7 +789,7 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.s: cmake_force
 CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: CMakeFiles/alphazero.dir/flags.make
 CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: /home/cosmos/omoknuni_small/src/selfplay/self_play_manager.cpp
 CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building CXX object CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building CXX object CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o -MF CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o.d -o CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o -c /home/cosmos/omoknuni_small/src/selfplay/self_play_manager.cpp
 
 CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.i: cmake_force
@@ -747,7 +803,7 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.s: cmake_force
 CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o: CMakeFiles/alphazero.dir/flags.make
 CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o: /home/cosmos/omoknuni_small/src/training/training_data_manager.cpp
 CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Building CXX object CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Building CXX object CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o -MF CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o.d -o CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o -c /home/cosmos/omoknuni_small/src/training/training_data_manager.cpp
 
 CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.i: cmake_force
@@ -761,7 +817,7 @@ CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.s: cmake_force
 CMakeFiles/alphazero.dir/src/training/dataset.cpp.o: CMakeFiles/alphazero.dir/flags.make
 CMakeFiles/alphazero.dir/src/training/dataset.cpp.o: /home/cosmos/omoknuni_small/src/training/dataset.cpp
 CMakeFiles/alphazero.dir/src/training/dataset.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_50) "Building CXX object CMakeFiles/alphazero.dir/src/training/dataset.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_54) "Building CXX object CMakeFiles/alphazero.dir/src/training/dataset.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/training/dataset.cpp.o -MF CMakeFiles/alphazero.dir/src/training/dataset.cpp.o.d -o CMakeFiles/alphazero.dir/src/training/dataset.cpp.o -c /home/cosmos/omoknuni_small/src/training/dataset.cpp
 
 CMakeFiles/alphazero.dir/src/training/dataset.cpp.i: cmake_force
@@ -775,7 +831,7 @@ CMakeFiles/alphazero.dir/src/training/dataset.cpp.s: cmake_force
 CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o: CMakeFiles/alphazero.dir/flags.make
 CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o: /home/cosmos/omoknuni_small/src/training/data_loader.cpp
 CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o: CMakeFiles/alphazero.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_51) "Building CXX object CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_55) "Building CXX object CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o -MF CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o.d -o CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o -c /home/cosmos/omoknuni_small/src/training/data_loader.cpp
 
 CMakeFiles/alphazero.dir/src/training/data_loader.cpp.i: cmake_force
@@ -830,6 +886,10 @@ alphazero_OBJECTS = \
 "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.o" \
 "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o" \
 "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.o" \
+"CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o" \
+"CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o" \
+"CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o" \
+"CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o" \
 "CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o" \
 "CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o" \
 "CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o" \
@@ -885,6 +945,10 @@ lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_engine_searc
 lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.o
 lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o
 lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.o
+lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o
+lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o
+lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o
+lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o
 lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o
 lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o
 lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o
@@ -917,7 +981,7 @@ lib/Release/libalphazero.so: /usr/lib/x86_64-linux-gnu/libfmt.so.9.1.0
 lib/Release/libalphazero.so: /usr/local/cuda/lib64/libcudart.so
 lib/Release/libalphazero.so: /usr/local/lib/librapids_logger.so
 lib/Release/libalphazero.so: CMakeFiles/alphazero.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Linking CXX shared library lib/Release/libalphazero.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_56) "Linking CXX shared library lib/Release/libalphazero.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/alphazero.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

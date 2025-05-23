@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "bin/Release/gomoku_tests"
+			"path" : "bin/Release/transposition_tests"
 		}
 	],
 	"backtrace" : 2,
@@ -45,25 +45,25 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 1382,
+				"line" : 1390,
 				"parent" : 0
 			},
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 1273,
+				"line" : 1277,
 				"parent" : 1
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 1290,
+				"line" : 1294,
 				"parent" : 1
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 1313,
+				"line" : 1317,
 				"parent" : 1
 			},
 			{
@@ -85,13 +85,13 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 734,
+				"line" : 738,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 748,
+				"line" : 752,
 				"parent" : 0
 			},
 			{
@@ -161,19 +161,19 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 751,
+				"line" : 755,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 768,
+				"line" : 772,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 951,
+				"line" : 955,
 				"parent" : 0
 			},
 			{
@@ -188,13 +188,13 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 991,
+				"line" : 995,
 				"parent" : 0
 			},
 			{
 				"command" : 4,
 				"file" : 0,
-				"line" : 987,
+				"line" : 991,
 				"parent" : 0
 			},
 			{
@@ -220,13 +220,13 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 1043,
+				"line" : 1047,
 				"parent" : 0
 			},
 			{
 				"command" : 4,
 				"file" : 0,
-				"line" : 1065,
+				"line" : 1069,
 				"parent" : 0
 			},
 			{
@@ -291,7 +291,7 @@
 			{
 				"command" : 10,
 				"file" : 0,
-				"line" : 1286,
+				"line" : 1290,
 				"parent" : 1
 			},
 			{
@@ -531,7 +531,8 @@
 			},
 			"sourceIndexes" : 
 			[
-				0
+				0,
+				1
 			]
 		}
 	],
@@ -550,7 +551,7 @@
 			"id" : "TracyClient::@5312c6e87bd9d431bdc8"
 		}
 	],
-	"id" : "gomoku_tests::@6890427a1f51a3e7e1df",
+	"id" : "transposition_tests::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -730,8 +731,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "gomoku_tests",
-	"nameOnDisk" : "gomoku_tests",
+	"name" : "transposition_tests",
+	"nameOnDisk" : "transposition_tests",
 	"paths" : 
 	{
 		"build" : ".",
@@ -743,7 +744,8 @@
 			"name" : "Source Files",
 			"sourceIndexes" : 
 			[
-				0
+				0,
+				1
 			]
 		}
 	],
@@ -752,7 +754,13 @@
 		{
 			"backtrace" : 2,
 			"compileGroupIndex" : 0,
-			"path" : "tests/games/gomoku/gomoku_test.cpp",
+			"path" : "tests/mcts/transposition_table_test.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "tests/mcts/transposition_integration_test.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],

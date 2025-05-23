@@ -4964,6 +4964,7 @@ CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o: \
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
  /usr/include/c++/13/future /usr/include/c++/13/bits/atomic_futex.h \
  /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
+ /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/cuda/CUDAContext.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/cuda/CUDAContextLight.h \
  /usr/local/cuda-12.8/include/cuda_runtime_api.h \

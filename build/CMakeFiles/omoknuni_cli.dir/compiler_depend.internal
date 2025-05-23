@@ -4,6 +4,29 @@
 CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /home/cosmos/omoknuni_small/src/cli/omoknuni_cli.cpp
  /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.h
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyFastVector.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyKCore.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyLock.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyProfiler.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyScoped.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracySysPower.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracySysTime.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_SPSCQueue.h
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_concurrentqueue.h
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_rpmalloc.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyAlign.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyAlloc.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyColor.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyForceInline.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyMutex.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyProtocol.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyQueue.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracySystem.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/Tracy.hpp
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/TracyC.h
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h
  /home/cosmos/omoknuni_small/include/cli/alphazero_pipeline.h
  /home/cosmos/omoknuni_small/include/cli/cli_manager.h
@@ -19,7 +42,9 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h
+ /home/cosmos/omoknuni_small/include/mcts/mcts_node_pool.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h
+ /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
@@ -27,6 +52,9 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h
  /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h
  /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h
+ /home/cosmos/omoknuni_small/include/utils/logger.h
+ /home/cosmos/omoknuni_small/include/utils/memory_allocator.h
+ /home/cosmos/omoknuni_small/include/utils/profiler.h
  /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h
  /opt/libtorch-2.7.0-cu128/include/ATen/ATen.h
@@ -4716,6 +4744,7 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /usr/include/alloca.h
  /usr/include/asm-generic/errno-base.h
  /usr/include/asm-generic/errno.h
+ /usr/include/asm-generic/param.h
  /usr/include/assert.h
  /usr/include/byteswap.h
  /usr/include/c++/13/algorithm
@@ -4935,13 +4964,18 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /usr/include/dlfcn.h
  /usr/include/endian.h
  /usr/include/errno.h
+ /usr/include/execinfo.h
  /usr/include/features-time64.h
  /usr/include/features.h
+ /usr/include/fmt/chrono.h
+ /usr/include/fmt/core.h
+ /usr/include/fmt/format.h
  /usr/include/libintl.h
  /usr/include/limits.h
  /usr/include/linux/close_range.h
  /usr/include/linux/errno.h
  /usr/include/linux/limits.h
+ /usr/include/linux/param.h
  /usr/include/locale.h
  /usr/include/math.h
  /usr/include/parallel_hashmap/phmap.h
@@ -4953,6 +4987,35 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /usr/include/pthread.h
  /usr/include/sched.h
  /usr/include/signal.h
+ /usr/include/spdlog/async.h
+ /usr/include/spdlog/async_logger.h
+ /usr/include/spdlog/common.h
+ /usr/include/spdlog/details/backtracer.h
+ /usr/include/spdlog/details/circular_q.h
+ /usr/include/spdlog/details/console_globals.h
+ /usr/include/spdlog/details/file_helper.h
+ /usr/include/spdlog/details/log_msg.h
+ /usr/include/spdlog/details/log_msg_buffer.h
+ /usr/include/spdlog/details/mpmc_blocking_q.h
+ /usr/include/spdlog/details/null_mutex.h
+ /usr/include/spdlog/details/os.h
+ /usr/include/spdlog/details/periodic_worker.h
+ /usr/include/spdlog/details/registry.h
+ /usr/include/spdlog/details/synchronous_factory.h
+ /usr/include/spdlog/details/thread_pool.h
+ /usr/include/spdlog/fmt/chrono.h
+ /usr/include/spdlog/fmt/fmt.h
+ /usr/include/spdlog/formatter.h
+ /usr/include/spdlog/logger.h
+ /usr/include/spdlog/sinks/ansicolor_sink.h
+ /usr/include/spdlog/sinks/base_sink.h
+ /usr/include/spdlog/sinks/daily_file_sink.h
+ /usr/include/spdlog/sinks/rotating_file_sink.h
+ /usr/include/spdlog/sinks/sink.h
+ /usr/include/spdlog/sinks/stdout_color_sinks.h
+ /usr/include/spdlog/spdlog.h
+ /usr/include/spdlog/tweakme.h
+ /usr/include/spdlog/version.h
  /usr/include/stdc-predef.h
  /usr/include/stdint.h
  /usr/include/stdio.h
@@ -4964,6 +5027,7 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /usr/include/wchar.h
  /usr/include/wctype.h
  /usr/include/x86_64-linux-gnu/asm/errno.h
+ /usr/include/x86_64-linux-gnu/asm/param.h
  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h
  /usr/include/x86_64-linux-gnu/bits/byteswap.h
  /usr/include/x86_64-linux-gnu/bits/confname.h
@@ -4991,12 +5055,14 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h
  /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h
  /usr/include/x86_64-linux-gnu/bits/mathcalls.h
+ /usr/include/x86_64-linux-gnu/bits/param.h
  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h
  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h
  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h
  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h
  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h
+ /usr/include/x86_64-linux-gnu/bits/resource.h
  /usr/include/x86_64-linux-gnu/bits/sched.h
  /usr/include/x86_64-linux-gnu/bits/select-decl.h
  /usr/include/x86_64-linux-gnu/bits/select.h
@@ -5058,6 +5124,7 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h
  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h
  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h
+ /usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h
  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h
  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h
@@ -5099,6 +5166,8 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h
  /usr/include/x86_64-linux-gnu/gnu/stubs.h
  /usr/include/x86_64-linux-gnu/sys/cdefs.h
+ /usr/include/x86_64-linux-gnu/sys/param.h
+ /usr/include/x86_64-linux-gnu/sys/resource.h
  /usr/include/x86_64-linux-gnu/sys/select.h
  /usr/include/x86_64-linux-gnu/sys/single_threaded.h
  /usr/include/x86_64-linux-gnu/sys/types.h

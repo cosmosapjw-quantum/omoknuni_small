@@ -3,6 +3,7 @@
 #include "games/gomoku/gomoku_rules.h"     // For rules_engine_
 #include "core/illegal_move_exception.h" // For core::IllegalMoveException
 #include "core/tensor_pool.h"            // For GlobalTensorPool optimization
+#include "mcts/aggressive_memory_manager.h" // For memory tracking
 #include <stdexcept> // For std::invalid_argument, std::out_of_range
 #include <iostream>  // For debugging (optional, remove in production)
 #include <numeric>   // For std::accumulate, std::gcd
@@ -176,13 +177,12 @@ int GomokuState::getActionSpaceSize() const {
 }
 
 std::vector<std::vector<std::vector<float>>> GomokuState::getTensorRepresentation() const {
-    // PERFORMANCE FIX: Use cached tensor if available and not dirty
-    if (!tensor_cache_dirty_.load(std::memory_order_relaxed) && !cached_tensor_repr_.empty()) {
-        return cached_tensor_repr_;
-    }
+    // CRITICAL FIX: Don't cache tensors to prevent memory accumulation
+    // Each call creates a fresh tensor to avoid holding memory during MCTS
     
-    // PERFORMANCE FIX: Use global tensor pool for efficient memory reuse
-    auto tensor = core::GlobalTensorPool::getInstance().getTensor(3, board_size_, board_size_);
+    auto tensor = std::vector<std::vector<std::vector<float>>>(
+        3, std::vector<std::vector<float>>(
+            board_size_, std::vector<float>(board_size_, 0.0f)));
     
     int p_idx_current = current_player_ - 1;      
     int p_idx_opponent = 1 - p_idx_current; 
@@ -199,25 +199,20 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getTensorRepresentatio
         }
     }
     
-    // PERFORMANCE FIX: Cache the computed tensor
-    cached_tensor_repr_ = tensor;
-    tensor_cache_dirty_.store(false, std::memory_order_relaxed);
-    
     return tensor;
 }
 
 std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepresentation() const {
-    // PERFORMANCE FIX: Use cached enhanced tensor if available and not dirty
-    if (!enhanced_tensor_cache_dirty_.load(std::memory_order_relaxed) && !cached_enhanced_tensor_repr_.empty()) {
-        return cached_enhanced_tensor_repr_;
-    }
+    // CRITICAL FIX: Don't cache tensors to prevent memory accumulation
     
     try {
         const int num_history_pairs = 8; 
         const int num_feature_planes = 2 * num_history_pairs + 1; 
         
-        // PERFORMANCE FIX: Use global tensor pool for efficient memory reuse
-        auto tensor = core::GlobalTensorPool::getInstance().getTensor(num_feature_planes, board_size_, board_size_);
+        // Create fresh tensor without pooling to avoid memory retention
+        auto tensor = std::vector<std::vector<std::vector<float>>>(
+            num_feature_planes, std::vector<std::vector<float>>(
+                board_size_, std::vector<float>(board_size_, 0.0f)));
 
         int history_len = move_history_.size();
         
@@ -258,10 +253,6 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
                 tensor[num_feature_planes - 1][r][c] = color_plane_val;
             }
         }
-        
-        // PERFORMANCE FIX: Cache the computed enhanced tensor
-        cached_enhanced_tensor_repr_ = tensor;
-        enhanced_tensor_cache_dirty_.store(false, std::memory_order_relaxed);
         
         return tensor;
     } catch (const std::exception& e) {
@@ -306,6 +297,12 @@ uint64_t GomokuState::getHash() const {
 
 std::unique_ptr<core::IGameState> GomokuState::clone() const {
     try {
+        // Track memory allocation for game state
+        size_t state_size = sizeof(GomokuState) + 
+                           (2 * player_bitboards_[0].size() * sizeof(uint64_t)) +
+                           (move_history_.size() * sizeof(int));
+        TRACK_MEMORY_ALLOC("GameStateClone", state_size);
+        
         // Create a new instance with same parameters - don't do any validation yet
         auto clone_ptr = std::make_unique<GomokuState>(
             board_size_,
@@ -376,6 +373,11 @@ std::unique_ptr<core::IGameState> GomokuState::clone() const {
     } catch (const std::exception& e) {
         // Simple error reporting without complex logging
         std::cerr << "Error in GomokuState::clone(): " << e.what() << std::endl;
+        // Free tracked memory on error
+        size_t state_size = sizeof(GomokuState) + 
+                           (2 * player_bitboards_[0].size() * sizeof(uint64_t)) +
+                           (move_history_.size() * sizeof(int));
+        TRACK_MEMORY_FREE("GameStateClone", state_size);
         throw;
     }
 }
@@ -961,22 +963,10 @@ GomokuState::~GomokuState() {
 }
 
 void GomokuState::clearTensorCache() const {
-    // Return cached tensors to the global pool
-    if (!cached_tensor_repr_.empty()) {
-        core::GlobalTensorPool::getInstance().returnTensor(
-            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_tensor_repr_),
-            3, board_size_, board_size_);
-        cached_tensor_repr_.clear();
-    }
-    
-    if (!cached_enhanced_tensor_repr_.empty()) {
-        const int num_history_pairs = 8;
-        const int num_feature_planes = 2 * num_history_pairs + 1;
-        core::GlobalTensorPool::getInstance().returnTensor(
-            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_enhanced_tensor_repr_),
-            num_feature_planes, board_size_, board_size_);
-        cached_enhanced_tensor_repr_.clear();
-    }
+    // CRITICAL FIX: No longer caching tensors, so nothing to clear
+    // This method is kept for compatibility but does nothing
+    cached_tensor_repr_.clear();
+    cached_enhanced_tensor_repr_.clear();
 }
 
 bool GomokuState::is_occupied(int action) const {

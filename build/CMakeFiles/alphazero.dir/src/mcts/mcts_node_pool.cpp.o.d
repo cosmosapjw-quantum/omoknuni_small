@@ -139,6 +139,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
  /usr/include/c++/13/bits/std_mutex.h \
  /usr/include/c++/13/bits/unique_lock.h /usr/include/c++/13/atomic \
+ /usr/include/c++/13/chrono \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
  /usr/include/c++/13/future /usr/include/c++/13/condition_variable \
  /usr/include/c++/13/bits/cxxabi_forced.h \
@@ -255,9 +256,8 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o: \
  /home/cosmos/omoknuni_small/include/utils/logger.h \
  /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
  /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \
- /usr/include/c++/13/chrono /usr/include/spdlog/fmt/fmt.h \
- /usr/include/fmt/core.h /usr/include/c++/13/cstring \
- /usr/include/string.h /usr/include/strings.h \
+ /usr/include/spdlog/fmt/fmt.h /usr/include/fmt/core.h \
+ /usr/include/c++/13/cstring /usr/include/string.h /usr/include/strings.h \
  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
  /usr/include/c++/13/iterator /usr/include/c++/13/bits/stream_iterator.h \
@@ -366,4 +366,9 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o: \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyScoped.hpp \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/TracyC.h \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.h \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
+ /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h \
+ /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
+ /usr/include/c++/13/bits/stl_map.h \
+ /usr/include/c++/13/bits/stl_multimap.h \
+ /home/cosmos/omoknuni_small/include/utils/debug_logger.h

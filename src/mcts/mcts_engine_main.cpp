@@ -1,6 +1,7 @@
 #include "mcts/mcts_engine.h"
 #include "mcts/mcts_node.h"
 #include "mcts/advanced_memory_pool.h"
+#include "mcts/aggressive_memory_manager.h"
 #include "utils/debug_monitor.h"
 #include <algorithm>
 #include <chrono>
@@ -44,6 +45,61 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     mem_pool_config.max_pool_size = 1000000; // Cap at 1 million objects
     memory_pool_ = std::make_unique<AdvancedMemoryPool>(mem_pool_config);
     
+    // Initialize node pool for efficient MCTS node allocation
+    MCTSNodePool::Config node_pool_config;
+    node_pool_config.initial_pool_size = std::min(size_t(10000), size_t(settings.num_simulations * 5));
+    node_pool_config.grow_size = std::min(size_t(5000), size_t(settings.num_simulations * 2));
+    node_pool_config.max_pool_size = std::min(size_t(1000000), size_t(settings.num_simulations * 50));
+    node_pool_ = std::make_unique<MCTSNodePool>(node_pool_config);
+    
+    // Initialize memory pressure monitor
+    MemoryPressureMonitor::Config mem_monitor_config;
+    mem_monitor_config.max_memory_bytes = 48ULL * 1024 * 1024 * 1024; // 48GB limit
+    mem_monitor_config.warning_threshold = 0.75; // 75% warning
+    mem_monitor_config.critical_threshold = 0.85; // 85% critical
+    mem_monitor_config.check_interval = std::chrono::milliseconds(500); // Check every 500ms
+    
+    memory_pressure_monitor_ = std::make_unique<MemoryPressureMonitor>(mem_monitor_config);
+    memory_pressure_monitor_->setCleanupCallback(
+        [this](MemoryPressureMonitor::PressureLevel level) {
+            handleMemoryPressure(level);
+        });
+    memory_pressure_monitor_->start();
+    
+    // Initialize aggressive memory manager
+    auto& aggressive_memory_manager = AggressiveMemoryManager::getInstance();
+    AggressiveMemoryManager::Config aggressive_config;
+    aggressive_config.warning_threshold_gb = 28.0;
+    aggressive_config.critical_threshold_gb = 35.0;
+    aggressive_config.emergency_threshold_gb = 40.0;
+    aggressive_memory_manager.setConfig(aggressive_config);
+    
+    // Register cleanup callbacks
+    aggressive_memory_manager.registerCleanupCallback("MCTSEngine_NodePool",
+        [this](AggressiveMemoryManager::PressureLevel level) {
+            if (node_pool_ && level >= AggressiveMemoryManager::PressureLevel::WARNING) {
+                node_pool_->compact();
+                if (level >= AggressiveMemoryManager::PressureLevel::CRITICAL) {
+                    // Release half of the free nodes
+                    node_pool_->releaseMemory(1000);
+                }
+            }
+        }, 100);
+    
+    aggressive_memory_manager.registerCleanupCallback("MCTSEngine_TranspositionTable",
+        [this](AggressiveMemoryManager::PressureLevel level) {
+            if (transposition_table_ && level >= AggressiveMemoryManager::PressureLevel::CRITICAL) {
+                transposition_table_->clear();
+            }
+        }, 90);
+    
+    aggressive_memory_manager.registerCleanupCallback("MCTSEngine_AdvancedMemoryPool",
+        [this](AggressiveMemoryManager::PressureLevel level) {
+            if (memory_pool_ && level >= AggressiveMemoryManager::PressureLevel::WARNING) {
+                memory_pool_->resetStats();
+            }
+        }, 80);
+    
     // Validate neural network
     if (!neural_net) {
         std::cerr << "ERROR: Null neural network passed to MCTSEngine" << std::endl;
@@ -61,8 +117,8 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
         return; // Skip creating complex infrastructure
     }
     
-    // SIMPLIFIED: No more UnifiedInferenceServer or BurstCoordinator
-    std::cout << "MCTSEngine: Using simplified direct batching approach" << std::endl;
+    // Simplified implementation - using direct batching approach
+    std::cout << "MCTSEngine: Using true parallel search with direct batching" << std::endl;
 }
 
 // Constructor with inference function
@@ -94,6 +150,20 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
     
     // Create node tracker for pending evaluations
     node_tracker_ = std::make_unique<NodeTracker>();
+    
+    // Initialize memory pressure monitor (same as first constructor)
+    MemoryPressureMonitor::Config mem_monitor_config;
+    mem_monitor_config.max_memory_bytes = 48ULL * 1024 * 1024 * 1024; // 48GB limit
+    mem_monitor_config.warning_threshold = 0.75; // 75% warning
+    mem_monitor_config.critical_threshold = 0.85; // 85% critical
+    mem_monitor_config.check_interval = std::chrono::milliseconds(500); // Check every 500ms
+    
+    memory_pressure_monitor_ = std::make_unique<MemoryPressureMonitor>(mem_monitor_config);
+    memory_pressure_monitor_->setCleanupCallback(
+        [this](MemoryPressureMonitor::PressureLevel level) {
+            handleMemoryPressure(level);
+        });
+    memory_pressure_monitor_->start();
     
     // Validate inference function
     if (!inference_fn) {
@@ -520,6 +590,11 @@ MCTSEngine::~MCTSEngine() {
     workers_active_.store(false, std::memory_order_release);
     active_simulations_.store(0, std::memory_order_release);
     pending_evaluations_.store(0, std::memory_order_release);
+    
+    // Stop memory pressure monitor
+    if (memory_pressure_monitor_) {
+        memory_pressure_monitor_->stop();
+    }
     
     // Phase 2: Stop the evaluator
     safelyStopEvaluator();
