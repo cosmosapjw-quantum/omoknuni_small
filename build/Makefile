@@ -1463,6 +1463,30 @@ src/mcts/mcts_engine_simple_batch.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.s
 .PHONY : src/mcts/mcts_engine_simple_batch.cpp.s
 
+src/mcts/mcts_engine_taskflow.o: src/mcts/mcts_engine_taskflow.cpp.o
+.PHONY : src/mcts/mcts_engine_taskflow.o
+
+# target to build an object file
+src/mcts/mcts_engine_taskflow.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.o
+.PHONY : src/mcts/mcts_engine_taskflow.cpp.o
+
+src/mcts/mcts_engine_taskflow.i: src/mcts/mcts_engine_taskflow.cpp.i
+.PHONY : src/mcts/mcts_engine_taskflow.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_taskflow.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.i
+.PHONY : src/mcts/mcts_engine_taskflow.cpp.i
+
+src/mcts/mcts_engine_taskflow.s: src/mcts/mcts_engine_taskflow.cpp.s
+.PHONY : src/mcts/mcts_engine_taskflow.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_taskflow.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.s
+.PHONY : src/mcts/mcts_engine_taskflow.cpp.s
+
 src/mcts/mcts_engine_tree.o: src/mcts/mcts_engine_tree.cpp.o
 .PHONY : src/mcts/mcts_engine_tree.o
 
@@ -2906,6 +2930,9 @@ help:
 	@echo "... src/mcts/mcts_engine_simple_batch.o"
 	@echo "... src/mcts/mcts_engine_simple_batch.i"
 	@echo "... src/mcts/mcts_engine_simple_batch.s"
+	@echo "... src/mcts/mcts_engine_taskflow.o"
+	@echo "... src/mcts/mcts_engine_taskflow.i"
+	@echo "... src/mcts/mcts_engine_taskflow.s"
 	@echo "... src/mcts/mcts_engine_tree.o"
 	@echo "... src/mcts/mcts_engine_tree.i"
 	@echo "... src/mcts/mcts_engine_tree.s"

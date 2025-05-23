@@ -386,49 +386,37 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         // Step 5: Reset search statistics and prepare for new search
         resetSearchState();
         
-        // Step 6: Create parallel search roots if root parallelization is enabled
+        // Step 6: Create search roots (root parallelization removed - always single root)
         std::vector<std::shared_ptr<MCTSNode>> search_roots;
-        if (settings_.use_root_parallelization && settings_.num_root_workers > 1) {
-            search_roots = createSearchRoots(root_, settings_.num_root_workers);
-        } else {
-            search_roots.push_back(root_);
-        }
+        search_roots.push_back(root_);
         
         // Step 7: Execute the main search algorithm based on selected method
         auto exec_start = std::chrono::steady_clock::now();
         
-        // COMPREHENSIVE ROUTING DIAGNOSTICS
-        std::cout << "[MCTS_ROUTING] Routing diagnostics:" << std::endl;
+        // TASKFLOW ROUTING - Always use leaf parallelization with taskflow
+        std::cout << "[MCTS_ROUTING] Using cpp-taskflow orchestration:" << std::endl;
         std::cout << "  - settings_.num_threads = " << settings_.num_threads << std::endl;
-        std::cout << "  - inference_server_ = NO (removed in simplification)" << std::endl;
-        std::cout << "  - burst_coordinator_ = NO (removed in simplification)" << std::endl;
-        std::cout << "  - use_advanced_memory_pool_ = " << use_advanced_memory_pool_ << std::endl;
+        std::cout << "  - Leaf parallelization only (no root parallelization)" << std::endl;
+        std::cout << "  - Target CPU/GPU throughput: 70%+" << std::endl;
         
         if (settings_.num_threads <= 0) {
-            // True serial mode with simple, direct inference - prioritize this check
+            // Serial mode
             std::cout << "[MCTS_PERF] Using executeSimpleSerialSearch (num_threads <= 0)" << std::endl;
             executeSimpleSerialSearch(search_roots);
-        } else if (settings_.num_threads > 1) {
-            // TRUE PARALLELIZATION: Use proper leaf parallelization
-            std::cout << "[MCTS_PERF] 🚀🚀🚀 Using executeTrueParallelSearch (TRUE leaf parallelization, " 
+        } else {
+            // TASKFLOW PARALLELIZATION: High-performance leaf parallelization
+            std::cout << "[MCTS_PERF] 🚀 Using executeTaskflowSearch (cpp-taskflow, " 
                       << settings_.num_threads << " threads)" << std::endl;
             if (!search_roots.empty() && search_roots[0]) {
-                executeTrueParallelSearch(search_roots[0].get(), search_roots[0]->getState().clone());
+                executeTaskflowSearch(search_roots[0].get(), settings_.num_simulations);
             }
-        } else {
-            // FALLBACK: Single thread mode
-            std::cout << "[MCTS_PERF] Using executeSerialSearch (single thread)" << std::endl;
-            executeSerialSearch(search_roots);
         }
         
         auto exec_end = std::chrono::steady_clock::now();
         std::cout << "[MCTS_PERF] Search execution completed in " 
                   << std::chrono::duration_cast<std::chrono::milliseconds>(exec_end - exec_start).count() << "ms" << std::endl;
         
-        // Step 8: Aggregate results from different search roots if using root parallelization
-        if (settings_.use_root_parallelization && settings_.num_root_workers > 1) {
-            aggregateRootParallelResults(search_roots);
-        }
+        // Step 8: No aggregation needed (root parallelization removed)
         
         // Step 9: Update search statistics before returning
         countTreeStatistics();

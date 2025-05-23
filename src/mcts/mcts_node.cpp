@@ -323,17 +323,17 @@ void MCTSNode::expand(bool use_progressive_widening, float cpw, float kpw) {
     size_t num_children_to_expand = legal_moves.size();
     
     // Track unexpanded moves for incremental expansion  
-    if (use_progressive_widening && visit_count_ > 0) {
+    if (use_progressive_widening) {
         // Progressive widening formula: num_children = cpw * N^kpw
         // where N is the parent's visit count
         int parent_visits = visit_count_.load();
         size_t current_children = children_.size();
         
         // Calculate total children we should have based on visit count
-        // More generous progressive widening for better tree utilization
+        // Ensure we expand at least some children even with 0 visits
         size_t target_children = std::min(
             legal_moves.size(),
-            static_cast<size_t>(std::max(4.0f, static_cast<float>(cpw * std::pow(parent_visits, kpw/15.0f))))
+            static_cast<size_t>(std::max(8.0f, static_cast<float>(cpw * std::pow(parent_visits + 1, kpw))))
         );
         
         // Incremental expansion: only add new children as needed
@@ -429,6 +429,10 @@ void MCTSNode::expand(bool use_progressive_widening, float cpw, float kpw) {
             auto child = MCTSNode::create(std::move(new_state), nullptr);
             child->setAction(move);
             child->setParentDirectly(shared_from_this());  // Set weak parent reference
+            
+            // Ensure child is fully initialized before adding to children vector
+            // This prevents other threads from accessing partially constructed nodes
+            std::atomic_thread_fence(std::memory_order_release);
             
             children_.push_back(child);
             actions_.push_back(move);

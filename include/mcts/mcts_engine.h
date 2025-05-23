@@ -96,8 +96,8 @@ struct ALPHAZERO_API MCTSSettings {
     
     // Progressive widening settings
     bool use_progressive_widening = true;
-    float progressive_widening_c = 1.0f;  // C parameter for progressive widening
-    float progressive_widening_k = 10.0f; // K parameter for progressive widening
+    float progressive_widening_c = 2.0f;  // C parameter for progressive widening
+    float progressive_widening_k = 0.5f; // K parameter for progressive widening (typically 0.25-0.5)
     
     // Root parallelization settings  
     bool use_root_parallelization = true;
@@ -397,6 +397,9 @@ private:
     
     // NEW: Burst-mode optimized search with unified memory management
     void executeOptimizedSearchV2(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
+    
+    // Taskflow-based leaf parallelization for high throughput
+    void executeTaskflowSearch(MCTSNode* root, int num_simulations);
     bool processBatchWithEvaluator(const std::vector<PendingEvaluation>& batch);
     
     // CRITICAL FIX: Simplified direct batching without complex layers

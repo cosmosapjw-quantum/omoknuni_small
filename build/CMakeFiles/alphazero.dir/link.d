@@ -47,6 +47,7 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o \
@@ -204,6 +205,8 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o:
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o:
 

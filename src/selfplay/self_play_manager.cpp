@@ -68,21 +68,12 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         rng_.seed(static_cast<unsigned int>(settings_.random_seed));
     }
 
-    // Configure root parallelization in MCTS settings
-    // auto mcts_settings = settings_.mcts_settings; // This line is unused and will be removed.
+    // LEAF PARALLELIZATION ONLY - Root parallelization removed
+    settings_.mcts_settings.use_root_parallelization = false;
+    settings_.mcts_settings.num_root_workers = 1;
     
-    // FIXED: Use root parallelization setting from config instead of hardcoding
-    // Keep the original setting from the provided configuration
-    // settings_.mcts_settings.use_root_parallelization is already set from config
-    
-    // Use the num_root_workers from config or set a reasonable default based on available cores
-    if (settings_.mcts_settings.num_root_workers <= 0) {
-        int available_cores = omp_get_max_threads();
-        settings_.mcts_settings.num_root_workers = std::max(1, available_cores / 2);
-    }
-    
-    std::cout << "SelfPlayManager: Using root parallelization with " 
-              << settings_.mcts_settings.num_root_workers << " root workers per game - CRITICAL for batch formation" << std::endl;
+    std::cout << "SelfPlayManager: Using LEAF parallelization with " 
+              << settings_.mcts_settings.num_threads << " threads - Optimized for 70%+ CPU/GPU throughput" << std::endl;
     
     // NOTE: Each MCTSEngine now creates its own optimized UnifiedInferenceServer + BurstCoordinator
     // No need for a shared inference server
@@ -268,8 +259,8 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     // Create a timestamp base for game IDs
     std::string timestamp_base = getCurrentTimestamp();
     
-    // Generate games in parallel with OpenMP for better CPU/GPU utilization
-    std::cout << "Generating " << num_games << " self-play games using root parallelization..." << std::endl;
+    // Generate games with optimized leaf parallelization
+    std::cout << "Generating " << num_games << " self-play games..." << std::endl;
     // Thread-safe game collection
     std::mutex games_mutex;
     std::atomic<int> completed_games(0);

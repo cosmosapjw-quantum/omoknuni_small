@@ -654,6 +654,7 @@ set(MCTS_SOURCES
     src/mcts/mcts_engine_parallel_batch.cpp
     src/mcts/mcts_engine_memory_pressure.cpp
     src/mcts/mcts_engine_true_parallel_search.cpp
+    src/mcts/mcts_engine_taskflow.cpp
     src/mcts/aggressive_memory_manager.cpp
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
