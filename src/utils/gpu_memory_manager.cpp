@@ -11,6 +11,20 @@ GPUMemoryManager::GPUMemoryManager() {
 }
 
 GPUMemoryManager::~GPUMemoryManager() {
+    // Check for memory leaks
+    {
+        std::lock_guard<std::mutex> lock(registry_mutex_);
+        if (!allocation_registry_.empty()) {
+            size_t total_leaked = 0;
+            for (const auto& [ptr, size] : allocation_registry_) {
+                total_leaked += size;
+            }
+            LOG_SYSTEM_ERROR("GPU Memory leak detected: {} allocations ({} bytes) not freed",
+                           allocation_registry_.size(), total_leaked);
+            total_leaked_bytes_.store(total_leaked, std::memory_order_relaxed);
+        }
+    }
+    
     reset();
 }
 
@@ -94,6 +108,12 @@ void* GPUMemoryManager::allocate(size_t size, cudaStream_t stream) {
     PROFILE_ALLOC(ptr, size);
 #endif
     
+    // Track allocation
+    {
+        std::lock_guard<std::mutex> lock(registry_mutex_);
+        allocation_registry_[ptr] = size;
+    }
+    
     utils::ProfileMemoryUsage(size);
     return ptr;
 }
@@ -102,6 +122,17 @@ void GPUMemoryManager::deallocate(void* ptr, size_t size, cudaStream_t stream) {
     PROFILE_SCOPE_N("GPUMemoryManager::deallocate");
     
     if (!ptr) return;
+    
+    // Remove from allocation registry
+    {
+        std::lock_guard<std::mutex> lock(registry_mutex_);
+        auto it = allocation_registry_.find(ptr);
+        if (it != allocation_registry_.end()) {
+            allocation_registry_.erase(it);
+        } else {
+            LOG_SYSTEM_WARN("Deallocating untracked pointer: {}", ptr);
+        }
+    }
     
 #ifdef USE_RAPIDS_RMM
     try {

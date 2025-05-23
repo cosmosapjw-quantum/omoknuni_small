@@ -1,4 +1,5 @@
 // src/python/bindings.cpp
+// OPTIMIZED: Compatible with new BurstCoordinator + UnifiedInferenceServer architecture
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>

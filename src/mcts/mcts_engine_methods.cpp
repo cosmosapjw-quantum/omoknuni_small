@@ -1,6 +1,6 @@
 #include "mcts/mcts_engine.h"
 #include "mcts/mcts_node.h"
-#include "mcts/mcts_evaluator.h"
+#include "mcts/advanced_memory_pool.h"
 #include "core/igamestate.h"
 #include "utils/debug_monitor.h"
 #include "utils/gamestate_pool.h"
@@ -16,7 +16,23 @@ namespace mcts {
 
 // Clone a game state using the memory pool if enabled
 std::shared_ptr<core::IGameState> MCTSEngine::cloneGameState(const core::IGameState& state) {
-    // Simple implementation - delegate to the state's clone method
+    // Use game state pool if enabled
+    if (game_state_pool_enabled_) {
+        // Try to use game state pool from utils
+        auto& pool_manager = utils::GameStatePoolManager::getInstance();
+        auto unique_state = pool_manager.cloneState(state);
+        
+        // Convert unique_ptr to shared_ptr
+        return unique_state ? std::shared_ptr<core::IGameState>(std::move(unique_state)) : state.clone();
+    }
+    
+    // Use advanced memory pool if enabled
+    if (use_advanced_memory_pool_ && memory_pool_) {
+        // Allocate state from our optimized memory pool
+        return memory_pool_->allocateGameState(state);
+    }
+    
+    // Fallback to standard clone
     return state.clone();
 }
 

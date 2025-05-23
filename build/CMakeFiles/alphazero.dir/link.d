@@ -4,6 +4,8 @@ lib/Release/libalphazero.so: \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadbegin.o \
   CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o \
   CMakeFiles/alphazero.dir/src/core/game_export.cpp.o \
+  CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.o \
+  CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/games/chess/chess_state.cpp.o \
   CMakeFiles/alphazero.dir/src/games/chess/chess_rules.cpp.o \
   CMakeFiles/alphazero.dir/src/games/chess/chess960.cpp.o \
@@ -19,6 +21,8 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/logger.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/gpu_memory_manager.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o \
@@ -26,11 +30,23 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_methods.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_node_virtual_loss.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/unified_inference_server.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/concurrent_request_aggregator.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/burst_coordinator.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/cuda_stream_optimizer.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/unified_memory_manager.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/adaptive_batch_sizer.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/lock_free_batch_accumulator.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/optimized_external_queue_processor.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_search.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/parallel_mcts_search.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized_control.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.o \
@@ -42,6 +58,8 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_taskflow_engine.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_adjuster.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/batch_barrier.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o \
@@ -49,7 +67,6 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/training/dataset.cpp.o \
   CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o \
-  CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.o \
   /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0 \
   /opt/libtorch-2.7.0-cu128/lib/libtorch.so \
   /opt/libtorch-2.7.0-cu128/lib/libc10.so \
@@ -112,6 +129,10 @@ CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o:
 
 CMakeFiles/alphazero.dir/src/core/game_export.cpp.o:
 
+CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.o:
+
+CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.o:
+
 CMakeFiles/alphazero.dir/src/games/chess/chess_state.cpp.o:
 
 CMakeFiles/alphazero.dir/src/games/chess/chess_rules.cpp.o:
@@ -142,6 +163,10 @@ CMakeFiles/alphazero.dir/src/utils/logger.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/gpu_memory_manager.cpp.o:
 
+CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o:
+
 CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o:
@@ -156,15 +181,39 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node_methods.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o:
 
+CMakeFiles/alphazero.dir/src/mcts/mcts_node_virtual_loss.cpp.o:
+
 CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o:
+CMakeFiles/alphazero.dir/src/mcts/unified_inference_server.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.o:
+CMakeFiles/alphazero.dir/src/mcts/concurrent_request_aggregator.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.o:
+CMakeFiles/alphazero.dir/src/mcts/burst_coordinator.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/cuda_stream_optimizer.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/unified_memory_manager.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/adaptive_batch_sizer.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/lock_free_batch_accumulator.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/optimized_external_queue_processor.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_search.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/parallel_mcts_search.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized_control.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_pipeline.cpp.o:
 
@@ -188,6 +237,10 @@ CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o:
 
+CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_adjuster.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/batch_barrier.cpp.o:
+
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o:
@@ -201,8 +254,6 @@ CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o:
 CMakeFiles/alphazero.dir/src/training/dataset.cpp.o:
 
 CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o:
-
-CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.o:
 
 /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0:
 

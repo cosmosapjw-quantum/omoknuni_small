@@ -9,6 +9,7 @@
 #include <memory>
 #include <unordered_map>
 #include <map>
+#include <atomic>
 #include "core/igamestate.h"
 #include "utils/zobrist_hash.h"
 #include "games/chess/chess_types.h"
@@ -95,6 +96,11 @@ public:
      * @brief Assignment operator
      */
     ChessState& operator=(const ChessState& other);
+    
+    /**
+     * @brief Destructor - returns cached tensors to pool
+     */
+    ~ChessState();
     
     // IGameState interface implementation
     std::vector<int> getLegalMoves() const override;
@@ -367,6 +373,12 @@ private:
     mutable core::GameResult cached_result_;
     mutable bool terminal_check_dirty_;
     
+    // PERFORMANCE FIX: Cached tensor representations to avoid expensive recomputation
+    mutable std::vector<std::vector<std::vector<float>>> cached_tensor_repr_;
+    mutable std::vector<std::vector<std::vector<float>>> cached_enhanced_tensor_repr_;
+    mutable std::atomic<bool> tensor_cache_dirty_{true};
+    mutable std::atomic<bool> enhanced_tensor_cache_dirty_{true};
+    
     // Rules object
     std::shared_ptr<ChessRules> rules_;
     
@@ -375,6 +387,7 @@ private:
     void initializeChess960Position(int position_number);
     void initializeEmpty();
     void invalidateCache();
+    void clearTensorCache() const;
     
     // Update zobrist hash
     void updateHash() const;

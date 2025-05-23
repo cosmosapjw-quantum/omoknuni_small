@@ -12,7 +12,6 @@
 #include "nn/neural_network_factory.h"
 #include "nn/resnet_model.h"
 #include "selfplay/self_play_manager.h"
-#include "evaluation/model_evaluator.h"
 
 namespace alphazero {
 namespace cli {

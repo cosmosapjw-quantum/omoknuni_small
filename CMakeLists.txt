@@ -616,11 +616,11 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 # ─────────────────────────────────── Source sets ───────────────────────────────
-set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp)
+set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp src/core/tensor_pool.cpp src/core/lock_free_tensor_pool.cpp)
 set(CHESS_SOURCES     src/games/chess/chess_state.cpp src/games/chess/chess_rules.cpp src/games/chess/chess960.cpp)
 set(GO_SOURCES        src/games/go/go_state.cpp   src/games/go/go_rules.cpp)
 set(GOMOKU_SOURCES    src/games/gomoku/gomoku_state.cpp src/games/gomoku/gomoku_rules.cpp)
-set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp)
+set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp src/utils/resource_monitor.cpp src/utils/advanced_memory_monitor.cpp)
 
 # Conditionally define NN_SOURCES based on WITH_TORCH
 set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
@@ -637,11 +637,25 @@ set(MCTS_SOURCES
     src/mcts/mcts_node.cpp
     src/mcts/mcts_node_methods.cpp
     src/mcts/mcts_node_pending_eval.cpp
+    src/mcts/mcts_node_virtual_loss.cpp
     src/mcts/mcts_node_pool.cpp
     src/mcts/evaluation_types.cpp
-    src/mcts/mcts_evaluator.cpp
-    src/mcts/mcts_evaluator_concurrent.cpp
-    src/mcts/batch_accumulator.cpp
+    src/mcts/unified_inference_server.cpp
+    src/mcts/concurrent_request_aggregator.cpp
+    src/mcts/burst_coordinator.cpp
+    src/mcts/mcts_object_pool.cpp
+    src/mcts/cuda_stream_optimizer.cpp
+    src/mcts/advanced_memory_pool.cpp
+    src/mcts/unified_memory_manager.cpp
+    src/mcts/adaptive_batch_sizer.cpp
+    src/mcts/lock_free_batch_accumulator.cpp
+    src/mcts/optimized_external_queue_processor.cpp
+    src/mcts/enhanced_mcts_search.cpp
+    src/mcts/parallel_mcts_search.cpp
+    # UPDATED: Now using UnifiedInferenceServer + BurstCoordinator architecture
+    src/mcts/mcts_engine_optimized.cpp
+    src/mcts/mcts_engine_optimized_control.cpp
+    # UPDATED: Advanced pipeline implementation for new architecture
     src/mcts/mcts_pipeline.cpp
     src/mcts/mcts_engine_main.cpp
     src/mcts/mcts_engine_utils.cpp
@@ -650,9 +664,12 @@ set(MCTS_SOURCES
     src/mcts/mcts_engine_common.cpp
     src/mcts/mcts_engine_search.cpp
     src/mcts/mcts_engine_methods.cpp
+    # UPDATED: Taskflow-based engine with new architecture
     src/mcts/mcts_taskflow_engine.cpp
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
+    src/mcts/dynamic_batch_adjuster.cpp
+    src/mcts/batch_barrier.cpp
 )
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp
@@ -663,7 +680,6 @@ set(TRAINING_SOURCES
     src/training/data_loader.cpp
 )
 set(EVALUATION_SOURCES
-    src/evaluation/model_evaluator.cpp
 )
 set(CLI_SOURCES 
     src/cli/cli_manager.cpp
@@ -1244,10 +1260,23 @@ if(BUILD_TESTS)
     set(CHESS_TEST_SOURCES  tests/games/chess/chess_test.cpp)
     set(GO_TEST_SOURCES     tests/games/go/go_test.cpp)
     set(GOMOKU_TEST_SOURCES tests/games/gomoku/gomoku_test.cpp)
-    set(MCTS_TEST_SOURCES   tests/mcts/mcts_node_test.cpp  tests/mcts/mcts_evaluator_test.cpp
+    set(MCTS_TEST_SOURCES   tests/mcts/mcts_node_test.cpp
                             tests/mcts/mcts_engine_test.cpp tests/mcts/mcts_openmp_test.cpp
-                            tests/mcts/mcts_optimization_test.cpp)
-    set(CLI_TEST_SOURCES tests/cli/cli_manager_test.cpp)
+                            tests/mcts/mcts_optimization_test.cpp
+                            tests/mcts/burst_coordinator_test.cpp
+                            tests/mcts/unified_inference_server_test.cpp
+                            tests/mcts/progressive_widening_test.cpp
+                            tests/mcts/virtual_loss_test.cpp
+                            tests/mcts/shared_queue_test.cpp)
+    set(TRANSPOSITION_TEST_SOURCES tests/mcts/transposition_table_test.cpp
+                                 tests/mcts/transposition_integration_test.cpp)
+    set(CLI_TEST_SOURCES    tests/cli/cli_manager_test.cpp)
+    set(NN_TEST_SOURCES     tests/nn/neural_network_test.cpp)
+    set(SELFPLAY_TEST_SOURCES tests/selfplay/self_play_manager_test.cpp)
+    set(TRAINING_TEST_SOURCES tests/training/training_data_manager_test.cpp)
+    set(INTEGRATION_TEST_SOURCES tests/integration/mcts_with_nn_test.cpp
+                               tests/integration/games/self_play_games_test.cpp
+                               tests/integration/optimized_architecture_test.cpp)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/mcts/mcts_test.cpp")
         list(APPEND MCTS_TEST_SOURCES tests/mcts/mcts_test.cpp)
     endif()
@@ -1373,21 +1402,21 @@ if(BUILD_TESTS)
     make_test(chess_tests   ${CHESS_TEST_SOURCES})
     make_test(go_tests      ${GO_TEST_SOURCES})
     make_test(gomoku_tests  ${GOMOKU_TEST_SOURCES})
-    make_test(neural_network_test tests/nn/neural_network_test.cpp)
-    make_test(mcts_with_nn_test tests/integration/mcts_with_nn_test.cpp)
-    make_test(self_play_manager_test tests/selfplay/self_play_manager_test.cpp)
-    make_test(training_data_manager_test tests/training/training_data_manager_test.cpp)
-    make_test(model_evaluator_test tests/evaluation/model_evaluator_test.cpp)
-    make_test(transposition_table_test tests/mcts/transposition_table_test.cpp)
-    make_test(transposition_integration_test tests/mcts/transposition_integration_test.cpp)
-    make_test(self_play_games_test tests/integration/games/self_play_games_test.cpp)
     if(MCTS_TEST_SOURCES)
         make_test(mcts_tests ${MCTS_TEST_SOURCES})
     endif()
+    make_test(transposition_tests ${TRANSPOSITION_TEST_SOURCES})
+    make_test(nn_tests      ${NN_TEST_SOURCES})
+    make_test(selfplay_tests ${SELFPLAY_TEST_SOURCES})
+    make_test(training_tests ${TRAINING_TEST_SOURCES})
+    make_test(integration_tests ${INTEGRATION_TEST_SOURCES})
     make_test(all_tests     tests/all_tests_main.cpp
                              ${CORE_TEST_SOURCES} ${CHESS_TEST_SOURCES}
                              ${GO_TEST_SOURCES} ${GOMOKU_TEST_SOURCES}
-                             ${MCTS_TEST_SOURCES} ${CLI_TEST_SOURCES})
+                             ${MCTS_TEST_SOURCES} ${TRANSPOSITION_TEST_SOURCES}
+                             ${CLI_TEST_SOURCES} ${NN_TEST_SOURCES}
+                             ${SELFPLAY_TEST_SOURCES} ${TRAINING_TEST_SOURCES}
+                             ${INTEGRATION_TEST_SOURCES})
     
     # Add benchmark executable (not a test, but a performance tool)
     if(WITH_TORCH)
@@ -1403,23 +1432,6 @@ if(BUILD_TESTS)
             INSTALL_RPATH_USE_LINK_PATH TRUE
         )
     endif()
-    
-    # Add shared queue test as a standalone executable
-    add_executable(shared_queue_test tests/mcts/shared_queue_test.cpp)
-    target_link_libraries(shared_queue_test PRIVATE alphazero GTest::gtest GTest::gtest_main pthread)
-    if(WITH_TORCH AND WITH_CUDA)
-        target_compile_definitions(shared_queue_test PRIVATE WITH_CUDA)
-    endif()
-    # Set rpath for shared queue test
-    set_target_properties(shared_queue_test PROPERTIES
-        INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${Torch_LIB_DIR}"
-        BUILD_WITH_INSTALL_RPATH TRUE
-        INSTALL_RPATH_USE_LINK_PATH TRUE
-    )
-    
-    # Add the shared queue test to CTest with a timeout
-    add_test(NAME shared_queue_test COMMAND shared_queue_test)
-    set_tests_properties(shared_queue_test PROPERTIES TIMEOUT 10)  # 10 second timeout
     
     # Accept shared library for GTest
     if(TARGET GTest::gtest)

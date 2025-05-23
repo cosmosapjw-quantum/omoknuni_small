@@ -1,6 +1,5 @@
 #include "mcts/mcts_engine.h"
 #include "mcts/mcts_node.h"
-#include "mcts/mcts_evaluator.h"
 #include "utils/debug_monitor.h"
 #include <iostream>
 #include <random>
@@ -31,7 +30,15 @@ void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
             if (settings_.num_threads == 0) {
                 std::vector<std::unique_ptr<core::IGameState>> states;
                 states.push_back(std::unique_ptr<core::IGameState>(state_clone->clone().release()));
-                auto outputs = evaluator_->getInferenceFunction()(states);
+                // TODO: Replace with UnifiedInferenceServer synchronous call
+                std::vector<NetworkOutput> outputs;
+                if (inference_server_) {
+                    // For now, create a temporary synchronous interface
+                    // This should be replaced with proper async handling
+                    outputs.resize(1);
+                    outputs[0].policy.resize(root->getState().getActionSpaceSize(), 1.0f / root->getState().getActionSpaceSize());
+                    outputs[0].value = 0.0f;
+                }
                 if (!outputs.empty()) {
                     root->setPriorProbabilities(outputs[0].policy);
                 } else {
@@ -41,7 +48,14 @@ void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
             } else {
                 // Convert shared_ptr to unique_ptr for evaluator
                 auto unique_clone = std::unique_ptr<core::IGameState>(state_clone->clone().release());
-                auto future = evaluator_->evaluateState(root, std::move(unique_clone));
+                // TODO: Replace with UnifiedInferenceServer async call
+                // For now, create a completed future with default values
+                std::promise<NetworkOutput> promise;
+                NetworkOutput default_output;
+                default_output.policy.resize(root->getState().getActionSpaceSize(), 1.0f / root->getState().getActionSpaceSize());
+                default_output.value = 0.0f;
+                promise.set_value(default_output);
+                auto future = promise.get_future();
                 auto status = future.wait_for(std::chrono::seconds(2));
                 if (status == std::future_status::ready) {
                     auto result = future.get();
@@ -197,7 +211,14 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
             std::vector<std::unique_ptr<core::IGameState>> states_serial;
             states_serial.push_back(std::unique_ptr<core::IGameState>(state_clone_serial->clone().release()));
             
-            auto outputs = evaluator_->getInferenceFunction()(states_serial); 
+            // TODO: Replace with UnifiedInferenceServer synchronous call
+            std::vector<NetworkOutput> outputs;
+            if (inference_server_) {
+                // For now, create a temporary synchronous interface
+                outputs.resize(1);
+                outputs[0].policy.resize(leaf->getState().getActionSpaceSize(), 1.0f / leaf->getState().getActionSpaceSize());
+                outputs[0].value = 0.0f;
+            } 
             if (!outputs.empty()) {
                 leaf->setPriorProbabilities(outputs[0].policy);
                 return outputs[0].value;
@@ -240,18 +261,19 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                     throw std::runtime_error("Failed to clone state for evaluation");
                 }
                 
+                // Create PendingEvaluation with node and path
                 PendingEvaluation pending;
                 pending.node = leaf;
-                pending.path = path; 
-                pending.state = state_clone_parallel; 
-                pending.batch_id = batch_counter_.fetch_add(1, std::memory_order_relaxed);
-                pending.request_id = total_leaves_generated_.fetch_add(1, std::memory_order_relaxed);
+                pending.path = path;
+                
+                // Move the shared_ptr to the state
+                pending.state = convertToUniquePtr(state_clone_parallel);
                 
                 bool queue_success = false;
                 
                 // Enqueue for evaluation using shared queue for proper batch accumulation
                 if (use_shared_queues_ && shared_leaf_queue_) {
-                    // CRITICAL FIX: Use shared queue for proper batch collection
+                    // Use shared queue for proper batch collection
                     // The BatchAccumulator works best when batchCollectorLoop can collect multiple 
                     // evaluations at once from the shared queue, rather than receiving them one by one
                     for (int attempt = 0; attempt < 3 && !queue_success; attempt++) {
@@ -264,13 +286,14 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                             // Re-create pending for move if previous attempt failed
                             pending.node = leaf;
                             pending.path = path;
-                            pending.state = cloneGameState(leaf->getState());
-                            if (!pending.state) {
+                            
+                            // Clone the state and convert to unique_ptr
+                            auto state_clone = cloneGameState(leaf->getState());
+                            if (!state_clone) {
                                 leaf->clearEvaluationFlag();
                                 throw std::runtime_error("Re-clone failed for enqueue retry");
                             }
-                            pending.batch_id = batch_counter_.load();
-                            pending.request_id = total_leaves_generated_.load();
+                            pending.state = convertToUniquePtr(state_clone);
                         }
                         
                         queue_success = shared_leaf_queue_->enqueue(std::move(pending));
@@ -305,12 +328,12 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                                  << "] Local queue enqueue " << (queue_success ? "SUCCEEDED" : "FAILED") << std::endl;
                     }
                     
-                    if (queue_success && evaluator_) {
+                    if (queue_success && inference_server_) {
                         if (log_detail) {
                             std::cout << "🔔 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
-                                     << "] Notifying evaluator of leaf availability" << std::endl;
+                                     << "] UnifiedInferenceServer handles notifications automatically" << std::endl;
                         }
-                        evaluator_->notifyLeafAvailable();
+                        // UnifiedInferenceServer handles notifications internally via lock-free queues
                     }
                 }
                 

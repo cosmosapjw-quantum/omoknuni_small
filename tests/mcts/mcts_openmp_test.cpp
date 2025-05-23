@@ -16,14 +16,14 @@ class MockNeuralNetwork : public nn::NeuralNetwork {
 public:
     MockNeuralNetwork() : call_count_(0) {}
     
-    std::vector<mcts::NetworkOutput> inference(
+    std::vector<alphazero::mcts::NetworkOutput> inference(
         const std::vector<std::unique_ptr<core::IGameState>>& states) override {
         
         call_count_.fetch_add(states.size(), std::memory_order_relaxed);
         
-        std::vector<mcts::NetworkOutput> outputs;
+        std::vector<alphazero::mcts::NetworkOutput> outputs;
         for (size_t i = 0; i < states.size(); i++) {
-            mcts::NetworkOutput output;
+            alphazero::mcts::NetworkOutput output;
             
             // Create dummy policy based on state
             int num_actions = 361; // 19x19 gomoku board
@@ -81,14 +81,14 @@ protected:
 
 TEST_F(MCTSOpenMPTest, BasicFunctionality) {
     // Test basic MCTS search with OpenMP
-    mcts::MCTSSettings settings;
+    alphazero::mcts::MCTSSettings settings;
     settings.num_simulations = 100;
     settings.num_threads = 4;
     settings.batch_size = 8;
     
     omp_set_num_threads(settings.num_threads);
     
-    mcts::MCTSEngine engine(neural_net_, settings);
+    alphazero::mcts::MCTSEngine engine(neural_net_, settings);
     games::gomoku::GomokuState state(19);
     
     auto result = engine.search(state);
@@ -106,14 +106,14 @@ TEST_F(MCTSOpenMPTest, ThreadScaling) {
     std::vector<double> times;
     
     for (int threads : thread_counts) {
-        mcts::MCTSSettings settings;
+        alphazero::mcts::MCTSSettings settings;
         settings.num_simulations = 400;
         settings.num_threads = threads;
         settings.batch_size = 16;
         
         omp_set_num_threads(threads);
         
-        mcts::MCTSEngine engine(neural_net_, settings);
+        alphazero::mcts::MCTSEngine engine(neural_net_, settings);
         games::gomoku::GomokuState state(19);
         
         auto start = std::chrono::high_resolution_clock::now();
@@ -134,7 +134,7 @@ TEST_F(MCTSOpenMPTest, ThreadScaling) {
 
 TEST_F(MCTSOpenMPTest, ConsistentResults) {
     // Test that results are consistent across runs
-    mcts::MCTSSettings settings;
+    alphazero::mcts::MCTSSettings settings;
     settings.num_simulations = 200;
     settings.num_threads = 4;
     settings.batch_size = 16;
@@ -153,7 +153,7 @@ TEST_F(MCTSOpenMPTest, ConsistentResults) {
     std::vector<float> values;
     
     for (int i = 0; i < 3; i++) {
-        mcts::MCTSEngine engine(neural_net_, settings);
+        alphazero::mcts::MCTSEngine engine(neural_net_, settings);
         auto result = engine.search(state);
         actions.push_back(result.action);
         values.push_back(result.value);
@@ -170,14 +170,14 @@ TEST_F(MCTSOpenMPTest, ConsistentResults) {
 
 TEST_F(MCTSOpenMPTest, HighThreadCount) {
     // Test with high thread count (matching user's system)
-    mcts::MCTSSettings settings;
+    alphazero::mcts::MCTSSettings settings;
     settings.num_simulations = 800;
     settings.num_threads = 20;  // User's mcts_num_threads setting
     settings.batch_size = 32;
     
     omp_set_num_threads(settings.num_threads);
     
-    mcts::MCTSEngine engine(neural_net_, settings);
+    alphazero::mcts::MCTSEngine engine(neural_net_, settings);
     games::gomoku::GomokuState state(19);
     
     // Start CPU monitoring
@@ -208,7 +208,7 @@ TEST_F(MCTSOpenMPTest, HighThreadCount) {
 
 TEST_F(MCTSOpenMPTest, MemoryEfficiency) {
     // Test memory efficiency with large simulation count
-    mcts::MCTSSettings settings;
+    alphazero::mcts::MCTSSettings settings;
     settings.num_simulations = 1600;
     settings.num_threads = 16;
     settings.batch_size = 64;
@@ -216,7 +216,7 @@ TEST_F(MCTSOpenMPTest, MemoryEfficiency) {
     
     omp_set_num_threads(settings.num_threads);
     
-    mcts::MCTSEngine engine(neural_net_, settings);
+    alphazero::mcts::MCTSEngine engine(neural_net_, settings);
     games::gomoku::GomokuState state(19);
     
     // Run search without detailed memory tracking since this is just a test
@@ -231,14 +231,14 @@ TEST_F(MCTSOpenMPTest, MemoryEfficiency) {
 
 TEST_F(MCTSOpenMPTest, StressTest) {
     // Stress test with extreme parameters
-    mcts::MCTSSettings settings;
+    alphazero::mcts::MCTSSettings settings;
     settings.num_simulations = 100;  // Small count but high frequency
     settings.num_threads = 24;
     settings.batch_size = 8;
     
     omp_set_num_threads(settings.num_threads);
     
-    mcts::MCTSEngine engine(neural_net_, settings);
+    alphazero::mcts::MCTSEngine engine(neural_net_, settings);
     
     // Run many searches rapidly
     const int num_searches = 10;

@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <memory>
 #include <optional>
+#include <atomic>
 #include "core/igamestate.h"
 #include "utils/zobrist_hash.h"
 #include "games/go/go_rules.h"
@@ -43,6 +44,11 @@ public:
      * @brief Copy constructor
      */
     GoState(const GoState& other);
+    
+    /**
+     * @brief Destructor - returns cached tensors to pool
+     */
+    ~GoState();
     
     /**
      * @brief Assignment operator
@@ -226,6 +232,16 @@ private:
     mutable uint64_t hash_;
     mutable bool hash_dirty_;
     
+    // PERFORMANCE FIX: Cached tensor representations to avoid expensive recomputation
+    mutable std::vector<std::vector<std::vector<float>>> cached_tensor_repr_;
+    mutable std::vector<std::vector<std::vector<float>>> cached_enhanced_tensor_repr_;
+    mutable std::atomic<bool> tensor_cache_dirty_{true};
+    mutable std::atomic<bool> enhanced_tensor_cache_dirty_{true};
+    
+    // PERFORMANCE FIX: Cache expensive group analysis results
+    mutable std::vector<StoneGroup> cached_groups_[2]; // [0] = black groups, [1] = white groups
+    mutable std::atomic<bool> groups_cache_dirty_{true};
+    
     // Rules
     std::shared_ptr<GoRules> rules_;
     
@@ -236,6 +252,7 @@ private:
     void invalidateHash();
     void captureGroup(const StoneGroup& group);
     void captureStones(const std::unordered_set<int>& positions);
+    void clearTensorCache() const;
     
     // Check if a move is valid
     bool isValidMove(int action) const;

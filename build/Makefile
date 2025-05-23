@@ -660,110 +660,6 @@ gomoku_tests/fast:
 .PHONY : gomoku_tests/fast
 
 #=============================================================================
-# Target rules for targets named neural_network_test
-
-# Build rule for target.
-neural_network_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 neural_network_test
-.PHONY : neural_network_test
-
-# fast build rule for target.
-neural_network_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/build
-.PHONY : neural_network_test/fast
-
-#=============================================================================
-# Target rules for targets named mcts_with_nn_test
-
-# Build rule for target.
-mcts_with_nn_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mcts_with_nn_test
-.PHONY : mcts_with_nn_test
-
-# fast build rule for target.
-mcts_with_nn_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/build
-.PHONY : mcts_with_nn_test/fast
-
-#=============================================================================
-# Target rules for targets named self_play_manager_test
-
-# Build rule for target.
-self_play_manager_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 self_play_manager_test
-.PHONY : self_play_manager_test
-
-# fast build rule for target.
-self_play_manager_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/build
-.PHONY : self_play_manager_test/fast
-
-#=============================================================================
-# Target rules for targets named training_data_manager_test
-
-# Build rule for target.
-training_data_manager_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 training_data_manager_test
-.PHONY : training_data_manager_test
-
-# fast build rule for target.
-training_data_manager_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/build
-.PHONY : training_data_manager_test/fast
-
-#=============================================================================
-# Target rules for targets named model_evaluator_test
-
-# Build rule for target.
-model_evaluator_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 model_evaluator_test
-.PHONY : model_evaluator_test
-
-# fast build rule for target.
-model_evaluator_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/build
-.PHONY : model_evaluator_test/fast
-
-#=============================================================================
-# Target rules for targets named transposition_table_test
-
-# Build rule for target.
-transposition_table_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 transposition_table_test
-.PHONY : transposition_table_test
-
-# fast build rule for target.
-transposition_table_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/build
-.PHONY : transposition_table_test/fast
-
-#=============================================================================
-# Target rules for targets named transposition_integration_test
-
-# Build rule for target.
-transposition_integration_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 transposition_integration_test
-.PHONY : transposition_integration_test
-
-# fast build rule for target.
-transposition_integration_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/build
-.PHONY : transposition_integration_test/fast
-
-#=============================================================================
-# Target rules for targets named self_play_games_test
-
-# Build rule for target.
-self_play_games_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 self_play_games_test
-.PHONY : self_play_games_test
-
-# fast build rule for target.
-self_play_games_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/build
-.PHONY : self_play_games_test/fast
-
-#=============================================================================
 # Target rules for targets named mcts_tests
 
 # Build rule for target.
@@ -775,6 +671,71 @@ mcts_tests: cmake_check_build_system
 mcts_tests/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/build
 .PHONY : mcts_tests/fast
+
+#=============================================================================
+# Target rules for targets named transposition_tests
+
+# Build rule for target.
+transposition_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 transposition_tests
+.PHONY : transposition_tests
+
+# fast build rule for target.
+transposition_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_tests.dir/build.make CMakeFiles/transposition_tests.dir/build
+.PHONY : transposition_tests/fast
+
+#=============================================================================
+# Target rules for targets named nn_tests
+
+# Build rule for target.
+nn_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nn_tests
+.PHONY : nn_tests
+
+# fast build rule for target.
+nn_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/nn_tests.dir/build.make CMakeFiles/nn_tests.dir/build
+.PHONY : nn_tests/fast
+
+#=============================================================================
+# Target rules for targets named selfplay_tests
+
+# Build rule for target.
+selfplay_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 selfplay_tests
+.PHONY : selfplay_tests
+
+# fast build rule for target.
+selfplay_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/selfplay_tests.dir/build.make CMakeFiles/selfplay_tests.dir/build
+.PHONY : selfplay_tests/fast
+
+#=============================================================================
+# Target rules for targets named training_tests
+
+# Build rule for target.
+training_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 training_tests
+.PHONY : training_tests
+
+# fast build rule for target.
+training_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_tests.dir/build.make CMakeFiles/training_tests.dir/build
+.PHONY : training_tests/fast
+
+#=============================================================================
+# Target rules for targets named integration_tests
+
+# Build rule for target.
+integration_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 integration_tests
+.PHONY : integration_tests
+
+# fast build rule for target.
+integration_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/build
+.PHONY : integration_tests/fast
 
 #=============================================================================
 # Target rules for targets named all_tests
@@ -801,19 +762,6 @@ mcts_openmp_benchmark: cmake_check_build_system
 mcts_openmp_benchmark/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_openmp_benchmark.dir/build.make CMakeFiles/mcts_openmp_benchmark.dir/build
 .PHONY : mcts_openmp_benchmark/fast
-
-#=============================================================================
-# Target rules for targets named shared_queue_test
-
-# Build rule for target.
-shared_queue_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 shared_queue_test
-.PHONY : shared_queue_test
-
-# fast build rule for target.
-shared_queue_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/shared_queue_test.dir/build.make CMakeFiles/shared_queue_test.dir/build
-.PHONY : shared_queue_test/fast
 
 #=============================================================================
 # Target rules for targets named mimalloc-static
@@ -1011,29 +959,53 @@ src/core/igamestate.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/igamestate.cpp.s
 .PHONY : src/core/igamestate.cpp.s
 
-src/evaluation/model_evaluator.o: src/evaluation/model_evaluator.cpp.o
-.PHONY : src/evaluation/model_evaluator.o
+src/core/lock_free_tensor_pool.o: src/core/lock_free_tensor_pool.cpp.o
+.PHONY : src/core/lock_free_tensor_pool.o
 
 # target to build an object file
-src/evaluation/model_evaluator.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.o
-.PHONY : src/evaluation/model_evaluator.cpp.o
+src/core/lock_free_tensor_pool.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.o
+.PHONY : src/core/lock_free_tensor_pool.cpp.o
 
-src/evaluation/model_evaluator.i: src/evaluation/model_evaluator.cpp.i
-.PHONY : src/evaluation/model_evaluator.i
+src/core/lock_free_tensor_pool.i: src/core/lock_free_tensor_pool.cpp.i
+.PHONY : src/core/lock_free_tensor_pool.i
 
 # target to preprocess a source file
-src/evaluation/model_evaluator.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.i
-.PHONY : src/evaluation/model_evaluator.cpp.i
+src/core/lock_free_tensor_pool.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.i
+.PHONY : src/core/lock_free_tensor_pool.cpp.i
 
-src/evaluation/model_evaluator.s: src/evaluation/model_evaluator.cpp.s
-.PHONY : src/evaluation/model_evaluator.s
+src/core/lock_free_tensor_pool.s: src/core/lock_free_tensor_pool.cpp.s
+.PHONY : src/core/lock_free_tensor_pool.s
 
 # target to generate assembly for a file
-src/evaluation/model_evaluator.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/evaluation/model_evaluator.cpp.s
-.PHONY : src/evaluation/model_evaluator.cpp.s
+src/core/lock_free_tensor_pool.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.s
+.PHONY : src/core/lock_free_tensor_pool.cpp.s
+
+src/core/tensor_pool.o: src/core/tensor_pool.cpp.o
+.PHONY : src/core/tensor_pool.o
+
+# target to build an object file
+src/core/tensor_pool.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.o
+.PHONY : src/core/tensor_pool.cpp.o
+
+src/core/tensor_pool.i: src/core/tensor_pool.cpp.i
+.PHONY : src/core/tensor_pool.i
+
+# target to preprocess a source file
+src/core/tensor_pool.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.i
+.PHONY : src/core/tensor_pool.cpp.i
+
+src/core/tensor_pool.s: src/core/tensor_pool.cpp.s
+.PHONY : src/core/tensor_pool.s
+
+# target to generate assembly for a file
+src/core/tensor_pool.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.s
+.PHONY : src/core/tensor_pool.cpp.s
 
 src/games/chess/chess960.o: src/games/chess/chess960.cpp.o
 .PHONY : src/games/chess/chess960.o
@@ -1203,29 +1175,197 @@ src/games/gomoku/gomoku_state.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_state.cpp.s
 .PHONY : src/games/gomoku/gomoku_state.cpp.s
 
-src/mcts/batch_accumulator.o: src/mcts/batch_accumulator.cpp.o
-.PHONY : src/mcts/batch_accumulator.o
+src/mcts/adaptive_batch_sizer.o: src/mcts/adaptive_batch_sizer.cpp.o
+.PHONY : src/mcts/adaptive_batch_sizer.o
 
 # target to build an object file
-src/mcts/batch_accumulator.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.o
-.PHONY : src/mcts/batch_accumulator.cpp.o
+src/mcts/adaptive_batch_sizer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/adaptive_batch_sizer.cpp.o
+.PHONY : src/mcts/adaptive_batch_sizer.cpp.o
 
-src/mcts/batch_accumulator.i: src/mcts/batch_accumulator.cpp.i
-.PHONY : src/mcts/batch_accumulator.i
+src/mcts/adaptive_batch_sizer.i: src/mcts/adaptive_batch_sizer.cpp.i
+.PHONY : src/mcts/adaptive_batch_sizer.i
 
 # target to preprocess a source file
-src/mcts/batch_accumulator.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.i
-.PHONY : src/mcts/batch_accumulator.cpp.i
+src/mcts/adaptive_batch_sizer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/adaptive_batch_sizer.cpp.i
+.PHONY : src/mcts/adaptive_batch_sizer.cpp.i
 
-src/mcts/batch_accumulator.s: src/mcts/batch_accumulator.cpp.s
-.PHONY : src/mcts/batch_accumulator.s
+src/mcts/adaptive_batch_sizer.s: src/mcts/adaptive_batch_sizer.cpp.s
+.PHONY : src/mcts/adaptive_batch_sizer.s
 
 # target to generate assembly for a file
-src/mcts/batch_accumulator.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/batch_accumulator.cpp.s
-.PHONY : src/mcts/batch_accumulator.cpp.s
+src/mcts/adaptive_batch_sizer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/adaptive_batch_sizer.cpp.s
+.PHONY : src/mcts/adaptive_batch_sizer.cpp.s
+
+src/mcts/advanced_memory_pool.o: src/mcts/advanced_memory_pool.cpp.o
+.PHONY : src/mcts/advanced_memory_pool.o
+
+# target to build an object file
+src/mcts/advanced_memory_pool.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.o
+.PHONY : src/mcts/advanced_memory_pool.cpp.o
+
+src/mcts/advanced_memory_pool.i: src/mcts/advanced_memory_pool.cpp.i
+.PHONY : src/mcts/advanced_memory_pool.i
+
+# target to preprocess a source file
+src/mcts/advanced_memory_pool.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.i
+.PHONY : src/mcts/advanced_memory_pool.cpp.i
+
+src/mcts/advanced_memory_pool.s: src/mcts/advanced_memory_pool.cpp.s
+.PHONY : src/mcts/advanced_memory_pool.s
+
+# target to generate assembly for a file
+src/mcts/advanced_memory_pool.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.s
+.PHONY : src/mcts/advanced_memory_pool.cpp.s
+
+src/mcts/batch_barrier.o: src/mcts/batch_barrier.cpp.o
+.PHONY : src/mcts/batch_barrier.o
+
+# target to build an object file
+src/mcts/batch_barrier.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/batch_barrier.cpp.o
+.PHONY : src/mcts/batch_barrier.cpp.o
+
+src/mcts/batch_barrier.i: src/mcts/batch_barrier.cpp.i
+.PHONY : src/mcts/batch_barrier.i
+
+# target to preprocess a source file
+src/mcts/batch_barrier.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/batch_barrier.cpp.i
+.PHONY : src/mcts/batch_barrier.cpp.i
+
+src/mcts/batch_barrier.s: src/mcts/batch_barrier.cpp.s
+.PHONY : src/mcts/batch_barrier.s
+
+# target to generate assembly for a file
+src/mcts/batch_barrier.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/batch_barrier.cpp.s
+.PHONY : src/mcts/batch_barrier.cpp.s
+
+src/mcts/burst_coordinator.o: src/mcts/burst_coordinator.cpp.o
+.PHONY : src/mcts/burst_coordinator.o
+
+# target to build an object file
+src/mcts/burst_coordinator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/burst_coordinator.cpp.o
+.PHONY : src/mcts/burst_coordinator.cpp.o
+
+src/mcts/burst_coordinator.i: src/mcts/burst_coordinator.cpp.i
+.PHONY : src/mcts/burst_coordinator.i
+
+# target to preprocess a source file
+src/mcts/burst_coordinator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/burst_coordinator.cpp.i
+.PHONY : src/mcts/burst_coordinator.cpp.i
+
+src/mcts/burst_coordinator.s: src/mcts/burst_coordinator.cpp.s
+.PHONY : src/mcts/burst_coordinator.s
+
+# target to generate assembly for a file
+src/mcts/burst_coordinator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/burst_coordinator.cpp.s
+.PHONY : src/mcts/burst_coordinator.cpp.s
+
+src/mcts/concurrent_request_aggregator.o: src/mcts/concurrent_request_aggregator.cpp.o
+.PHONY : src/mcts/concurrent_request_aggregator.o
+
+# target to build an object file
+src/mcts/concurrent_request_aggregator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/concurrent_request_aggregator.cpp.o
+.PHONY : src/mcts/concurrent_request_aggregator.cpp.o
+
+src/mcts/concurrent_request_aggregator.i: src/mcts/concurrent_request_aggregator.cpp.i
+.PHONY : src/mcts/concurrent_request_aggregator.i
+
+# target to preprocess a source file
+src/mcts/concurrent_request_aggregator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/concurrent_request_aggregator.cpp.i
+.PHONY : src/mcts/concurrent_request_aggregator.cpp.i
+
+src/mcts/concurrent_request_aggregator.s: src/mcts/concurrent_request_aggregator.cpp.s
+.PHONY : src/mcts/concurrent_request_aggregator.s
+
+# target to generate assembly for a file
+src/mcts/concurrent_request_aggregator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/concurrent_request_aggregator.cpp.s
+.PHONY : src/mcts/concurrent_request_aggregator.cpp.s
+
+src/mcts/cuda_stream_optimizer.o: src/mcts/cuda_stream_optimizer.cpp.o
+.PHONY : src/mcts/cuda_stream_optimizer.o
+
+# target to build an object file
+src/mcts/cuda_stream_optimizer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/cuda_stream_optimizer.cpp.o
+.PHONY : src/mcts/cuda_stream_optimizer.cpp.o
+
+src/mcts/cuda_stream_optimizer.i: src/mcts/cuda_stream_optimizer.cpp.i
+.PHONY : src/mcts/cuda_stream_optimizer.i
+
+# target to preprocess a source file
+src/mcts/cuda_stream_optimizer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/cuda_stream_optimizer.cpp.i
+.PHONY : src/mcts/cuda_stream_optimizer.cpp.i
+
+src/mcts/cuda_stream_optimizer.s: src/mcts/cuda_stream_optimizer.cpp.s
+.PHONY : src/mcts/cuda_stream_optimizer.s
+
+# target to generate assembly for a file
+src/mcts/cuda_stream_optimizer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/cuda_stream_optimizer.cpp.s
+.PHONY : src/mcts/cuda_stream_optimizer.cpp.s
+
+src/mcts/dynamic_batch_adjuster.o: src/mcts/dynamic_batch_adjuster.cpp.o
+.PHONY : src/mcts/dynamic_batch_adjuster.o
+
+# target to build an object file
+src/mcts/dynamic_batch_adjuster.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_adjuster.cpp.o
+.PHONY : src/mcts/dynamic_batch_adjuster.cpp.o
+
+src/mcts/dynamic_batch_adjuster.i: src/mcts/dynamic_batch_adjuster.cpp.i
+.PHONY : src/mcts/dynamic_batch_adjuster.i
+
+# target to preprocess a source file
+src/mcts/dynamic_batch_adjuster.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_adjuster.cpp.i
+.PHONY : src/mcts/dynamic_batch_adjuster.cpp.i
+
+src/mcts/dynamic_batch_adjuster.s: src/mcts/dynamic_batch_adjuster.cpp.s
+.PHONY : src/mcts/dynamic_batch_adjuster.s
+
+# target to generate assembly for a file
+src/mcts/dynamic_batch_adjuster.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_adjuster.cpp.s
+.PHONY : src/mcts/dynamic_batch_adjuster.cpp.s
+
+src/mcts/enhanced_mcts_search.o: src/mcts/enhanced_mcts_search.cpp.o
+.PHONY : src/mcts/enhanced_mcts_search.o
+
+# target to build an object file
+src/mcts/enhanced_mcts_search.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_search.cpp.o
+.PHONY : src/mcts/enhanced_mcts_search.cpp.o
+
+src/mcts/enhanced_mcts_search.i: src/mcts/enhanced_mcts_search.cpp.i
+.PHONY : src/mcts/enhanced_mcts_search.i
+
+# target to preprocess a source file
+src/mcts/enhanced_mcts_search.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_search.cpp.i
+.PHONY : src/mcts/enhanced_mcts_search.cpp.i
+
+src/mcts/enhanced_mcts_search.s: src/mcts/enhanced_mcts_search.cpp.s
+.PHONY : src/mcts/enhanced_mcts_search.s
+
+# target to generate assembly for a file
+src/mcts/enhanced_mcts_search.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_search.cpp.s
+.PHONY : src/mcts/enhanced_mcts_search.cpp.s
 
 src/mcts/evaluation_types.o: src/mcts/evaluation_types.cpp.o
 .PHONY : src/mcts/evaluation_types.o
@@ -1250,6 +1390,30 @@ src/mcts/evaluation_types.s: src/mcts/evaluation_types.cpp.s
 src/mcts/evaluation_types.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.s
 .PHONY : src/mcts/evaluation_types.cpp.s
+
+src/mcts/lock_free_batch_accumulator.o: src/mcts/lock_free_batch_accumulator.cpp.o
+.PHONY : src/mcts/lock_free_batch_accumulator.o
+
+# target to build an object file
+src/mcts/lock_free_batch_accumulator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/lock_free_batch_accumulator.cpp.o
+.PHONY : src/mcts/lock_free_batch_accumulator.cpp.o
+
+src/mcts/lock_free_batch_accumulator.i: src/mcts/lock_free_batch_accumulator.cpp.i
+.PHONY : src/mcts/lock_free_batch_accumulator.i
+
+# target to preprocess a source file
+src/mcts/lock_free_batch_accumulator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/lock_free_batch_accumulator.cpp.i
+.PHONY : src/mcts/lock_free_batch_accumulator.cpp.i
+
+src/mcts/lock_free_batch_accumulator.s: src/mcts/lock_free_batch_accumulator.cpp.s
+.PHONY : src/mcts/lock_free_batch_accumulator.s
+
+# target to generate assembly for a file
+src/mcts/lock_free_batch_accumulator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/lock_free_batch_accumulator.cpp.s
+.PHONY : src/mcts/lock_free_batch_accumulator.cpp.s
 
 src/mcts/mcts_engine_common.o: src/mcts/mcts_engine_common.cpp.o
 .PHONY : src/mcts/mcts_engine_common.o
@@ -1347,6 +1511,54 @@ src/mcts/mcts_engine_methods.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.s
 .PHONY : src/mcts/mcts_engine_methods.cpp.s
 
+src/mcts/mcts_engine_optimized.o: src/mcts/mcts_engine_optimized.cpp.o
+.PHONY : src/mcts/mcts_engine_optimized.o
+
+# target to build an object file
+src/mcts/mcts_engine_optimized.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized.cpp.o
+.PHONY : src/mcts/mcts_engine_optimized.cpp.o
+
+src/mcts/mcts_engine_optimized.i: src/mcts/mcts_engine_optimized.cpp.i
+.PHONY : src/mcts/mcts_engine_optimized.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_optimized.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized.cpp.i
+.PHONY : src/mcts/mcts_engine_optimized.cpp.i
+
+src/mcts/mcts_engine_optimized.s: src/mcts/mcts_engine_optimized.cpp.s
+.PHONY : src/mcts/mcts_engine_optimized.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_optimized.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized.cpp.s
+.PHONY : src/mcts/mcts_engine_optimized.cpp.s
+
+src/mcts/mcts_engine_optimized_control.o: src/mcts/mcts_engine_optimized_control.cpp.o
+.PHONY : src/mcts/mcts_engine_optimized_control.o
+
+# target to build an object file
+src/mcts/mcts_engine_optimized_control.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized_control.cpp.o
+.PHONY : src/mcts/mcts_engine_optimized_control.cpp.o
+
+src/mcts/mcts_engine_optimized_control.i: src/mcts/mcts_engine_optimized_control.cpp.i
+.PHONY : src/mcts/mcts_engine_optimized_control.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_optimized_control.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized_control.cpp.i
+.PHONY : src/mcts/mcts_engine_optimized_control.cpp.i
+
+src/mcts/mcts_engine_optimized_control.s: src/mcts/mcts_engine_optimized_control.cpp.s
+.PHONY : src/mcts/mcts_engine_optimized_control.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_optimized_control.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized_control.cpp.s
+.PHONY : src/mcts/mcts_engine_optimized_control.cpp.s
+
 src/mcts/mcts_engine_search.o: src/mcts/mcts_engine_search.cpp.o
 .PHONY : src/mcts/mcts_engine_search.o
 
@@ -1418,54 +1630,6 @@ src/mcts/mcts_engine_utils.s: src/mcts/mcts_engine_utils.cpp.s
 src/mcts/mcts_engine_utils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.s
 .PHONY : src/mcts/mcts_engine_utils.cpp.s
-
-src/mcts/mcts_evaluator.o: src/mcts/mcts_evaluator.cpp.o
-.PHONY : src/mcts/mcts_evaluator.o
-
-# target to build an object file
-src/mcts/mcts_evaluator.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.o
-.PHONY : src/mcts/mcts_evaluator.cpp.o
-
-src/mcts/mcts_evaluator.i: src/mcts/mcts_evaluator.cpp.i
-.PHONY : src/mcts/mcts_evaluator.i
-
-# target to preprocess a source file
-src/mcts/mcts_evaluator.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.i
-.PHONY : src/mcts/mcts_evaluator.cpp.i
-
-src/mcts/mcts_evaluator.s: src/mcts/mcts_evaluator.cpp.s
-.PHONY : src/mcts/mcts_evaluator.s
-
-# target to generate assembly for a file
-src/mcts/mcts_evaluator.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator.cpp.s
-.PHONY : src/mcts/mcts_evaluator.cpp.s
-
-src/mcts/mcts_evaluator_concurrent.o: src/mcts/mcts_evaluator_concurrent.cpp.o
-.PHONY : src/mcts/mcts_evaluator_concurrent.o
-
-# target to build an object file
-src/mcts/mcts_evaluator_concurrent.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.o
-.PHONY : src/mcts/mcts_evaluator_concurrent.cpp.o
-
-src/mcts/mcts_evaluator_concurrent.i: src/mcts/mcts_evaluator_concurrent.cpp.i
-.PHONY : src/mcts/mcts_evaluator_concurrent.i
-
-# target to preprocess a source file
-src/mcts/mcts_evaluator_concurrent.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.i
-.PHONY : src/mcts/mcts_evaluator_concurrent.cpp.i
-
-src/mcts/mcts_evaluator_concurrent.s: src/mcts/mcts_evaluator_concurrent.cpp.s
-.PHONY : src/mcts/mcts_evaluator_concurrent.s
-
-# target to generate assembly for a file
-src/mcts/mcts_evaluator_concurrent.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_evaluator_concurrent.cpp.s
-.PHONY : src/mcts/mcts_evaluator_concurrent.cpp.s
 
 src/mcts/mcts_node.o: src/mcts/mcts_node.cpp.o
 .PHONY : src/mcts/mcts_node.o
@@ -1563,6 +1727,54 @@ src/mcts/mcts_node_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.s
 .PHONY : src/mcts/mcts_node_pool.cpp.s
 
+src/mcts/mcts_node_virtual_loss.o: src/mcts/mcts_node_virtual_loss.cpp.o
+.PHONY : src/mcts/mcts_node_virtual_loss.o
+
+# target to build an object file
+src/mcts/mcts_node_virtual_loss.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_node_virtual_loss.cpp.o
+.PHONY : src/mcts/mcts_node_virtual_loss.cpp.o
+
+src/mcts/mcts_node_virtual_loss.i: src/mcts/mcts_node_virtual_loss.cpp.i
+.PHONY : src/mcts/mcts_node_virtual_loss.i
+
+# target to preprocess a source file
+src/mcts/mcts_node_virtual_loss.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_node_virtual_loss.cpp.i
+.PHONY : src/mcts/mcts_node_virtual_loss.cpp.i
+
+src/mcts/mcts_node_virtual_loss.s: src/mcts/mcts_node_virtual_loss.cpp.s
+.PHONY : src/mcts/mcts_node_virtual_loss.s
+
+# target to generate assembly for a file
+src/mcts/mcts_node_virtual_loss.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_node_virtual_loss.cpp.s
+.PHONY : src/mcts/mcts_node_virtual_loss.cpp.s
+
+src/mcts/mcts_object_pool.o: src/mcts/mcts_object_pool.cpp.o
+.PHONY : src/mcts/mcts_object_pool.o
+
+# target to build an object file
+src/mcts/mcts_object_pool.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.o
+.PHONY : src/mcts/mcts_object_pool.cpp.o
+
+src/mcts/mcts_object_pool.i: src/mcts/mcts_object_pool.cpp.i
+.PHONY : src/mcts/mcts_object_pool.i
+
+# target to preprocess a source file
+src/mcts/mcts_object_pool.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.i
+.PHONY : src/mcts/mcts_object_pool.cpp.i
+
+src/mcts/mcts_object_pool.s: src/mcts/mcts_object_pool.cpp.s
+.PHONY : src/mcts/mcts_object_pool.s
+
+# target to generate assembly for a file
+src/mcts/mcts_object_pool.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.s
+.PHONY : src/mcts/mcts_object_pool.cpp.s
+
 src/mcts/mcts_pipeline.o: src/mcts/mcts_pipeline.cpp.o
 .PHONY : src/mcts/mcts_pipeline.o
 
@@ -1635,6 +1847,54 @@ src/mcts/node_tracker.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.s
 .PHONY : src/mcts/node_tracker.cpp.s
 
+src/mcts/optimized_external_queue_processor.o: src/mcts/optimized_external_queue_processor.cpp.o
+.PHONY : src/mcts/optimized_external_queue_processor.o
+
+# target to build an object file
+src/mcts/optimized_external_queue_processor.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/optimized_external_queue_processor.cpp.o
+.PHONY : src/mcts/optimized_external_queue_processor.cpp.o
+
+src/mcts/optimized_external_queue_processor.i: src/mcts/optimized_external_queue_processor.cpp.i
+.PHONY : src/mcts/optimized_external_queue_processor.i
+
+# target to preprocess a source file
+src/mcts/optimized_external_queue_processor.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/optimized_external_queue_processor.cpp.i
+.PHONY : src/mcts/optimized_external_queue_processor.cpp.i
+
+src/mcts/optimized_external_queue_processor.s: src/mcts/optimized_external_queue_processor.cpp.s
+.PHONY : src/mcts/optimized_external_queue_processor.s
+
+# target to generate assembly for a file
+src/mcts/optimized_external_queue_processor.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/optimized_external_queue_processor.cpp.s
+.PHONY : src/mcts/optimized_external_queue_processor.cpp.s
+
+src/mcts/parallel_mcts_search.o: src/mcts/parallel_mcts_search.cpp.o
+.PHONY : src/mcts/parallel_mcts_search.o
+
+# target to build an object file
+src/mcts/parallel_mcts_search.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/parallel_mcts_search.cpp.o
+.PHONY : src/mcts/parallel_mcts_search.cpp.o
+
+src/mcts/parallel_mcts_search.i: src/mcts/parallel_mcts_search.cpp.i
+.PHONY : src/mcts/parallel_mcts_search.i
+
+# target to preprocess a source file
+src/mcts/parallel_mcts_search.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/parallel_mcts_search.cpp.i
+.PHONY : src/mcts/parallel_mcts_search.cpp.i
+
+src/mcts/parallel_mcts_search.s: src/mcts/parallel_mcts_search.cpp.s
+.PHONY : src/mcts/parallel_mcts_search.s
+
+# target to generate assembly for a file
+src/mcts/parallel_mcts_search.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/parallel_mcts_search.cpp.s
+.PHONY : src/mcts/parallel_mcts_search.cpp.s
+
 src/mcts/transposition_table.o: src/mcts/transposition_table.cpp.o
 .PHONY : src/mcts/transposition_table.o
 
@@ -1658,6 +1918,54 @@ src/mcts/transposition_table.s: src/mcts/transposition_table.cpp.s
 src/mcts/transposition_table.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.s
 .PHONY : src/mcts/transposition_table.cpp.s
+
+src/mcts/unified_inference_server.o: src/mcts/unified_inference_server.cpp.o
+.PHONY : src/mcts/unified_inference_server.o
+
+# target to build an object file
+src/mcts/unified_inference_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/unified_inference_server.cpp.o
+.PHONY : src/mcts/unified_inference_server.cpp.o
+
+src/mcts/unified_inference_server.i: src/mcts/unified_inference_server.cpp.i
+.PHONY : src/mcts/unified_inference_server.i
+
+# target to preprocess a source file
+src/mcts/unified_inference_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/unified_inference_server.cpp.i
+.PHONY : src/mcts/unified_inference_server.cpp.i
+
+src/mcts/unified_inference_server.s: src/mcts/unified_inference_server.cpp.s
+.PHONY : src/mcts/unified_inference_server.s
+
+# target to generate assembly for a file
+src/mcts/unified_inference_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/unified_inference_server.cpp.s
+.PHONY : src/mcts/unified_inference_server.cpp.s
+
+src/mcts/unified_memory_manager.o: src/mcts/unified_memory_manager.cpp.o
+.PHONY : src/mcts/unified_memory_manager.o
+
+# target to build an object file
+src/mcts/unified_memory_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/unified_memory_manager.cpp.o
+.PHONY : src/mcts/unified_memory_manager.cpp.o
+
+src/mcts/unified_memory_manager.i: src/mcts/unified_memory_manager.cpp.i
+.PHONY : src/mcts/unified_memory_manager.i
+
+# target to preprocess a source file
+src/mcts/unified_memory_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/unified_memory_manager.cpp.i
+.PHONY : src/mcts/unified_memory_manager.cpp.i
+
+src/mcts/unified_memory_manager.s: src/mcts/unified_memory_manager.cpp.s
+.PHONY : src/mcts/unified_memory_manager.s
+
+# target to generate assembly for a file
+src/mcts/unified_memory_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/unified_memory_manager.cpp.s
+.PHONY : src/mcts/unified_memory_manager.cpp.s
 
 src/nn/ddw_randwire_resnet.o: src/nn/ddw_randwire_resnet.cpp.o
 .PHONY : src/nn/ddw_randwire_resnet.o
@@ -1899,6 +2207,30 @@ src/training/training_data_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.s
 .PHONY : src/training/training_data_manager.cpp.s
 
+src/utils/advanced_memory_monitor.o: src/utils/advanced_memory_monitor.cpp.o
+.PHONY : src/utils/advanced_memory_monitor.o
+
+# target to build an object file
+src/utils/advanced_memory_monitor.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o
+.PHONY : src/utils/advanced_memory_monitor.cpp.o
+
+src/utils/advanced_memory_monitor.i: src/utils/advanced_memory_monitor.cpp.i
+.PHONY : src/utils/advanced_memory_monitor.i
+
+# target to preprocess a source file
+src/utils/advanced_memory_monitor.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.i
+.PHONY : src/utils/advanced_memory_monitor.cpp.i
+
+src/utils/advanced_memory_monitor.s: src/utils/advanced_memory_monitor.cpp.s
+.PHONY : src/utils/advanced_memory_monitor.s
+
+# target to generate assembly for a file
+src/utils/advanced_memory_monitor.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.s
+.PHONY : src/utils/advanced_memory_monitor.cpp.s
+
 src/utils/attack_defense_module.o: src/utils/attack_defense_module.cpp.o
 .PHONY : src/utils/attack_defense_module.o
 
@@ -2067,6 +2399,30 @@ src/utils/memory_tracker.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.s
 .PHONY : src/utils/memory_tracker.cpp.s
 
+src/utils/resource_monitor.o: src/utils/resource_monitor.cpp.o
+.PHONY : src/utils/resource_monitor.o
+
+# target to build an object file
+src/utils/resource_monitor.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o
+.PHONY : src/utils/resource_monitor.cpp.o
+
+src/utils/resource_monitor.i: src/utils/resource_monitor.cpp.i
+.PHONY : src/utils/resource_monitor.i
+
+# target to preprocess a source file
+src/utils/resource_monitor.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.i
+.PHONY : src/utils/resource_monitor.cpp.i
+
+src/utils/resource_monitor.s: src/utils/resource_monitor.cpp.s
+.PHONY : src/utils/resource_monitor.s
+
+# target to generate assembly for a file
+src/utils/resource_monitor.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.s
+.PHONY : src/utils/resource_monitor.cpp.s
+
 src/utils/zobrist_hash.o: src/utils/zobrist_hash.cpp.o
 .PHONY : src/utils/zobrist_hash.o
 
@@ -2217,30 +2573,6 @@ tests/core_tests_main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/tests/core_tests_main.cpp.s
 .PHONY : tests/core_tests_main.cpp.s
 
-tests/evaluation/model_evaluator_test.o: tests/evaluation/model_evaluator_test.cpp.o
-.PHONY : tests/evaluation/model_evaluator_test.o
-
-# target to build an object file
-tests/evaluation/model_evaluator_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/tests/evaluation/model_evaluator_test.cpp.o
-.PHONY : tests/evaluation/model_evaluator_test.cpp.o
-
-tests/evaluation/model_evaluator_test.i: tests/evaluation/model_evaluator_test.cpp.i
-.PHONY : tests/evaluation/model_evaluator_test.i
-
-# target to preprocess a source file
-tests/evaluation/model_evaluator_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/tests/evaluation/model_evaluator_test.cpp.i
-.PHONY : tests/evaluation/model_evaluator_test.cpp.i
-
-tests/evaluation/model_evaluator_test.s: tests/evaluation/model_evaluator_test.cpp.s
-.PHONY : tests/evaluation/model_evaluator_test.s
-
-# target to generate assembly for a file
-tests/evaluation/model_evaluator_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/model_evaluator_test.dir/build.make CMakeFiles/model_evaluator_test.dir/tests/evaluation/model_evaluator_test.cpp.s
-.PHONY : tests/evaluation/model_evaluator_test.cpp.s
-
 tests/games/chess/chess_test.o: tests/games/chess/chess_test.cpp.o
 .PHONY : tests/games/chess/chess_test.o
 
@@ -2327,7 +2659,8 @@ tests/integration/games/self_play_games_test.o: tests/integration/games/self_pla
 
 # target to build an object file
 tests/integration/games/self_play_games_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/tests/integration/games/self_play_games_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o
 .PHONY : tests/integration/games/self_play_games_test.cpp.o
 
 tests/integration/games/self_play_games_test.i: tests/integration/games/self_play_games_test.cpp.i
@@ -2335,7 +2668,8 @@ tests/integration/games/self_play_games_test.i: tests/integration/games/self_pla
 
 # target to preprocess a source file
 tests/integration/games/self_play_games_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/tests/integration/games/self_play_games_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.i
 .PHONY : tests/integration/games/self_play_games_test.cpp.i
 
 tests/integration/games/self_play_games_test.s: tests/integration/games/self_play_games_test.cpp.s
@@ -2343,7 +2677,8 @@ tests/integration/games/self_play_games_test.s: tests/integration/games/self_pla
 
 # target to generate assembly for a file
 tests/integration/games/self_play_games_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_games_test.dir/build.make CMakeFiles/self_play_games_test.dir/tests/integration/games/self_play_games_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/tests/integration/games/self_play_games_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.s
 .PHONY : tests/integration/games/self_play_games_test.cpp.s
 
 tests/integration/mcts_with_nn_test.o: tests/integration/mcts_with_nn_test.cpp.o
@@ -2351,7 +2686,8 @@ tests/integration/mcts_with_nn_test.o: tests/integration/mcts_with_nn_test.cpp.o
 
 # target to build an object file
 tests/integration/mcts_with_nn_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/tests/integration/mcts_with_nn_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/tests/integration/mcts_with_nn_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/integration/mcts_with_nn_test.cpp.o
 .PHONY : tests/integration/mcts_with_nn_test.cpp.o
 
 tests/integration/mcts_with_nn_test.i: tests/integration/mcts_with_nn_test.cpp.i
@@ -2359,7 +2695,8 @@ tests/integration/mcts_with_nn_test.i: tests/integration/mcts_with_nn_test.cpp.i
 
 # target to preprocess a source file
 tests/integration/mcts_with_nn_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/tests/integration/mcts_with_nn_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/tests/integration/mcts_with_nn_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/integration/mcts_with_nn_test.cpp.i
 .PHONY : tests/integration/mcts_with_nn_test.cpp.i
 
 tests/integration/mcts_with_nn_test.s: tests/integration/mcts_with_nn_test.cpp.s
@@ -2367,8 +2704,63 @@ tests/integration/mcts_with_nn_test.s: tests/integration/mcts_with_nn_test.cpp.s
 
 # target to generate assembly for a file
 tests/integration/mcts_with_nn_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_with_nn_test.dir/build.make CMakeFiles/mcts_with_nn_test.dir/tests/integration/mcts_with_nn_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/tests/integration/mcts_with_nn_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/integration/mcts_with_nn_test.cpp.s
 .PHONY : tests/integration/mcts_with_nn_test.cpp.s
+
+tests/integration/optimized_architecture_test.o: tests/integration/optimized_architecture_test.cpp.o
+.PHONY : tests/integration/optimized_architecture_test.o
+
+# target to build an object file
+tests/integration/optimized_architecture_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/tests/integration/optimized_architecture_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/integration/optimized_architecture_test.cpp.o
+.PHONY : tests/integration/optimized_architecture_test.cpp.o
+
+tests/integration/optimized_architecture_test.i: tests/integration/optimized_architecture_test.cpp.i
+.PHONY : tests/integration/optimized_architecture_test.i
+
+# target to preprocess a source file
+tests/integration/optimized_architecture_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/tests/integration/optimized_architecture_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/integration/optimized_architecture_test.cpp.i
+.PHONY : tests/integration/optimized_architecture_test.cpp.i
+
+tests/integration/optimized_architecture_test.s: tests/integration/optimized_architecture_test.cpp.s
+.PHONY : tests/integration/optimized_architecture_test.s
+
+# target to generate assembly for a file
+tests/integration/optimized_architecture_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/tests/integration/optimized_architecture_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/integration/optimized_architecture_test.cpp.s
+.PHONY : tests/integration/optimized_architecture_test.cpp.s
+
+tests/mcts/burst_coordinator_test.o: tests/mcts/burst_coordinator_test.cpp.o
+.PHONY : tests/mcts/burst_coordinator_test.o
+
+# target to build an object file
+tests/mcts/burst_coordinator_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/burst_coordinator_test.cpp.o
+.PHONY : tests/mcts/burst_coordinator_test.cpp.o
+
+tests/mcts/burst_coordinator_test.i: tests/mcts/burst_coordinator_test.cpp.i
+.PHONY : tests/mcts/burst_coordinator_test.i
+
+# target to preprocess a source file
+tests/mcts/burst_coordinator_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/burst_coordinator_test.cpp.i
+.PHONY : tests/mcts/burst_coordinator_test.cpp.i
+
+tests/mcts/burst_coordinator_test.s: tests/mcts/burst_coordinator_test.cpp.s
+.PHONY : tests/mcts/burst_coordinator_test.s
+
+# target to generate assembly for a file
+tests/mcts/burst_coordinator_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/burst_coordinator_test.cpp.s
+.PHONY : tests/mcts/burst_coordinator_test.cpp.s
 
 tests/mcts/mcts_engine_test.o: tests/mcts/mcts_engine_test.cpp.o
 .PHONY : tests/mcts/mcts_engine_test.o
@@ -2396,33 +2788,6 @@ tests/mcts/mcts_engine_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.s
 .PHONY : tests/mcts/mcts_engine_test.cpp.s
-
-tests/mcts/mcts_evaluator_test.o: tests/mcts/mcts_evaluator_test.cpp.o
-.PHONY : tests/mcts/mcts_evaluator_test.o
-
-# target to build an object file
-tests/mcts/mcts_evaluator_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o
-.PHONY : tests/mcts/mcts_evaluator_test.cpp.o
-
-tests/mcts/mcts_evaluator_test.i: tests/mcts/mcts_evaluator_test.cpp.i
-.PHONY : tests/mcts/mcts_evaluator_test.i
-
-# target to preprocess a source file
-tests/mcts/mcts_evaluator_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.i
-.PHONY : tests/mcts/mcts_evaluator_test.cpp.i
-
-tests/mcts/mcts_evaluator_test.s: tests/mcts/mcts_evaluator_test.cpp.s
-.PHONY : tests/mcts/mcts_evaluator_test.s
-
-# target to generate assembly for a file
-tests/mcts/mcts_evaluator_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.s
-.PHONY : tests/mcts/mcts_evaluator_test.cpp.s
 
 tests/mcts/mcts_node_test.o: tests/mcts/mcts_node_test.cpp.o
 .PHONY : tests/mcts/mcts_node_test.o
@@ -2529,12 +2894,40 @@ tests/mcts/mcts_optimization_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.s
 .PHONY : tests/mcts/mcts_optimization_test.cpp.s
 
+tests/mcts/progressive_widening_test.o: tests/mcts/progressive_widening_test.cpp.o
+.PHONY : tests/mcts/progressive_widening_test.o
+
+# target to build an object file
+tests/mcts/progressive_widening_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/progressive_widening_test.cpp.o
+.PHONY : tests/mcts/progressive_widening_test.cpp.o
+
+tests/mcts/progressive_widening_test.i: tests/mcts/progressive_widening_test.cpp.i
+.PHONY : tests/mcts/progressive_widening_test.i
+
+# target to preprocess a source file
+tests/mcts/progressive_widening_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/progressive_widening_test.cpp.i
+.PHONY : tests/mcts/progressive_widening_test.cpp.i
+
+tests/mcts/progressive_widening_test.s: tests/mcts/progressive_widening_test.cpp.s
+.PHONY : tests/mcts/progressive_widening_test.s
+
+# target to generate assembly for a file
+tests/mcts/progressive_widening_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/progressive_widening_test.cpp.s
+.PHONY : tests/mcts/progressive_widening_test.cpp.s
+
 tests/mcts/shared_queue_test.o: tests/mcts/shared_queue_test.cpp.o
 .PHONY : tests/mcts/shared_queue_test.o
 
 # target to build an object file
 tests/mcts/shared_queue_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/shared_queue_test.dir/build.make CMakeFiles/shared_queue_test.dir/tests/mcts/shared_queue_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/shared_queue_test.cpp.o
 .PHONY : tests/mcts/shared_queue_test.cpp.o
 
 tests/mcts/shared_queue_test.i: tests/mcts/shared_queue_test.cpp.i
@@ -2542,7 +2935,8 @@ tests/mcts/shared_queue_test.i: tests/mcts/shared_queue_test.cpp.i
 
 # target to preprocess a source file
 tests/mcts/shared_queue_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/shared_queue_test.dir/build.make CMakeFiles/shared_queue_test.dir/tests/mcts/shared_queue_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/shared_queue_test.cpp.i
 .PHONY : tests/mcts/shared_queue_test.cpp.i
 
 tests/mcts/shared_queue_test.s: tests/mcts/shared_queue_test.cpp.s
@@ -2550,7 +2944,8 @@ tests/mcts/shared_queue_test.s: tests/mcts/shared_queue_test.cpp.s
 
 # target to generate assembly for a file
 tests/mcts/shared_queue_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/shared_queue_test.dir/build.make CMakeFiles/shared_queue_test.dir/tests/mcts/shared_queue_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/shared_queue_test.cpp.s
 .PHONY : tests/mcts/shared_queue_test.cpp.s
 
 tests/mcts/transposition_integration_test.o: tests/mcts/transposition_integration_test.cpp.o
@@ -2558,7 +2953,8 @@ tests/mcts/transposition_integration_test.o: tests/mcts/transposition_integratio
 
 # target to build an object file
 tests/mcts/transposition_integration_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_tests.dir/build.make CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.o
 .PHONY : tests/mcts/transposition_integration_test.cpp.o
 
 tests/mcts/transposition_integration_test.i: tests/mcts/transposition_integration_test.cpp.i
@@ -2566,7 +2962,8 @@ tests/mcts/transposition_integration_test.i: tests/mcts/transposition_integratio
 
 # target to preprocess a source file
 tests/mcts/transposition_integration_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_tests.dir/build.make CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.i
 .PHONY : tests/mcts/transposition_integration_test.cpp.i
 
 tests/mcts/transposition_integration_test.s: tests/mcts/transposition_integration_test.cpp.s
@@ -2574,7 +2971,8 @@ tests/mcts/transposition_integration_test.s: tests/mcts/transposition_integratio
 
 # target to generate assembly for a file
 tests/mcts/transposition_integration_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_integration_test.dir/build.make CMakeFiles/transposition_integration_test.dir/tests/mcts/transposition_integration_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_tests.dir/build.make CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.s
 .PHONY : tests/mcts/transposition_integration_test.cpp.s
 
 tests/mcts/transposition_table_test.o: tests/mcts/transposition_table_test.cpp.o
@@ -2582,7 +2980,8 @@ tests/mcts/transposition_table_test.o: tests/mcts/transposition_table_test.cpp.o
 
 # target to build an object file
 tests/mcts/transposition_table_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/tests/mcts/transposition_table_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_tests.dir/build.make CMakeFiles/transposition_tests.dir/tests/mcts/transposition_table_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/transposition_table_test.cpp.o
 .PHONY : tests/mcts/transposition_table_test.cpp.o
 
 tests/mcts/transposition_table_test.i: tests/mcts/transposition_table_test.cpp.i
@@ -2590,7 +2989,8 @@ tests/mcts/transposition_table_test.i: tests/mcts/transposition_table_test.cpp.i
 
 # target to preprocess a source file
 tests/mcts/transposition_table_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/tests/mcts/transposition_table_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_tests.dir/build.make CMakeFiles/transposition_tests.dir/tests/mcts/transposition_table_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/transposition_table_test.cpp.i
 .PHONY : tests/mcts/transposition_table_test.cpp.i
 
 tests/mcts/transposition_table_test.s: tests/mcts/transposition_table_test.cpp.s
@@ -2598,15 +2998,71 @@ tests/mcts/transposition_table_test.s: tests/mcts/transposition_table_test.cpp.s
 
 # target to generate assembly for a file
 tests/mcts/transposition_table_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_table_test.dir/build.make CMakeFiles/transposition_table_test.dir/tests/mcts/transposition_table_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/transposition_tests.dir/build.make CMakeFiles/transposition_tests.dir/tests/mcts/transposition_table_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/transposition_table_test.cpp.s
 .PHONY : tests/mcts/transposition_table_test.cpp.s
+
+tests/mcts/unified_inference_server_test.o: tests/mcts/unified_inference_server_test.cpp.o
+.PHONY : tests/mcts/unified_inference_server_test.o
+
+# target to build an object file
+tests/mcts/unified_inference_server_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/unified_inference_server_test.cpp.o
+.PHONY : tests/mcts/unified_inference_server_test.cpp.o
+
+tests/mcts/unified_inference_server_test.i: tests/mcts/unified_inference_server_test.cpp.i
+.PHONY : tests/mcts/unified_inference_server_test.i
+
+# target to preprocess a source file
+tests/mcts/unified_inference_server_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/unified_inference_server_test.cpp.i
+.PHONY : tests/mcts/unified_inference_server_test.cpp.i
+
+tests/mcts/unified_inference_server_test.s: tests/mcts/unified_inference_server_test.cpp.s
+.PHONY : tests/mcts/unified_inference_server_test.s
+
+# target to generate assembly for a file
+tests/mcts/unified_inference_server_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/unified_inference_server_test.cpp.s
+.PHONY : tests/mcts/unified_inference_server_test.cpp.s
+
+tests/mcts/virtual_loss_test.o: tests/mcts/virtual_loss_test.cpp.o
+.PHONY : tests/mcts/virtual_loss_test.o
+
+# target to build an object file
+tests/mcts/virtual_loss_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o
+.PHONY : tests/mcts/virtual_loss_test.cpp.o
+
+tests/mcts/virtual_loss_test.i: tests/mcts/virtual_loss_test.cpp.i
+.PHONY : tests/mcts/virtual_loss_test.i
+
+# target to preprocess a source file
+tests/mcts/virtual_loss_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.i
+.PHONY : tests/mcts/virtual_loss_test.cpp.i
+
+tests/mcts/virtual_loss_test.s: tests/mcts/virtual_loss_test.cpp.s
+.PHONY : tests/mcts/virtual_loss_test.s
+
+# target to generate assembly for a file
+tests/mcts/virtual_loss_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_tests.dir/build.make CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.s
+.PHONY : tests/mcts/virtual_loss_test.cpp.s
 
 tests/nn/neural_network_test.o: tests/nn/neural_network_test.cpp.o
 .PHONY : tests/nn/neural_network_test.o
 
 # target to build an object file
 tests/nn/neural_network_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/tests/nn/neural_network_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/nn_tests.dir/build.make CMakeFiles/nn_tests.dir/tests/nn/neural_network_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/nn/neural_network_test.cpp.o
 .PHONY : tests/nn/neural_network_test.cpp.o
 
 tests/nn/neural_network_test.i: tests/nn/neural_network_test.cpp.i
@@ -2614,7 +3070,8 @@ tests/nn/neural_network_test.i: tests/nn/neural_network_test.cpp.i
 
 # target to preprocess a source file
 tests/nn/neural_network_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/tests/nn/neural_network_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/nn_tests.dir/build.make CMakeFiles/nn_tests.dir/tests/nn/neural_network_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/nn/neural_network_test.cpp.i
 .PHONY : tests/nn/neural_network_test.cpp.i
 
 tests/nn/neural_network_test.s: tests/nn/neural_network_test.cpp.s
@@ -2622,7 +3079,8 @@ tests/nn/neural_network_test.s: tests/nn/neural_network_test.cpp.s
 
 # target to generate assembly for a file
 tests/nn/neural_network_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/neural_network_test.dir/build.make CMakeFiles/neural_network_test.dir/tests/nn/neural_network_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/nn_tests.dir/build.make CMakeFiles/nn_tests.dir/tests/nn/neural_network_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/nn/neural_network_test.cpp.s
 .PHONY : tests/nn/neural_network_test.cpp.s
 
 tests/selfplay/self_play_manager_test.o: tests/selfplay/self_play_manager_test.cpp.o
@@ -2630,7 +3088,8 @@ tests/selfplay/self_play_manager_test.o: tests/selfplay/self_play_manager_test.c
 
 # target to build an object file
 tests/selfplay/self_play_manager_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/tests/selfplay/self_play_manager_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/selfplay_tests.dir/build.make CMakeFiles/selfplay_tests.dir/tests/selfplay/self_play_manager_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o
 .PHONY : tests/selfplay/self_play_manager_test.cpp.o
 
 tests/selfplay/self_play_manager_test.i: tests/selfplay/self_play_manager_test.cpp.i
@@ -2638,7 +3097,8 @@ tests/selfplay/self_play_manager_test.i: tests/selfplay/self_play_manager_test.c
 
 # target to preprocess a source file
 tests/selfplay/self_play_manager_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/tests/selfplay/self_play_manager_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/selfplay_tests.dir/build.make CMakeFiles/selfplay_tests.dir/tests/selfplay/self_play_manager_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.i
 .PHONY : tests/selfplay/self_play_manager_test.cpp.i
 
 tests/selfplay/self_play_manager_test.s: tests/selfplay/self_play_manager_test.cpp.s
@@ -2646,7 +3106,8 @@ tests/selfplay/self_play_manager_test.s: tests/selfplay/self_play_manager_test.c
 
 # target to generate assembly for a file
 tests/selfplay/self_play_manager_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/self_play_manager_test.dir/build.make CMakeFiles/self_play_manager_test.dir/tests/selfplay/self_play_manager_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/selfplay_tests.dir/build.make CMakeFiles/selfplay_tests.dir/tests/selfplay/self_play_manager_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.s
 .PHONY : tests/selfplay/self_play_manager_test.cpp.s
 
 tests/training/training_data_manager_test.o: tests/training/training_data_manager_test.cpp.o
@@ -2654,7 +3115,8 @@ tests/training/training_data_manager_test.o: tests/training/training_data_manage
 
 # target to build an object file
 tests/training/training_data_manager_test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_tests.dir/build.make CMakeFiles/training_tests.dir/tests/training/training_data_manager_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o
 .PHONY : tests/training/training_data_manager_test.cpp.o
 
 tests/training/training_data_manager_test.i: tests/training/training_data_manager_test.cpp.i
@@ -2662,7 +3124,8 @@ tests/training/training_data_manager_test.i: tests/training/training_data_manage
 
 # target to preprocess a source file
 tests/training/training_data_manager_test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_tests.dir/build.make CMakeFiles/training_tests.dir/tests/training/training_data_manager_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.i
 .PHONY : tests/training/training_data_manager_test.cpp.i
 
 tests/training/training_data_manager_test.s: tests/training/training_data_manager_test.cpp.s
@@ -2670,7 +3133,8 @@ tests/training/training_data_manager_test.s: tests/training/training_data_manage
 
 # target to generate assembly for a file
 tests/training/training_data_manager_test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_data_manager_test.dir/build.make CMakeFiles/training_data_manager_test.dir/tests/training/training_data_manager_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/training_tests.dir/build.make CMakeFiles/training_tests.dir/tests/training/training_data_manager_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.s
 .PHONY : tests/training/training_data_manager_test.cpp.s
 
 # Help Target
@@ -2726,20 +3190,16 @@ help:
 	@echo "... core_tests"
 	@echo "... go_tests"
 	@echo "... gomoku_tests"
+	@echo "... integration_tests"
 	@echo "... mcts_openmp_benchmark"
 	@echo "... mcts_tests"
-	@echo "... mcts_with_nn_test"
 	@echo "... mimalloc-obj"
 	@echo "... mimalloc-static"
-	@echo "... model_evaluator_test"
-	@echo "... neural_network_test"
+	@echo "... nn_tests"
 	@echo "... omoknuni_cli"
-	@echo "... self_play_games_test"
-	@echo "... self_play_manager_test"
-	@echo "... shared_queue_test"
-	@echo "... training_data_manager_test"
-	@echo "... transposition_integration_test"
-	@echo "... transposition_table_test"
+	@echo "... selfplay_tests"
+	@echo "... training_tests"
+	@echo "... transposition_tests"
 	@echo "... src/cli/alphazero_cli_pipeline.o"
 	@echo "... src/cli/alphazero_cli_pipeline.i"
 	@echo "... src/cli/alphazero_cli_pipeline.s"
@@ -2758,9 +3218,12 @@ help:
 	@echo "... src/core/igamestate.o"
 	@echo "... src/core/igamestate.i"
 	@echo "... src/core/igamestate.s"
-	@echo "... src/evaluation/model_evaluator.o"
-	@echo "... src/evaluation/model_evaluator.i"
-	@echo "... src/evaluation/model_evaluator.s"
+	@echo "... src/core/lock_free_tensor_pool.o"
+	@echo "... src/core/lock_free_tensor_pool.i"
+	@echo "... src/core/lock_free_tensor_pool.s"
+	@echo "... src/core/tensor_pool.o"
+	@echo "... src/core/tensor_pool.i"
+	@echo "... src/core/tensor_pool.s"
 	@echo "... src/games/chess/chess960.o"
 	@echo "... src/games/chess/chess960.i"
 	@echo "... src/games/chess/chess960.s"
@@ -2782,12 +3245,36 @@ help:
 	@echo "... src/games/gomoku/gomoku_state.o"
 	@echo "... src/games/gomoku/gomoku_state.i"
 	@echo "... src/games/gomoku/gomoku_state.s"
-	@echo "... src/mcts/batch_accumulator.o"
-	@echo "... src/mcts/batch_accumulator.i"
-	@echo "... src/mcts/batch_accumulator.s"
+	@echo "... src/mcts/adaptive_batch_sizer.o"
+	@echo "... src/mcts/adaptive_batch_sizer.i"
+	@echo "... src/mcts/adaptive_batch_sizer.s"
+	@echo "... src/mcts/advanced_memory_pool.o"
+	@echo "... src/mcts/advanced_memory_pool.i"
+	@echo "... src/mcts/advanced_memory_pool.s"
+	@echo "... src/mcts/batch_barrier.o"
+	@echo "... src/mcts/batch_barrier.i"
+	@echo "... src/mcts/batch_barrier.s"
+	@echo "... src/mcts/burst_coordinator.o"
+	@echo "... src/mcts/burst_coordinator.i"
+	@echo "... src/mcts/burst_coordinator.s"
+	@echo "... src/mcts/concurrent_request_aggregator.o"
+	@echo "... src/mcts/concurrent_request_aggregator.i"
+	@echo "... src/mcts/concurrent_request_aggregator.s"
+	@echo "... src/mcts/cuda_stream_optimizer.o"
+	@echo "... src/mcts/cuda_stream_optimizer.i"
+	@echo "... src/mcts/cuda_stream_optimizer.s"
+	@echo "... src/mcts/dynamic_batch_adjuster.o"
+	@echo "... src/mcts/dynamic_batch_adjuster.i"
+	@echo "... src/mcts/dynamic_batch_adjuster.s"
+	@echo "... src/mcts/enhanced_mcts_search.o"
+	@echo "... src/mcts/enhanced_mcts_search.i"
+	@echo "... src/mcts/enhanced_mcts_search.s"
 	@echo "... src/mcts/evaluation_types.o"
 	@echo "... src/mcts/evaluation_types.i"
 	@echo "... src/mcts/evaluation_types.s"
+	@echo "... src/mcts/lock_free_batch_accumulator.o"
+	@echo "... src/mcts/lock_free_batch_accumulator.i"
+	@echo "... src/mcts/lock_free_batch_accumulator.s"
 	@echo "... src/mcts/mcts_engine_common.o"
 	@echo "... src/mcts/mcts_engine_common.i"
 	@echo "... src/mcts/mcts_engine_common.s"
@@ -2800,6 +3287,12 @@ help:
 	@echo "... src/mcts/mcts_engine_methods.o"
 	@echo "... src/mcts/mcts_engine_methods.i"
 	@echo "... src/mcts/mcts_engine_methods.s"
+	@echo "... src/mcts/mcts_engine_optimized.o"
+	@echo "... src/mcts/mcts_engine_optimized.i"
+	@echo "... src/mcts/mcts_engine_optimized.s"
+	@echo "... src/mcts/mcts_engine_optimized_control.o"
+	@echo "... src/mcts/mcts_engine_optimized_control.i"
+	@echo "... src/mcts/mcts_engine_optimized_control.s"
 	@echo "... src/mcts/mcts_engine_search.o"
 	@echo "... src/mcts/mcts_engine_search.i"
 	@echo "... src/mcts/mcts_engine_search.s"
@@ -2809,12 +3302,6 @@ help:
 	@echo "... src/mcts/mcts_engine_utils.o"
 	@echo "... src/mcts/mcts_engine_utils.i"
 	@echo "... src/mcts/mcts_engine_utils.s"
-	@echo "... src/mcts/mcts_evaluator.o"
-	@echo "... src/mcts/mcts_evaluator.i"
-	@echo "... src/mcts/mcts_evaluator.s"
-	@echo "... src/mcts/mcts_evaluator_concurrent.o"
-	@echo "... src/mcts/mcts_evaluator_concurrent.i"
-	@echo "... src/mcts/mcts_evaluator_concurrent.s"
 	@echo "... src/mcts/mcts_node.o"
 	@echo "... src/mcts/mcts_node.i"
 	@echo "... src/mcts/mcts_node.s"
@@ -2827,6 +3314,12 @@ help:
 	@echo "... src/mcts/mcts_node_pool.o"
 	@echo "... src/mcts/mcts_node_pool.i"
 	@echo "... src/mcts/mcts_node_pool.s"
+	@echo "... src/mcts/mcts_node_virtual_loss.o"
+	@echo "... src/mcts/mcts_node_virtual_loss.i"
+	@echo "... src/mcts/mcts_node_virtual_loss.s"
+	@echo "... src/mcts/mcts_object_pool.o"
+	@echo "... src/mcts/mcts_object_pool.i"
+	@echo "... src/mcts/mcts_object_pool.s"
 	@echo "... src/mcts/mcts_pipeline.o"
 	@echo "... src/mcts/mcts_pipeline.i"
 	@echo "... src/mcts/mcts_pipeline.s"
@@ -2836,9 +3329,21 @@ help:
 	@echo "... src/mcts/node_tracker.o"
 	@echo "... src/mcts/node_tracker.i"
 	@echo "... src/mcts/node_tracker.s"
+	@echo "... src/mcts/optimized_external_queue_processor.o"
+	@echo "... src/mcts/optimized_external_queue_processor.i"
+	@echo "... src/mcts/optimized_external_queue_processor.s"
+	@echo "... src/mcts/parallel_mcts_search.o"
+	@echo "... src/mcts/parallel_mcts_search.i"
+	@echo "... src/mcts/parallel_mcts_search.s"
 	@echo "... src/mcts/transposition_table.o"
 	@echo "... src/mcts/transposition_table.i"
 	@echo "... src/mcts/transposition_table.s"
+	@echo "... src/mcts/unified_inference_server.o"
+	@echo "... src/mcts/unified_inference_server.i"
+	@echo "... src/mcts/unified_inference_server.s"
+	@echo "... src/mcts/unified_memory_manager.o"
+	@echo "... src/mcts/unified_memory_manager.i"
+	@echo "... src/mcts/unified_memory_manager.s"
 	@echo "... src/nn/ddw_randwire_resnet.o"
 	@echo "... src/nn/ddw_randwire_resnet.i"
 	@echo "... src/nn/ddw_randwire_resnet.s"
@@ -2869,6 +3374,9 @@ help:
 	@echo "... src/training/training_data_manager.o"
 	@echo "... src/training/training_data_manager.i"
 	@echo "... src/training/training_data_manager.s"
+	@echo "... src/utils/advanced_memory_monitor.o"
+	@echo "... src/utils/advanced_memory_monitor.i"
+	@echo "... src/utils/advanced_memory_monitor.s"
 	@echo "... src/utils/attack_defense_module.o"
 	@echo "... src/utils/attack_defense_module.i"
 	@echo "... src/utils/attack_defense_module.s"
@@ -2890,6 +3398,9 @@ help:
 	@echo "... src/utils/memory_tracker.o"
 	@echo "... src/utils/memory_tracker.i"
 	@echo "... src/utils/memory_tracker.s"
+	@echo "... src/utils/resource_monitor.o"
+	@echo "... src/utils/resource_monitor.i"
+	@echo "... src/utils/resource_monitor.s"
 	@echo "... src/utils/zobrist_hash.o"
 	@echo "... src/utils/zobrist_hash.i"
 	@echo "... src/utils/zobrist_hash.s"
@@ -2908,9 +3419,6 @@ help:
 	@echo "... tests/core_tests_main.o"
 	@echo "... tests/core_tests_main.i"
 	@echo "... tests/core_tests_main.s"
-	@echo "... tests/evaluation/model_evaluator_test.o"
-	@echo "... tests/evaluation/model_evaluator_test.i"
-	@echo "... tests/evaluation/model_evaluator_test.s"
 	@echo "... tests/games/chess/chess_test.o"
 	@echo "... tests/games/chess/chess_test.i"
 	@echo "... tests/games/chess/chess_test.s"
@@ -2926,12 +3434,15 @@ help:
 	@echo "... tests/integration/mcts_with_nn_test.o"
 	@echo "... tests/integration/mcts_with_nn_test.i"
 	@echo "... tests/integration/mcts_with_nn_test.s"
+	@echo "... tests/integration/optimized_architecture_test.o"
+	@echo "... tests/integration/optimized_architecture_test.i"
+	@echo "... tests/integration/optimized_architecture_test.s"
+	@echo "... tests/mcts/burst_coordinator_test.o"
+	@echo "... tests/mcts/burst_coordinator_test.i"
+	@echo "... tests/mcts/burst_coordinator_test.s"
 	@echo "... tests/mcts/mcts_engine_test.o"
 	@echo "... tests/mcts/mcts_engine_test.i"
 	@echo "... tests/mcts/mcts_engine_test.s"
-	@echo "... tests/mcts/mcts_evaluator_test.o"
-	@echo "... tests/mcts/mcts_evaluator_test.i"
-	@echo "... tests/mcts/mcts_evaluator_test.s"
 	@echo "... tests/mcts/mcts_node_test.o"
 	@echo "... tests/mcts/mcts_node_test.i"
 	@echo "... tests/mcts/mcts_node_test.s"
@@ -2944,6 +3455,9 @@ help:
 	@echo "... tests/mcts/mcts_optimization_test.o"
 	@echo "... tests/mcts/mcts_optimization_test.i"
 	@echo "... tests/mcts/mcts_optimization_test.s"
+	@echo "... tests/mcts/progressive_widening_test.o"
+	@echo "... tests/mcts/progressive_widening_test.i"
+	@echo "... tests/mcts/progressive_widening_test.s"
 	@echo "... tests/mcts/shared_queue_test.o"
 	@echo "... tests/mcts/shared_queue_test.i"
 	@echo "... tests/mcts/shared_queue_test.s"
@@ -2953,6 +3467,12 @@ help:
 	@echo "... tests/mcts/transposition_table_test.o"
 	@echo "... tests/mcts/transposition_table_test.i"
 	@echo "... tests/mcts/transposition_table_test.s"
+	@echo "... tests/mcts/unified_inference_server_test.o"
+	@echo "... tests/mcts/unified_inference_server_test.i"
+	@echo "... tests/mcts/unified_inference_server_test.s"
+	@echo "... tests/mcts/virtual_loss_test.o"
+	@echo "... tests/mcts/virtual_loss_test.i"
+	@echo "... tests/mcts/virtual_loss_test.s"
 	@echo "... tests/nn/neural_network_test.o"
 	@echo "... tests/nn/neural_network_test.i"
 	@echo "... tests/nn/neural_network_test.s"

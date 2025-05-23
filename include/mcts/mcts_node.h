@@ -7,6 +7,7 @@
 #include <mutex>
 #include <memory>
 #include <future>
+#include <random>
 #include "core/igamestate.h"
 #include "core/export_macros.h"
 #include "mcts/evaluation_types.h"
@@ -42,16 +43,28 @@ public:
     bool isFullyExpanded() const;
     bool isLeaf() const;
     bool isTerminal() const;
+    bool isExpanded() const { return is_expanded_.load(std::memory_order_acquire); }
     int getNumExpandedChildren() const;
+    
+    // UCB Selection for enhanced optimized search
+    std::shared_ptr<MCTSNode> selectBestChildUCB(float exploration_constant, std::mt19937& rng);
 
     // Virtual loss
     void addVirtualLoss();
     void addVirtualLoss(int amount);
     void removeVirtualLoss();
     void removeVirtualLoss(int amount);
+    
+    // Aliases for compatibility with updated code
+    void applyVirtualLoss(int amount) { addVirtualLoss(amount); }
+    void revertVirtualLoss(int amount) { removeVirtualLoss(amount); }
 
     // Backpropagation
     void update(float value);
+    
+    // Aliases for compatibility with updated code
+    void updateStats(float value) { update(value); }
+    void updateRecursive(float value); // Forward declaration for optimized implementation
     
     // RAVE updates
     void updateRAVE(float value);
@@ -89,7 +102,6 @@ public:
     bool updateChildReference(const std::shared_ptr<MCTSNode>& old_child, const std::shared_ptr<MCTSNode>& new_child);
     
     // Virtual loss management
-    void applyVirtualLoss(int amount = 1);
     int getVirtualLoss() const;
     
     // Pending evaluation management - simplified for lock-free operations
@@ -99,14 +111,25 @@ public:
     
     // CRITICAL FIX: Added method to clear both evaluation flags at once for stuck nodes
     void clearAllEvaluationFlags() {
-        evaluation_in_progress_ = false;  // Directly clear the in-progress flag
+        evaluation_in_progress_.store(false, std::memory_order_release);  // Use atomic store
         clearPendingEvaluation();         // Use existing method for pending flag
+    }
+    
+    // CRITICAL FIX: Check if the node has a valid state
+    bool hasValidState() const {
+        return static_cast<bool>(state_);
     }
     
     // New methods required by mcts_taskflow_engine
     float getPrior() const { return prior_probability_; }
     void setPrior(float prior) { prior_probability_ = prior; }
-    int getPlayer() const { return state_->getCurrentPlayer(); }
+    int getPlayer() const { 
+        if (!state_) {
+            std::cout << "💥 CRITICAL: getPlayer() called on NULL state!" << std::endl;
+            return 1; // Default to player 1
+        }
+        return state_->getCurrentPlayer(); 
+    }
     int getDepth() const;
     std::mutex& getExpansionMutex();
     float getTerminalValue() const;
@@ -154,8 +177,8 @@ private:
     alignas(64) std::atomic<bool> evaluation_in_progress_{false};
     char padding6[60];
     
-    // Pending evaluation tracking - using atomic_flag for lock-free operations
-    alignas(64) mutable std::atomic_flag pending_evaluation_ = ATOMIC_FLAG_INIT;
+    // Pending evaluation tracking - using atomic_bool for proper lock-free operations
+    alignas(64) mutable std::atomic<bool> pending_evaluation_{false};
     char padding7[60];
     
     // Remove mutex as we use lock-free atomic operations
@@ -164,6 +187,10 @@ private:
     // Thread safety - atomic flag for expansion status (lock-free)
     alignas(64) std::atomic<bool> is_expanded_{false};
     char padding8[60];
+    
+    // PERFORMANCE CACHE: Terminal status cache to avoid repeated expensive isTerminal() calls
+    alignas(64) mutable std::atomic<int> cached_terminal_status_{-1}; // -1=uncached, 0=false, 1=true
+    char padding9[60];
 };
 
 } // namespace mcts

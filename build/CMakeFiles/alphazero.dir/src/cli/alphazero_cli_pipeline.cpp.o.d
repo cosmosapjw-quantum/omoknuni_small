@@ -271,18 +271,13 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
  /usr/include/c++/13/utility /usr/include/c++/13/bits/stl_relops.h \
- /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
- /usr/include/parallel_hashmap/phmap.h /usr/include/c++/13/algorithm \
- /usr/include/c++/13/pstl/glue_algorithm_defs.h \
- /usr/include/c++/13/cstring /usr/include/string.h /usr/include/strings.h \
- /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
- /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
- /usr/include/c++/13/iterator /usr/include/c++/13/bits/stream_iterator.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h \
+ /usr/include/c++/13/stack /usr/include/c++/13/bits/stl_stack.h \
+ /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
  /usr/include/c++/13/cassert /usr/include/assert.h \
- /usr/include/parallel_hashmap/phmap_fwd_decl.h \
- /usr/include/parallel_hashmap/phmap_utils.h \
- /usr/include/parallel_hashmap/phmap_bits.h /usr/include/byteswap.h \
- /usr/include/parallel_hashmap/phmap_config.h \
+ /usr/include/c++/13/algorithm \
+ /usr/include/c++/13/pstl/glue_algorithm_defs.h \
+ /usr/include/c++/13/climits \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
@@ -291,17 +286,29 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+ /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+ /usr/include/parallel_hashmap/phmap.h /usr/include/c++/13/cstring \
+ /usr/include/string.h /usr/include/strings.h \
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /usr/include/c++/13/iterator /usr/include/c++/13/bits/stream_iterator.h \
+ /usr/include/parallel_hashmap/phmap_fwd_decl.h \
+ /usr/include/parallel_hashmap/phmap_utils.h \
+ /usr/include/parallel_hashmap/phmap_bits.h /usr/include/byteswap.h \
+ /usr/include/parallel_hashmap/phmap_config.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
  /usr/include/parallel_hashmap/phmap_base.h \
  /usr/include/c++/13/shared_mutex \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
- /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
- /usr/include/c++/13/climits \
- /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
+ /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
  /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
- /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
- /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
- /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h \
+ /home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h \
+ /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h \
+ /home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
+ /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
  /home/cosmos/omoknuni_small/include/cli/cli_manager.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
@@ -967,7 +974,6 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/FuncTorchTLS.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/PythonTorchFunctionTLS.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/SavedTensorHooks.h \
- /usr/include/c++/13/stack /usr/include/c++/13/bits/stl_stack.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/ThreadLocalPythonObjects.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PythonDispatcherTLS.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/TorchDispatchModeTLS.h \
@@ -5008,5 +5014,4 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/sparse.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
- /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
- /home/cosmos/omoknuni_small/include/evaluation/model_evaluator.h
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h

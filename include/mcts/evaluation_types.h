@@ -45,6 +45,33 @@ struct ALPHAZERO_API EvaluationRequest {
     EvaluationRequest& operator=(const EvaluationRequest&) = delete;
 };
 
+// Definition for PendingEvaluation used by LockFreeBatchAccumulator
+struct ALPHAZERO_API PendingEvaluation {
+    std::shared_ptr<MCTSNode> node;
+    std::unique_ptr<core::IGameState> state;
+    std::vector<std::shared_ptr<MCTSNode>> path;
+    
+    // Additional fields used by parallel MCTS implementations
+    int batch_id = 0;
+    int request_id = 0;
+    
+    // Default constructor for container operations
+    PendingEvaluation() = default;
+    
+    // Move constructor and assignment
+    PendingEvaluation(PendingEvaluation&&) = default;
+    PendingEvaluation& operator=(PendingEvaluation&&) = default;
+    
+    // Delete copy operations
+    PendingEvaluation(const PendingEvaluation&) = delete;
+    PendingEvaluation& operator=(const PendingEvaluation&) = delete;
+    
+    // Constructor
+    PendingEvaluation(std::shared_ptr<MCTSNode> n, std::unique_ptr<core::IGameState> s,
+                     std::vector<std::shared_ptr<MCTSNode>> p = {})
+        : node(std::move(n)), state(std::move(s)), path(std::move(p)) {}
+};
+
 } // namespace mcts
 } // namespace alphazero
 

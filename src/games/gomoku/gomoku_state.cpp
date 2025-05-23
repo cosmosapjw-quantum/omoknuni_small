@@ -2,6 +2,7 @@
 #include "games/gomoku/gomoku_state.h"
 #include "games/gomoku/gomoku_rules.h"     // For rules_engine_
 #include "core/illegal_move_exception.h" // For core::IllegalMoveException
+#include "core/tensor_pool.h"            // For GlobalTensorPool optimization
 #include <stdexcept> // For std::invalid_argument, std::out_of_range
 #include <iostream>  // For debugging (optional, remove in production)
 #include <numeric>   // For std::accumulate, std::gcd
@@ -28,6 +29,8 @@ GomokuState::GomokuState(int board_size, bool use_renju, bool use_omok, int seed
       winner_check_dirty_(true),
       hash_signature_(0), 
       hash_dirty_(true),
+      tensor_cache_dirty_(true),
+      enhanced_tensor_cache_dirty_(true),
       last_action_played_(-1) {
 
     if (board_size_ <= 0) {
@@ -60,12 +63,15 @@ GomokuState::GomokuState(const GomokuState& other)
       use_omok_(other.use_omok_),
       use_pro_long_opening_(other.use_pro_long_opening_),
       black_first_stone_(other.black_first_stone_),
+      valid_moves_dirty_(other.valid_moves_dirty_.load()),
+      cached_winner_(other.cached_winner_.load()),
+      winner_check_dirty_(other.winner_check_dirty_.load()),
+      hash_signature_(other.hash_signature_.load()),
+      hash_dirty_(other.hash_dirty_.load()),
+      // Don't copy cached tensors - force recomputation to avoid memory issues
+      tensor_cache_dirty_(true),
+      enhanced_tensor_cache_dirty_(true),
       cached_valid_moves_(other.cached_valid_moves_),
-      valid_moves_dirty_(other.valid_moves_dirty_),
-      cached_winner_(other.cached_winner_),
-      winner_check_dirty_(other.winner_check_dirty_),
-      hash_signature_(other.hash_signature_),
-      hash_dirty_(other.hash_dirty_),
       num_words_(other.num_words_),
       player_bitboards_(other.player_bitboards_),
       rules_engine_(std::make_shared<GomokuRules>(other.board_size_)), 
@@ -117,19 +123,40 @@ bool GomokuState::undoMove() {
 }
 
 bool GomokuState::isTerminal() const {
-    if (winner_check_dirty_) {
-        refresh_winner_cache();
+    // CRITICAL FIX: Fast path for empty board to prevent MCTS stalling
+    if (move_history_.empty()) {
+        return false; // Empty board cannot be terminal
     }
-    return (cached_winner_ != NO_PLAYER) || is_stalemate();
+    
+    
+    // MCTS OPTIMIZATION: For very early game (≤4 moves), skip expensive winner check
+    // Cannot have a winner in Gomoku with 4 or fewer stones
+    int total_stones = count_total_stones();
+    if (total_stones <= 4) {
+        return false;
+    }
+    
+    // LOCK-FREE: Check winner cache with atomic operations
+    if (winner_check_dirty_.load(std::memory_order_acquire)) {
+        refresh_winner_cache(); // Lock-free refresh
+    }
+    
+    int current_winner = cached_winner_.load(std::memory_order_acquire);
+    bool has_winner = (current_winner != NO_PLAYER);
+    
+    bool is_stale = is_stalemate(); // Lock-free stalemate check
+    
+    return has_winner || is_stale;
 }
 
 core::GameResult GomokuState::getGameResult() const {
-    if (winner_check_dirty_) { 
+    if (winner_check_dirty_.load(std::memory_order_acquire)) { 
         refresh_winner_cache();
     }
 
-    if (cached_winner_ == BLACK) return core::GameResult::WIN_PLAYER1;
-    if (cached_winner_ == WHITE) return core::GameResult::WIN_PLAYER2;
+    int current_winner = cached_winner_.load(std::memory_order_acquire);
+    if (current_winner == BLACK) return core::GameResult::WIN_PLAYER1;
+    if (current_winner == WHITE) return core::GameResult::WIN_PLAYER2;
     
     if (is_stalemate()) return core::GameResult::DRAW;
     
@@ -149,8 +176,13 @@ int GomokuState::getActionSpaceSize() const {
 }
 
 std::vector<std::vector<std::vector<float>>> GomokuState::getTensorRepresentation() const {
-    std::vector<std::vector<std::vector<float>>> tensor(
-        3, std::vector<std::vector<float>>(board_size_, std::vector<float>(board_size_, 0.0f)));
+    // PERFORMANCE FIX: Use cached tensor if available and not dirty
+    if (!tensor_cache_dirty_.load(std::memory_order_relaxed) && !cached_tensor_repr_.empty()) {
+        return cached_tensor_repr_;
+    }
+    
+    // PERFORMANCE FIX: Use global tensor pool for efficient memory reuse
+    auto tensor = core::GlobalTensorPool::getInstance().getTensor(3, board_size_, board_size_);
     
     int p_idx_current = current_player_ - 1;      
     int p_idx_opponent = 1 - p_idx_current; 
@@ -166,17 +198,26 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getTensorRepresentatio
             tensor[2][r][c] = (current_player_ == BLACK) ? 1.0f : 0.0f;
         }
     }
+    
+    // PERFORMANCE FIX: Cache the computed tensor
+    cached_tensor_repr_ = tensor;
+    tensor_cache_dirty_.store(false, std::memory_order_relaxed);
+    
     return tensor;
 }
 
 std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepresentation() const {
+    // PERFORMANCE FIX: Use cached enhanced tensor if available and not dirty
+    if (!enhanced_tensor_cache_dirty_.load(std::memory_order_relaxed) && !cached_enhanced_tensor_repr_.empty()) {
+        return cached_enhanced_tensor_repr_;
+    }
+    
     try {
         const int num_history_pairs = 8; 
         const int num_feature_planes = 2 * num_history_pairs + 1; 
         
-        std::vector<std::vector<std::vector<float>>> tensor(
-            num_feature_planes, std::vector<std::vector<float>>(
-                board_size_, std::vector<float>(board_size_, 0.0f)));
+        // PERFORMANCE FIX: Use global tensor pool for efficient memory reuse
+        auto tensor = core::GlobalTensorPool::getInstance().getTensor(num_feature_planes, board_size_, board_size_);
 
         int history_len = move_history_.size();
         
@@ -217,6 +258,11 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
                 tensor[num_feature_planes - 1][r][c] = color_plane_val;
             }
         }
+        
+        // PERFORMANCE FIX: Cache the computed enhanced tensor
+        cached_enhanced_tensor_repr_ = tensor;
+        enhanced_tensor_cache_dirty_.store(false, std::memory_order_relaxed);
+        
         return tensor;
     } catch (const std::exception& e) {
         std::cerr << "Exception in getEnhancedTensorRepresentation: " << e.what() << std::endl;
@@ -282,12 +328,12 @@ std::unique_ptr<core::IGameState> GomokuState::clone() const {
         clone_ptr->move_history_ = move_history_; 
         
         // Don't copy cached data to avoid race conditions. Mark caches as dirty instead.
-        clone_ptr->valid_moves_dirty_ = true;  // Force recomputation of valid moves
+        clone_ptr->valid_moves_dirty_.store(true, std::memory_order_release);  // Force recomputation of valid moves
         clone_ptr->cached_valid_moves_.clear(); // Clear the cache
-        clone_ptr->cached_winner_ = NO_PLAYER;
-        clone_ptr->winner_check_dirty_ = true;  // Force recomputation of winner
-        clone_ptr->hash_signature_ = 0;
-        clone_ptr->hash_dirty_ = true;  // Force recomputation of hash 
+        clone_ptr->cached_winner_.store(NO_PLAYER, std::memory_order_release);
+        clone_ptr->winner_check_dirty_.store(true, std::memory_order_release);  // Force recomputation of winner
+        clone_ptr->hash_signature_.store(0, std::memory_order_release);
+        clone_ptr->hash_dirty_.store(true, std::memory_order_release);  // Force recomputation of hash 
         
         // Deep copy of player_bitboards_ with size checking
         // First ensure both have the correct sizes
@@ -371,12 +417,12 @@ void GomokuState::copyFrom(const core::IGameState& source) {
     }
     
     // Mark all caches as dirty to ensure thread safety
-    valid_moves_dirty_ = true;
+    valid_moves_dirty_.store(true, std::memory_order_release);
     cached_valid_moves_.clear();
-    cached_winner_ = NO_PLAYER;
-    winner_check_dirty_ = true;
-    hash_signature_ = 0;
-    hash_dirty_ = true;
+    cached_winner_.store(NO_PLAYER, std::memory_order_release);
+    winner_check_dirty_.store(true, std::memory_order_release);
+    hash_signature_.store(0, std::memory_order_release);
+    hash_dirty_.store(true, std::memory_order_release);
     
     // Validate the copied state
     if (!validate()) {
@@ -658,7 +704,13 @@ int GomokuState::count_total_stones() const noexcept {
 }
 
 void GomokuState::refresh_winner_cache() const {
-    cached_winner_ = NO_PLAYER; 
+    // LOCK-FREE: Check if refresh is needed using atomic load
+    if (!winner_check_dirty_.load(std::memory_order_acquire)) {
+        return; // Cache is already fresh
+    }
+    
+    // Compute winner without modifying cache until the end
+    int new_winner = NO_PLAYER; 
     if (last_action_played_ == -1 && !move_history_.empty()) { 
          const_cast<GomokuState*>(this)->last_action_played_ = move_history_.back();
     } else if (move_history_.empty() && last_action_played_ != -1) { 
@@ -696,11 +748,11 @@ void GomokuState::refresh_winner_cache() const {
                 
                 // Only set as winner if exactly 5 stones in a row
                 if (max_length == 5) {
-                    cached_winner_ = player_who_made_last_move;
+                    new_winner = player_who_made_last_move;
                 }
             } else if (win_by_five) {
                 // Standard or Omok
-                cached_winner_ = player_who_made_last_move;
+                new_winner = player_who_made_last_move;
             }
         } else { // WHITE made last move
             // White can win with 5+ in a row in any variant
@@ -721,40 +773,85 @@ void GomokuState::refresh_winner_cache() const {
             }
             
             if (win_by_five) {
-                cached_winner_ = player_who_made_last_move;
+                new_winner = player_who_made_last_move;
             }
         }
     }
     
-    winner_check_dirty_ = false;
+    // Atomically publish the computed winner and mark cache as clean
+    cached_winner_.store(new_winner, std::memory_order_release);
+    winner_check_dirty_.store(false, std::memory_order_release);
 }
 
 bool GomokuState::is_stalemate() const {
-    if (cached_winner_ != NO_PLAYER && !winner_check_dirty_) return false; 
-
-    if (count_total_stones() >= getActionSpaceSize()) return true; 
-
-    if (valid_moves_dirty_) { // Must refresh to check if any moves are possible
-        const_cast<GomokuState*>(this)->refresh_valid_moves_cache();
+    // Fast atomic checks
+    int current_winner = cached_winner_.load(std::memory_order_acquire);
+    bool winner_dirty = winner_check_dirty_.load(std::memory_order_acquire);
+    
+    if (current_winner != NO_PLAYER && !winner_dirty) {
+        return false; 
     }
-    // Stalemate if no winner and no legal moves for the current player
-    return cached_valid_moves_.empty() && (cached_winner_ == NO_PLAYER);
+
+    int total_stones = count_total_stones();
+    if (total_stones >= getActionSpaceSize()) {
+        return true; 
+    }
+    
+    // MCTS OPTIMIZATION: For early game (≤8 moves), compute on-demand without caching
+    // This avoids the expensive mutex contention for 99% of MCTS cases
+    if (total_stones <= 8) {
+        // Early game positions are extremely unlikely to be stalemate in Gomoku
+        // Do a quick check for any legal move instead of full enumeration
+        for (int action = 0; action < getActionSpaceSize(); ++action) {
+            if (!is_occupied(action)) {
+                return false; 
+            }
+        }
+        return true;
+    }
+    
+    // For mid/late game, use thread-safe cache
+    std::lock_guard<std::mutex> lock(cache_mutex_);
+    
+    if (valid_moves_dirty_.load(std::memory_order_acquire)) {
+        refresh_valid_moves_cache_internal(); 
+    }
+    
+    current_winner = cached_winner_.load(std::memory_order_acquire);
+    bool result = cached_valid_moves_.empty() && (current_winner == NO_PLAYER);
+    return result;
 }
 
 
 void GomokuState::refresh_valid_moves_cache() const {
+    // LOCK-FREE: Check if refresh is needed using atomic load
+    if (!valid_moves_dirty_.load(std::memory_order_acquire)) {
+        return; // Cache is already fresh
+    }
+    
+    std::lock_guard<std::mutex> lock(cache_mutex_);
+    refresh_valid_moves_cache_internal();
+}
+
+void GomokuState::refresh_valid_moves_cache_internal() const {
+    // Double-check pattern - another thread might have refreshed it
+    if (!valid_moves_dirty_.load(std::memory_order_acquire)) {
+        return; // Cache is already fresh
+    }
+    
     cached_valid_moves_.clear();
-    if (cached_winner_ != NO_PLAYER && !winner_check_dirty_) {
-        valid_moves_dirty_ = false;
+    
+    // Check if we have a winner (no valid moves)
+    int current_winner = cached_winner_.load(std::memory_order_acquire);
+    bool winner_dirty = winner_check_dirty_.load(std::memory_order_acquire);
+    
+    if (current_winner != NO_PLAYER && !winner_dirty) {
+        // Game has winner, no valid moves
+        valid_moves_dirty_.store(false, std::memory_order_release);
         return;
     }
 
-    // Debug logging (commented out for production)
-    // if (count_total_stones() == 0) {
-    //     std::cerr << "refresh_valid_moves_cache: total_stones=0, current_player=" << current_player_ 
-    //               << ", use_pro_long_opening=" << use_pro_long_opening_ << std::endl;
-    // }
-
+    // Compute all valid moves
     int total_actions = getActionSpaceSize();
     for (int action = 0; action < total_actions; ++action) {
         if (is_move_valid_internal(action, true)) { 
@@ -762,13 +859,7 @@ void GomokuState::refresh_valid_moves_cache() const {
         }
     }
     
-    // Debug logging (commented out for production)
-    // if (count_total_stones() == 0 && cached_valid_moves_.size() != 1) {
-    //     std::cerr << "refresh_valid_moves_cache: WARNING - expected 1 valid move but found " 
-    //               << cached_valid_moves_.size() << std::endl;
-    // }
-    
-    valid_moves_dirty_ = false;
+    valid_moves_dirty_.store(false, std::memory_order_release);
 }
 
 bool GomokuState::is_move_valid_internal(int action, bool check_occupation) const {
@@ -852,9 +943,40 @@ void GomokuState::undo_last_move_internal(int last_action_undone, int player_who
 }
 
 void GomokuState::invalidate_caches() {
-    valid_moves_dirty_ = true;
-    winner_check_dirty_ = true;
-    hash_dirty_ = true;
+    valid_moves_dirty_.store(true, std::memory_order_release);
+    winner_check_dirty_.store(true, std::memory_order_release);
+    hash_dirty_.store(true, std::memory_order_release);
+    
+    // PERFORMANCE FIX: Return old tensors before invalidating caches
+    clearTensorCache();
+    
+    // PERFORMANCE FIX: Invalidate tensor caches when game state changes
+    tensor_cache_dirty_.store(true, std::memory_order_release);
+    enhanced_tensor_cache_dirty_.store(true, std::memory_order_release);
+}
+
+GomokuState::~GomokuState() {
+    // Return cached tensors to the pool to prevent memory leaks
+    clearTensorCache();
+}
+
+void GomokuState::clearTensorCache() const {
+    // Return cached tensors to the global pool
+    if (!cached_tensor_repr_.empty()) {
+        core::GlobalTensorPool::getInstance().returnTensor(
+            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_tensor_repr_),
+            3, board_size_, board_size_);
+        cached_tensor_repr_.clear();
+    }
+    
+    if (!cached_enhanced_tensor_repr_.empty()) {
+        const int num_history_pairs = 8;
+        const int num_feature_planes = 2 * num_history_pairs + 1;
+        core::GlobalTensorPool::getInstance().returnTensor(
+            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_enhanced_tensor_repr_),
+            num_feature_planes, board_size_, board_size_);
+        cached_enhanced_tensor_repr_.clear();
+    }
 }
 
 bool GomokuState::is_occupied(int action) const {

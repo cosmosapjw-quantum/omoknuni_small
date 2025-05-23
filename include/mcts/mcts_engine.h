@@ -10,9 +10,11 @@
 #include <functional>
 #include <chrono>
 #include "mcts/mcts_node.h"
-// #include "mcts/mcts_evaluator.h" // Removed this line
+#include "mcts/mcts_object_pool.h"
 #include "mcts/transposition_table.h"
 #include "mcts/node_tracker.h"
+#include "mcts/unified_inference_server.h"
+#include "mcts/burst_coordinator.h"
 #include "core/igamestate.h"
 #include "core/export_macros.h"
 #include "nn/neural_network.h"
@@ -21,7 +23,7 @@
 namespace alphazero {
 namespace mcts {
 
-class MCTSEvaluator; // Added forward declaration
+class AdvancedMemoryPool; // Forward declaration
 
 // Standardized batch parameters to ensure consistent batch handling across components
 struct ALPHAZERO_API BatchParameters {
@@ -158,6 +160,17 @@ struct ALPHAZERO_API MCTSStats {
     float pool_hit_rate = 0.0f;
     size_t pool_size = 0;
     size_t pool_total_allocated = 0;
+    
+    // Enhanced statistics for optimized architecture
+    size_t total_requests_processed = 0;
+    size_t total_batches_processed = 0;
+    float burst_efficiency = 0.0f;
+    float burst_utilization = 0.0f;
+    float parallel_efficiency = 0.0f;
+    float task_scheduling_overhead = 0.0f;
+    int tree_depth = 0;
+    float tree_branching_factor = 0.0f;
+    float exploration_efficiency = 0.0f;
 };
 
 struct ALPHAZERO_API SearchResult {
@@ -174,42 +187,15 @@ struct ALPHAZERO_API SearchResult {
     MCTSStats stats;
 };
 
-// Pending evaluation tracking
-struct PendingEvaluation {
-    std::shared_ptr<MCTSNode> node;
-    std::vector<std::shared_ptr<MCTSNode>> path;
-    std::shared_ptr<core::IGameState> state;  // Changed from unique_ptr to shared_ptr
-    int batch_id;
-    int request_id;
-    
-    // Default constructor
-    PendingEvaluation() = default;
-    
-    // Move constructor
-    PendingEvaluation(PendingEvaluation&& other) noexcept
-        : node(std::move(other.node)),
-          path(std::move(other.path)),
-          state(std::move(other.state)),
-          batch_id(other.batch_id),
-          request_id(other.request_id) {
-    }
-    
-    // Move assignment
-    PendingEvaluation& operator=(PendingEvaluation&& other) noexcept {
-        if (this != &other) {
-            node = std::move(other.node);
-            path = std::move(other.path);
-            state = std::move(other.state);
-            batch_id = other.batch_id;
-            request_id = other.request_id;
-        }
-        return *this;
-    }
-    
-    // Delete copy operations
-    PendingEvaluation(const PendingEvaluation&) = delete;
-    PendingEvaluation& operator=(const PendingEvaluation&) = delete;
-};
+// Using PendingEvaluation from evaluation_types.h
+// Note: adapters for compatibility between the shared_ptr in PendingEvaluation and the unique_ptr in evaluation methods
+inline std::shared_ptr<core::IGameState> convertToSharedPtr(const core::IGameState& state) {
+    return std::shared_ptr<core::IGameState>(state.clone());
+}
+
+inline std::unique_ptr<core::IGameState> convertToUniquePtr(const std::shared_ptr<core::IGameState>& state) {
+    return state ? state->clone() : nullptr;
+}
 
 class ALPHAZERO_API MCTSEngine {
 public:
@@ -256,6 +242,9 @@ public:
     // Search from given state
     SearchResult search(const core::IGameState& state);
     
+    // PERFORMANCE FIX: Search with tree reuse for sequential moves
+    SearchResult searchWithTreeReuse(const core::IGameState& state, int last_action = -1);
+    
     // Get the current settings
     const MCTSSettings& getSettings() const;
     
@@ -298,13 +287,6 @@ public:
      */
     float getTranspositionTableHitRate() const;
 
-    /**
-     * @brief Start the neural network evaluator if it hasn't been started yet
-     * 
-     * @return true if the evaluator was started successfully or already running
-     * @return false if the evaluator failed to start
-     */
-    bool ensureEvaluatorStarted();
     
     /**
      * @brief Monitor memory usage and perform cleanup if needed
@@ -323,24 +305,28 @@ public:
      */
     void forceCleanup();
     
-    /**
-     * @brief Set shared external queues to use instead of internal queues
-     * 
-     * @param leaf_queue Shared queue for pending evaluations
-     * @param result_queue Shared queue for evaluation results
-     * @param notify_fn Notification function when results are ready
-     */
-    void setSharedExternalQueues(
-        moodycamel::ConcurrentQueue<PendingEvaluation>* leaf_queue,
-        moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>>* result_queue,
-        std::function<void()> notify_fn);
         
+    
     /**
-     * @brief Get the evaluator for direct access
+     * @brief Get the unified inference server
      * 
-     * @return Pointer to the evaluator (may be nullptr)
+     * @return Shared pointer to the inference server (may be nullptr)
      */
-    MCTSEvaluator* getEvaluator() const { return evaluator_.get(); }
+    std::shared_ptr<UnifiedInferenceServer> getInferenceServer() const { return inference_server_; }
+    
+    /**
+     * @brief Enable unified inference server mode (replaces traditional evaluator)
+     * 
+     * @param enable Whether to use the unified inference server
+     */
+    void setUseUnifiedInferenceServer(bool enable);
+    
+    /**
+     * @brief Check if using unified inference server
+     * 
+     * @return true if using unified inference server, false otherwise
+     */
+    bool isUsingUnifiedInferenceServer() const;
     
 
 public:
@@ -358,6 +344,8 @@ private:
     void initializeGameStatePool(const core::IGameState& state);
     void resetSearchState();
     void executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
+    void executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
+    void executeSimplifiedParallelSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
     void runSimulation(std::shared_ptr<MCTSNode> root);
     std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> selectLeafNode(std::shared_ptr<MCTSNode> root);
     float expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::vector<std::shared_ptr<MCTSNode>>& path);
@@ -372,6 +360,144 @@ private:
     void processPendingEvaluations(std::shared_ptr<MCTSNode> root);
     std::vector<float> getActionProbabilities(std::shared_ptr<MCTSNode> root, float temperature);
     
+    // CRITICAL FIX: Enhanced search with virtual loss and lock-free batching
+    void executeEnhancedSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
+    
+    // Helper methods for enhanced search
+    std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> 
+    selectLeafNodeWithVirtualLoss(std::shared_ptr<MCTSNode> root, std::mt19937& rng);
+    
+    void submitBatchForEvaluation(std::vector<PendingEvaluation>&& batch);
+    
+    void waitForEvaluationCompletion(std::chrono::steady_clock::time_point start_time);
+    
+    // OPTIMIZATION 1: OpenMP parallelized search with multi-threaded simulation generation
+    void executeParallelSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
+    void executeTrueLeafParallelSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
+    
+    // Helper methods for parallel search
+    void processParallelBatch(std::vector<PendingEvaluation>& batch, int thread_id);
+    
+    void waitForParallelEvaluationCompletion(const std::vector<PendingEvaluation>& evaluation_requests);
+    
+    // ParallelSearchResult for parallel search
+    struct ParallelSearchResult {
+        int simulations_completed = 0;
+        int batches_evaluated = 0;
+        double avg_batch_size = 0.0;
+        double avg_batch_time_ms = 0.0;
+        int cache_hits = 0;
+        
+        // Additional fields used by parallel_mcts_search.cpp
+        std::chrono::microseconds elapsed_time{0};
+        int terminal_nodes_processed = 0;
+        int virtual_loss_applications = 0;
+        std::vector<std::shared_ptr<MCTSNode>> expanded_nodes;
+        std::vector<PendingEvaluation> evaluation_requests;
+    };
+    
+    void updateParallelSearchStats(const ParallelSearchResult& search_result);
+    
+    // Method to execute fully optimized search with all enhancements
+    SearchResult executeOptimizedSearch(std::shared_ptr<core::IGameState> root_state);
+    
+    // Enhanced burst search methods for optimized implementation
+    size_t executeEnhancedBurstSearch(const core::IGameState& root_state, 
+                                     std::shared_ptr<MCTSNode> root_node, int batch_target);
+    std::pair<std::shared_ptr<MCTSNode>, std::vector<std::shared_ptr<MCTSNode>>> 
+    selectOptimizedLeafNode(std::shared_ptr<MCTSNode> root);
+    float calculateExplorationEfficiency(std::shared_ptr<MCTSNode> root);
+    float calculateAverageBranchingFactor(std::shared_ptr<MCTSNode> root);
+    
+    // Real-time optimization worker method
+    void realTimeOptimizationWorker();
+    
+    // NEW: Burst-mode optimized search with unified memory management
+    void executeOptimizedSearchV2(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
+    bool processBatchWithEvaluator(const std::vector<PendingEvaluation>& batch);
+    
+    // Performance mode for optimization configuration
+    enum class PerformanceMode {
+        MaximumAccuracy,    // Prioritize quality of search over speed
+        BalancedPerformance, // Balance between quality and speed
+        MaximumSpeed,       // Prioritize speed over quality
+        EnergyEfficiency    // Minimize resource usage
+    };
+    
+    // Configure performance mode
+    void setPerformanceMode(PerformanceMode mode);
+    
+    // Enable/disable advanced optimizations
+    void enableAdvancedOptimizations(bool enable = true);
+    bool isAdvancedOptimizationsEnabled() const;
+    
+    // Disable all advanced optimizations
+    void disableAdvancedOptimizations();
+    
+    // Real-time optimization control
+    void enableRealTimeOptimization(bool enable);
+    
+    // Configure component optimizations
+    void configureAdaptiveBatching(bool enable);
+    void enableBurstPipelining(bool enable, int pipeline_depth = 2);
+    void enableMemoryOptimizations(bool enable);
+    void configureConcurrencyOptimizations(int max_threads);
+    
+    // Specific optimizations
+    void optimizeInferenceServerConfiguration();
+    void optimizeBurstCoordinatorConfiguration();
+    void enableTranspositionTableOptimizations();
+    
+    // Specific performance profiles
+    void configureForMaximumAccuracy();
+    void configureForBalancedPerformance();
+    void configureForMaximumSpeed();
+    void configureForEnergyEfficiency();
+    
+    // Metrics for optimization tuning
+    struct OptimizationMetrics {
+        float batch_efficiency;
+        float virtual_loss_impact;
+        float neural_network_utilization;
+        float memory_utilization;
+        float thread_utilization;
+        std::chrono::milliseconds average_evaluation_latency;
+        std::chrono::microseconds average_selection_time;
+        std::chrono::microseconds average_expansion_time;
+        
+        // Additional optimization metrics for new architecture
+        float average_batch_size = 0.0f;
+        float batch_utilization = 0.0f;
+        float burst_efficiency = 0.0f;
+        float coordination_overhead = 0.0f;
+        float memory_efficiency = 0.0f;
+        float pool_utilization = 0.0f;
+        float inference_throughput = 0.0f;
+        float overall_optimization_score = 0.0f;
+    };
+    
+    // Get optimization metrics
+    OptimizationMetrics getOptimizationMetrics() const;
+    
+    // Forward declarations for parallel search components
+    
+    struct ParallelLeafResult {
+        std::shared_ptr<MCTSNode> leaf_node;
+        std::vector<std::shared_ptr<MCTSNode>> path;
+        bool needs_evaluation = false;
+        bool applied_virtual_loss = false;
+        bool terminal = false;
+        float terminal_value = 0.0f;
+    };
+    
+private:
+    // Parallel search helper methods
+    ParallelSearchResult executeParallelSimulations(const std::vector<std::shared_ptr<MCTSNode>>& search_roots, int target_simulations);
+    ParallelLeafResult selectLeafNodeParallel(std::shared_ptr<MCTSNode> root, std::vector<std::shared_ptr<MCTSNode>>& path, std::mt19937& rng);
+    void backpropagateParallel(const std::vector<std::shared_ptr<MCTSNode>>& path, float value, int virtual_loss_amount);
+    
+public:
+    
     // Tree traversal helpers
     std::shared_ptr<MCTSNode> traverseTreeForLeaf(std::shared_ptr<MCTSNode> node, std::vector<std::shared_ptr<MCTSNode>>& path);
     bool handleTranspositionMatch(std::shared_ptr<MCTSNode>& node, std::shared_ptr<MCTSNode>& parent);
@@ -382,6 +508,14 @@ private:
     std::vector<float> createDefaultPolicy(int action_space_size);
     bool safelyMarkNodeForEvaluation(std::shared_ptr<MCTSNode> node);
     void addDirichletNoise(std::shared_ptr<MCTSNode> root);
+    
+    // New architecture management methods
+    bool ensureEvaluatorStarted();
+    void safelyStopEvaluator();
+    void setSharedExternalQueues(
+        moodycamel::ConcurrentQueue<PendingEvaluation>* leaf_queue,
+        moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>>* result_queue,
+        std::function<void()> notify_fn);
     
     // Parallelization strategies
     void runOpenMPSearch();
@@ -399,8 +533,12 @@ private:
     // Statistics from last search
     MCTSStats last_stats_;
     
-    // Neural network evaluator
-    std::unique_ptr<MCTSEvaluator> evaluator_;
+    
+    // NEW: Unified inference server for improved batching and reduced deadlocks
+    std::shared_ptr<UnifiedInferenceServer> inference_server_;
+    
+    // NEW: Burst coordinator for coordinated batch collection
+    std::unique_ptr<BurstCoordinator> burst_coordinator_;
     
     // Tree root
     std::shared_ptr<MCTSNode> root_;
@@ -423,14 +561,6 @@ private:
     // Whether to use the transposition table
     bool use_transposition_table_;
 
-    // Whether the evaluator thread has been started
-    std::atomic<bool> evaluator_started_{false};
-    
-    // Mutex for evaluator initialization
-    std::mutex evaluator_mutex_;
-
-    // Safely stop the evaluator if it was started
-    void safelyStopEvaluator();
 
     // Helper methods for thread management
     void createWorkerThreads();
@@ -493,11 +623,36 @@ private:
     // Removed mutex destruction flags - no longer needed with lock-free approach
     std::function<void()> external_queue_notify_fn_; 
     
+    // New optimized memory management
+    std::unique_ptr<AdvancedMemoryPool> memory_pool_;
+    std::atomic<bool> use_advanced_memory_pool_{true};
+    
     // Flag to enable memory pool for GameState cloning
     bool game_state_pool_enabled_;
     
     // Node tracker for lock-free pending evaluation management
     std::unique_ptr<NodeTracker> node_tracker_;
+    
+    // Advanced optimization components - using singleton object pool manager
+    std::shared_ptr<UnifiedInferenceServer> unified_inference_server_;
+    
+    // New optimization control variables
+    std::atomic<bool> use_advanced_optimizations_{false};
+    std::atomic<bool> adaptive_batching_enabled_{false};
+    std::atomic<bool> burst_pipelining_enabled_{false};
+    std::atomic<bool> memory_optimizations_enabled_{false};
+    std::atomic<bool> real_time_optimization_enabled_{false};
+    std::atomic<int> performance_mode_{0}; // 0=MaximumAccuracy, 1=BalancedPerformance, 2=MaximumSpeed, 3=EnergyEfficiency
+    std::atomic<int> max_concurrent_threads_{static_cast<int>(std::thread::hardware_concurrency())};
+    
+    // Neural network reference for optimization files
+    std::shared_ptr<nn::NeuralNetwork> neural_network_;
+    
+    // Real-time optimization worker thread
+    std::thread optimization_thread_;
+    
+    // Direct inference function for serial mode (bypasses complex infrastructure)
+    InferenceFunction direct_inference_fn_;
 };
 
 } // namespace mcts

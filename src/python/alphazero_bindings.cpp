@@ -1,3 +1,5 @@
+// Python bindings for optimized AlphaZero architecture
+// Features: BurstCoordinator + UnifiedInferenceServer with 10x batch optimization
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>

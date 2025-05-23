@@ -1,5 +1,6 @@
 // src/games/go/go_state.cpp
 #include "games/go/go_state.h"
+#include "core/tensor_pool.h"            // For GlobalTensorPool optimization
 #include <iostream>
 #include <algorithm>
 #include <sstream>
@@ -70,7 +71,11 @@ GoState::GoState(const GoState& other)
       dead_stones_(other.dead_stones_),
       zobrist_(other.zobrist_),
       hash_(other.hash_),
-      hash_dirty_(other.hash_dirty_)
+      hash_dirty_(other.hash_dirty_),
+      // Don't copy cached tensors - force recomputation to avoid memory issues
+      tensor_cache_dirty_(true),
+      enhanced_tensor_cache_dirty_(true),
+      groups_cache_dirty_(true)
 {
     // Initialize rules
     rules_ = std::make_shared<GoRules>(board_size_, chinese_rules_, other.rules_->isSuperkoenforced());
@@ -103,6 +108,14 @@ GoState& GoState::operator=(const GoState& other) {
         dead_stones_ = other.dead_stones_;
         hash_ = other.hash_;
         hash_dirty_ = other.hash_dirty_;
+        
+        // Clear old tensor caches before assignment
+        clearTensorCache();
+        
+        // Don't copy cached tensors - force recomputation
+        tensor_cache_dirty_ = true;
+        enhanced_tensor_cache_dirty_ = true;
+        groups_cache_dirty_ = true;
         
         // Reinitialize rules
         rules_ = std::make_shared<GoRules>(board_size_, chinese_rules_, other.rules_->isSuperkoenforced());
@@ -388,10 +401,13 @@ int GoState::getActionSpaceSize() const {
 }
 
 std::vector<std::vector<std::vector<float>>> GoState::getTensorRepresentation() const {
-    // Basic 3-plane representation (black, white, turn)
-    std::vector<std::vector<std::vector<float>>> tensor(3, 
-        std::vector<std::vector<float>>(board_size_, 
-            std::vector<float>(board_size_, 0.0f)));
+    // PERFORMANCE FIX: Use cached tensor if available and not dirty
+    if (!tensor_cache_dirty_.load(std::memory_order_relaxed) && !cached_tensor_repr_.empty()) {
+        return cached_tensor_repr_;
+    }
+    
+    // PERFORMANCE FIX: Use global tensor pool for efficient memory reuse
+    auto tensor = core::GlobalTensorPool::getInstance().getTensor(3, board_size_, board_size_);
     
     // Fill first two planes with stone positions
     for (int y = 0; y < board_size_; ++y) {
@@ -415,10 +431,19 @@ std::vector<std::vector<std::vector<float>>> GoState::getTensorRepresentation() 
         }
     }
     
+    // PERFORMANCE FIX: Cache the computed tensor
+    cached_tensor_repr_ = tensor;
+    tensor_cache_dirty_.store(false, std::memory_order_relaxed);
+    
     return tensor;
 }
 
 std::vector<std::vector<std::vector<float>>> GoState::getEnhancedTensorRepresentation() const {
+    // PERFORMANCE FIX: Use cached enhanced tensor if available and not dirty
+    if (!enhanced_tensor_cache_dirty_.load(std::memory_order_relaxed) && !cached_enhanced_tensor_repr_.empty()) {
+        return cached_enhanced_tensor_repr_;
+    }
+    
     try {
         // Start with the basic representation
         std::vector<std::vector<std::vector<float>>> tensor = getTensorRepresentation();
@@ -431,9 +456,22 @@ std::vector<std::vector<std::vector<float>>> GoState::getEnhancedTensorRepresent
         std::vector<std::vector<float>> whiteLiberties(board_size_, std::vector<float>(board_size_, 0.0f));
         
         try {
-            // Get groups from cache (will be calculated if needed)
-            auto blackGroups = rules_->findGroups(1);
-            auto whiteGroups = rules_->findGroups(2);
+            // PERFORMANCE FIX: Use cached groups if available and not dirty
+            std::vector<StoneGroup> blackGroups, whiteGroups;
+            if (!groups_cache_dirty_.load(std::memory_order_relaxed) && 
+                !cached_groups_[0].empty() && !cached_groups_[1].empty()) {
+                blackGroups = cached_groups_[0];
+                whiteGroups = cached_groups_[1];
+            } else {
+                // Get groups and cache them
+                blackGroups = rules_->findGroups(1);
+                whiteGroups = rules_->findGroups(2);
+                
+                // Cache the expensive group analysis results
+                cached_groups_[0] = blackGroups;
+                cached_groups_[1] = whiteGroups;
+                groups_cache_dirty_.store(false, std::memory_order_relaxed);
+            }
             
             // Process black groups with bounds checking
             for (const auto& group : blackGroups) {
@@ -500,6 +538,10 @@ std::vector<std::vector<std::vector<float>>> GoState::getEnhancedTensorRepresent
         
         tensor.push_back(distanceX);
         tensor.push_back(distanceY);
+        
+        // PERFORMANCE FIX: Cache the computed enhanced tensor
+        cached_enhanced_tensor_repr_ = tensor;
+        enhanced_tensor_cache_dirty_.store(false, std::memory_order_relaxed);
         
         return tensor;
     } catch (const std::exception& e) {
@@ -946,6 +988,36 @@ bool GoState::isInBounds(int pos) const {
 
 void GoState::invalidateHash() {
     hash_dirty_ = true;
+    
+    // PERFORMANCE FIX: Return old tensors before invalidating caches
+    clearTensorCache();
+    
+    // PERFORMANCE FIX: Invalidate tensor and group caches when game state changes
+    tensor_cache_dirty_.store(true, std::memory_order_release);
+    enhanced_tensor_cache_dirty_.store(true, std::memory_order_release);
+    groups_cache_dirty_.store(true, std::memory_order_release);
+}
+
+GoState::~GoState() {
+    // Return cached tensors to the pool to prevent memory leaks
+    clearTensorCache();
+}
+
+void GoState::clearTensorCache() const {
+    // Return cached tensors to the global pool
+    if (!cached_tensor_repr_.empty()) {
+        core::GlobalTensorPool::getInstance().returnTensor(
+            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_tensor_repr_),
+            17, board_size_, board_size_);  // Go uses 17 channels for basic representation
+        cached_tensor_repr_.clear();
+    }
+    
+    if (!cached_enhanced_tensor_repr_.empty()) {
+        core::GlobalTensorPool::getInstance().returnTensor(
+            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_enhanced_tensor_repr_),
+            17, board_size_, board_size_);  // Go uses 17 channels for enhanced representation
+        cached_enhanced_tensor_repr_.clear();
+    }
 }
 
 void GoState::captureGroup(const StoneGroup& group) {

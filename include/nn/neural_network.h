@@ -27,6 +27,51 @@ public:
      */
     virtual std::vector<mcts::NetworkOutput> inference(
         const std::vector<std::unique_ptr<core::IGameState>>& states) = 0;
+        
+    /**
+     * @brief Evaluate a single game state
+     * 
+     * @param state The game state to evaluate
+     * @return Network output (policy and value)
+     */
+    virtual mcts::NetworkOutput evaluate(const core::IGameState& state) {
+        // Default implementation using inference
+        auto state_clone = state.clone();
+        std::vector<std::unique_ptr<core::IGameState>> states;
+        states.push_back(std::move(state_clone));
+        
+        auto results = inference(states);
+        if (results.empty()) {
+            // Return default if inference failed
+            mcts::NetworkOutput default_output;
+            default_output.value = 0.0f;
+            default_output.policy.resize(state.getActionSpaceSize(), 1.0f / state.getActionSpaceSize());
+            return default_output;
+        }
+        
+        return results[0];
+    }
+    
+    /**
+     * @brief Check if the neural network supports batch evaluation
+     * 
+     * @return true if evaluateBatch is supported
+     */
+    virtual bool supportsEvaluateBatch() const {
+        return false; // Default implementation does not support evaluateBatch
+    }
+    
+    /**
+     * @brief Perform batch evaluation directly (optimized implementation)
+     * 
+     * @param states Vector of game states
+     * @return Vector of network outputs
+     */
+    virtual std::vector<mcts::NetworkOutput> evaluateBatch(
+        const std::vector<std::unique_ptr<core::IGameState>>& states) {
+        // Default implementation falls back to inference
+        return inference(states);
+    }
     
     /**
      * @brief Save the model to a file

@@ -6,11 +6,29 @@
 
 #ifdef USE_MIMALLOC
     #include <mimalloc.h>
-    #include <mimalloc-override.h>  // This automatically overrides malloc/free globally
+    // Note: Avoid mimalloc-override.h to prevent conflicts with PyTorch
+    // Use mimalloc functions explicitly instead of global overrides
     
     // Optional: Define custom allocation functions for specific use cases
     namespace alphazero {
     namespace memory {
+        // Explicit mimalloc functions to avoid global override conflicts
+        inline void* malloc(size_t size) {
+            return mi_malloc(size);
+        }
+        
+        inline void* calloc(size_t count, size_t size) {
+            return mi_calloc(count, size);
+        }
+        
+        inline void* realloc(void* ptr, size_t newsize) {
+            return mi_realloc(ptr, newsize);
+        }
+        
+        inline void free(void* ptr) {
+            mi_free(ptr);
+        }
+        
         // Use mimalloc's aligned allocation for SIMD operations
         inline void* aligned_alloc(size_t alignment, size_t size) {
             return mi_aligned_alloc(alignment, size);

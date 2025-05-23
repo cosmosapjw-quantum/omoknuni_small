@@ -428,8 +428,20 @@ CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o: \
  /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
  /usr/include/c++/13/iostream \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h \
+ /usr/include/c++/13/stack /usr/include/c++/13/bits/stl_stack.h \
+ /usr/include/c++/13/iomanip /usr/include/c++/13/locale \
+ /usr/include/c++/13/bits/locale_facets_nonio.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h \
+ /usr/include/libintl.h /usr/include/c++/13/bits/codecvt.h \
+ /usr/include/c++/13/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/13/bits/locale_conv.h \
+ /usr/include/c++/13/bits/quoted_string.h \
+ /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
+ /usr/include/c++/13/cassert /usr/include/c++/13/climits \
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
- /usr/include/parallel_hashmap/phmap.h /usr/include/c++/13/cassert \
+ /usr/include/parallel_hashmap/phmap.h \
  /usr/include/parallel_hashmap/phmap_fwd_decl.h \
  /usr/include/parallel_hashmap/phmap_utils.h \
  /usr/include/parallel_hashmap/phmap_bits.h /usr/include/byteswap.h \
@@ -438,20 +450,19 @@ CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o: \
  /usr/include/parallel_hashmap/phmap_base.h \
  /usr/include/c++/13/shared_mutex \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
- /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
- /usr/include/c++/13/climits \
+ /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
+ /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h \
+ /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h \
+ /home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
+ /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
  /home/cosmos/omoknuni_small/include/games/chess/chess_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
  /home/cosmos/omoknuni_small/include/games/chess/chess_types.h \
  /home/cosmos/omoknuni_small/include/games/go/go_state.h \
  /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
- /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
- /usr/include/c++/13/iomanip /usr/include/c++/13/locale \
- /usr/include/c++/13/bits/locale_facets_nonio.h \
- /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h \
- /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h \
- /usr/include/libintl.h /usr/include/c++/13/bits/codecvt.h \
- /usr/include/c++/13/bits/locale_facets_nonio.tcc \
- /usr/include/c++/13/bits/locale_conv.h \
- /usr/include/c++/13/bits/quoted_string.h
+ /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h

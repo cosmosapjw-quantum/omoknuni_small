@@ -1,253 +1,346 @@
-#include "mcts/mcts_evaluator.h"
+#include "mcts/unified_inference_server.h"
+#include "mcts/burst_coordinator.h"
 #include "mcts/mcts_node.h"
 #include <iostream>
+#include <chrono>
+#include <thread>
+#include <future>
 
 namespace alphazero {
 namespace mcts {
 
-// Pipeline parallelism implementation for MCTSEvaluator
-// This allows overlapping batch collection and inference
+// Advanced pipeline implementation for UnifiedInferenceServer + BurstCoordinator
+// This enables sophisticated overlapping of batch collection, inference, and result processing
 
-// Add an evaluation to the pipeline buffer
-void MCTSEvaluator::addToPipelineBatch(PendingEvaluation&& eval) {
-    // Add to the pipeline buffer using lock-free queue
-    // The pipeline buffer will automatically swap buffers when the 
-    // target batch size is reached
-    pipeline_buffer_.add(std::move(eval));
-}
+/**
+ * Multi-stage pipeline processor that maximizes GPU utilization through
+ * sophisticated request staging and result streaming
+ */
+class AdvancedInferencePipeline {
+private:
+    std::shared_ptr<UnifiedInferenceServer> server_;
+    std::unique_ptr<BurstCoordinator> coordinator_;
+    
+    // Pipeline stages
+    std::atomic<bool> pipeline_active_{false};
+    std::thread pipeline_thread_;
+    
+    // Performance monitoring
+    struct PipelineMetrics {
+        std::atomic<size_t> total_requests_processed{0};
+        std::atomic<size_t> total_batches_processed{0};
+        std::atomic<double> average_pipeline_latency{0.0};
+        std::atomic<double> average_throughput{0.0};
+        std::chrono::steady_clock::time_point start_time;
+    } metrics_;
 
-// Swap active and inactive buffers, making the collected batch available for processing
-void MCTSEvaluator::swapPipelineBuffers() {
-    // Force a buffer swap in the pipeline buffer
-    // This is a no-op if the collection buffer is empty
-    pipeline_buffer_.forceBufferSwap();
-}
-
-// Get the active batch for processing
-std::vector<PendingEvaluation> MCTSEvaluator::getActivePipelineBatch() {
-    std::vector<PendingEvaluation> result;
-    
-    // Wait for the processing buffer to be ready with timeout
-    auto timeout = batch_params_.max_wait_time;
-    
-    // Try to get items from the pipeline buffer
-    pipeline_buffer_.getItems(result, timeout);
-    
-    // Check if shutdown was requested
-    if (shutdown_flag_.load(std::memory_order_acquire)) {
-        result.clear(); // Return empty batch on shutdown
+public:
+    AdvancedInferencePipeline(std::shared_ptr<UnifiedInferenceServer> server,
+                             BurstCoordinator::BurstConfig burst_config)
+        : server_(server) {
+        coordinator_ = std::make_unique<BurstCoordinator>(server_, burst_config);
+        metrics_.start_time = std::chrono::steady_clock::now();
     }
     
-    return result;
-}
-
-// Add a batch processing method that uses pipeline parallelism
-bool MCTSEvaluator::processPipelineBatch() {
-    // Only process if not shutting down
-    if (shutdown_flag_.load(std::memory_order_acquire)) {
-        return false;
+    ~AdvancedInferencePipeline() {
+        stopPipeline();
     }
     
-    // Try to collect a batch directly (no intermediate vector)
-    std::vector<PendingEvaluation> batch;
-    
-    // Reserve space for optimal batch size
-    batch.reserve(batch_params_.optimal_batch_size);
-    
-    // Use getItems which handles waiting and timeout internally
-    bool got_items = pipeline_buffer_.getItems(batch, batch_params_.max_wait_time);
-    if (!got_items || batch.empty()) {
-        return false;
+    void startPipeline() {
+        if (!pipeline_active_.exchange(true)) {
+            pipeline_thread_ = std::thread(&AdvancedInferencePipeline::pipelineWorker, this);
+        }
     }
     
-    // Process the batch
-    std::vector<std::unique_ptr<core::IGameState>> states;
-    states.reserve(batch.size());
-    
-    // Track valid items and indices
-    std::vector<size_t> valid_indices;
-    valid_indices.reserve(batch.size());
-    
-    // Extract states for neural network evaluation - loop optimized with reserve
-    for (size_t i = 0; i < batch.size(); ++i) {
-        if (batch[i].state) {
-            auto state_clone = batch[i].state->clone();
-            if (state_clone) {
-                states.push_back(std::move(state_clone));
-                valid_indices.push_back(i);
+    void stopPipeline() {
+        if (pipeline_active_.exchange(false)) {
+            if (pipeline_thread_.joinable()) {
+                pipeline_thread_.join();
             }
         }
     }
     
-    // Skip if no valid states
-    if (states.empty()) {
-        return false;
+    // High-performance batch processing with staged pipeline
+    std::vector<NetworkOutput> processBatchWithPipeline(
+        std::vector<BurstCoordinator::BurstRequest>&& requests) {
+        
+        auto start_time = std::chrono::steady_clock::now();
+        
+        // Stage 1: Pre-validate and prepare requests
+        auto prepared_requests = preprocessRequests(std::move(requests));
+        
+        // Stage 2: Coordinated burst collection with optimization
+        auto results = coordinator_->collectAndEvaluate(prepared_requests, prepared_requests.size());
+        
+        // Stage 3: Post-process results with enhanced analytics
+        auto enhanced_results = postprocessResults(results, prepared_requests);
+        
+        auto end_time = std::chrono::steady_clock::now();
+        auto latency = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+        
+        // Update pipeline metrics
+        updatePipelineMetrics(prepared_requests.size(), latency);
+        
+        return enhanced_results;
     }
     
-    // Run neural network inference
-    std::vector<NetworkOutput> results;
-    std::chrono::steady_clock::time_point inference_start_time;
-    long long inference_duration_ms = 0;
-    try {
-        // Add timing metrics for inference
-        inference_start_time = std::chrono::steady_clock::now();
+    // Asynchronous pipeline processing for maximum throughput
+    std::future<std::vector<NetworkOutput>> processAsync(
+        std::vector<BurstCoordinator::BurstRequest>&& requests) {
         
-        results = inference_fn_(states);
+        return std::async(std::launch::async, [this](auto reqs) {
+            return processBatchWithPipeline(std::move(reqs));
+        }, std::move(requests));
+    }
+    
+    // Advanced streaming processing for continuous inference
+    void processStreamingBatches(
+        std::function<std::vector<BurstCoordinator::BurstRequest>()> request_generator,
+        std::function<void(std::vector<NetworkOutput>)> result_consumer,
+        int max_concurrent_batches = 4) {
         
-        auto inference_end_time = std::chrono::steady_clock::now();
-        inference_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            inference_end_time - inference_start_time).count();
+        std::vector<std::future<std::vector<NetworkOutput>>> active_batches;
+        
+        while (pipeline_active_.load()) {
+            // Maintain optimal number of concurrent batches
+            while (active_batches.size() < static_cast<size_t>(max_concurrent_batches)) {
+                auto requests = request_generator();
+                if (requests.empty()) {
+                    break;
+                }
+                
+                active_batches.emplace_back(processAsync(std::move(requests)));
+            }
             
-        // Update inference timing metrics (this was cumulative_batch_time_ms_ before, make sure it's appropriate here)
-        // For pipeline, this specific batch's duration might be more relevant to log or use for adaptive logic for the pipeline itself.
-        // The global cumulative_batch_time_ms_ will be updated when results are processed by the engine or if we add it here too.
-        // For now, let's assume this duration is for this specific pipeline batch.
-
-    } catch (const std::exception& e) {
-        std::cout << "Exception during pipeline inference: " << e.what() << std::endl;
-        // If inference fails, we should still mark nodes as not evaluating and potentially return default/error results.
-        for (size_t i = 0; i < valid_indices.size(); ++i) {
-            size_t orig_idx = valid_indices[i];
-            auto& eval = batch[orig_idx];
-            if (eval.node) {
-                eval.node->clearEvaluationFlag();
-            }
-        }
-        return false;
-    }
-    
-    // Check for valid results
-    if (results.size() != valid_indices.size()) {
-        std::cout << "Mismatch in pipeline result and valid indices counts: " << results.size() << " vs " << valid_indices.size() << std::endl;
-        // Clear evaluation flags for nodes that were part of this failed batch processing
-        for (size_t i = 0; i < valid_indices.size(); ++i) {
-            size_t orig_idx = valid_indices[i];
-            auto& eval = batch[orig_idx];
-            if (eval.node) {
-                eval.node->clearEvaluationFlag();
-            }
-        }
-        return false;
-    }
-    
-    // Process the results
-    if (use_external_queues_) {
-        if (result_queue_ptr_) {
-            auto* external_result_queue = static_cast<moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>>*>(result_queue_ptr_);
-            std::vector<std::pair<NetworkOutput, PendingEvaluation>> result_pairs_external;
-            result_pairs_external.reserve(results.size());
-
-            for (size_t i = 0; i < results.size(); ++i) {
-                size_t orig_idx = valid_indices[i];
-                result_pairs_external.emplace_back(std::move(results[i]), std::move(batch[orig_idx]));
-            }
-
-            if (!result_pairs_external.empty()){
-                external_result_queue->enqueue_bulk(std::make_move_iterator(result_pairs_external.begin()), result_pairs_external.size());
-                if (result_notify_callback_) {
-                    result_notify_callback_();
+            // Process completed batches
+            auto it = active_batches.begin();
+            while (it != active_batches.end()) {
+                if (it->wait_for(std::chrono::milliseconds(1)) == std::future_status::ready) {
+                    auto results = it->get();
+                    result_consumer(std::move(results));
+                    it = active_batches.erase(it);
+                } else {
+                    ++it;
                 }
             }
-        } else {
-             std::cout << "Error: use_external_queues_ is true but result_queue_ptr_ is null in processPipelineBatch" << std::endl;
-        }
-        // Update global/evaluator stats for batches processed via pipeline using external queues
-        total_batches_.fetch_add(1, std::memory_order_relaxed);
-        total_evaluations_.fetch_add(results.size(), std::memory_order_relaxed);
-        cumulative_batch_size_.fetch_add(results.size(), std::memory_order_relaxed);
-        // Note: cumulative_batch_time_ms_ was updated with inference_duration_ms from inferenceWorkerLoop.
-        // To be consistent, we should also sum the duration_ms of this pipeline batch here.
-        // auto current_batch_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - batch_collection_start_time).count(); // This would be overall time
-        // For now, let's use the inference duration of this specific batch, similar to inferenceWorkerLoop's update.
-        // auto current_inference_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time_placeholder).count(); // Placeholder for actual inference start time of this batch
-        // The `start_time` used for `duration_ms` above is the correct one for this specific inference batch.
-        // So, we use that `duration_ms`.
-        // auto actual_inference_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time_placeholder).count();
-        try {
-            cumulative_batch_time_ms_.fetch_add(inference_duration_ms, std::memory_order_relaxed);
-
-        } catch(const std::exception& e) {
-            std::cout << "Exception calculating duration for stats in pipeline: " << e.what() << std::endl;
-        }
-
-    } else {
-        // Original internal processing logic (fulfilling promises directly or updating nodes)
-        for (size_t i = 0; i < results.size(); ++i) {
-            size_t orig_idx = valid_indices[i];
-            auto& output = results[i];
-            auto& eval = batch[orig_idx];
             
-            // Apply results to the node with null checks
-            if (eval.node) {
-                try {
-                    eval.node->setPriorProbabilities(output.policy);
-                    
-                    // Back-propagate value through the tree
-                    float value = output.value;
-                    for (auto& node : eval.path) {
-                        if (node) {
-                            node->update(value);
-                            value = -value; // Flip value for alternating perspective
-                        }
+            // Small yield to prevent busy waiting
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+        }
+        
+        // Wait for remaining batches to complete
+        for (auto& batch : active_batches) {
+            if (batch.valid()) {
+                auto results = batch.get();
+                result_consumer(std::move(results));
+            }
+        }
+    }
+    
+    // Pipeline performance analytics
+    struct PipelineAnalytics {
+        double average_latency_ms;
+        double throughput_requests_per_second;
+        size_t total_requests_processed;
+        size_t total_batches_processed;
+        double pipeline_efficiency;
+        double gpu_utilization_estimate;
+    };
+    
+    PipelineAnalytics getPipelineAnalytics() const {
+        auto current_time = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration<double>(current_time - metrics_.start_time).count();
+        
+        PipelineAnalytics analytics;
+        analytics.average_latency_ms = metrics_.average_pipeline_latency.load();
+        analytics.total_requests_processed = metrics_.total_requests_processed.load();
+        analytics.total_batches_processed = metrics_.total_batches_processed.load();
+        
+        if (elapsed > 0.0) {
+            analytics.throughput_requests_per_second = 
+                analytics.total_requests_processed / elapsed;
+        } else {
+            analytics.throughput_requests_per_second = 0.0;
+        }
+        
+        // Calculate pipeline efficiency
+        if (analytics.total_batches_processed > 0) {
+            double avg_batch_size = static_cast<double>(analytics.total_requests_processed) / 
+                                   analytics.total_batches_processed;
+            auto coordinator_config = coordinator_->getConfig();
+            analytics.pipeline_efficiency = avg_batch_size / coordinator_config.target_burst_size;
+        } else {
+            analytics.pipeline_efficiency = 0.0;
+        }
+        
+        // Estimate GPU utilization based on throughput and latency
+        analytics.gpu_utilization_estimate = std::min(1.0,
+            analytics.throughput_requests_per_second * analytics.average_latency_ms / 1000.0 / 100.0);
+        
+        return analytics;
+    }
+
+private:
+    void pipelineWorker() {
+        while (pipeline_active_.load()) {
+            // Continuous pipeline optimization and monitoring
+            optimizePipelineConfiguration();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+    
+    std::vector<BurstCoordinator::BurstRequest> preprocessRequests(
+        std::vector<BurstCoordinator::BurstRequest>&& requests) {
+        
+        // Stage 1a: Validate all requests
+        auto valid_end = std::remove_if(requests.begin(), requests.end(),
+            [](const auto& req) {
+                return !req.leaf || !req.state || !req.state->validate();
+            });
+        requests.erase(valid_end, requests.end());
+        
+        // Stage 1b: Sort requests for optimal batching (optional optimization)
+        // Could sort by state complexity, game type, etc.
+        
+        // Stage 1c: Apply request preprocessing optimizations
+        for (auto& request : requests) {
+            // Pre-compute any expensive operations that can be cached
+            if (request.state && !request.state->isTerminal()) {
+                // Pre-validate move generation if needed
+                request.state->getLegalMoves();
+            }
+        }
+        
+        return std::move(requests);
+    }
+    
+    std::vector<NetworkOutput> postprocessResults(
+        const std::vector<NetworkOutput>& results,
+        const std::vector<BurstCoordinator::BurstRequest>& requests) {
+        
+        std::vector<NetworkOutput> enhanced_results = results;
+        
+        // Stage 3a: Result validation and correction
+        for (size_t i = 0; i < enhanced_results.size() && i < requests.size(); ++i) {
+            auto& result = enhanced_results[i];
+            const auto& request = requests[i];
+            
+            // Validate and clamp value
+            result.value = std::max(-1.0f, std::min(1.0f, result.value));
+            
+            // Validate policy distribution
+            if (!result.policy.empty()) {
+                float policy_sum = std::accumulate(result.policy.begin(), result.policy.end(), 0.0f);
+                if (policy_sum > 0.0f && std::abs(policy_sum - 1.0f) > 0.01f) {
+                    // Renormalize policy if needed
+                    for (float& prob : result.policy) {
+                        prob /= policy_sum;
                     }
-                    
-                    // Clear evaluation flag
-                    eval.node->clearEvaluationFlag();
-                } catch (const std::exception& e) {
-                    std::cout << "Exception during result processing: " << e.what() << std::endl;
-                    // Continue processing other results
+                }
+            }
+            
+            // Apply game-specific result processing if needed
+            if (request.state) {
+                processGameSpecificResult(result, *request.state);
+            }
+        }
+        
+        // Stage 3b: Apply advanced result analytics
+        analyzeResultDistribution(enhanced_results);
+        
+        return enhanced_results;
+    }
+    
+    void processGameSpecificResult(NetworkOutput& result, const core::IGameState& state) {
+        // Apply game-specific optimizations and validations
+        auto legal_moves = state.getLegalMoves();
+        
+        if (result.policy.size() >= legal_moves.size()) {
+            // Zero out illegal move probabilities
+            std::vector<bool> legal_mask(result.policy.size(), false);
+            for (int move : legal_moves) {
+                if (move >= 0 && move < static_cast<int>(legal_mask.size())) {
+                    legal_mask[move] = true;
+                }
+            }
+            
+            float legal_sum = 0.0f;
+            for (size_t i = 0; i < result.policy.size(); ++i) {
+                if (!legal_mask[i]) {
+                    result.policy[i] = 0.0f;
+                } else {
+                    legal_sum += result.policy[i];
+                }
+            }
+            
+            // Renormalize legal moves
+            if (legal_sum > 0.0f) {
+                for (size_t i = 0; i < result.policy.size(); ++i) {
+                    if (legal_mask[i]) {
+                        result.policy[i] /= legal_sum;
+                    }
                 }
             }
         }
-        
-        // Update statistics
-        total_batches_.fetch_add(1, std::memory_order_relaxed);
-        total_evaluations_.fetch_add(results.size(), std::memory_order_relaxed);
-        cumulative_batch_size_.fetch_add(results.size(), std::memory_order_relaxed);
-        
-        // If we got a full batch, increment full_batches counter
-        if (batch.size() >= batch_params_.optimal_batch_size) {
-            full_batches_.fetch_add(1, std::memory_order_relaxed);
-        } else {
-            partial_batches_.fetch_add(1, std::memory_order_relaxed);
-        }
     }
     
-    return true;
-}
-
-// A background thread function for pipeline processing
-void MCTSEvaluator::pipelineProcessorLoop() {
-    std::cout << "Starting pipeline processor thread" << std::endl;
-    
-    // Initialize the pipeline buffer with the optimal batch size
-    pipeline_buffer_.setTargetBatchSize(batch_params_.optimal_batch_size);
-    
-    while (!shutdown_flag_.load(std::memory_order_acquire)) {
-        bool processed = processPipelineBatch();
+    void analyzeResultDistribution(const std::vector<NetworkOutput>& results) {
+        if (results.empty()) return;
         
-        if (!processed) {
-            // If no batch was processed, wait briefly but use less CPU
-            // Adaptive backoff - longer wait time when fewer items are coming in
-            auto size_approx = pipeline_buffer_.size_approx();
-            if (size_approx == 0) {
-                // If no items at all, wait longer
-                std::this_thread::sleep_for(std::chrono::milliseconds(5));
-            } else if (size_approx < batch_params_.minimum_viable_batch_size / 2) {
-                // If few items, wait a moderate amount
-                std::this_thread::sleep_for(std::chrono::milliseconds(2));
-            } else {
-                // If getting close to batch size, wait just a little
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        // Collect distribution statistics for adaptive optimization
+        double value_sum = 0.0;
+        double value_variance = 0.0;
+        
+        for (const auto& result : results) {
+            value_sum += result.value;
+        }
+        
+        double mean_value = value_sum / results.size();
+        
+        for (const auto& result : results) {
+            double diff = result.value - mean_value;
+            value_variance += diff * diff;
+        }
+        
+        value_variance /= results.size();
+        
+        // Use statistics for adaptive pipeline tuning
+        // (Implementation would depend on specific optimization strategies)
+    }
+    
+    void optimizePipelineConfiguration() {
+        auto analytics = getPipelineAnalytics();
+        
+        // Adaptive optimization based on current performance
+        if (analytics.pipeline_efficiency < 0.7 && analytics.total_batches_processed > 10) {
+            // Pipeline efficiency is low, adjust burst coordination
+            auto current_config = coordinator_->getConfig();
+            
+            if (analytics.average_latency_ms > 50.0) {
+                // High latency, reduce collection timeout
+                current_config.collection_timeout = 
+                    std::chrono::milliseconds(std::max(1, static_cast<int>(current_config.collection_timeout.count()) - 1));
+            } else if (analytics.pipeline_efficiency < 0.5) {
+                // Very low efficiency, increase collection time slightly
+                current_config.collection_timeout = 
+                    std::chrono::milliseconds(std::min(20, static_cast<int>(current_config.collection_timeout.count()) + 1));
             }
+            
+            coordinator_->updateConfig(current_config);
         }
     }
     
-    // Shutdown the pipeline buffer to release any waiting threads
-    pipeline_buffer_.shutdown();
-    
-    std::cout << "Pipeline processor thread exiting" << std::endl;
-}
+    void updatePipelineMetrics(size_t batch_size, double latency_ms) {
+        metrics_.total_requests_processed.fetch_add(batch_size);
+        metrics_.total_batches_processed.fetch_add(1);
+        
+        // Exponential moving average for latency
+        double current_latency = metrics_.average_pipeline_latency.load();
+        double alpha = 0.1; // Smoothing factor
+        double new_latency = alpha * latency_ms + (1.0 - alpha) * current_latency;
+        metrics_.average_pipeline_latency.store(new_latency);
+    }
+};
 
 } // namespace mcts
 } // namespace alphazero

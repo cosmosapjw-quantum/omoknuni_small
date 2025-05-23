@@ -612,13 +612,18 @@ float AlphaZeroPipeline::trainNeuralNetwork(const std::vector<selfplay::GameData
                         
                         output = resnet_model_ptr->forward(states_tensor);
                     } else {
-                        // DDW-RandWire is not fully implemented for training here yet, this would crash.
-                        // For now, to make it compile, let's assume a similar forward if we were to implement it.
-                        // This part needs proper implementation for DDWRandWireResNet.
-                        throw std::runtime_error("DDW-RandWire training forward pass not implemented in this class-based pipeline.");
-                        // auto* ddw_model_ptr = dynamic_cast<nn::DDWRandWireResNet*>(training_model);
-                        // if (!ddw_model_ptr) throw std::runtime_error("Failed to cast training_model to DDWRandWireResNet for forward pass");
-                        // output = ddw_model_ptr->forward(states_tensor); // Assuming DDWRandWireResNet has such a forward
+                        // DDW-RandWire ResNet training forward pass
+                        auto* ddw_model_ptr = dynamic_cast<nn::DDWRandWireResNet*>(training_model);
+                        if (!ddw_model_ptr) {
+                            throw std::runtime_error("Failed to cast training_model to DDWRandWireResNet for forward pass");
+                        }
+                        
+                        // Enable gradients for training
+                        if (states_tensor.requires_grad() == false) {
+                            states_tensor = states_tensor.detach().requires_grad_(true);
+                        }
+                        
+                        output = ddw_model_ptr->forward(states_tensor);
                     }
                 } catch (const torch::Error& e) {
                     std::cerr << "PyTorch error during forward pass: " << e.what() << std::endl;

@@ -1,6 +1,6 @@
 // tests/integration/self_play_integration_test.cpp
 #include "mcts/mcts_engine.h"
-#include "mcts/mcts_evaluator.h"
+#include "mcts/unified_inference_server.h"
 #include "games/gomoku/gomoku_state.h"
 #include "nn/neural_network.h"
 #include "selfplay/self_play_manager.h"

@@ -86,24 +86,10 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/mcts_node_test.cpp -o CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.s
 
-CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: CMakeFiles/mcts_tests.dir/flags.make
-CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/mcts_evaluator_test.cpp
-CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o: CMakeFiles/mcts_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o -MF CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o.d -o CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/mcts_evaluator_test.cpp
-
-CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/tests/mcts/mcts_evaluator_test.cpp > CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.i
-
-CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/mcts_evaluator_test.cpp -o CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.s
-
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o: CMakeFiles/mcts_tests.dir/flags.make
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/mcts_engine_test.cpp
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o: CMakeFiles/mcts_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o -MF CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o.d -o CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/mcts_engine_test.cpp
 
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.i: cmake_force
@@ -117,7 +103,7 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.s: cmake_force
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o: CMakeFiles/mcts_tests.dir/flags.make
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/mcts_openmp_test.cpp
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o: CMakeFiles/mcts_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o -MF CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o.d -o CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/mcts_openmp_test.cpp
 
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.i: cmake_force
@@ -131,7 +117,7 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.s: cmake_force
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o: CMakeFiles/mcts_tests.dir/flags.make
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/mcts_optimization_test.cpp
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o: CMakeFiles/mcts_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o -MF CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o.d -o CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/mcts_optimization_test.cpp
 
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.i: cmake_force
@@ -142,22 +128,100 @@ CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/mcts_optimization_test.cpp -o CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.s
 
+CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o: CMakeFiles/mcts_tests.dir/flags.make
+CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/burst_coordinator_test.cpp
+CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o: CMakeFiles/mcts_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o -MF CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o.d -o CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/burst_coordinator_test.cpp
+
+CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/tests/mcts/burst_coordinator_test.cpp > CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.i
+
+CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/burst_coordinator_test.cpp -o CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.s
+
+CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o: CMakeFiles/mcts_tests.dir/flags.make
+CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/unified_inference_server_test.cpp
+CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o: CMakeFiles/mcts_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o -MF CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o.d -o CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/unified_inference_server_test.cpp
+
+CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/tests/mcts/unified_inference_server_test.cpp > CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.i
+
+CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/unified_inference_server_test.cpp -o CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.s
+
+CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o: CMakeFiles/mcts_tests.dir/flags.make
+CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/progressive_widening_test.cpp
+CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o: CMakeFiles/mcts_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o -MF CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o.d -o CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/progressive_widening_test.cpp
+
+CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/tests/mcts/progressive_widening_test.cpp > CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.i
+
+CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/progressive_widening_test.cpp -o CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.s
+
+CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o: CMakeFiles/mcts_tests.dir/flags.make
+CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/virtual_loss_test.cpp
+CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o: CMakeFiles/mcts_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o -MF CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o.d -o CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/virtual_loss_test.cpp
+
+CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/tests/mcts/virtual_loss_test.cpp > CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.i
+
+CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/virtual_loss_test.cpp -o CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.s
+
+CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o: CMakeFiles/mcts_tests.dir/flags.make
+CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/shared_queue_test.cpp
+CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o: CMakeFiles/mcts_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o -MF CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o.d -o CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o -c /home/cosmos/omoknuni_small/tests/mcts/shared_queue_test.cpp
+
+CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/tests/mcts/shared_queue_test.cpp > CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.i
+
+CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/tests/mcts/shared_queue_test.cpp -o CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.s
+
 # Object files for target mcts_tests
 mcts_tests_OBJECTS = \
 "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.o" \
-"CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o" \
 "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o" \
 "CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o" \
-"CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o"
+"CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o" \
+"CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o" \
+"CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o" \
+"CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o" \
+"CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o" \
+"CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o"
 
 # External object files for target mcts_tests
 mcts_tests_EXTERNAL_OBJECTS =
 
 bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.o
-bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o
 bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o
 bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o
 bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o
+bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o
+bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o
+bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o
+bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o
+bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o
 bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/build.make
 bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/compiler_depend.ts
 bin/Release/mcts_tests: lib/Release/libalphazero.so
@@ -186,7 +250,7 @@ bin/Release/mcts_tests: /usr/local/cuda/lib64/libcudart.so
 bin/Release/mcts_tests: /usr/local/lib/librapids_logger.so
 bin/Release/mcts_tests: /usr/lib/x86_64-linux-gnu/libgtest.a
 bin/Release/mcts_tests: CMakeFiles/mcts_tests.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable bin/Release/mcts_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX executable bin/Release/mcts_tests"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/mcts_tests.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

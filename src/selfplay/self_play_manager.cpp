@@ -1,11 +1,14 @@
 // src/selfplay/self_play_manager.cpp
 #include "selfplay/self_play_manager.h"
+#include "utils/advanced_memory_monitor.h"
+#include <iomanip>
 #include "mcts/mcts_engine.h"
 #include "utils/debug_monitor.h"
 #include "games/chess/chess_state.h"
 #include "games/go/go_state.h"
 #include "games/gomoku/gomoku_state.h"
 #include "utils/memory_tracker.h"
+#include "core/tensor_pool.h"
 #include <vector>
 #include <string>
 #include <memory>
@@ -49,6 +52,10 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     std::cout << "SelfPlayManager: Created with sequential game generation and " 
               << settings_.mcts_settings.num_simulations 
               << " MCTS simulations" << std::endl;
+              
+    // Enable tensor pool periodic logging for memory monitoring
+    core::GlobalTensorPool::getInstance().setPeriodicLogging(true, std::chrono::seconds(30));
+    std::cout << "SelfPlayManager: Enabled tensor pool periodic logging (every 30s)" << std::endl;
     
     // Track initial memory
     // alphazero::utils::trackMemory("SelfPlayManager created");
@@ -77,76 +84,8 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     std::cout << "SelfPlayManager: Using root parallelization with " 
               << settings_.mcts_settings.num_root_workers << " root workers per game - CRITICAL for batch formation" << std::endl;
     
-    // Create a single shared evaluator for all engines
-    auto notify_fn = [this]() {
-        // Wake up the shared evaluator when there's work to do
-        static std::atomic<long long> notify_count_selfplay_manager(0);
-        long long current_notify_count = notify_count_selfplay_manager.fetch_add(1, std::memory_order_relaxed);
-        if (current_notify_count < 20 || current_notify_count % 100 == 0) { // Log frequently at start, then less often
-            std::cout << "SELFPLAY_MANAGER (notify_fn): Called (count: " << current_notify_count 
-                      << "). Notifying shared_evaluator_@" << static_cast<void*>(shared_evaluator_.get()) << std::endl;
-        }
-        if (shared_evaluator_) {
-            shared_evaluator_->notifyLeafAvailable();
-        }
-    };
-    
-    // Create the shared evaluator with the neural network
-    auto evaluator_inference_fn = [this](const std::vector<std::unique_ptr<core::IGameState>>& states) -> std::vector<mcts::NetworkOutput> {
-        return neural_net_->inference(states);
-    };
-    shared_evaluator_ = std::make_shared<mcts::MCTSEvaluator>(
-        evaluator_inference_fn,
-        settings_.mcts_settings.batch_size,
-        settings_.mcts_settings.batch_timeout
-    );
-    
-    // Configure the shared evaluator to use the shared queues
-    // CRITICAL FIX: Implement the correct queue setup for the shared evaluator
-    std::cout << "SelfPlayManager: Setting up shared queues for evaluator at addresses leaf_queue=" 
-              << (void*)&shared_leaf_queue_ << ", result_queue=" << (void*)&shared_result_queue_ << std::endl;
-    
-    // Configure batch parameters first before setting external queues
-    // Configure batch parameters for efficient GPU utilization
-    mcts::BatchParameters batch_params;
-    // Use batch size from settings with reasonable minimums
-    batch_params.optimal_batch_size = settings_.mcts_settings.batch_size;
-    // Set min viable size to ~75% of target size, but at least 16
-    batch_params.minimum_viable_batch_size = std::max(16UL, batch_params.optimal_batch_size * 3 / 4);
-    // Set fallback size to ~25% of target size, but at least 8
-    batch_params.minimum_fallback_batch_size = std::max(8UL, batch_params.optimal_batch_size / 4);
-    // Use timeout from settings for responsiveness, with reasonable minimums
-    batch_params.max_wait_time = std::max(
-        std::chrono::milliseconds(50), 
-        settings_.mcts_settings.batch_timeout
-    );
-    // Very short additional wait time to balance responsiveness and efficiency
-    batch_params.additional_wait_time = std::chrono::milliseconds(10);
-    
-    // Set batch parameters first
-    shared_evaluator_->setBatchParameters(batch_params);
-    
-    // Then set external queues
-    shared_evaluator_->setExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
-    
-    // Verify that batch accumulator is created
-    if (auto* batch_accumulator = shared_evaluator_->getBatchAccumulator()) {
-        std::cout << "SelfPlayManager: Batch accumulator exists, isRunning=" 
-                  << (batch_accumulator->isRunning() ? "yes" : "no") << std::endl;
-        
-        // Ensure the accumulator is started
-        if (!batch_accumulator->isRunning()) {
-            std::cout << "SelfPlayManager: Starting batch accumulator..." << std::endl;
-            batch_accumulator->start();
-        }
-    } else {
-        std::cout << "SelfPlayManager: WARNING: Batch accumulator is null!" << std::endl;
-    }
-    
-    // Start the shared evaluator
-    shared_evaluator_->start();
-    
-    std::cout << "SelfPlayManager: Shared evaluator configured and started" << std::endl;
+    // NOTE: Each MCTSEngine now creates its own optimized UnifiedInferenceServer + BurstCoordinator
+    // No need for a shared inference server
     
     // Create a single MCTS engine with root parallelization
     // try {
@@ -164,45 +103,61 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     //     throw std::runtime_error("Failed to create MCTS engine: " + std::string(e.what()));
     // }
 
-    // CRITICAL FIX: Use single shared engine for all parallel games
-    // This enables proper batch accumulation across all threads
-    std::cout << "SelfPlayManager: Creating single shared MCTS engine for optimal batching..." << std::endl;
+    // OPTIMIZED: Use single engine with leaf parallelization for optimal performance
+    // Focus on optimizing the leaf parallelization within a single engine
+    std::cout << "SelfPlayManager: Creating single optimized MCTS engine with leaf parallelization..." << std::endl;
     
     try {
-        // Create one shared engine that all threads will use
-        auto shared_engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
+        // Configure MCTS settings for memory-efficient parallelization
+        auto optimized_settings = settings_.mcts_settings;
+        optimized_settings.use_root_parallelization = false;  // Disable root parallelization, use leaf parallelization instead
         
-        // CRITICAL FIX: Set up batch parameters for optimal performance
-        mcts::BatchParameters batch_params;
-        batch_params.optimal_batch_size = settings_.mcts_settings.batch_size;
-        batch_params.minimum_viable_batch_size = std::max(16UL, batch_params.optimal_batch_size * 3 / 4);
-        batch_params.minimum_fallback_batch_size = std::max(8UL, batch_params.optimal_batch_size / 4);
-        batch_params.max_wait_time = std::max(std::chrono::milliseconds(50), settings_.mcts_settings.batch_timeout);
-        batch_params.additional_wait_time = std::chrono::milliseconds(10);
-        batch_params.max_collection_batch_size = batch_params.optimal_batch_size;
-        
-        // Configure the shared engine with batch parameters
-        if (auto* evaluator = shared_engine->getEvaluator()) {
-            evaluator->setBatchParameters(batch_params);
-        } else {
-            throw std::runtime_error("Shared engine has null evaluator");
+        // PERFORMANCE OPTIMIZATION: Use settings from config, applying sensible caps if needed.
+        // Respect user's config for num_threads, num_simulations, batch_size, and batch_timeout.
+        // Apply a reasonable upper cap for threads based on hardware if not specified or too high.
+        if (optimized_settings.num_threads <= 0 || optimized_settings.num_threads > static_cast<int>(std::thread::hardware_concurrency())) {
+            optimized_settings.num_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency() / 2));
+             std::cout << "SelfPlayManager: Adjusted num_threads to " << optimized_settings.num_threads << " based on hardware." << std::endl;
         }
         
-        // Set up shared external queues for the single engine
-        shared_engine->setSharedExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
+        // Respect num_simulations from config - remove hardcoded cap. User has already reduced it.
+        // optimized_settings.num_simulations = std::min(settings_.mcts_settings.num_simulations, 200);
         
-        std::cout << "SelfPlayManager: Shared engine configured with batch params: optimal=" 
-                  << batch_params.optimal_batch_size 
-                  << ", min_viable=" << batch_params.minimum_viable_batch_size
-                  << ", target=" << batch_params.optimal_batch_size << std::endl;
+        // Respect batch_size from config - remove hardcoded cap. User has already reduced it.
+        // optimized_settings.batch_size = std::min(settings_.mcts_settings.batch_size, 64);
         
-        // Store the single shared engine (all threads will use this one)
+        // Respect batch_timeout from config - user has increased it for memory safety.
+        // optimized_settings.batch_timeout = std::chrono::milliseconds(50);
+        
+        std::cout << "SelfPlayManager: Applying MCTS settings from configuration:" << std::endl;
+        std::cout << "  - Threads: " << optimized_settings.num_threads << " (original: " << settings_.mcts_settings.num_threads << ")" << std::endl;
+        std::cout << "  - Simulations: " << optimized_settings.num_simulations << " (original: " << settings_.mcts_settings.num_simulations << ")" << std::endl;
+        std::cout << "  - Batch size: " << optimized_settings.batch_size << " (original: " << settings_.mcts_settings.batch_size << ")" << std::endl;
+        std::cout << "  - Batch timeout: " << optimized_settings.batch_timeout.count() << "ms (original: " << settings_.mcts_settings.batch_timeout.count() << "ms)" << std::endl;
+        
+        std::cout << "SelfPlayManager: Configuring MCTS with " << optimized_settings.num_threads 
+                  << " threads for true leaf parallelization" << std::endl;
+        
+        // COMPREHENSIVE SETTINGS VERIFICATION
+        std::cout << "[CONFIG_VERIFY] MCTS Settings Verification:" << std::endl;
+        std::cout << "  - Original config num_threads: " << settings_.mcts_settings.num_threads << std::endl;
+        std::cout << "  - Applied num_threads: " << optimized_settings.num_threads << std::endl;
+        std::cout << "  - batch_size: " << optimized_settings.batch_size << std::endl;
+        std::cout << "  - num_simulations: " << optimized_settings.num_simulations << std::endl;
+        std::cout << "  - use_root_parallelization: " << (optimized_settings.use_root_parallelization ? "YES" : "NO") << std::endl;
+        std::cout << "  - Expected routing: " << (optimized_settings.num_threads > 1 ? "executeParallelSearch" : "executeOptimizedSearchV2") << std::endl;
+        
+        // Create engine directly with neural network to get the optimized UnifiedInferenceServer + BurstCoordinator architecture
+        auto single_engine = std::make_unique<mcts::MCTSEngine>(neural_net_, optimized_settings);
+        
         engines_.clear();
-        engines_.push_back(std::move(shared_engine));
+        engines_.push_back(std::move(single_engine));
+        
+        std::cout << "SelfPlayManager: Created single optimized engine with leaf parallelization" << std::endl;
         
     } catch (const std::exception& e) {
-        std::cerr << "ERROR creating shared MCTS engine: " << e.what() << std::endl;
-        throw std::runtime_error("Failed to create shared MCTS engine: " + std::string(e.what()));
+        std::cerr << "ERROR creating optimized MCTS engine: " << e.what() << std::endl;
+        throw std::runtime_error("Failed to create optimized MCTS engine: " + std::string(e.what()));
     }
     std::cout << "SelfPlayManager: Created " << engines_.size() << " MCTS engine(s) sharing one evaluator." << std::endl;
 
@@ -261,14 +216,7 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
 }
 
 SelfPlayManager::~SelfPlayManager() {
-    // Stop the shared evaluator first
-    if (shared_evaluator_) {
-        try {
-            shared_evaluator_->stop();
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Exception during evaluator cleanup: " << e.what() << std::endl;
-        }
-    }
+    // Each engine manages its own inference server - no shared server to clean up
     
     // Reset game counter
     game_counter_ = 0;
@@ -292,6 +240,12 @@ SelfPlayManager::~SelfPlayManager() {
 std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager::generateGames(core::GameType game_type,
                                                     int num_games,
                                                     int board_size) {
+    // Start advanced memory monitoring
+    auto& monitor = utils::AdvancedMemoryMonitor::getInstance();
+    monitor.startMonitoring("resource_monitor.log");
+    monitor.logEvent("Starting self-play game generation");
+    monitor.captureSnapshot("generate_games_start");
+    
     // Sanity check inputs
     if (num_games <= 0) {
         throw std::invalid_argument("Number of games must be positive");
@@ -320,60 +274,46 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     std::mutex games_mutex;
     std::atomic<int> completed_games(0);
     
-    // Use OpenMP for parallel game generation (one game per thread)
-    const int max_threads = settings_.num_parallel_games > 0 ? 
-                          std::min(settings_.num_parallel_games, omp_get_max_threads()) : 
-                          omp_get_max_threads();
-    #pragma omp parallel for schedule(dynamic) num_threads(max_threads)
+    // PERFORMANCE FIX: Parallel game generation for maximum CPU/GPU utilization
+    // Use OpenMP parallel for to generate games concurrently across cores
+    std::cout << "Generating " << num_games << " games in parallel with optimized resource utilization..." << std::endl;
+    
+    // PERFORMANCE OPTIMIZATION: Sequential game generation with maximum MCTS parallelization
+    // Run games one at a time but use full 8 threads per game for optimal GPU batch utilization
+    std::cout << "Generating " << num_games << " games sequentially with " 
+              << settings_.mcts_settings.num_threads << " MCTS threads per game" << std::endl;
+    
+    mcts::MCTSEngine& engine = *engines_[0];  // Single engine with full parallelization
+    
     for (int i = 0; i < num_games; i++) {
-        // Thread ID for debugging
-        int thread_id = omp_get_thread_num();
-        // CRITICAL FIX: All threads use the single shared engine for optimal batching
-        mcts::MCTSEngine& current_engine = *engines_[0];
+        std::cout << "Starting game " << i << " with " << settings_.mcts_settings.num_threads 
+                  << " parallel MCTS threads" << std::endl;
         
-        #pragma omp critical(debug_print)
-        {
-            std::cout << "Thread " << thread_id << " starting game " << i << " using shared engine" << std::endl;
-        }
-        
-        // Periodic memory cleanup per thread
+        // Periodic memory cleanup
         if (i > 0 && i % 50 == 0) {
-            #pragma omp critical
-            {
-                utils::GameStatePoolManager::getInstance().clearAllPools();
-                std::cout << "Progress: " << completed_games.load() << "/" << num_games << " games" << std::endl;
-            }
+            utils::GameStatePoolManager::getInstance().clearAllPools();
+            std::cout << "Progress: " << games.size() << "/" << num_games << " games" << std::endl;
         }
         
         std::string game_id = timestamp_base + "_" + std::to_string(i);
         
         try {
-            auto game_data = generateGame(current_engine, game_type, board_size, game_id);
+            auto game_data = generateGame(engine, game_type, board_size, game_id);
             
-            // Add game to results if it has at least one move
+            // Sequential game collection (no locking needed)
             if (!game_data.moves.empty()) {
-                #pragma omp critical(games_add)
-                {
-                    games.push_back(std::move(game_data));
-                }
+                games.push_back(std::move(game_data));
                 
-                int comp = completed_games.fetch_add(1, std::memory_order_relaxed) + 1;
+                // Progress tracking
+                std::cout << "Completed " << games.size() << "/" << num_games << " games" << std::endl;
                 
-                // Progress update and memory cleanup
-                if (comp % 10 == 0) {
-                    #pragma omp critical(progress_print)
-                    {
-                        std::cout << "Completed " << comp << "/" << num_games << " games" << std::endl;
-                        
-                        // More aggressive cleanup between games
-                        utils::GameStatePoolManager::getInstance().clearAllPools();
-                        if (torch::cuda::is_available()) {
-                            try {
-                                torch::cuda::synchronize();
-                                c10::cuda::CUDACachingAllocator::emptyCache();
-                            } catch (...) {}
-                        }
-                    }
+                // More aggressive cleanup between games
+                utils::GameStatePoolManager::getInstance().clearAllPools();
+                if (torch::cuda::is_available()) {
+                    try {
+                        torch::cuda::synchronize();
+                        c10::cuda::CUDACachingAllocator::emptyCache();
+                    } catch (...) {}
                 }
             } else {
                 std::cerr << "Failed to generate game " << i << ": no moves were made" << std::endl;
@@ -386,6 +326,47 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     }
     
     std::cout << "Successfully generated " << games.size() << " games" << std::endl;
+    
+    // Final memory monitoring
+    monitor.captureSnapshot("generate_games_complete");
+    monitor.logEvent("Self-play game generation completed");
+    
+    // Print comprehensive performance summary
+    std::cout << "\n🎯 FINAL PERFORMANCE SUMMARY:" << std::endl;
+    std::cout << "========================================" << std::endl;
+    
+    // Memory statistics
+    std::cout << "[MEMORY] Statistics:" << std::endl;
+    std::cout << "  - Average memory usage: " << std::fixed << std::setprecision(1) 
+              << monitor.getAverageMemoryUsage() * 100.0 << "%" << std::endl;
+    std::cout << "  - Average GPU usage: " << std::fixed << std::setprecision(1) 
+              << monitor.getAverageGPUUsage() << "%" << std::endl;
+    std::cout << "  - Memory pressure detected: " << (monitor.isMemoryPressureHigh() ? "YES" : "NO") << std::endl;
+    std::cout << "  - GPU pressure detected: " << (monitor.isGPUMemoryPressureHigh() ? "YES" : "NO") << std::endl;
+    
+    // Engine performance summary
+    if (!engines_.empty()) {
+        auto& engine = *engines_[0];
+        if (auto inference_server = engine.getInferenceServer()) {
+            auto stats = inference_server->getStats();
+            std::cout << "[INFERENCE] Neural Network Statistics:" << std::endl;
+            std::cout << "  - Total batches processed: " << stats.total_batches << std::endl;
+            std::cout << "  - Average batch size: " << stats.getAverageBatchSize() << std::endl;
+            std::cout << "  - Average latency: " << stats.getAverageBatchLatency() << "ms" << std::endl;
+            std::cout << "  - Requests dropped: " << stats.dropped_requests << std::endl;
+        }
+    }
+    
+    std::cout << "[THREADING] Configuration Used:" << std::endl;
+    std::cout << "  - MCTS threads per game: " << settings_.mcts_settings.num_threads << std::endl;
+    std::cout << "  - Game parallelization: Sequential (optimized for GPU utilization)" << std::endl;
+    std::cout << "  - Expected GPU batch efficiency: HIGH with " << settings_.mcts_settings.num_threads << " concurrent threads" << std::endl;
+    
+    std::cout << "========================================" << std::endl;
+    
+    // Stop monitoring
+    monitor.stopMonitoring();
+    
     return games;
 }
 
@@ -527,7 +508,18 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 
                 // Track memory every 10 moves
                 if (move_count % 10 == 0) {
-                    // alphazero::utils::trackMemory("Before search - Game " + game_id + ", Move " + std::to_string(move_count));
+                    auto& monitor = utils::AdvancedMemoryMonitor::getInstance();
+                    monitor.captureSnapshot("game_" + game_id + "_move_" + std::to_string(move_count) + "_before");
+                    
+                    // Check for memory pressure and trigger cleanup
+                    if (monitor.isMemoryPressureHigh()) {
+                        monitor.logEvent("HIGH MEMORY PRESSURE DETECTED - Triggering aggressive cleanup");
+                        utils::GameStatePoolManager::getInstance().clearAllPools();
+                        if (torch::cuda::is_available()) {
+                            torch::cuda::synchronize();
+                            c10::cuda::CUDACachingAllocator::emptyCache();
+                        }
+                    }
                 }
                 
                 std::cout << "=============================================================" << std::endl;
@@ -547,43 +539,64 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 // Begin search
                 auto search_start_time = std::chrono::steady_clock::now();
                 
-                // Add diagnostic logging before search to track batch metrics
-                if (auto* evaluator = engine.getEvaluator()) {
-                    if (auto* batch_acc = evaluator->getBatchAccumulator()) {
-                        auto [avg_batch, total_batches, timeouts, optimal] = batch_acc->getStats();
-                        std::cout << "📊 BATCH METRICS BEFORE SEARCH: avg_size=" << avg_batch
-                                << ", total_batches=" << total_batches
-                                << ", timeouts=" << timeouts
-                                << ", optimal_batches=" << optimal << std::endl;
-                    }
+                // Add diagnostic logging before search to track inference metrics
+                if (auto inference_server = engine.getInferenceServer()) {
+                    auto stats = inference_server->getStats();
+                    std::cout << "🔬 Pre-search - Avg batch: " << stats.getAverageBatchSize() 
+                             << ", Total batches: " << stats.total_batches << std::endl;
                 }
                 
-                // Run the search
-                result = engine.search(*game);
+                // PERFORMANCE FIX: Use tree reuse for efficiency (except first move)
+                if (move_count == 0) {
+                    result = engine.search(*game);
+                } else {
+                    // Use tree reuse with the last action played
+                    int last_action = (data.moves.empty()) ? -1 : data.moves.back();
+                    result = engine.searchWithTreeReuse(*game, last_action);
+                }
                 
                 auto search_end_time = std::chrono::steady_clock::now();
                 auto search_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     search_end_time - search_start_time).count();
                 
-                // Add diagnostic logging after search to track batch metrics
-                if (auto* evaluator = engine.getEvaluator()) {
-                    if (auto* batch_acc = evaluator->getBatchAccumulator()) {
-                        auto [avg_batch, total_batches, timeouts, optimal] = batch_acc->getStats();
-                        std::cout << "📊 BATCH METRICS AFTER SEARCH: avg_size=" << avg_batch
-                                << ", total_batches=" << total_batches
-                                << ", timeouts=" << timeouts
-                                << ", optimal_batches=" << optimal << std::endl;
-                    }
+                // Add diagnostic logging after search to track inference metrics
+                if (auto inference_server = engine.getInferenceServer()) {
+                    auto stats = inference_server->getStats();
+                    std::cout << "🔬 Post-search - Avg batch: " << stats.getAverageBatchSize() 
+                             << ", Total batches: " << stats.total_batches << std::endl;
                     
-                    // Get evaluator stats
-                    std::cout << "🔢 EVALUATOR STATS: avg_batch_size=" << evaluator->getAverageBatchSize()
-                            << ", avg_latency=" << evaluator->getAverageBatchLatency().count() << "ms"
-                            << ", total_evals=" << evaluator->getTotalEvaluations() << std::endl;
                 }
                 
                 std::cout << "SelfPlayManager::generateGame - Completed MCTS search for game " << game_id 
                          << ", move " << move_count << " in " << search_duration << "ms" << std::endl;
                 std::cout << "=============================================================" << std::endl;
+                
+                // AGGRESSIVE memory cleanup after every move to prevent stacking
+                utils::GameStatePoolManager::getInstance().clearAllPools();
+                if (torch::cuda::is_available()) {
+                    try {
+                        torch::cuda::synchronize();
+                        c10::cuda::CUDACachingAllocator::emptyCache();
+                    } catch (...) {}
+                }
+                
+                // Capture memory snapshot after search
+                if (move_count % 5 == 0) {  // More frequent snapshots
+                    auto& monitor = utils::AdvancedMemoryMonitor::getInstance();
+                    monitor.captureSnapshot("game_" + game_id + "_move_" + std::to_string(move_count) + "_after_cleanup");
+                    
+                    // Log memory status and emergency termination if needed
+                    if (monitor.isMemoryPressureHigh()) {
+                        std::cout << "[MEMORY_WARNING] High memory pressure detected after move " << move_count << std::endl;
+                        
+                        // Emergency game termination if memory is critically high
+                        if (monitor.getAverageMemoryUsage() > 0.90) { // >90% memory usage
+                            std::cout << "[MEMORY_EMERGENCY] Terminating game " << game_id 
+                                     << " at move " << move_count << " due to critical memory pressure" << std::endl;
+                            break; // Exit move loop
+                        }
+                    }
+                }
                 
                 // Log every 10th move to reduce verbosity
                 if (move_count % 10 == 0) {

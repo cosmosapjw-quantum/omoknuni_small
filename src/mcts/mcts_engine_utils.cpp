@@ -1,6 +1,5 @@
 #include "mcts/mcts_engine.h"
 #include "mcts/mcts_node.h"
-#include "mcts/mcts_evaluator.h"
 #include "utils/debug_monitor.h"
 #include "utils/gamestate_pool.h"
 #include <iostream>
@@ -25,8 +24,8 @@ namespace mcts {
 // Force aggressive memory cleanup
 void MCTSEngine::forceCleanup() {
     // Clear any batches waiting for processing
-    if (evaluator_) {
-        evaluator_->clearPendingBatches();
+    if (inference_server_) {
+        inference_server_->clearPendingRequests();
     }
     
     // Clean up the transposition table

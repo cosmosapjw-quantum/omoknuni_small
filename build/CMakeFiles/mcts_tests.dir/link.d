@@ -4,10 +4,14 @@ bin/Release/mcts_tests: \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtbeginS.o \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadbegin.o \
   CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.o \
-  CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o \
   CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o \
   CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o \
   CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o \
+  CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o \
+  CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o \
+  CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o \
+  CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o \
+  CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o \
   lib/Release/libalphazero.so \
   /usr/lib/x86_64-linux-gnu/libgtest_main.a \
   /usr/lib/x86_64-linux-gnu/libgtest.a \
@@ -93,13 +97,21 @@ bin/Release/mcts_tests: \
 
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_node_test.cpp.o:
 
-CMakeFiles/mcts_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o:
-
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_engine_test.cpp.o:
 
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_openmp_test.cpp.o:
 
 CMakeFiles/mcts_tests.dir/tests/mcts/mcts_optimization_test.cpp.o:
+
+CMakeFiles/mcts_tests.dir/tests/mcts/burst_coordinator_test.cpp.o:
+
+CMakeFiles/mcts_tests.dir/tests/mcts/unified_inference_server_test.cpp.o:
+
+CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o:
+
+CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o:
+
+CMakeFiles/mcts_tests.dir/tests/mcts/shared_queue_test.cpp.o:
 
 lib/Release/libalphazero.so:
 

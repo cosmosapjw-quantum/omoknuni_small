@@ -198,14 +198,14 @@ private:
 };
 
 // Mock neural network for testing
-std::vector<mcts::NetworkOutput> mockNeuralNetwork(
+std::vector<alphazero::mcts::NetworkOutput> mockNeuralNetwork(
     const std::vector<std::unique_ptr<core::IGameState>>& states) {
     
-    std::vector<mcts::NetworkOutput> outputs;
+    std::vector<alphazero::mcts::NetworkOutput> outputs;
     outputs.reserve(states.size());
     
     for (const auto& state : states) {
-        mcts::NetworkOutput output;
+        alphazero::mcts::NetworkOutput output;
         output.policy = std::vector<float>{0.5f, 0.5f};
         
         // Value based on state
@@ -235,11 +235,11 @@ protected:
         settings.exploration_constant = 1.5f;
 
         // Create MCTS engine
-        engine = std::make_unique<mcts::MCTSEngine>(mockNeuralNetwork, settings);
+        engine = std::make_unique<alphazero::mcts::MCTSEngine>(mockNeuralNetwork, settings);
     }
     
-    mcts::MCTSSettings settings;
-    std::unique_ptr<mcts::MCTSEngine> engine;
+    alphazero::mcts::MCTSSettings settings;
+    std::unique_ptr<alphazero::mcts::MCTSEngine> engine;
 };
 
 // Test search with transposition table
@@ -274,7 +274,3 @@ TEST_F(TranspositionIntegrationTest, SearchWithTranspositionTable) {
 // Test with real game is removed because it's causing timeouts
 // Instead, we'll only use the synthetic test case which is more controlled.
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

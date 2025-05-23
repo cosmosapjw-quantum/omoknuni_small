@@ -181,7 +181,7 @@ CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o: \
  /usr/include/c++/13/pstl/glue_memory_defs.h \
  /usr/include/c++/13/pstl/execution_defs.h /usr/include/c++/13/map \
  /usr/include/c++/13/bits/stl_tree.h /usr/include/c++/13/bits/stl_map.h \
- /usr/include/c++/13/bits/stl_multimap.h \
+ /usr/include/c++/13/bits/stl_multimap.h /usr/include/c++/13/atomic \
  /home/cosmos/omoknuni_small/include/core/igamestate.h \
  /usr/include/c++/13/stdexcept \
  /home/cosmos/omoknuni_small/include/core/export_macros.h \

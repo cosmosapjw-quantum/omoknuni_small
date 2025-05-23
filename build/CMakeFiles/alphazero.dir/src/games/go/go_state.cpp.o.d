@@ -171,6 +171,7 @@ CMakeFiles/alphazero.dir/src/games/go/go_state.cpp.o: \
  /usr/include/c++/13/backward/auto_ptr.h \
  /usr/include/c++/13/pstl/glue_memory_defs.h \
  /usr/include/c++/13/pstl/execution_defs.h /usr/include/c++/13/optional \
+ /usr/include/c++/13/atomic \
  /home/cosmos/omoknuni_small/include/core/igamestate.h \
  /usr/include/c++/13/cstdint /usr/include/c++/13/stdexcept \
  /home/cosmos/omoknuni_small/include/core/export_macros.h \
@@ -237,11 +238,17 @@ CMakeFiles/alphazero.dir/src/games/go/go_state.cpp.o: \
  /usr/include/c++/13/array /usr/include/c++/13/compare \
  /usr/include/c++/13/bits/stl_algo.h \
  /usr/include/c++/13/bits/algorithmfwd.h \
- /usr/include/c++/13/bits/stl_heap.h /usr/include/c++/13/iostream \
+ /usr/include/c++/13/bits/stl_heap.h \
+ /home/cosmos/omoknuni_small/include/core/tensor_pool.h \
+ /usr/include/c++/13/mutex /usr/include/c++/13/bits/chrono.h \
+ /usr/include/c++/13/ratio /usr/include/c++/13/ctime \
+ /usr/include/c++/13/bits/parse_numbers.h \
+ /usr/include/c++/13/bits/std_mutex.h \
+ /usr/include/c++/13/bits/unique_lock.h /usr/include/c++/13/iostream \
  /usr/include/c++/13/algorithm \
  /usr/include/c++/13/pstl/glue_algorithm_defs.h \
  /usr/include/c++/13/iomanip /usr/include/c++/13/locale \
- /usr/include/c++/13/bits/locale_facets_nonio.h /usr/include/c++/13/ctime \
+ /usr/include/c++/13/bits/locale_facets_nonio.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h \
  /usr/include/libintl.h /usr/include/c++/13/bits/codecvt.h \

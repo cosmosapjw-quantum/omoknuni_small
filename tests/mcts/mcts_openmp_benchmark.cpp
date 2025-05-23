@@ -15,12 +15,12 @@ using namespace alphazero;
 // Mock neural network for benchmarking
 class MockNeuralNetworkBench : public nn::NeuralNetwork {
 public:
-    std::vector<mcts::NetworkOutput> inference(
+    std::vector<alphazero::mcts::NetworkOutput> inference(
         const std::vector<std::unique_ptr<core::IGameState>>& states) override {
         
-        std::vector<mcts::NetworkOutput> outputs;
+        std::vector<alphazero::mcts::NetworkOutput> outputs;
         for (size_t i = 0; i < states.size(); i++) {
-            mcts::NetworkOutput output;
+            alphazero::mcts::NetworkOutput output;
             
             // Create dummy policy
             int num_actions = 361; // 19x19 board
@@ -70,7 +70,7 @@ public:
     
     void runBenchmark(const std::string& test_name, int board_size, int num_sims, int num_threads) {
         // Configure MCTS settings
-        mcts::MCTSSettings settings;
+        alphazero::mcts::MCTSSettings settings;
         settings.num_simulations = num_sims;
         settings.num_threads = num_threads;
         settings.batch_size = 32;
@@ -82,7 +82,7 @@ public:
         omp_set_num_threads(num_threads);
         
         // Create MCTS engine
-        mcts::MCTSEngine engine(neural_net_, settings);
+        alphazero::mcts::MCTSEngine engine(neural_net_, settings);
         
         // Create initial game state
         auto game_state = std::make_unique<games::gomoku::GomokuState>(board_size);

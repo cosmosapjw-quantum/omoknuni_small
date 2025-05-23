@@ -2,6 +2,7 @@
 #include "games/chess/chess_state.h"
 #include "games/chess/chess_rules.h"
 #include "games/chess/chess960.h"
+#include "core/tensor_pool.h"            // For GlobalTensorPool optimization
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -103,7 +104,10 @@ ChessState::ChessState(const ChessState& other)
       hash_dirty_(other.hash_dirty_),
       is_terminal_cached_(other.is_terminal_cached_),
       cached_result_(other.cached_result_),
-      terminal_check_dirty_(other.terminal_check_dirty_)
+      terminal_check_dirty_(other.terminal_check_dirty_),
+      // Don't copy cached tensors - force recomputation to avoid memory issues
+      tensor_cache_dirty_(true),
+      enhanced_tensor_cache_dirty_(true)
 {
     // Initialize rules object after all other members are initialized
     rules_ = std::make_shared<ChessRules>(chess960_);
@@ -132,6 +136,13 @@ ChessState& ChessState::operator=(const ChessState& other) {
         is_terminal_cached_ = other.is_terminal_cached_;
         cached_result_ = other.cached_result_;
         terminal_check_dirty_ = other.terminal_check_dirty_;
+        
+        // Clear old tensor caches before assignment
+        clearTensorCache();
+        
+        // Don't copy cached tensors - force recomputation
+        tensor_cache_dirty_ = true;
+        enhanced_tensor_cache_dirty_ = true;
         
         // Reinitialize rules object after all other members are updated
         rules_ = std::make_shared<ChessRules>(chess960_);
@@ -675,10 +686,13 @@ int ChessState::getCurrentPlayer() const {
 }
 
 std::vector<std::vector<std::vector<float>>> ChessState::getTensorRepresentation() const {
-    // Basic 12-plane representation (6 piece types, 2 colors)
-    std::vector<std::vector<std::vector<float>>> tensor(12, 
-        std::vector<std::vector<float>>(8, 
-            std::vector<float>(8, 0.0f)));
+    // PERFORMANCE FIX: Use cached tensor if available and not dirty
+    if (!tensor_cache_dirty_.load(std::memory_order_relaxed) && !cached_tensor_repr_.empty()) {
+        return cached_tensor_repr_;
+    }
+    
+    // PERFORMANCE FIX: Use global tensor pool for efficient memory reuse
+    auto tensor = core::GlobalTensorPool::getInstance().getTensor(12, 8, 8);
     
     // Fill tensor with piece positions
     for (int square = 0; square < NUM_SQUARES; ++square) {
@@ -716,10 +730,19 @@ std::vector<std::vector<std::vector<float>>> ChessState::getTensorRepresentation
         }
     }
     
+    // PERFORMANCE FIX: Cache the computed tensor
+    cached_tensor_repr_ = tensor;
+    tensor_cache_dirty_.store(false, std::memory_order_relaxed);
+    
     return tensor;
 }
 
 std::vector<std::vector<std::vector<float>>> ChessState::getEnhancedTensorRepresentation() const {
+    // PERFORMANCE FIX: Use cached enhanced tensor if available and not dirty
+    if (!enhanced_tensor_cache_dirty_.load(std::memory_order_relaxed) && !cached_enhanced_tensor_repr_.empty()) {
+        return cached_enhanced_tensor_repr_;
+    }
+    
     try {
         // Start with basic representation
         std::vector<std::vector<std::vector<float>>> tensor = getTensorRepresentation();
@@ -781,6 +804,10 @@ std::vector<std::vector<std::vector<float>>> ChessState::getEnhancedTensorRepres
             }
         }
         tensor.push_back(repetitionPlane);
+        
+        // PERFORMANCE FIX: Cache the computed enhanced tensor
+        cached_enhanced_tensor_repr_ = tensor;
+        enhanced_tensor_cache_dirty_.store(false, std::memory_order_relaxed);
         
         return tensor;
     } catch (const std::exception& e) {
@@ -1219,6 +1246,35 @@ int ChessState::getKingSquare(PieceColor color) const {
 void ChessState::invalidateCache() {
     legal_moves_dirty_ = true;
     terminal_check_dirty_ = true;
+    
+    // PERFORMANCE FIX: Return old tensors before invalidating caches
+    clearTensorCache();
+    
+    // PERFORMANCE FIX: Invalidate tensor caches when game state changes
+    tensor_cache_dirty_.store(true, std::memory_order_release);
+    enhanced_tensor_cache_dirty_.store(true, std::memory_order_release);
+}
+
+ChessState::~ChessState() {
+    // Return cached tensors to the pool to prevent memory leaks
+    clearTensorCache();
+}
+
+void ChessState::clearTensorCache() const {
+    // Return cached tensors to the global pool
+    if (!cached_tensor_repr_.empty()) {
+        core::GlobalTensorPool::getInstance().returnTensor(
+            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_tensor_repr_),
+            20, 8, 8);  // Chess uses 20 channels for basic representation
+        cached_tensor_repr_.clear();
+    }
+    
+    if (!cached_enhanced_tensor_repr_.empty()) {
+        core::GlobalTensorPool::getInstance().returnTensor(
+            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_enhanced_tensor_repr_),
+            119, 8, 8);  // Chess uses 119 channels for enhanced representation
+        cached_enhanced_tensor_repr_.clear();
+    }
 }
 
 void ChessState::updateHash() const {

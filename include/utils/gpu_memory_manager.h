@@ -4,6 +4,9 @@
 #include <memory>
 #include <cstddef>
 #include <stdexcept>
+#include <mutex>
+#include <unordered_map>
+#include <atomic>
 
 #ifdef USE_RAPIDS_RMM
     #include <rmm/mr/device/cuda_memory_resource.hpp>
@@ -73,6 +76,11 @@ private:
 #endif
     
     bool initialized_ = false;
+    
+    // Allocation tracking for leak detection
+    mutable std::mutex registry_mutex_;
+    std::unordered_map<void*, size_t> allocation_registry_;
+    std::atomic<size_t> total_leaked_bytes_{0};
 };
 
 // RAII wrapper for GPU memory

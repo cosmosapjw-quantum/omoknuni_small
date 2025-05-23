@@ -14,7 +14,6 @@
 
 #include "mcts/mcts_node.h"
 #include "mcts/mcts_node_pool.h"
-#include "mcts/mcts_evaluator.h"
 #include "mcts/transposition_table.h"
 #include "mcts/node_tracker.h"
 #include "mcts/mcts_engine.h"  // For MCTSSettings

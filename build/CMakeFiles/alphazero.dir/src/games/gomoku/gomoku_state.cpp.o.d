@@ -243,7 +243,11 @@ CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_state.cpp.o: \
  /usr/include/c++/13/bits/locale_conv.h \
  /usr/include/c++/13/bits/quoted_string.h \
  /usr/include/c++/13/unordered_set \
- /usr/include/c++/13/bits/unordered_set.h \
+ /usr/include/c++/13/bits/unordered_set.h /usr/include/c++/13/atomic \
+ /usr/include/c++/13/mutex /usr/include/c++/13/bits/chrono.h \
+ /usr/include/c++/13/ratio /usr/include/c++/13/bits/parse_numbers.h \
+ /usr/include/c++/13/bits/std_mutex.h \
+ /usr/include/c++/13/bits/unique_lock.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_rules.h \
  /usr/include/c++/13/set /usr/include/c++/13/bits/stl_tree.h \
  /usr/include/c++/13/bits/stl_set.h \
@@ -254,4 +258,5 @@ CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_state.cpp.o: \
  /usr/include/c++/13/bits/stl_map.h \
  /usr/include/c++/13/bits/stl_multimap.h \
  /home/cosmos/omoknuni_small/include/utils/hash_specializations.h \
+ /home/cosmos/omoknuni_small/include/core/tensor_pool.h \
  /usr/include/c++/13/iostream

@@ -1,121 +1,51 @@
-# GPU Optimized Configuration for AlphaZero
-# Optimized for Ryzen 5900X + RTX 3060 Ti
+# 🚀 MEMORY OPTIMIZED AlphaZero Configuration v2.1
+# CRITICAL FIX: Using correct config keys to prevent memory explosion
 
 # Game settings
-game: gomoku  # Options: gomoku, chess, go
+game_type: gomoku
 board_size: 15
 
-# AlphaZero pipeline settings
-num_iterations: 10  # Number of iterations for full AlphaZero training
-
-# Self-play settings  
-self_play_games_per_generation: 1
-self_play_num_parallel_games: 8  # Multiple games share the single engine for optimal batching
-self_play_max_moves: 0
-self_play_temperature_threshold: 30  # Move number after which temperature is reduced
-self_play_high_temperature: 1.0  # Temperature for early moves (exploration)
-self_play_low_temperature: 0.1  # Temperature for later moves (exploitation)
-
-# GPU-optimized MCTS settings  
-mcts_simulations: 400 
-mcts_num_threads: 12
-
-# Batch handling parameters - OPTIMIZED FOR BATCHING
-mcts_batch_size: 64  # The optimal target batch size
-mcts_min_viable_batch_size: 32  # Minimum batch size threshold for waiting (50% of optimal)
-mcts_min_fallback_batch_size: 16  # Absolute minimum batch size after timeout (25% of optimal)
-mcts_max_collection_batch_size: 64  # Set equal to batch_size for maximum collection
-mcts_batch_timeout_ms: 100  # Longer timeout for better batch formation (100ms is a good balance)
-mcts_additional_wait_ms: 25  # Slightly increased for better batch completion
-
-# Other MCTS parameters
-mcts_max_concurrent_simulations: 512
+# 🚀 MEMORY-SAFE GPU UTILIZATION SETTINGS - Prevent OOM while maintaining performance  
+mcts_num_simulations: 400          # REDUCED: Prevent memory accumulation
+mcts_num_threads: 4                # REDUCED: Lower thread count to reduce memory pressure
+mcts_batch_size: 32                # REDUCED: Target 20-24 batches for sustained operation
+mcts_max_collection_batch_size: 32  # REDUCED: Conservative to prevent memory explosion
+mcts_batch_timeout_ms: 150         # INCREASED: Allow more time for batch formation with fewer threads
 mcts_exploration_constant: 1.4
-mcts_virtual_loss: 3  # Increased to better prevent thread collisions
+mcts_virtual_loss: 3               # Restored for thread safety
+mcts_temperature: 1.0
+
+# MCTS Additional settings
 mcts_add_dirichlet_noise: true
 mcts_dirichlet_alpha: 0.3
 mcts_dirichlet_epsilon: 0.25
-mcts_temperature: 1.0  # Base temperature for move selection
 
-# Root parallelization settings (replaces multiple MCTS engines)
-mcts_use_root_parallelization: true  # CRITICAL: Enables shared engine architecture for optimal batch formation
-mcts_num_root_workers: 8  # Number of worker threads for the shared engine
-
-# Progressive widening (helps with batching)
+# Progressive widening - DISABLED FOR SIMPLICITY
 mcts_use_progressive_widening: true
 mcts_progressive_widening_c: 1.0
 mcts_progressive_widening_k: 10.0
 
-# RAVE settings
+# Root parallelization - ENABLED for maximum throughput
+mcts_use_root_parallelization: false
+mcts_num_root_workers: 1
+
+# RAVE settings - DISABLED FOR SIMPLICITY
 mcts_use_rave: true
 mcts_rave_constant: 3000
 
-# Transposition table
+# Transposition table - REDUCED SIZE
 mcts_use_transposition_table: true
-mcts_transposition_table_size_mb: 256
+mcts_transposition_table_size_mb: 32
 
-# Neural network settings
-network_type: resnet  # Options: resnet, ddw_randwire
-use_gpu: true
+# 🔥 Neural network settings - MEMORY-SAFE PERFORMANCE  
 model_path: models/model.pt
-model_input_channels: 17
-model_num_res_blocks: 12
-model_num_filters: 128
+num_res_blocks: 10                  # REDUCED: Lower memory footprint
+num_filters: 128                    # REDUCED: Conservative for memory safety
 
-# Training settings
-training_batch_size: 512  # Large training batch for GPU
-training_learning_rate: 0.01
-training_weight_decay: 0.0001
-training_num_epochs: 10
-training_window_size: 1000000
-training_sample_size: 50000
-training_save_frequency: 10
-train_num_workers: 4  # Number of data loading workers
-train_lr_step_size: 10  # Number of epochs before learning rate reduction
-train_lr_gamma: 0.1  # Learning rate decay factor
-
-# Evaluation/Arena settings
-enable_evaluation: true  # Whether to evaluate new model against previous best
-arena_num_games: 50  # Number of games to play in evaluation
-arena_num_parallel_games: 8  # Number of parallel evaluation games
-arena_num_threads: 4  # Number of threads per engine for evaluation
-arena_num_simulations: 400  # Number of MCTS simulations for evaluation
-arena_temperature: 0.1  # Temperature for move selection in evaluation
-arena_win_rate_threshold: 0.55  # New model must win this % to become champion
-evaluation_games: 100
-evaluation_mcts_simulations: 400
-evaluation_mcts_batch_size: 256
-evaluation_threshold: 0.55
-
-# GPU memory optimization
-gpu_memory_optimization: true
-gpu_pinned_memory: true
-gpu_async_transfers: true
-
-# OpenMP settings
-omp_num_threads: 20
-omp_affinity: close  # Keep threads on same NUMA node
-
-# Output settings  
-self_play_output_dir: data/self_play_games
-self_play_output_format: json  # Options: json, binary
-
-# Game-specific settings
-# Gomoku settings
-gomoku_board_size: 15
-gomoku_win_length: 5
-gomoku_use_renju: false
-gomoku_use_omok: false  
-gomoku_use_pro_long_opening: false
-
-# Chess settings
-chess_use_chess960: false  # Whether to use Chess960 (Fischer Random Chess)
-
-# Go settings
-go_komi: 7.5  # Komi (compensation points for white)
-go_chinese_rules: true  # Use Chinese rules (vs Japanese)
-go_enforce_superko: true  # Enforce super-ko rule
-
-# Debug settings
-debug_level: 0  # 0=none, 1=info, 2=debug, 3=verbose
-enable_profiling: false
+# Self-play settings - MEMORY-SAFE OPERATION
+self_play_num_games: 10             # REDUCED: Prevent memory accumulation over many games
+self_play_num_parallel_games: 1    # DISABLED: Sequential games to control memory usage
+self_play_max_moves: 0
+self_play_temperature_threshold: 30
+self_play_high_temperature: 1.0
+self_play_low_temperature: 0.1

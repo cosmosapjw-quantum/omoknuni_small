@@ -249,7 +249,11 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o: \
  /usr/include/c++/13/bits/locale_conv.h \
  /usr/include/c++/13/bits/quoted_string.h \
  /usr/include/c++/13/unordered_set \
- /usr/include/c++/13/bits/unordered_set.h \
+ /usr/include/c++/13/bits/unordered_set.h /usr/include/c++/13/atomic \
+ /usr/include/c++/13/mutex /usr/include/c++/13/bits/chrono.h \
+ /usr/include/c++/13/ratio /usr/include/c++/13/bits/parse_numbers.h \
+ /usr/include/c++/13/bits/std_mutex.h \
+ /usr/include/c++/13/bits/unique_lock.h \
  /home/cosmos/omoknuni_small/include/games/chess/chess_state.h \
  /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
  /usr/include/c++/13/bits/stl_map.h \
@@ -258,11 +262,10 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o: \
  /home/cosmos/omoknuni_small/include/games/go/go_state.h \
  /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
  /usr/include/c++/13/iostream /usr/include/c++/13/filesystem \
- /usr/include/c++/13/bits/fs_fwd.h /usr/include/c++/13/bits/chrono.h \
- /usr/include/c++/13/ratio /usr/include/c++/13/bits/parse_numbers.h \
- /usr/include/c++/13/bits/fs_path.h /usr/include/c++/13/codecvt \
- /usr/include/c++/13/bits/fs_dir.h /usr/include/c++/13/bits/fs_ops.h \
- /usr/include/dlfcn.h /usr/include/x86_64-linux-gnu/bits/dlfcn.h \
+ /usr/include/c++/13/bits/fs_fwd.h /usr/include/c++/13/bits/fs_path.h \
+ /usr/include/c++/13/codecvt /usr/include/c++/13/bits/fs_dir.h \
+ /usr/include/c++/13/bits/fs_ops.h /usr/include/dlfcn.h \
+ /usr/include/x86_64-linux-gnu/bits/dlfcn.h \
  /usr/include/x86_64-linux-gnu/bits/dl_find_object.h \
  /usr/include/signal.h \
  /usr/include/x86_64-linux-gnu/bits/signum-generic.h \
@@ -305,11 +308,8 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o: \
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
- /usr/include/c++/13/future /usr/include/c++/13/mutex \
- /usr/include/c++/13/bits/std_mutex.h \
- /usr/include/c++/13/bits/unique_lock.h \
- /usr/include/c++/13/condition_variable \
- /usr/include/c++/13/bits/atomic_futex.h /usr/include/c++/13/atomic \
+ /usr/include/c++/13/future /usr/include/c++/13/condition_variable \
+ /usr/include/c++/13/bits/atomic_futex.h \
  /usr/include/c++/13/bits/std_thread.h \
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
@@ -5030,6 +5030,8 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o: \
  /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
  /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h \
+ /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
  /usr/include/parallel_hashmap/phmap.h \
  /usr/include/parallel_hashmap/phmap_fwd_decl.h \
@@ -5039,10 +5041,12 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
  /usr/include/parallel_hashmap/phmap_base.h \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
- /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_evaluator.h \
- /home/cosmos/omoknuni_small/include/mcts/batch_accumulator.h \
- /home/cosmos/omoknuni_small/include/mcts/prioritized_concurrent_queue.h \
- /home/cosmos/omoknuni_small/include/mcts/concurrent_pipeline_buffer.h \
- /home/cosmos/omoknuni_small/include/evaluation/model_evaluator.h \
+ /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
+ /home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h \
+ /home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h \
+ /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h \
+ /home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
+ /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
  /home/cosmos/omoknuni_small/include/cli/alphazero_pipeline.h

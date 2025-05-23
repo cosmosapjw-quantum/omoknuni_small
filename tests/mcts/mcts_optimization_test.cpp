@@ -3,10 +3,11 @@
 #include <vector>
 #include <thread>
 #include "mcts/mcts_engine.h"
-#include "mcts/mcts_evaluator.h"
+#include "mcts/unified_inference_server.h"
 #include "games/gomoku/gomoku_state.h"
 #include "nn/neural_network_factory.h"
 #include "nn/gpu_optimizer.h"
+#include "core/game_export.h"
 
 namespace alphazero {
 namespace mcts {
@@ -15,6 +16,12 @@ namespace test {
 class MCTSOptimizationTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        // Register GOMOKU game type for tests  
+        core::GameRegistry::instance().registerGame(
+            core::GameType::GOMOKU,
+            []() { return std::make_unique<games::gomoku::GomokuState>(); }
+        );
+        
         // Create neural network
         neural_net = nn::NeuralNetworkFactory::createResNet(
             4,      // input_channels

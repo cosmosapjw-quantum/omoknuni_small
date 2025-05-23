@@ -1,6 +1,6 @@
 #include "mcts/mcts_engine.h"
-#include "mcts/mcts_evaluator.h"
-#include "mcts/batch_accumulator.h"
+#include "mcts/unified_inference_server.h"
+#include "nn/neural_network.h"
 #include "games/gomoku/gomoku_state.h"
 #include <gtest/gtest.h>
 #include <thread>
@@ -9,6 +9,35 @@
 
 using namespace alphazero;
 using namespace alphazero::mcts;
+
+// Mock neural network for testing
+class MockNeuralNetwork : public nn::NeuralNetwork {
+public:
+    MockNeuralNetwork() = default;
+    
+    std::vector<NetworkOutput> inference(const std::vector<std::unique_ptr<core::IGameState>>& states) override {
+        std::vector<NetworkOutput> outputs;
+        outputs.reserve(states.size());
+        
+        for (size_t i = 0; i < states.size(); ++i) {
+            NetworkOutput output;
+            output.value = 0.5f; // Default value
+            
+            // Get action space size and create uniform policy
+            int action_size = states[i]->getActionSpaceSize();
+            output.policy.resize(action_size, 1.0f / action_size);
+            outputs.push_back(output);
+        }
+        
+        return outputs;
+    }
+    
+    // Required interface methods
+    void save(const std::string&) override {}
+    void load(const std::string&) override {}
+    std::vector<int64_t> getInputShape() const override { return {3, 15, 15}; }
+    int64_t getPolicySize() const override { return 225; }
+};
 
 // Test fixture for shared queue testing
 class SharedQueueTest : public ::testing::Test {
@@ -60,33 +89,18 @@ TEST_F(SharedQueueTest, EngineCorrectlyEnqueues) {
         std::cout << "Notify function called!" << std::endl;
     };
     
-    // Create MCTSEngine with our inference function
-    MCTSEngine engine(inference_fn_, settings);
+    // Create MCTSEngine with neural network to get new architecture
+    auto neural_net = std::make_shared<MockNeuralNetwork>();
+    MCTSEngine engine(neural_net, settings);
     
-    // Set up shared queues - this implicitly configures the evaluator to use the external queue
-    engine.setSharedExternalQueues(&shared_leaf_queue_, &shared_result_queue_, notify_fn);
-    
-    // Get the evaluator from the engine
-    MCTSEvaluator* evaluator = engine.getEvaluator();
-    if (!evaluator) {
-        std::cerr << "Error: Could not get evaluator from engine" << std::endl;
-        GTEST_FAIL() << "Evaluator is null";
+    // Get the UnifiedInferenceServer from the engine (new architecture)
+    auto inference_server = engine.getInferenceServer();
+    if (!inference_server) {
+        std::cerr << "Error: Could not get inference server from engine" << std::endl;
+        GTEST_FAIL() << "Inference server is null";
     }
     
-    // Get the batch accumulator from the evaluator
-    BatchAccumulator* batch_accumulator = evaluator->getBatchAccumulator();
-    if (!batch_accumulator) {
-        std::cerr << "Error: Could not get batch accumulator from evaluator" << std::endl;
-        GTEST_FAIL() << "Batch accumulator is null";
-    }
-    
-    // Ensure batch accumulator is started
-    if (!batch_accumulator->isRunning()) {
-        std::cout << "Starting batch accumulator" << std::endl;
-        batch_accumulator->start();
-    } else {
-        std::cout << "Batch accumulator is already running" << std::endl;
-    }
+    std::cout << "UnifiedInferenceServer is available and configured" << std::endl;
     
     // Create a Gomoku state for testing
     std::unique_ptr<games::gomoku::GomokuState> state = 

@@ -14,6 +14,8 @@
 #include <iomanip>   // For std::setw in toString
 #include <unordered_set> // For cached_valid_moves
 #include <optional>  // For std::optional
+#include <atomic>    // For lock-free thread safety
+#include <mutex>     // For cache protection
 
 namespace alphazero {
 namespace games {
@@ -47,6 +49,11 @@ public:
      * @brief Copy constructor.
      */
     GomokuState(const GomokuState& other);
+    
+    /**
+     * @brief Destructor - returns cached tensors to pool
+     */
+    ~GomokuState();
 
     // --- IGameState Interface Implementation ---
     std::vector<int> getLegalMoves() const override;
@@ -96,13 +103,23 @@ private:
     bool use_pro_long_opening_;
     int black_first_stone_; 
 
-    // Caching members (mutable for const methods that update cache)
+    // MCTS-OPTIMIZED CACHING: Fast atomic operations for thread safety
+    mutable std::atomic<bool> valid_moves_dirty_;
+    mutable std::atomic<int> cached_winner_; 
+    mutable std::atomic<bool> winner_check_dirty_;
+    mutable std::atomic<uint64_t> hash_signature_;
+    mutable std::atomic<bool> hash_dirty_;
+    
+    // Fast early-game: compute valid moves on-demand without caching for MCTS performance
+    // Only cache for mid/late game positions
     mutable std::unordered_set<int> cached_valid_moves_;
-    mutable bool valid_moves_dirty_;
-    mutable int cached_winner_; 
-    mutable bool winner_check_dirty_;
-    mutable uint64_t hash_signature_;
-    mutable bool hash_dirty_;
+    mutable std::mutex cache_mutex_;  // Only used for late-game caching
+    
+    // PERFORMANCE FIX: Cached tensor representations to avoid expensive recomputation
+    mutable std::vector<std::vector<std::vector<float>>> cached_tensor_repr_;
+    mutable std::vector<std::vector<std::vector<float>>> cached_enhanced_tensor_repr_;
+    mutable std::atomic<bool> tensor_cache_dirty_;
+    mutable std::atomic<bool> enhanced_tensor_cache_dirty_;
 
     // Bitboard representation
     int num_words_; 
@@ -125,10 +142,11 @@ private:
     int count_total_stones() const noexcept; 
 
     // Cache management and game state computation
-    void refresh_winner_cache() const; 
+    void refresh_winner_cache() const;
     bool is_stalemate() const;         
     
-    void refresh_valid_moves_cache() const; 
+    void refresh_valid_moves_cache() const;
+    void refresh_valid_moves_cache_internal() const; // Internal version (assumes lock held) 
     bool is_move_valid_internal(int action, bool check_occupation = true) const; // Detailed check
     
     uint64_t compute_hash_signature_internal() const; 
@@ -140,6 +158,9 @@ private:
     void invalidate_caches(); 
     bool is_occupied(int action) const; 
     bool is_any_bit_set_for_rules(int action) const; // Wrapper for rules_engine accessor
+    
+    // Tensor cache management
+    void clearTensorCache() const;
 
     // Rule-specific helpers
     bool is_pro_long_opening_move_valid(int action, int total_stones_on_board) const;

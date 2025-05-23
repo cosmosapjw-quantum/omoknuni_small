@@ -1,3 +1,4 @@
+#include <gtest/gtest.h>
 #include "selfplay/self_play_manager.h"
 #include "nn/neural_network.h"
 #include "core/game_export.h"
@@ -17,12 +18,12 @@ public:
     MockNeuralNetwork() : policy_size_(225) {} // Default to 15x15
     
     // Implement required interface methods
-    std::vector<mcts::NetworkOutput> inference(
+    std::vector<alphazero::mcts::NetworkOutput> inference(
         const std::vector<std::unique_ptr<core::IGameState>>& states) override {
         
-        std::vector<mcts::NetworkOutput> results;
+        std::vector<alphazero::mcts::NetworkOutput> results;
         for (const auto& state : states) {
-            mcts::NetworkOutput output;
+            alphazero::mcts::NetworkOutput output;
             int action_space = state->getActionSpaceSize();
             output.policy.resize(action_space, 1.0f / action_space);
             output.value = 0.0f;
@@ -142,43 +143,20 @@ bool test_self_play_for_game(core::GameType game_type, int num_games, int board_
     }
 }
 
-int main(int, char**) {
-    try {
-        std::cout << "Starting self-play game tests..." << std::endl;
-        
-        bool success = true;
-        
-        // Test Gomoku
-        std::cout << "\n=== Testing Gomoku ===" << std::endl;
-        if (!test_self_play_for_game(core::GameType::GOMOKU, 1, 9)) {
-            std::cerr << "Gomoku test failed!" << std::endl;
-            success = false;
-        }
-        
-        // Test Chess
-        std::cout << "\n=== Testing Chess ===" << std::endl;
-        if (!test_self_play_for_game(core::GameType::CHESS, 1, 8)) {
-            std::cerr << "Chess test failed!" << std::endl;
-            success = false;
-        }
-        
-        // Test Go
-        std::cout << "\n=== Testing Go ===" << std::endl;
-        if (!test_self_play_for_game(core::GameType::GO, 1, 9)) {
-            std::cerr << "Go test failed!" << std::endl;
-            success = false;
-        }
-        
-        if (success) {
-            std::cout << "\nAll self-play game tests PASSED!" << std::endl;
-            return 0;
-        } else {
-            std::cerr << "\nSome self-play game tests FAILED!" << std::endl;
-            return 1;
-        }
-    }
-    catch (const std::exception& e) {
-        std::cerr << "FATAL ERROR: " << e.what() << std::endl;
-        return 1;
-    }
+TEST(SelfPlayGameTest, AllGames) {
+    std::cout << "Starting self-play game tests..." << std::endl;
+    
+    // Test Gomoku
+    std::cout << "\n=== Testing Gomoku ===" << std::endl;
+    EXPECT_TRUE(test_self_play_for_game(core::GameType::GOMOKU, 1, 9)) << "Gomoku test failed!";
+    
+    // Test Chess
+    std::cout << "\n=== Testing Chess ===" << std::endl;
+    EXPECT_TRUE(test_self_play_for_game(core::GameType::CHESS, 1, 8)) << "Chess test failed!";
+    
+    // Test Go
+    std::cout << "\n=== Testing Go ===" << std::endl;
+    EXPECT_TRUE(test_self_play_for_game(core::GameType::GO, 1, 9)) << "Go test failed!";
+    
+    std::cout << "\nAll self-play game tests completed!" << std::endl;
 }

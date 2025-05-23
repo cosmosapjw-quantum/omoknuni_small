@@ -10,11 +10,23 @@ bin/Release/all_tests: \
   CMakeFiles/all_tests.dir/tests/games/go/go_test.cpp.o \
   CMakeFiles/all_tests.dir/tests/games/gomoku/gomoku_test.cpp.o \
   CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o \
-  CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o \
   CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.o \
   CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o \
   CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/mcts/burst_coordinator_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/mcts/unified_inference_server_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/mcts/progressive_widening_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/mcts/shared_queue_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/mcts/transposition_table_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.o \
   CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/nn/neural_network_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/integration/mcts_with_nn_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/integration/optimized_architecture_test.cpp.o \
   lib/Release/libalphazero.so \
   /usr/lib/x86_64-linux-gnu/libgmock.a \
   /usr/lib/x86_64-linux-gnu/libgtest.a \
@@ -110,15 +122,39 @@ CMakeFiles/all_tests.dir/tests/games/gomoku/gomoku_test.cpp.o:
 
 CMakeFiles/all_tests.dir/tests/mcts/mcts_node_test.cpp.o:
 
-CMakeFiles/all_tests.dir/tests/mcts/mcts_evaluator_test.cpp.o:
-
 CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.o:
 
 CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o:
 
 CMakeFiles/all_tests.dir/tests/mcts/mcts_optimization_test.cpp.o:
 
+CMakeFiles/all_tests.dir/tests/mcts/burst_coordinator_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/mcts/unified_inference_server_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/mcts/progressive_widening_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/mcts/shared_queue_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/mcts/transposition_table_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.o:
+
 CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/nn/neural_network_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/integration/mcts_with_nn_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/integration/optimized_architecture_test.cpp.o:
 
 lib/Release/libalphazero.so:
 

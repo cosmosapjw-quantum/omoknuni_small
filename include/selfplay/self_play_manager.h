@@ -12,7 +12,7 @@
 #include "core/export_macros.h"
 #include <moodycamel/concurrentqueue.h>
 #include "mcts/evaluation_types.h"
-#include "mcts/mcts_evaluator.h"
+#include "mcts/unified_inference_server.h"
 
 namespace alphazero {
 namespace selfplay {
@@ -216,12 +216,10 @@ private:
     // Sequential game counter (no longer using atomic for parallel operations)
     int game_counter_;
     
-    // Shared external queues for the MCTS engine to use
+    // NOTE: Legacy shared queues - no longer used with new optimized architecture
+    // Each MCTSEngine now has its own UnifiedInferenceServer + BurstCoordinator
     moodycamel::ConcurrentQueue<mcts::PendingEvaluation> shared_leaf_queue_;
     moodycamel::ConcurrentQueue<std::pair<mcts::NetworkOutput, mcts::PendingEvaluation>> shared_result_queue_;
-    
-    // Shared evaluator
-    std::shared_ptr<mcts::MCTSEvaluator> shared_evaluator_;
 };
 
 } // namespace selfplay

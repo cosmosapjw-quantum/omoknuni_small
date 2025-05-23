@@ -13,8 +13,8 @@ using namespace alphazero;
 class MCTSWithNNTest : public ::testing::Test {
 protected:
     std::shared_ptr<nn::ResNetModel> model;
-    mcts::MCTSSettings settings;
-    std::unique_ptr<mcts::MCTSEngine> engine;
+    alphazero::mcts::MCTSSettings settings;
+    std::unique_ptr<alphazero::mcts::MCTSEngine> engine;
     std::unique_ptr<games::gomoku::GomokuState> game;
     int64_t input_channels = 17;
     int64_t board_size = 9;
@@ -32,7 +32,7 @@ protected:
         settings.add_dirichlet_noise = false;  // Deterministic for tests
         
         // Create MCTS engine with the neural network
-        engine = std::make_unique<mcts::MCTSEngine>(
+        engine = std::make_unique<alphazero::mcts::MCTSEngine>(
             std::static_pointer_cast<nn::NeuralNetwork>(model), settings);
         
         // Create Gomoku game
@@ -82,7 +82,7 @@ TEST_F(MCTSWithNNTest, BatchProcessing) {
     settings.num_threads = 4;
     
     // Create new engine with updated settings
-    engine = std::make_unique<mcts::MCTSEngine>(std::static_pointer_cast<nn::NeuralNetwork>(model), settings);
+    engine = std::make_unique<alphazero::mcts::MCTSEngine>(std::static_pointer_cast<nn::NeuralNetwork>(model), settings);
     
     // Run search
     auto result = engine->search(*game);
@@ -98,7 +98,4 @@ TEST(MCTSWithNNTest, WithoutTorchTest) {
 }
 #endif // WITH_TORCH
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+// Main function removed - this is part of integration_tests target

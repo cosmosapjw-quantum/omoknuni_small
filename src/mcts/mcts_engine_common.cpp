@@ -1,6 +1,5 @@
 #include "mcts/mcts_engine.h"
 #include "mcts/mcts_node.h"
-#include "mcts/mcts_evaluator.h"
 #include "utils/debug_monitor.h"
 #include <iostream>
 #include <numeric>
@@ -116,11 +115,12 @@ void MCTSEngine::waitForSimulationsToComplete(std::chrono::steady_clock::time_po
         // Process results directly when using shared queues
         processPendingSimulations();
         
-        // Notify evaluator to process remaining items
+        // Notify inference server to process remaining items
         if (use_shared_queues_ && external_queue_notify_fn_) {
             external_queue_notify_fn_();
-        } else if (!use_shared_queues_ && evaluator_) {
-            evaluator_->notifyLeafAvailable();
+        } else if (inference_server_) {
+            // UnifiedInferenceServer handles notifications automatically
+            // through its internal queue monitoring
         }
         
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

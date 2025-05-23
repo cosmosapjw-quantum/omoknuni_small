@@ -146,18 +146,12 @@ TEST_F(NeuralNetworkTest, SaveLoad) {
     std::remove(filename.c_str());
 }
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+// Main function removed - part of all_tests target
 #else
 // Dummy test when torch is not available
 TEST(DummyTest, NoTorchAvailable) {
     SUCCEED() << "Neural network tests are skipped when WITH_TORCH is OFF";
 }
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+// Main function removed - part of all_tests target
 #endif // WITH_TORCH

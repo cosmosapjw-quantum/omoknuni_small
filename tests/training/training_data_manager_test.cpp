@@ -271,7 +271,4 @@ TEST(TrainingDataManagerTest, WithoutTorchTest) {
 }
 #endif // WITH_TORCH
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+// Main function removed - part of all_tests target

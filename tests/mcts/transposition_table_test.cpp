@@ -217,7 +217,7 @@ class TestNeuralNetwork {
 public:
     TestNeuralNetwork() : evaluation_count_(0) {}
     
-    std::vector<mcts::NetworkOutput> operator()(
+    std::vector<alphazero::mcts::NetworkOutput> operator()(
         const std::vector<std::unique_ptr<core::IGameState>>& states) {
         
         evaluation_count_ += states.size();
@@ -235,11 +235,11 @@ public:
         }
         
         // Return standard results
-        std::vector<mcts::NetworkOutput> outputs;
+        std::vector<alphazero::mcts::NetworkOutput> outputs;
         outputs.reserve(states.size());
         
         for (const auto& state : states) {
-            mcts::NetworkOutput output;
+            alphazero::mcts::NetworkOutput output;
             output.policy = std::vector<float>{0.6f, 0.4f};  // Slight preference for move 0
             
             // Slightly prefer branch 0 if player 1, branch 1 if player 2
@@ -284,16 +284,16 @@ protected:
         nn.reset();
         
         // Create MCTS engine with the neural network
-        engine = std::make_unique<mcts::MCTSEngine>(
+        engine = std::make_unique<alphazero::mcts::MCTSEngine>(
             [this](const std::vector<std::unique_ptr<core::IGameState>>& states) {
                 return nn(states);
             }, 
             settings);
     }
     
-    mcts::MCTSSettings settings;
+    alphazero::mcts::MCTSSettings settings;
     TestNeuralNetwork nn;
-    std::unique_ptr<mcts::MCTSEngine> engine;
+    std::unique_ptr<alphazero::mcts::MCTSEngine> engine;
 };
 
 // Test search with transposition table enabled vs. disabled
@@ -382,7 +382,7 @@ TEST_F(TranspositionIntegrationTest, ConcurrentSearches) {
     
     // Use more threads internally within the engine to stress-test concurrency
     // for the transposition table and internal MCTS logic.
-    mcts::MCTSSettings current_settings = engine->getSettings();
+    alphazero::mcts::MCTSSettings current_settings = engine->getSettings();
     current_settings.num_threads = 4; // MCTS engine will use 4 internal worker threads
     current_settings.num_simulations = 200; // Increased simulations for a more thorough test
     engine->updateSettings(current_settings);
@@ -392,7 +392,7 @@ TEST_F(TranspositionIntegrationTest, ConcurrentSearches) {
     // TestNeuralNetwork::evaluated_positions_ does not require external locking for this setup.
     nn.reset(); // Reset NN stats before the search
 
-    mcts::SearchResult result;
+    alphazero::mcts::SearchResult result;
     // Perform a single search. The MCTS engine will use its configured number of threads (4)
     // to run simulations concurrently. These simulations will interact with the engine's transposition table.
     ASSERT_NO_THROW({
@@ -414,7 +414,3 @@ TEST_F(TranspositionIntegrationTest, ConcurrentSearches) {
         << "Transposition table was not utilized during concurrent search.";
 }
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
