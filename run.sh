@@ -11,6 +11,6 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build/lib/Release
 
 # Run the pipeline with the optimized configuration
 ./build/bin/Release/omoknuni_cli self-play \
-    --config config.yaml \
+    --config config_optimized.yaml \
     --output-dir data/self_play_games_optimized \
     --num-games 10

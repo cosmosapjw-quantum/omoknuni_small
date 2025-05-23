@@ -1463,29 +1463,29 @@ src/mcts/mcts_engine_simple_batch.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.s
 .PHONY : src/mcts/mcts_engine_simple_batch.cpp.s
 
-src/mcts/mcts_engine_taskflow.o: src/mcts/mcts_engine_taskflow.cpp.o
-.PHONY : src/mcts/mcts_engine_taskflow.o
+src/mcts/mcts_engine_taskflow_optimized.o: src/mcts/mcts_engine_taskflow_optimized.cpp.o
+.PHONY : src/mcts/mcts_engine_taskflow_optimized.o
 
 # target to build an object file
-src/mcts/mcts_engine_taskflow.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.o
-.PHONY : src/mcts/mcts_engine_taskflow.cpp.o
+src/mcts/mcts_engine_taskflow_optimized.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.o
+.PHONY : src/mcts/mcts_engine_taskflow_optimized.cpp.o
 
-src/mcts/mcts_engine_taskflow.i: src/mcts/mcts_engine_taskflow.cpp.i
-.PHONY : src/mcts/mcts_engine_taskflow.i
+src/mcts/mcts_engine_taskflow_optimized.i: src/mcts/mcts_engine_taskflow_optimized.cpp.i
+.PHONY : src/mcts/mcts_engine_taskflow_optimized.i
 
 # target to preprocess a source file
-src/mcts/mcts_engine_taskflow.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.i
-.PHONY : src/mcts/mcts_engine_taskflow.cpp.i
+src/mcts/mcts_engine_taskflow_optimized.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.i
+.PHONY : src/mcts/mcts_engine_taskflow_optimized.cpp.i
 
-src/mcts/mcts_engine_taskflow.s: src/mcts/mcts_engine_taskflow.cpp.s
-.PHONY : src/mcts/mcts_engine_taskflow.s
+src/mcts/mcts_engine_taskflow_optimized.s: src/mcts/mcts_engine_taskflow_optimized.cpp.s
+.PHONY : src/mcts/mcts_engine_taskflow_optimized.s
 
 # target to generate assembly for a file
-src/mcts/mcts_engine_taskflow.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.s
-.PHONY : src/mcts/mcts_engine_taskflow.cpp.s
+src/mcts/mcts_engine_taskflow_optimized.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.s
+.PHONY : src/mcts/mcts_engine_taskflow_optimized.cpp.s
 
 src/mcts/mcts_engine_tree.o: src/mcts/mcts_engine_tree.cpp.o
 .PHONY : src/mcts/mcts_engine_tree.o
@@ -1823,29 +1823,29 @@ src/nn/neural_network_factory.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.s
 .PHONY : src/nn/neural_network_factory.cpp.s
 
-src/nn/resnet_model.o: src/nn/resnet_model.cpp.o
-.PHONY : src/nn/resnet_model.o
+src/nn/resnet_model_performance.o: src/nn/resnet_model_performance.cpp.o
+.PHONY : src/nn/resnet_model_performance.o
 
 # target to build an object file
-src/nn/resnet_model.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o
-.PHONY : src/nn/resnet_model.cpp.o
+src/nn/resnet_model_performance.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o
+.PHONY : src/nn/resnet_model_performance.cpp.o
 
-src/nn/resnet_model.i: src/nn/resnet_model.cpp.i
-.PHONY : src/nn/resnet_model.i
+src/nn/resnet_model_performance.i: src/nn/resnet_model_performance.cpp.i
+.PHONY : src/nn/resnet_model_performance.i
 
 # target to preprocess a source file
-src/nn/resnet_model.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.i
-.PHONY : src/nn/resnet_model.cpp.i
+src/nn/resnet_model_performance.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.i
+.PHONY : src/nn/resnet_model_performance.cpp.i
 
-src/nn/resnet_model.s: src/nn/resnet_model.cpp.s
-.PHONY : src/nn/resnet_model.s
+src/nn/resnet_model_performance.s: src/nn/resnet_model_performance.cpp.s
+.PHONY : src/nn/resnet_model_performance.s
 
 # target to generate assembly for a file
-src/nn/resnet_model.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.s
-.PHONY : src/nn/resnet_model.cpp.s
+src/nn/resnet_model_performance.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.s
+.PHONY : src/nn/resnet_model_performance.cpp.s
 
 src/python/alphazero_bindings.o: src/python/alphazero_bindings.cpp.o
 .PHONY : src/python/alphazero_bindings.o
@@ -1918,6 +1918,30 @@ src/selfplay/self_play_manager.s: src/selfplay/self_play_manager.cpp.s
 src/selfplay/self_play_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.s
 .PHONY : src/selfplay/self_play_manager.cpp.s
+
+src/selfplay/self_play_manager_parallel.o: src/selfplay/self_play_manager_parallel.cpp.o
+.PHONY : src/selfplay/self_play_manager_parallel.o
+
+# target to build an object file
+src/selfplay/self_play_manager_parallel.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o
+.PHONY : src/selfplay/self_play_manager_parallel.cpp.o
+
+src/selfplay/self_play_manager_parallel.i: src/selfplay/self_play_manager_parallel.cpp.i
+.PHONY : src/selfplay/self_play_manager_parallel.i
+
+# target to preprocess a source file
+src/selfplay/self_play_manager_parallel.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.i
+.PHONY : src/selfplay/self_play_manager_parallel.cpp.i
+
+src/selfplay/self_play_manager_parallel.s: src/selfplay/self_play_manager_parallel.cpp.s
+.PHONY : src/selfplay/self_play_manager_parallel.s
+
+# target to generate assembly for a file
+src/selfplay/self_play_manager_parallel.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.s
+.PHONY : src/selfplay/self_play_manager_parallel.cpp.s
 
 src/training/data_loader.o: src/training/data_loader.cpp.o
 .PHONY : src/training/data_loader.o
@@ -2930,9 +2954,9 @@ help:
 	@echo "... src/mcts/mcts_engine_simple_batch.o"
 	@echo "... src/mcts/mcts_engine_simple_batch.i"
 	@echo "... src/mcts/mcts_engine_simple_batch.s"
-	@echo "... src/mcts/mcts_engine_taskflow.o"
-	@echo "... src/mcts/mcts_engine_taskflow.i"
-	@echo "... src/mcts/mcts_engine_taskflow.s"
+	@echo "... src/mcts/mcts_engine_taskflow_optimized.o"
+	@echo "... src/mcts/mcts_engine_taskflow_optimized.i"
+	@echo "... src/mcts/mcts_engine_taskflow_optimized.s"
 	@echo "... src/mcts/mcts_engine_tree.o"
 	@echo "... src/mcts/mcts_engine_tree.i"
 	@echo "... src/mcts/mcts_engine_tree.s"
@@ -2975,9 +2999,9 @@ help:
 	@echo "... src/nn/neural_network_factory.o"
 	@echo "... src/nn/neural_network_factory.i"
 	@echo "... src/nn/neural_network_factory.s"
-	@echo "... src/nn/resnet_model.o"
-	@echo "... src/nn/resnet_model.i"
-	@echo "... src/nn/resnet_model.s"
+	@echo "... src/nn/resnet_model_performance.o"
+	@echo "... src/nn/resnet_model_performance.i"
+	@echo "... src/nn/resnet_model_performance.s"
 	@echo "... src/python/alphazero_bindings.o"
 	@echo "... src/python/alphazero_bindings.i"
 	@echo "... src/python/alphazero_bindings.s"
@@ -2987,6 +3011,9 @@ help:
 	@echo "... src/selfplay/self_play_manager.o"
 	@echo "... src/selfplay/self_play_manager.i"
 	@echo "... src/selfplay/self_play_manager.s"
+	@echo "... src/selfplay/self_play_manager_parallel.o"
+	@echo "... src/selfplay/self_play_manager_parallel.i"
+	@echo "... src/selfplay/self_play_manager_parallel.s"
 	@echo "... src/training/data_loader.o"
 	@echo "... src/training/data_loader.i"
 	@echo "... src/training/data_loader.s"

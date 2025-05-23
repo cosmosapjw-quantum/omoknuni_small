@@ -1,0 +1,54 @@
+# Ultra performance configuration for sustained 80%+ GPU utilization
+# Tuned for Ryzen 9 5900X + RTX 3060 Ti with stable performance achieved
+
+# Game settings
+game_type: gomoku
+board_size: 15
+
+# MCTS settings - pushed for higher throughput
+mcts_num_simulations: 400
+mcts_num_threads: 12  # Increased from 8 since system is stable
+mcts_exploration_constant: 1.4
+mcts_dirichlet_alpha: 0.3
+mcts_dirichlet_epsilon: 0.25
+mcts_batch_size: 48  # Increased from 32 (15% VRAM usage has room)
+mcts_batch_timeout_ms: 40  # Slightly reduced for faster collection
+mcts_virtual_loss: 6  # Adjusted for 12 threads
+mcts_max_collection_batch_size: 96  # Larger collection buffer
+mcts_add_dirichlet_noise: true
+mcts_temperature: 1.0
+mcts_use_transposition_table: true
+mcts_transposition_table_size_mb: 512  # Increased for better caching
+mcts_use_progressive_widening: true
+mcts_progressive_widening_c: 1.0
+mcts_progressive_widening_k: 0.5
+mcts_use_root_parallelization: false
+mcts_num_root_workers: 1
+mcts_use_rave: true
+mcts_rave_constant: 3000.0
+mcts_cache_size: 200000
+
+# Self-play settings  
+self_play_num_games: 10
+self_play_num_parallel_games: 1
+self_play_temperature_threshold: 30
+self_play_high_temperature: 1.0
+self_play_low_temperature: 0.1
+self_play_max_moves: 500
+self_play_output_dir: data/self_play_games
+self_play_output_format: json
+
+# Neural network settings
+nn_num_filters: 128
+nn_num_res_blocks: 10
+nn_use_gpu: true
+nn_batch_size: 48  # Match MCTS batch size
+
+# Game-specific settings
+gomoku_use_renju: true
+gomoku_use_omok: false
+gomoku_use_pro_long_opening: true
+
+# System settings
+log_level: info
+model_path: models/model.pt

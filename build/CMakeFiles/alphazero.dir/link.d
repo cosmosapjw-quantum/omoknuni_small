@@ -24,7 +24,7 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o \
-  CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o \
+  CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o \
@@ -47,7 +47,7 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o \
@@ -55,6 +55,7 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o \
+  CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o \
   CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/training/dataset.cpp.o \
   CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o \
@@ -160,7 +161,7 @@ CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o:
 
-CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o:
+CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o:
 
@@ -206,7 +207,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow.cpp.o:
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o:
 
@@ -221,6 +222,8 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o:
 CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o:
 
 CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o:
+
+CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o:
 
 CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o:
 

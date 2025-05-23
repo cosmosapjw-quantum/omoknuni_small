@@ -5106,4 +5106,5 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o: \
  /usr/include/x86_64-linux-gnu/sys/resource.h \
  /usr/include/x86_64-linux-gnu/bits/resource.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h \
+ /home/cosmos/omoknuni_small/include/selfplay/parallel_self_play_manager.h \
  /home/cosmos/omoknuni_small/include/cli/alphazero_pipeline.h

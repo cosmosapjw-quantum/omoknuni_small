@@ -1,0 +1,53 @@
+# Parallel games configuration for maximum GPU utilization
+# Optimized for Ryzen 9 5900X (12 cores) + RTX 3060 Ti
+
+# Game settings
+game_type: gomoku
+board_size: 15
+
+# MCTS settings - optimized for parallel games
+mcts_num_simulations: 400
+mcts_num_threads: 4  # Reduced threads per engine (12 cores / 3 games = 4)
+mcts_exploration_constant: 1.4
+mcts_dirichlet_alpha: 0.3
+mcts_dirichlet_epsilon: 0.25
+mcts_batch_size: 32  # Smaller batch per engine
+mcts_batch_timeout_ms: 30  # Faster timeout
+mcts_virtual_loss: 3  # Reduced for 4 threads
+mcts_max_collection_batch_size: 64
+mcts_add_dirichlet_noise: true
+mcts_temperature: 1.0
+mcts_use_transposition_table: true
+mcts_transposition_table_size_mb: 256
+mcts_use_progressive_widening: true
+mcts_progressive_widening_c: 1.0
+mcts_progressive_widening_k: 0.5
+mcts_use_root_parallelization: false
+mcts_num_root_workers: 1
+mcts_use_rave: true
+mcts_rave_constant: 3000.0
+
+# Self-play settings - KEY CHANGE
+self_play_num_games: 10
+self_play_num_parallel_games: 3  # Run 3 games simultaneously
+self_play_temperature_threshold: 30
+self_play_high_temperature: 1.0
+self_play_low_temperature: 0.1
+self_play_max_moves: 500
+self_play_output_dir: data/self_play_games
+self_play_output_format: json
+
+# Neural network settings
+nn_num_filters: 128
+nn_num_res_blocks: 10
+nn_use_gpu: true
+nn_batch_size: 96  # 3 games × 32 = 96 total batch
+
+# Game-specific settings
+gomoku_use_renju: true
+gomoku_use_omok: false
+gomoku_use_pro_long_opening: true
+
+# System settings
+log_level: info
+model_path: models/model.pt

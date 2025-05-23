@@ -1130,12 +1130,12 @@ CMakeFiles/alphazero_py.dir/all: _deps/mimalloc-build/CMakeFiles/mimalloc-static
 CMakeFiles/alphazero_py.dir/all: _deps/tracy-build/CMakeFiles/TracyClient.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=61,62 "Built target alphazero_py"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=62 "Built target alphazero_py"
 .PHONY : CMakeFiles/alphazero_py.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/alphazero_py.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 58
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 57
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/alphazero_py.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 0
 .PHONY : CMakeFiles/alphazero_py.dir/rule
@@ -1147,7 +1147,7 @@ alphazero_py: CMakeFiles/alphazero_py.dir/rule
 # codegen rule for target.
 CMakeFiles/alphazero_py.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=61,62 "Finished codegen for target alphazero_py"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=62 "Finished codegen for target alphazero_py"
 .PHONY : CMakeFiles/alphazero_py.dir/codegen
 
 # clean rule for target.
@@ -1164,12 +1164,12 @@ CMakeFiles/alphazero_pipeline.dir/all: _deps/mimalloc-build/CMakeFiles/mimalloc-
 CMakeFiles/alphazero_pipeline.dir/all: _deps/tracy-build/CMakeFiles/TracyClient.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=60 "Built target alphazero_pipeline"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=60,61 "Built target alphazero_pipeline"
 .PHONY : CMakeFiles/alphazero_pipeline.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/alphazero_pipeline.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 57
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 58
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/alphazero_pipeline.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 0
 .PHONY : CMakeFiles/alphazero_pipeline.dir/rule
@@ -1181,7 +1181,7 @@ alphazero_pipeline: CMakeFiles/alphazero_pipeline.dir/rule
 # codegen rule for target.
 CMakeFiles/alphazero_pipeline.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=60 "Finished codegen for target alphazero_pipeline"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=60,61 "Finished codegen for target alphazero_pipeline"
 .PHONY : CMakeFiles/alphazero_pipeline.dir/codegen
 
 # clean rule for target.
@@ -1265,7 +1265,7 @@ CMakeFiles/core_tests.dir/all: _deps/mimalloc-build/CMakeFiles/mimalloc-static.d
 CMakeFiles/core_tests.dir/all: _deps/tracy-build/CMakeFiles/TracyClient.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=64,65,66 "Built target core_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=65,66,67 "Built target core_tests"
 .PHONY : CMakeFiles/core_tests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1282,7 +1282,7 @@ core_tests: CMakeFiles/core_tests.dir/rule
 # codegen rule for target.
 CMakeFiles/core_tests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=64,65,66 "Finished codegen for target core_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=65,66,67 "Finished codegen for target core_tests"
 .PHONY : CMakeFiles/core_tests.dir/codegen
 
 # clean rule for target.
@@ -1299,12 +1299,12 @@ CMakeFiles/chess_tests.dir/all: _deps/mimalloc-build/CMakeFiles/mimalloc-static.
 CMakeFiles/chess_tests.dir/all: _deps/tracy-build/CMakeFiles/TracyClient.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/chess_tests.dir/build.make CMakeFiles/chess_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/chess_tests.dir/build.make CMakeFiles/chess_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=63 "Built target chess_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=63,64 "Built target chess_tests"
 .PHONY : CMakeFiles/chess_tests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/chess_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 57
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 58
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/chess_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 0
 .PHONY : CMakeFiles/chess_tests.dir/rule
@@ -1316,7 +1316,7 @@ chess_tests: CMakeFiles/chess_tests.dir/rule
 # codegen rule for target.
 CMakeFiles/chess_tests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/chess_tests.dir/build.make CMakeFiles/chess_tests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=63 "Finished codegen for target chess_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=63,64 "Finished codegen for target chess_tests"
 .PHONY : CMakeFiles/chess_tests.dir/codegen
 
 # clean rule for target.
@@ -1333,12 +1333,12 @@ CMakeFiles/go_tests.dir/all: _deps/mimalloc-build/CMakeFiles/mimalloc-static.dir
 CMakeFiles/go_tests.dir/all: _deps/tracy-build/CMakeFiles/TracyClient.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/go_tests.dir/build.make CMakeFiles/go_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/go_tests.dir/build.make CMakeFiles/go_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=67,68 "Built target go_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=68 "Built target go_tests"
 .PHONY : CMakeFiles/go_tests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/go_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 58
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 57
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/go_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 0
 .PHONY : CMakeFiles/go_tests.dir/rule
@@ -1350,7 +1350,7 @@ go_tests: CMakeFiles/go_tests.dir/rule
 # codegen rule for target.
 CMakeFiles/go_tests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/go_tests.dir/build.make CMakeFiles/go_tests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=67,68 "Finished codegen for target go_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=68 "Finished codegen for target go_tests"
 .PHONY : CMakeFiles/go_tests.dir/codegen
 
 # clean rule for target.
@@ -1367,12 +1367,12 @@ CMakeFiles/gomoku_tests.dir/all: _deps/mimalloc-build/CMakeFiles/mimalloc-static
 CMakeFiles/gomoku_tests.dir/all: _deps/tracy-build/CMakeFiles/TracyClient.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gomoku_tests.dir/build.make CMakeFiles/gomoku_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gomoku_tests.dir/build.make CMakeFiles/gomoku_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=69 "Built target gomoku_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=69,70 "Built target gomoku_tests"
 .PHONY : CMakeFiles/gomoku_tests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/gomoku_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 57
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 58
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/gomoku_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 0
 .PHONY : CMakeFiles/gomoku_tests.dir/rule
@@ -1384,7 +1384,7 @@ gomoku_tests: CMakeFiles/gomoku_tests.dir/rule
 # codegen rule for target.
 CMakeFiles/gomoku_tests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gomoku_tests.dir/build.make CMakeFiles/gomoku_tests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=69 "Finished codegen for target gomoku_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=69,70 "Finished codegen for target gomoku_tests"
 .PHONY : CMakeFiles/gomoku_tests.dir/codegen
 
 # clean rule for target.
@@ -1571,12 +1571,12 @@ CMakeFiles/integration_tests.dir/all: _deps/mimalloc-build/CMakeFiles/mimalloc-s
 CMakeFiles/integration_tests.dir/all: _deps/tracy-build/CMakeFiles/TracyClient.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=70,71,72 "Built target integration_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=71,72 "Built target integration_tests"
 .PHONY : CMakeFiles/integration_tests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/integration_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 59
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 58
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/integration_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 0
 .PHONY : CMakeFiles/integration_tests.dir/rule
@@ -1588,7 +1588,7 @@ integration_tests: CMakeFiles/integration_tests.dir/rule
 # codegen rule for target.
 CMakeFiles/integration_tests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/integration_tests.dir/build.make CMakeFiles/integration_tests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=70,71,72 "Finished codegen for target integration_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=71,72 "Finished codegen for target integration_tests"
 .PHONY : CMakeFiles/integration_tests.dir/codegen
 
 # clean rule for target.
@@ -1703,12 +1703,12 @@ _deps/mimalloc-build/CMakeFiles/mimalloc-static.dir/clean:
 _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/all:
 	$(MAKE) $(MAKESILENT) -f _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/build.make _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/build.make _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num= "Built target mimalloc-obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=79 "Built target mimalloc-obj"
 .PHONY : _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/all
 
 # Build rule for subdir invocation for target.
 _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 1
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosmos/omoknuni_small/build/CMakeFiles 0
 .PHONY : _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/rule
@@ -1720,7 +1720,7 @@ mimalloc-obj: _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/rule
 # codegen rule for target.
 _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/build.make _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num= "Finished codegen for target mimalloc-obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=79 "Finished codegen for target mimalloc-obj"
 .PHONY : _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/codegen
 
 # clean rule for target.
@@ -1735,7 +1735,7 @@ _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/clean:
 _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/all: _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/build.make _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/depend
 	$(MAKE) $(MAKESILENT) -f _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/build.make _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=79 "Built target mimalloc-obj-target"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num= "Built target mimalloc-obj-target"
 .PHONY : _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1752,7 +1752,7 @@ mimalloc-obj-target: _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/rul
 # codegen rule for target.
 _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/codegen: _deps/mimalloc-build/CMakeFiles/mimalloc-obj.dir/all
 	$(MAKE) $(MAKESILENT) -f _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/build.make _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=79 "Finished codegen for target mimalloc-obj-target"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num= "Finished codegen for target mimalloc-obj-target"
 .PHONY : _deps/mimalloc-build/CMakeFiles/mimalloc-obj-target.dir/codegen
 
 # clean rule for target.

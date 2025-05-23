@@ -17,6 +17,7 @@
 #include <chrono>
 #include "nn/neural_network_factory.h"
 #include "selfplay/self_play_manager.h"
+#include "selfplay/parallel_self_play_manager.h"
 #include "cli/alphazero_pipeline.h"
 #include <optional>
 
@@ -469,21 +470,78 @@ int main(int argc, char** argv) {
                     
                     // Initialize self-play manager
                     std::cout << "Initializing self-play manager..." << std::endl;
-                    alphazero::selfplay::SelfPlayManager self_play_manager(neural_net, self_play_settings);
                     
-                    // Generate games
-                    std::cout << "Generating " << num_games << " self-play games..." << std::endl;
-                    try {
-                        auto games = self_play_manager.generateGames(game_type, num_games, board_size);
+                    // Check if we should use parallel game generation
+                    if (self_play_settings.num_parallel_games > 1) {
+                        std::cout << "Using PARALLEL self-play manager with " 
+                                  << self_play_settings.num_parallel_games << " parallel games" << std::endl;
                         
-                        // Save games
-                        std::cout << "Saving games to " << output_dir << " in " << output_format << " format..." << std::endl;
-                        self_play_manager.saveGames(games, output_dir, output_format);
+                        alphazero::selfplay::ParallelSelfPlayManager parallel_manager(neural_net, self_play_settings);
                         
-                        std::cout << "Self-play completed successfully." << std::endl;
-                    } catch (const std::exception& e) {
-                        std::cerr << "Error during self-play: " << e.what() << std::endl;
-                        return 1;
+                        // Generate games in parallel
+                        std::cout << "Generating " << num_games << " self-play games in PARALLEL..." << std::endl;
+                        try {
+                            // Convert game_type enum to string
+                            std::string game_type_str;
+                            switch(game_type) {
+                                case alphazero::core::GameType::GOMOKU:
+                                    game_type_str = "gomoku";
+                                    break;
+                                case alphazero::core::GameType::CHESS:
+                                    game_type_str = "chess";
+                                    break;
+                                case alphazero::core::GameType::GO:
+                                    game_type_str = "go";
+                                    break;
+                                default:
+                                    throw std::runtime_error("Unknown game type");
+                            }
+                            
+                            auto game_records = parallel_manager.generateGamesParallel(game_type_str, num_games, board_size);
+                            
+                            // Convert GameRecord to GameData for saving
+                            std::vector<alphazero::selfplay::GameData> games;
+                            for (const auto& record : game_records) {
+                                alphazero::selfplay::GameData game_data;
+                                game_data.game_id = "game_" + std::to_string(record.game_id);
+                                game_data.game_type = game_type;
+                                game_data.board_size = board_size;
+                                game_data.winner = (record.outcome > 0) ? 1 : (record.outcome < 0) ? 2 : 0;
+                                
+                                // Convert actions and policies
+                                game_data.moves = record.actions;
+                                game_data.policies = record.action_probabilities;
+                                
+                                games.push_back(game_data);
+                            }
+                            
+                            // Save games
+                            std::cout << "Saving games to " << output_dir << " in " << output_format << " format..." << std::endl;
+                            parallel_manager.saveGames(games, output_dir, output_format);
+                            
+                            std::cout << "Parallel self-play completed successfully." << std::endl;
+                        } catch (const std::exception& e) {
+                            std::cerr << "Error during parallel self-play: " << e.what() << std::endl;
+                            return 1;
+                        }
+                    } else {
+                        // Use standard sequential self-play
+                        alphazero::selfplay::SelfPlayManager self_play_manager(neural_net, self_play_settings);
+                        
+                        // Generate games
+                        std::cout << "Generating " << num_games << " self-play games..." << std::endl;
+                        try {
+                            auto games = self_play_manager.generateGames(game_type, num_games, board_size);
+                            
+                            // Save games
+                            std::cout << "Saving games to " << output_dir << " in " << output_format << " format..." << std::endl;
+                            self_play_manager.saveGames(games, output_dir, output_format);
+                            
+                            std::cout << "Self-play completed successfully." << std::endl;
+                        } catch (const std::exception& e) {
+                            std::cerr << "Error during self-play: " << e.what() << std::endl;
+                            return 1;
+                        }
                     }
                     
                     return 0;

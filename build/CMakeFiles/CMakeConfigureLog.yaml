@@ -2341,3 +2341,453 @@ events:
         12.8
       exitCode: 0
 ...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_b1aa0/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_b1aa0.dir/build.make CMakeFiles/cmTC_b1aa0.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_b1aa0.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_b1aa0.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_b1aa0
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b1aa0.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_b1aa0.dir/detect_cuda_version.cc.o -o cmTC_b1aa0  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_be8db/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_be8db.dir/build.make CMakeFiles/cmTC_be8db.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_be8db.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_be8db.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_be8db
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_be8db.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_be8db.dir/detect_cuda_version.cc.o -o cmTC_be8db  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_1bfaf/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_1bfaf.dir/build.make CMakeFiles/cmTC_1bfaf.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_1bfaf.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_1bfaf.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_1bfaf
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1bfaf.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_1bfaf.dir/detect_cuda_version.cc.o -o cmTC_1bfaf  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c485e/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c485e.dir/build.make CMakeFiles/cmTC_c485e.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_c485e.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_c485e.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_c485e
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c485e.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_c485e.dir/detect_cuda_version.cc.o -o cmTC_c485e  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_32637/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_32637.dir/build.make CMakeFiles/cmTC_32637.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_32637.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_32637.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_32637
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_32637.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_32637.dir/detect_cuda_version.cc.o -o cmTC_32637  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_1f8c0/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_1f8c0.dir/build.make CMakeFiles/cmTC_1f8c0.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_1f8c0.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_1f8c0.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_1f8c0
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1f8c0.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_1f8c0.dir/detect_cuda_version.cc.o -o cmTC_1f8c0  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_05d40/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_05d40.dir/build.make CMakeFiles/cmTC_05d40.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_05d40.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_05d40.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_05d40
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_05d40.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_05d40.dir/detect_cuda_version.cc.o -o cmTC_05d40  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_419c8/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_419c8.dir/build.make CMakeFiles/cmTC_419c8.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_419c8.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_419c8.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_419c8
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_419c8.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_419c8.dir/detect_cuda_version.cc.o -o cmTC_419c8  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c1a09/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c1a09.dir/build.make CMakeFiles/cmTC_c1a09.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_c1a09.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_c1a09.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_c1a09
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c1a09.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_c1a09.dir/detect_cuda_version.cc.o -o cmTC_c1a09  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/cuda.cmake:99 (try_run)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/Caffe2Config.cmake:86 (include)"
+      - "/opt/libtorch-2.7.0-cu128/share/cmake/Torch/TorchConfig.cmake:68 (find_package)"
+      - "CMakeLists.txt:362 (find_package)"
+    directories:
+      source: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+      binary: "/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "70;75;80;86"
+      CMAKE_CXX_FLAGS: " -D_GLIBCXX_USE_CXX11_ABI=1"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2;/opt/libtorch-2.7.0-cu128/share/cmake/Caffe2/public/../Modules_CUDA_fix"
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_e70d5/fast
+        gmake[1]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_e70d5.dir/build.make CMakeFiles/cmTC_e70d5.dir/build
+        gmake[2]: Entering directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        Building CXX object CMakeFiles/cmTC_e70d5.dir/detect_cuda_version.cc.o
+        /usr/bin/g++  -I/usr/local/cuda/include -D_GLIBCXX_USE_CXX11_ABI=1  -std=gnu++17 -o CMakeFiles/cmTC_e70d5.dir/detect_cuda_version.cc.o -c /home/cosmos/omoknuni_small/build/detect_cuda_version.cc
+        Linking CXX executable cmTC_e70d5
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e70d5.dir/link.txt --verbose=1
+        /usr/bin/g++  -D_GLIBCXX_USE_CXX11_ABI=1  CMakeFiles/cmTC_e70d5.dir/detect_cuda_version.cc.o -o cmTC_e70d5  -Wl,-rpath,/usr/local/cuda/lib64 /usr/local/cuda/lib64/libcudart.so
+        gmake[2]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        gmake[1]: Leaving directory '/home/cosmos/omoknuni_small/build/CMakeFiles/CMakeTmp'
+        
+      exitCode: 0
+    runResult:
+      variable: "run_result"
+      cached: true
+      stdout: |
+        12.8
+      exitCode: 0
+...

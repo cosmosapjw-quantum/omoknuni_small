@@ -627,7 +627,7 @@ set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
 if(WITH_TORCH)
     list(APPEND NN_SOURCES
         src/nn/ddw_randwire_resnet.cpp
-        src/nn/resnet_model.cpp
+        src/nn/resnet_model_performance.cpp
         src/nn/neural_network_factory.cpp
         src/nn/gpu_optimizer.cpp
     )
@@ -654,13 +654,14 @@ set(MCTS_SOURCES
     src/mcts/mcts_engine_parallel_batch.cpp
     src/mcts/mcts_engine_memory_pressure.cpp
     src/mcts/mcts_engine_true_parallel_search.cpp
-    src/mcts/mcts_engine_taskflow.cpp
+    src/mcts/mcts_engine_taskflow_optimized.cpp
     src/mcts/aggressive_memory_manager.cpp
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
 )
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp
+    src/selfplay/self_play_manager_parallel.cpp
 )
 set(TRAINING_SOURCES
     src/training/training_data_manager.cpp

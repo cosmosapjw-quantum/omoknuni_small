@@ -199,11 +199,14 @@ private:
                                                 int board_size, 
                                                 int position_id);
     
+protected:
     // Neural network
     std::shared_ptr<nn::NeuralNetwork> neural_net_;
     
     // Self-play settings
     SelfPlaySettings settings_;
+    
+private:
     
     // Single MCTS engine used for all games
     std::vector<std::unique_ptr<mcts::MCTSEngine>> engines_;
