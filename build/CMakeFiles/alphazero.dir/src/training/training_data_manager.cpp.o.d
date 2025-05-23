@@ -292,16 +292,7 @@ CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o: \
  /usr/include/parallel_hashmap/phmap_base.h \
  /usr/include/c++/13/shared_mutex \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
- /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
- /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
- /home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h \
- /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h \
- /home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
- /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
- /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
  /usr/include/c++/13/filesystem /usr/include/c++/13/bits/fs_fwd.h \
  /usr/include/c++/13/bits/fs_path.h /usr/include/c++/13/codecvt \
  /usr/include/c++/13/bits/fs_dir.h /usr/include/c++/13/bits/fs_ops.h \

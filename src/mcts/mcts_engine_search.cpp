@@ -23,14 +23,14 @@
 #include <taskflow/taskflow.hpp>
 
 // 🚀 INTEGRATE LEGACY MEMORY MANAGEMENT COMPONENTS
-#include "mcts/unified_memory_manager.h"
+// #include "mcts/unified_memory_manager.h" - removed
 #include "mcts/advanced_memory_pool.h"
 #include "utils/gpu_memory_manager.h"
 #include "core/tensor_pool.h"
 #include "utils/memory_tracker.h"
 
 // 🚀 LOCK-FREE BATCH ACCUMULATOR for maximum batching efficiency
-#include "mcts/lock_free_batch_accumulator.h"
+// #include "mcts/lock_free_batch_accumulator.h" // Removed in simplification
 
 namespace alphazero {
 namespace mcts {
@@ -51,7 +51,7 @@ private:
     std::chrono::steady_clock::time_point last_check_time_;
     
     // 🚀 LEGACY MEMORY COMPONENTS INTEGRATION
-    UnifiedMemoryManager* unified_memory_manager_;
+    // UnifiedMemoryManager* unified_memory_manager_; // Removed in simplification
     utils::GPUMemoryManager* gpu_memory_manager_;
     core::GlobalTensorPool* tensor_pool_;
     std::unique_ptr<AdvancedMemoryPool> advanced_memory_pool_;
@@ -113,11 +113,7 @@ public:
                     total_managed_memory += total_tensors * 1024; // 1KB per tensor estimate
                 }
                 
-                // Unified Memory Manager stats
-                if (unified_memory_manager_) {
-                    last_unified_usage_ = unified_memory_manager_->getCurrentMemoryUsage();
-                    total_managed_memory += last_unified_usage_;
-                }
+                // UnifiedMemoryManager was removed in simplification
             } catch (...) {
                 // Ignore errors in stats collection
             }
@@ -161,7 +157,7 @@ public:
         
         try {
             // Initialize UnifiedMemoryManager
-            unified_memory_manager_ = &UnifiedMemoryManager::getInstance();
+            // unified_memory_manager_ = &// UnifiedMemoryManager::getInstance();
             
             // Initialize GPUMemoryManager  
             gpu_memory_manager_ = &utils::GPUMemoryManager::getInstance();
@@ -273,27 +269,7 @@ public:
             }
         }
         
-        // 5. Unified Memory Manager cleanup
-        if (unified_memory_manager_) {
-            try {
-                auto before_usage = unified_memory_manager_->getCurrentMemoryUsage();
-                std::cout << "🔧 Unified Manager before cleanup: " << formatMemoryUsage(before_usage) << std::endl;
-                
-                unified_memory_manager_->cleanup();
-                
-                auto after_usage = unified_memory_manager_->getCurrentMemoryUsage();
-                size_t saved = (before_usage > after_usage) ? (before_usage - after_usage) : 0;
-                std::cout << "🔧 Unified Manager after cleanup: " << formatMemoryUsage(after_usage);
-                if (saved > 0) {
-                    std::cout << " (saved: " << formatMemoryUsage(saved) << ")";
-                }
-                std::cout << std::endl;
-            } catch (const std::exception& e) {
-                std::cout << "⚠️  Unified Manager cleanup error: " << e.what() << std::endl;
-            } catch (...) {
-                std::cout << "⚠️  Unified Manager cleanup failed" << std::endl;
-            }
-        }
+        // 5. UnifiedMemoryManager was removed in simplification
         
         // 6. GameState Pool cleanup
         try {
@@ -423,28 +399,19 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         // COMPREHENSIVE ROUTING DIAGNOSTICS
         std::cout << "[MCTS_ROUTING] Routing diagnostics:" << std::endl;
         std::cout << "  - settings_.num_threads = " << settings_.num_threads << std::endl;
-        std::cout << "  - inference_server_ = " << (inference_server_ ? "YES" : "NO") << std::endl;
-        std::cout << "  - burst_coordinator_ = " << (burst_coordinator_ ? "YES" : "NO") << std::endl;
+        std::cout << "  - inference_server_ = NO (removed in simplification)" << std::endl;
+        std::cout << "  - burst_coordinator_ = NO (removed in simplification)" << std::endl;
         std::cout << "  - use_advanced_memory_pool_ = " << use_advanced_memory_pool_ << std::endl;
         
         if (settings_.num_threads <= 0) {
             // True serial mode with simple, direct inference - prioritize this check
             std::cout << "[MCTS_PERF] Using executeSimpleSerialSearch (num_threads <= 0)" << std::endl;
             executeSimpleSerialSearch(search_roots);
-        } else if (settings_.num_threads > 1) {
-            // SIMPLIFIED LEAF PARALLELIZATION: Direct batching without complex infrastructure
-            std::cout << "[MCTS_PERF] ✅ Using executeSimplifiedParallelSearch with " << settings_.num_threads << " OpenMP threads" << std::endl;
-            executeSimplifiedParallelSearch(search_roots);
-        } else if (inference_server_ && burst_coordinator_) {
-            // Execute optimized search with UnifiedInferenceServer and BurstCoordinator (single-threaded)
-            std::cout << "[MCTS_PERF] Using executeOptimizedSearchV2 with UnifiedInferenceServer (single-threaded, num_threads=1)" << std::endl;
-            executeOptimizedSearchV2(search_roots);
-        } else if (use_advanced_memory_pool_ && memory_pool_) {
-            // Execute enhanced search with improved virtual loss and lock-free batching
-            executeEnhancedSearch(search_roots);
         } else {
-            // Fallback to traditional serial search
-            executeSerialSearch(search_roots);
+            // CRITICAL FIX: Use simplified direct batching for ALL multi-threaded searches
+            std::cout << "[MCTS_PERF] ✅ Using executeSimpleBatchedSearch (direct batching, " 
+                      << settings_.num_threads << " threads)" << std::endl;
+            executeSimpleBatchedSearch(search_roots);
         }
         
         auto exec_end = std::chrono::steady_clock::now();
@@ -596,16 +563,6 @@ void MCTSEngine::executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCT
                             leaf->setPriorProbabilities(results[0].policy);
                         }
                     }
-                } else if (inference_server_) {
-                    // Fallback to inference server if available
-                    auto results = inference_server_->evaluateBatch(states);
-                    if (!results.empty()) {
-                        value = results[0].value;
-                        // Set policy probabilities if leaf has children
-                        if (!leaf->getChildren().empty() && !results[0].policy.empty()) {
-                            leaf->setPriorProbabilities(results[0].policy);
-                        }
-                    }
                 } else {
                     // No inference available - use neutral value
                     value = 0.0f;
@@ -732,13 +689,8 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
             if (claimed) {
                 int leaves_found = 0;
                 
-                // ==== NEW BURST-MODE SEARCH IMPLEMENTATION ====
-                // Use BurstCoordinator for coordinated batch collection with pipelining
-                if (burst_coordinator_) {
-                    // Reset empty collection counter for new search iteration
-                    if (main_loop_iterations == 1) {
-                        burst_coordinator_->resetEmptyCollectionCounter();
-                    }
+                // BurstCoordinator was removed in simplification
+                if (false) {
                     
                     // Handle serial mode vs parallel mode differently
                     std::vector<NetworkOutput> burst_results;
@@ -746,11 +698,11 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
                     if (settings_.num_threads <= 0) {
                         // Serial mode: single burst without async threads
                         std::cout << "[SERIAL_SEARCH] Starting single burst for " << simulations_to_claim << " simulations" << std::endl;
-                        burst_results = burst_coordinator_->startBurstCollection(simulations_to_claim, search_roots);
+                        // burst_results = burst_coordinator_->startBurstCollection(simulations_to_claim, search_roots);
                     } else {
                         // THREADING FIX: Single burst instead of multiple concurrent bursts to prevent resource exhaustion
                         std::cout << "[BURST_SEARCH] Starting single burst for " << simulations_to_claim << " simulations" << std::endl;
-                        burst_results = burst_coordinator_->startBurstCollection(simulations_to_claim, search_roots);
+                        // burst_results = burst_coordinator_->startBurstCollection(simulations_to_claim, search_roots);
                     }
                     
                     std::cout << "[SEARCH] Completed burst collection with " << burst_results.size() << " total results" << std::endl;
@@ -850,13 +802,7 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
     last_stats_.search_time = std::chrono::duration_cast<std::chrono::milliseconds>(
         search_end_time - search_start_time);
     
-    // Update inference server stats
-    if (inference_server_) {
-        auto stats = inference_server_->getStats();
-        last_stats_.avg_batch_size = stats.getAverageBatchSize();
-        last_stats_.avg_batch_latency = std::chrono::milliseconds(static_cast<int>(stats.getAverageBatchLatency()));
-        last_stats_.total_evaluations = stats.total_evaluations;
-    }
+    // UnifiedInferenceServer was removed in simplification
     
     // Mark search as completed
     search_running_.store(false, std::memory_order_release);
@@ -926,21 +872,17 @@ void MCTSEngine::executeParallelSearch(const std::vector<std::shared_ptr<MCTSNod
                 expandNonTerminalLeaf(leaf_node);
             }
             
-            // ATOMIC BURST COORDINATION: Enable true concurrent batch formation
+            // Direct neural network evaluation since inference server was removed
             NetworkOutput result;
-            if (inference_server_) {
-                // PHASE 1: Atomic coordination - signal this thread has a request ready
-                pending_evaluations.fetch_add(1, std::memory_order_relaxed);
-                
-                // PHASE 2: Submit request to concurrent queue (lock-free)
+            {
+                // Use neural network directly
                 std::vector<std::unique_ptr<core::IGameState>> states;
                 states.push_back(leaf_node->getState().clone());
                 
                 auto nn_start = std::chrono::steady_clock::now();
                 
-                // Submit to inference server - it will use atomic signals to form optimal batches
-                // Multiple threads submitting simultaneously will be batched together
-                auto results = inference_server_->evaluateBatch(states);
+                // Direct neural network call
+                auto results = neural_network_->inference(states);
                 
                 auto nn_end = std::chrono::steady_clock::now();
                 auto nn_duration = std::chrono::duration_cast<std::chrono::microseconds>(nn_end - nn_start);
@@ -955,10 +897,6 @@ void MCTSEngine::executeParallelSearch(const std::vector<std::shared_ptr<MCTSNod
                     std::cout << "[THREAD_" << thread_id << "] NN call " << total_nn_calls.load() 
                               << " took " << nn_duration.count() << "μs" << std::endl;
                 }
-            } else {
-                // Fallback: use random evaluation
-                result.value = (static_cast<float>(rand()) / RAND_MAX) * 2.0f - 1.0f;
-                result.policy.resize(leaf_node->getState().getActionSpaceSize(), 1.0f / leaf_node->getState().getActionSpaceSize());
             }
             
             // Backpropagate result through the path
@@ -1051,6 +989,8 @@ mcts::SearchResult MCTSEngine::searchWithTreeReuse(const core::IGameState& state
 }
 
 // ENHANCED SIMPLIFIED PARALLEL SEARCH: Integrates advanced legacy features + aggressive memory control
+// Removed - uses components that were removed in simplification
+#if 0
 void MCTSEngine::executeSimplifiedParallelSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots) {
     if (search_roots.empty()) {
         return;
@@ -1282,6 +1222,7 @@ void MCTSEngine::executeSimplifiedParallelSearch(const std::vector<std::shared_p
     }
     std::cout << std::endl;
 } // End of executeSimplifiedParallelSearch
+#endif // 0
 
 } // namespace mcts
 } // namespace alphazero

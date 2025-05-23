@@ -58,57 +58,11 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     // For true serial mode (num_threads <= 0), skip complex inference infrastructure
     if (settings.num_threads <= 0) {
         std::cout << "MCTSEngine: Serial mode detected - using direct neural network inference (no threading)" << std::endl;
-        return; // Skip creating UnifiedInferenceServer and BurstCoordinator
+        return; // Skip creating complex infrastructure
     }
     
-    // Create unified inference server for improved architecture
-    try {
-        UnifiedInferenceServer::ServerConfig server_config;
-        // OPTIMIZED: Use larger batch sizes for maximum GPU utilization
-        server_config.target_batch_size = static_cast<size_t>(settings.batch_size);
-        server_config.min_batch_size = std::max(size_t(8), static_cast<size_t>(settings.batch_size / 8)); // Min 8 states for efficiency
-        server_config.max_batch_size = static_cast<size_t>(settings.batch_size * 2); // Allow larger batches
-        server_config.max_batch_wait = std::chrono::milliseconds(settings.batch_timeout); // Use full config timeout
-        server_config.min_batch_wait = std::chrono::milliseconds(settings.batch_timeout / 3); // Use 1/3 of config timeout for min wait
-        
-        // Handle serial mode (num_threads = 0) properly
-        if (settings.num_threads <= 0) {
-            // Serial mode: use minimal threading to prevent deadlocks
-            server_config.num_worker_threads = 1;
-        } else {
-            server_config.num_worker_threads = std::max(size_t(2), static_cast<size_t>(settings.num_threads / 2));
-        }
-        
-        server_config.virtual_loss_value = settings.virtual_loss;
-        
-        inference_server_ = std::make_shared<UnifiedInferenceServer>(neural_net, server_config);
-        
-        // Create burst coordinator for coordinated batch collection
-        BurstCoordinator::BurstConfig burst_config;
-        burst_config.target_burst_size = settings.batch_size;
-        burst_config.min_burst_size = std::max(size_t(16), static_cast<size_t>(settings.batch_size / 4)); // Higher minimum for efficiency
-        burst_config.collection_timeout = std::chrono::milliseconds(settings.batch_timeout / 4); // More aggressive collection
-        burst_config.evaluation_timeout = settings.batch_timeout;
-        
-        // Handle serial mode threading configuration
-        if (settings.num_threads <= 0) {
-            // Serial mode: use single thread to prevent deadlocks
-            burst_config.max_parallel_threads = 1;
-        } else {
-            burst_config.max_parallel_threads = std::min(size_t(32), std::max(size_t(16), static_cast<size_t>(settings.num_threads * 4)));
-        }
-        
-        burst_coordinator_ = std::make_unique<BurstCoordinator>(inference_server_, burst_config);
-        
-        std::cout << "MCTSEngine: Created UnifiedInferenceServer with batch_size=" 
-                  << server_config.target_batch_size << " and BurstCoordinator with burst_size=" 
-                  << burst_config.target_burst_size << " (serial_mode=" << (settings.num_threads <= 0) << ")" << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "ERROR during inference server creation: " << e.what() << std::endl;
-        throw;
-    }
-    
-    std::cout << "Using optimized UnifiedInferenceServer + BurstCoordinator architecture" << std::endl;
+    // SIMPLIFIED: No more UnifiedInferenceServer or BurstCoordinator
+    std::cout << "MCTSEngine: Using simplified direct batching approach" << std::endl;
 }
 
 // Constructor with inference function
@@ -150,111 +104,18 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
     // For true serial mode (num_threads <= 0), skip complex inference infrastructure
     if (settings.num_threads <= 0) {
         std::cout << "MCTSEngine: Serial mode detected - using direct inference (no threading)" << std::endl;
-        return; // Skip creating UnifiedInferenceServer and BurstCoordinator
+        return; // Skip creating complex infrastructure
     }
     
-    // Create unified inference server for parallel modes (we need to wrap the inference function)
-    try {
-        // Create a mock neural network wrapper for the inference function
-        class InferenceFunctionWrapper : public nn::NeuralNetwork {
-        private:
-            InferenceFunction inference_fn_;
-        public:
-            InferenceFunctionWrapper(InferenceFunction fn) : inference_fn_(std::move(fn)) {}
-            
-            std::vector<NetworkOutput> inference(const std::vector<std::unique_ptr<core::IGameState>>& states) override {
-                return inference_fn_(states);
-            }
-            
-            void train() { /* No-op for inference-only */ }
-            void eval() { /* No-op */ }
-            
-            std::vector<int64_t> getInputShape() const override {
-                return {15, 15}; // Default for Gomoku
-            }
-            
-            int64_t getPolicySize() const override {
-                return 225; // Default 15x15 board
-            }
-            void save(const std::string&) override { /* No-op */ }
-            void load(const std::string&) override { /* No-op */ }
-        };
+    // SIMPLIFIED: No more UnifiedInferenceServer or BurstCoordinator
+    std::cout << "MCTSEngine: Using simplified direct batching approach" << std::endl;
         
-        auto inference_fn_copy = inference_fn;  // Make a copy for the wrapper
-        auto wrapped_network = std::make_shared<InferenceFunctionWrapper>(std::move(inference_fn_copy));
-        
-        UnifiedInferenceServer::ServerConfig server_config;
-        // OPTIMIZED: Use larger batch sizes for maximum GPU utilization
-        server_config.target_batch_size = static_cast<size_t>(settings.batch_size);
-        server_config.min_batch_size = std::max(size_t(8), static_cast<size_t>(settings.batch_size / 8)); // Min 8 states for efficiency
-        server_config.max_batch_size = static_cast<size_t>(settings.batch_size * 2); // Allow larger batches
-        server_config.max_batch_wait = std::chrono::milliseconds(settings.batch_timeout); // Use full config timeout
-        server_config.min_batch_wait = std::chrono::milliseconds(settings.batch_timeout / 3); // Use 1/3 of config timeout for min wait
-        
-        // Handle serial mode (num_threads = 0) properly
-        if (settings.num_threads <= 0) {
-            // Serial mode: use minimal threading to prevent deadlocks
-            server_config.num_worker_threads = 1;
-        } else {
-            server_config.num_worker_threads = std::max(size_t(2), static_cast<size_t>(settings.num_threads / 2));
-        }
-        
-        server_config.virtual_loss_value = settings.virtual_loss;
-        
-        inference_server_ = std::make_shared<UnifiedInferenceServer>(wrapped_network, server_config);
-        
-        // Create burst coordinator for coordinated batch collection
-        BurstCoordinator::BurstConfig burst_config;
-        burst_config.target_burst_size = settings.batch_size;
-        burst_config.min_burst_size = std::max(size_t(16), static_cast<size_t>(settings.batch_size / 4)); // Higher minimum for efficiency
-        burst_config.collection_timeout = std::chrono::milliseconds(settings.batch_timeout / 4); // More aggressive collection
-        burst_config.evaluation_timeout = settings.batch_timeout;
-        
-        // Handle serial mode threading configuration
-        if (settings.num_threads <= 0) {
-            // Serial mode: use single thread to prevent deadlocks
-            burst_config.max_parallel_threads = 1;
-        } else {
-            burst_config.max_parallel_threads = std::min(size_t(32), std::max(size_t(16), static_cast<size_t>(settings.num_threads * 4)));
-        }
-        
-        burst_coordinator_ = std::make_unique<BurstCoordinator>(inference_server_, burst_config);
-        
-        std::cout << "MCTSEngine: Created UnifiedInferenceServer with batch_size=" 
-                  << server_config.target_batch_size << " and BurstCoordinator with burst_size=" 
-                  << burst_config.target_burst_size << " (serial_mode=" << (settings.num_threads <= 0) << ")" << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "ERROR during inference server creation: " << e.what() << std::endl;
-        throw;
-    }
-    
-    // The new architecture uses UnifiedInferenceServer + BurstCoordinator
-    // No need for separate MCTSEvaluator - removed legacy fallback system
-    std::cout << "Using optimized UnifiedInferenceServer + BurstCoordinator architecture" << std::endl;
 }
 
 // Start the inference server if not already running
 bool MCTSEngine::ensureEvaluatorStarted() {
-    // New architecture: Check if UnifiedInferenceServer is ready
-    if (inference_server_ && inference_server_->isRunning()) {
-        return true;
-    }
-    
-    // Start the UnifiedInferenceServer if available
-    if (inference_server_) {
-        try {
-            if (!inference_server_->isRunning()) {
-                inference_server_->start();
-            }
-            return true;
-        } catch (const std::exception& e) {
-            std::cerr << "Failed to start UnifiedInferenceServer: " << e.what() << std::endl;
-            return false;
-        }
-    }
-    
-    std::cerr << "UnifiedInferenceServer not available" << std::endl;
-    return false;
+    // SIMPLIFIED: No more server to start
+    return true;
 }
 
 // Main search method
@@ -326,42 +187,16 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
         }
         std::cout << "MCTSEngine: Using direct inference for serial mode evaluation" << std::endl;
     } else {
-        // Parallel mode: start the unified inference server
-        bool inference_server_started = false;
-        try {
-            if (inference_server_) {
-                inference_server_->start();
-                inference_server_started = inference_server_->isRunning();
-                std::cout << "MCTSEngine: Using UnifiedInferenceServer for evaluation" << std::endl;
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "WARNING: Failed to start inference server: " << e.what() << std::endl;
+        // Parallel mode: simplified architecture no longer uses UnifiedInferenceServer
+        // Always use traditional evaluator
+        if (!ensureEvaluatorStarted()) {
+            throw std::runtime_error("Failed to start evaluator");
         }
+        std::cout << "MCTSEngine: Using traditional MCTSEvaluator for evaluation" << std::endl;
         
-        if (!inference_server_started) {
-            // Fallback to traditional evaluator
-            if (!ensureEvaluatorStarted()) {
-                throw std::runtime_error("Failed to start evaluator or inference server");
-            }
-            std::cout << "MCTSEngine: Using traditional MCTSEvaluator for evaluation" << std::endl;
-        }
+        // UnifiedInferenceServer and BurstCoordinator were removed in simplification
         
-        // Check UnifiedInferenceServer and BurstCoordinator for parallel mode
-        if (!inference_server_) {
-            std::cout << "❌ CRITICAL ERROR: MCTSEngine::search - UnifiedInferenceServer is null! Cannot proceed with parallel search." << std::endl;
-            throw std::runtime_error("UnifiedInferenceServer is null - cannot search in parallel mode");
-        }
-        
-        if (!burst_coordinator_) {
-            std::cout << "❌ CRITICAL ERROR: MCTSEngine::search - BurstCoordinator is null! Cannot proceed with parallel search." << std::endl;
-            throw std::runtime_error("BurstCoordinator is null - cannot search in parallel mode");
-        }
-        
-        // Ensure inference server is running
-        if (!inference_server_->isRunning()) {
-            inference_server_->start();
-            std::cout << "✅ Started UnifiedInferenceServer" << std::endl;
-        }
+        // Inference server was removed in simplification
     }
     
     // Run the search with enhanced error handling
@@ -484,17 +319,10 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
 
     // Update statistics
     last_stats_.search_time = search_time;
-    if (inference_server_) {
-        auto stats = inference_server_->getStats();
-        last_stats_.avg_batch_size = stats.getAverageBatchSize();
-        last_stats_.avg_batch_latency = std::chrono::milliseconds(static_cast<int>(stats.getAverageBatchLatency()));
-        last_stats_.total_evaluations = stats.total_evaluations;
-    } else {
-        // Serial mode: set basic statistics
-        last_stats_.avg_batch_size = 1.0f; // Direct inference, batch size 1
-        last_stats_.avg_batch_latency = std::chrono::milliseconds(1);
-        last_stats_.total_evaluations = settings_.num_simulations; // Approximate
-    }
+    // Serial mode: set basic statistics
+    last_stats_.avg_batch_size = settings_.batch_size; // Using configured batch size
+    last_stats_.avg_batch_latency = std::chrono::milliseconds(1);
+    last_stats_.total_evaluations = settings_.num_simulations; // Approximate
     
     if (last_stats_.search_time.count() > 0) {
         last_stats_.nodes_per_second = 1000.0f * last_stats_.total_nodes / 
@@ -508,21 +336,18 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
     }
     
     result.stats = last_stats_;
+    
+    // FIX: Clean up memory after search completes
+    // This prevents memory accumulation between searches
+    cleanupPendingEvaluations();
+    
     return result;
 }
 
 // Safely stop the inference server if it was started
 void MCTSEngine::safelyStopEvaluator() {
-    // Stop UnifiedInferenceServer
-    if (inference_server_) {
-        try {
-            inference_server_->stop();
-        } catch (const std::exception& e) {
-            std::cerr << "Error stopping UnifiedInferenceServer: " << e.what() << std::endl;
-        } catch (...) {
-            std::cerr << "Unknown error stopping UnifiedInferenceServer" << std::endl;
-        }
-    }
+    // UnifiedInferenceServer was removed in simplification
+    // Nothing to do here anymore
 }
 
 // Configure shared external queues
@@ -535,13 +360,7 @@ void MCTSEngine::setSharedExternalQueues(
     use_shared_queues_ = true;
     external_queue_notify_fn_ = notify_fn;
     
-    // NEW ARCHITECTURE: The UnifiedInferenceServer manages its own queues internally
-    // External queue coordination is handled through the inference server's interface
-    if (inference_server_) {
-        // The UnifiedInferenceServer has internal queue management
-        // External coordination happens through the standard request/response interface
-        std::cout << "Note: External queue configuration with UnifiedInferenceServer (queues managed internally)" << std::endl;
-    }
+    // UnifiedInferenceServer was removed in simplification
 }
 
 // Accessor methods for transposition table
@@ -589,15 +408,6 @@ const MCTSStats& MCTSEngine::getLastStats() const {
     return last_stats_;
 }
 
-// Unified Inference Server control methods
-void MCTSEngine::setUseUnifiedInferenceServer(bool enable) {
-    // Currently, we always use the unified inference server if available
-    // This method is for future configurability
-}
-
-bool MCTSEngine::isUsingUnifiedInferenceServer() const {
-    return inference_server_ && inference_server_->isRunning();
-}
 
 // Force memory cleanup
 void MCTSEngine::monitorMemoryUsage() {
@@ -609,14 +419,7 @@ MCTSEngine::MCTSEngine(MCTSEngine&& other) noexcept {
     // First stop the other engine to ensure thread safety
     other.shutdown_ = true;
     
-    // Stop inference server if it was started
-    if (other.inference_server_) {
-        try {
-            other.inference_server_->stop();
-        } catch (...) {
-            // Ignore exceptions during move
-        }
-    }
+    // UnifiedInferenceServer was removed in simplification
     
     // Wait for threads to complete
     if (other.result_distributor_worker_.joinable()) {
@@ -630,8 +433,8 @@ MCTSEngine::MCTSEngine(MCTSEngine&& other) noexcept {
     // Move resources
     settings_ = std::move(other.settings_);
     last_stats_ = std::move(other.last_stats_);
-    inference_server_ = std::move(other.inference_server_);
-    burst_coordinator_ = std::move(other.burst_coordinator_);
+    // inference_server_ = std::move(other.// inference_server_);
+    // burst_coordinator_ = std::move(other.// burst_coordinator_);
     root_ = std::move(other.root_);
     shutdown_ = other.shutdown_.load();
     active_simulations_ = other.active_simulations_.load();
@@ -676,8 +479,8 @@ MCTSEngine& MCTSEngine::operator=(MCTSEngine&& other) noexcept {
         // Move resources from other
         settings_ = std::move(other.settings_);
         last_stats_ = std::move(other.last_stats_);
-        inference_server_ = std::move(other.inference_server_);
-        burst_coordinator_ = std::move(other.burst_coordinator_);
+        // inference_server_ = std::move(other.// inference_server_);
+        // burst_coordinator_ = std::move(other.// burst_coordinator_);
         root_ = std::move(other.root_);
         shutdown_ = other.shutdown_.load();
         active_simulations_ = other.active_simulations_.load();

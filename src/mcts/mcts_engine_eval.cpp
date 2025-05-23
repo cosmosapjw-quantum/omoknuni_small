@@ -32,13 +32,10 @@ void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
                 states.push_back(std::unique_ptr<core::IGameState>(state_clone->clone().release()));
                 // TODO: Replace with UnifiedInferenceServer synchronous call
                 std::vector<NetworkOutput> outputs;
-                if (inference_server_) {
-                    // For now, create a temporary synchronous interface
-                    // This should be replaced with proper async handling
-                    outputs.resize(1);
-                    outputs[0].policy.resize(root->getState().getActionSpaceSize(), 1.0f / root->getState().getActionSpaceSize());
-                    outputs[0].value = 0.0f;
-                }
+                // Create default outputs since inference server was removed
+                outputs.resize(1);
+                outputs[0].policy.resize(root->getState().getActionSpaceSize(), 1.0f / root->getState().getActionSpaceSize());
+                outputs[0].value = 0.0f;
                 if (!outputs.empty()) {
                     root->setPriorProbabilities(outputs[0].policy);
                 } else {
@@ -73,7 +70,6 @@ void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
             int action_space_size = root->getState().getActionSpaceSize();
             root->setPriorProbabilities(createDefaultPolicy(action_space_size));
         }
-    }
     
     if (root->getChildren().empty()) {
         return;  // No children to add noise to
@@ -109,6 +105,7 @@ void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
         child->setPriorProbability(noisy_prior);
     }
 }
+}  // End of addDirichletNoise function
 
 // Process results from pending evaluations
 void MCTSEngine::processEvaluationResults() {
@@ -211,14 +208,13 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
             std::vector<std::unique_ptr<core::IGameState>> states_serial;
             states_serial.push_back(std::unique_ptr<core::IGameState>(state_clone_serial->clone().release()));
             
-            // TODO: Replace with UnifiedInferenceServer synchronous call
+            // Direct neural network evaluation for synchronous mode
             std::vector<NetworkOutput> outputs;
-            if (inference_server_) {
-                // For now, create a temporary synchronous interface
-                outputs.resize(1);
-                outputs[0].policy.resize(leaf->getState().getActionSpaceSize(), 1.0f / leaf->getState().getActionSpaceSize());
-                outputs[0].value = 0.0f;
-            } 
+            // Create default outputs since inference server was removed
+            outputs.resize(1);
+            outputs[0].policy.resize(leaf->getState().getActionSpaceSize(), 1.0f / leaf->getState().getActionSpaceSize());
+            outputs[0].value = 0.0f;
+            
             if (!outputs.empty()) {
                 leaf->setPriorProbabilities(outputs[0].policy);
                 return outputs[0].value;
@@ -328,13 +324,7 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                                  << "] Local queue enqueue " << (queue_success ? "SUCCEEDED" : "FAILED") << std::endl;
                     }
                     
-                    if (queue_success && inference_server_) {
-                        if (log_detail) {
-                            std::cout << "🔔 MCTSEngine::expandAndEvaluate - [#" << attempt_id 
-                                     << "] UnifiedInferenceServer handles notifications automatically" << std::endl;
-                        }
-                        // UnifiedInferenceServer handles notifications internally via lock-free queues
-                    }
+                    // UnifiedInferenceServer was removed in simplification
                 }
                 
                 if (!queue_success) {

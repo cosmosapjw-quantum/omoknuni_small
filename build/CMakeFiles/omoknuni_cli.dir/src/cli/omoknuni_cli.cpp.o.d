@@ -5041,12 +5041,4 @@ CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
  /usr/include/parallel_hashmap/phmap_base.h \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
- /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
- /home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h \
- /home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h \
- /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h \
- /home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
- /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
- /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
  /home/cosmos/omoknuni_small/include/cli/alphazero_pipeline.h

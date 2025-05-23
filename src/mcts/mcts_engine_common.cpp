@@ -118,10 +118,8 @@ void MCTSEngine::waitForSimulationsToComplete(std::chrono::steady_clock::time_po
         // Notify inference server to process remaining items
         if (use_shared_queues_ && external_queue_notify_fn_) {
             external_queue_notify_fn_();
-        } else if (inference_server_) {
-            // UnifiedInferenceServer handles notifications automatically
-            // through its internal queue monitoring
         }
+        // Note: UnifiedInferenceServer was removed as part of simplification
         
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

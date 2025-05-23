@@ -8,17 +8,12 @@ CMakeFiles/mcts_openmp_benchmark.dir/tests/mcts/mcts_openmp_benchmark.cpp.o: /ho
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
   /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
-  /home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h \
-  /home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h \
-  /home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h \
-  /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h \
   /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h \
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
-  /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
   /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
@@ -119,7 +114,6 @@ CMakeFiles/mcts_openmp_benchmark.dir/tests/mcts/mcts_openmp_benchmark.cpp.o: /ho
   /usr/include/c++/13/bits/stl_multimap.h \
   /usr/include/c++/13/bits/stl_numeric.h \
   /usr/include/c++/13/bits/stl_pair.h \
-  /usr/include/c++/13/bits/stl_queue.h \
   /usr/include/c++/13/bits/stl_raw_storage_iter.h \
   /usr/include/c++/13/bits/stl_relops.h \
   /usr/include/c++/13/bits/stl_stack.h \
@@ -194,7 +188,6 @@ CMakeFiles/mcts_openmp_benchmark.dir/tests/mcts/mcts_openmp_benchmark.cpp.o: /ho
   /usr/include/c++/13/pstl/glue_memory_defs.h \
   /usr/include/c++/13/pstl/glue_numeric_defs.h \
   /usr/include/c++/13/pstl/pstl_config.h \
-  /usr/include/c++/13/queue \
   /usr/include/c++/13/random \
   /usr/include/c++/13/ratio \
   /usr/include/c++/13/shared_mutex \
@@ -430,6 +423,8 @@ bin/Release/mcts_openmp_benchmark: /lib/x86_64-linux-gnu/libc.so.6 \
 
 CMakeFiles/mcts_openmp_benchmark.dir/tests/mcts/mcts_openmp_benchmark.cpp.o:
 
+/usr/local/cuda/lib64/libnvToolsExt.so:
+
 /usr/lib/x86_64-linux-gnu/libspdlog.so.1.12.0:
 
 /usr/lib/x86_64-linux-gnu/librt.a:
@@ -491,6 +486,10 @@ CMakeFiles/mcts_openmp_benchmark.dir/tests/mcts/mcts_openmp_benchmark.cpp.o:
 /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h:
+
+/usr/local/cuda/lib64/libcudart.so:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h:
 
@@ -640,12 +639,6 @@ lib/Release/libalphazero.so:
 
 /usr/include/x86_64-linux-gnu/bits/fp-logb.h:
 
-/usr/include/x86_64-linux-gnu/bits/fp-fast.h:
-
-/usr/include/x86_64-linux-gnu/bits/floatn.h:
-
-/usr/include/x86_64-linux-gnu/bits/endian.h:
-
 /lib/x86_64-linux-gnu/libc.so.6:
 
 /usr/include/c++/13/bits/stl_map.h:
@@ -657,6 +650,8 @@ lib/Release/libalphazero.so:
 /usr/include/c++/13/bits/functexcept.h:
 
 /usr/include/c++/13/bits/stl_construct.h:
+
+/usr/include/c++/13/bits/std_mutex.h:
 
 /usr/include/c++/13/bits/stl_bvector.h:
 
@@ -682,11 +677,19 @@ lib/Release/libalphazero.so:
 
 /usr/include/c++/13/bits/erase_if.h:
 
+/usr/include/c++/13/bits/stringfwd.h:
+
+/usr/include/c++/13/bits/this_thread_sleep.h:
+
+/usr/include/x86_64-linux-gnu/bits/sched.h:
+
+/home/cosmos/omoknuni_small/include/utils/zobrist_hash.h:
+
 /usr/include/c++/13/bits/shared_ptr.h:
 
-/usr/include/x86_64-linux-gnu/bits/floatn-common.h:
+/usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
 
-/usr/include/c++/13/bits/requires_hosted.h:
+/usr/include/c++/13/bits/string_view.tcc:
 
 /usr/include/c++/13/bits/locale_facets.tcc:
 
@@ -734,39 +737,21 @@ lib/Release/libalphazero.so:
 
 /usr/include/c++/13/bits/locale_classes.h:
 
-/usr/include/x86_64-linux-gnu/bits/sched.h:
-
-/home/cosmos/omoknuni_small/include/utils/zobrist_hash.h:
-
-/usr/include/c++/13/bits/this_thread_sleep.h:
-
 /usr/include/c++/13/bits/invoke.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/error_t.h:
 
 /usr/include/c++/13/bits/hashtable.h:
 
-/usr/include/c++/13/bits/functional_hash.h:
+/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
 
-/usr/include/x86_64-linux-gnu/bits/mathcalls.h:
+/usr/include/c++/13/bits/enable_special_members.h:
 
-/usr/include/c++/13/bits/stl_relops.h:
+/usr/lib/x86_64-linux-gnu/libpthread.a:
 
-/usr/include/c++/13/stack:
+/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
 
-/usr/include/errno.h:
-
-/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
-
-/usr/include/c++/13/bits/node_handle.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
-
-/usr/include/c++/13/bits/stl_multimap.h:
-
-/usr/include/c++/13/bits/locale_conv.h:
-
-/usr/include/c++/13/bits/istream.tcc:
+/usr/include/c++/13/bits/stream_iterator.h:
 
 /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h:
 
@@ -792,45 +777,81 @@ lib/Release/libalphazero.so:
 
 /usr/include/c++/13/bits/codecvt.h:
 
-/usr/include/c++/13/bits/stringfwd.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
 
 /usr/include/asm-generic/errno.h:
 
-/usr/local/lib/librapids_logger.so:
+/usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h:
 
-/usr/include/c++/13/ios:
+/usr/include/c++/13/ostream:
 
-/usr/include/c++/13/bits/stl_uninitialized.h:
+/usr/include/c++/13/tr1/riemann_zeta.tcc:
 
-/usr/include/c++/13/bits/new_allocator.h:
+/usr/include/c++/13/bits/stl_raw_storage_iter.h:
 
-/usr/include/c++/13/bits/atomic_base.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h:
 
-/usr/include/c++/13/bits/uses_allocator_args.h:
+/usr/include/c++/13/algorithm:
 
-/home/cosmos/omoknuni_small/include/mcts/mcts_node.h:
+/usr/include/c++/13/array:
+
+/usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0:
+
+/usr/include/c++/13/bits/stl_iterator_base_funcs.h:
+
+/usr/include/asm-generic/errno-base.h:
+
+/usr/include/c++/13/bits/hash_bytes.h:
+
+/usr/include/parallel_hashmap/phmap_config.h:
+
+/usr/include/c++/13/backward/binders.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
+
+/usr/include/c++/13/bits/stl_multimap.h:
+
+/usr/include/c++/13/bits/locale_conv.h:
+
+/usr/include/c++/13/bits/istream.tcc:
+
+/usr/include/c++/13/bits/uniform_int_dist.h:
+
+/usr/include/c++/13/bits/locale_classes.tcc:
+
+/usr/include/parallel_hashmap/phmap_utils.h:
+
+/usr/include/c++/13/bits/basic_string.tcc:
+
+/usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
+
+/usr/include/c++/13/bits/charconv.h:
+
+/usr/include/c++/13/cstdio:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h:
+
+/usr/include/c++/13/fstream:
+
+/usr/include/c++/13/cstdint:
+
+/usr/include/c++/13/cstdlib:
+
+/usr/include/c++/13/bits/exception_ptr.h:
+
+/home/cosmos/omoknuni_small/include/nn/neural_network.h:
+
+/usr/include/c++/13/bits/fstream.tcc:
 
 /usr/include/c++/13/bits/predefined_ops.h:
+
+/home/cosmos/omoknuni_small/include/mcts/mcts_node.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
 
 /usr/include/c++/13/condition_variable:
 
 /usr/include/c++/13/iosfwd:
-
-/usr/include/c++/13/bits/fstream.tcc:
-
-/usr/include/c++/13/bits/exception_ptr.h:
-
-/home/cosmos/omoknuni_small/include/nn/neural_network.h:
-
-/usr/include/c++/13/bits/std_mutex.h:
-
-/home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h:
-
-/usr/include/c++/13/stdlib.h:
 
 /home/cosmos/omoknuni_small/tests/mcts/mcts_openmp_benchmark.cpp:
 
@@ -848,75 +869,15 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /usr/include/c++/13/bits/locale_facets.h:
 
-/usr/include/c++/13/backward/auto_ptr.h:
+/usr/local/lib/librapids_logger.so:
 
-/usr/lib/x86_64-linux-gnu/libpthread.a:
+/usr/include/c++/13/ios:
 
-/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
+/usr/include/c++/13/bits/streambuf.tcc:
 
-/usr/include/c++/13/bits/stream_iterator.h:
+/usr/include/c++/13/bits/specfun.h:
 
-/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
-
-/usr/include/c++/13/bits/enable_special_members.h:
-
-/usr/include/c++/13/bits/stl_raw_storage_iter.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h:
-
-/usr/include/c++/13/algorithm:
-
-/usr/include/c++/13/bits/memoryfwd.h:
-
-/usr/include/x86_64-linux-gnu/bits/setjmp.h:
-
-/usr/include/time.h:
-
-/usr/include/assert.h:
-
-/home/cosmos/omoknuni_small/include/core/igamestate.h:
-
-/home/cosmos/omoknuni_small/include/utils/gamestate_pool.h:
-
-/home/cosmos/omoknuni_small/include/mcts/mcts_engine.h:
-
-/usr/include/c++/13/bits/refwrap.h:
-
-_deps/mimalloc-src/include/mimalloc.h:
-
-/usr/include/c++/13/bits/unordered_set.h:
-
-/home/cosmos/omoknuni_small/include/utils/debug_monitor.h:
-
-/usr/include/c++/13/cstdint:
-
-/usr/include/c++/13/cstdlib:
-
-/usr/local/cuda/lib64/libcudart.so:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h:
-
-/home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h:
-
-/home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h:
-
-/usr/include/alloca.h:
-
-/usr/include/parallel_hashmap/phmap_utils.h:
-
-/usr/include/c++/13/bits/basic_string.tcc:
-
-/usr/include/c++/13/bits/hash_bytes.h:
-
-/usr/include/parallel_hashmap/phmap_config.h:
-
-/usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0:
-
-/usr/include/c++/13/bits/stl_iterator_base_funcs.h:
-
-/usr/include/asm-generic/errno-base.h:
-
-/usr/include/c++/13/array:
+/usr/include/c++/13/atomic:
 
 /usr/include/c++/13/bits/basic_string.h:
 
@@ -924,41 +885,37 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/libintl.h:
 
-/usr/include/c++/13/atomic:
+/usr/include/c++/13/backward/auto_ptr.h:
 
-/usr/local/cuda/lib64/libnvToolsExt.so:
+/usr/include/c++/13/bits/stl_uninitialized.h:
 
-/usr/include/c++/13/bits/stl_queue.h:
+/usr/include/c++/13/bits/new_allocator.h:
+
+/usr/include/c++/13/bits/atomic_base.h:
+
+/usr/include/c++/13/bits/uses_allocator_args.h:
+
+/usr/include/c++/13/bits/memoryfwd.h:
+
+/usr/include/x86_64-linux-gnu/bits/setjmp.h:
+
+/usr/include/time.h:
+
+/home/cosmos/omoknuni_small/include/utils/gamestate_pool.h:
+
+/home/cosmos/omoknuni_small/include/mcts/mcts_engine.h:
+
+/usr/include/assert.h:
+
+/home/cosmos/omoknuni_small/include/core/igamestate.h:
+
+/home/cosmos/omoknuni_small/include/utils/debug_monitor.h:
+
+/usr/include/c++/13/bits/unordered_set.h:
 
 /usr/include/c++/13/bits/atomic_lockfree_defines.h:
 
 /usr/include/x86_64-linux-gnu/asm/errno.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
-
-/usr/include/c++/13/bits/charconv.h:
-
-/usr/include/x86_64-linux-gnu/bits/errno.h:
-
-/usr/include/c++/13/bits/stl_pair.h:
-
-/usr/include/c++/13/cstdio:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h:
-
-/usr/include/c++/13/fstream:
-
-/home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h:
-
-/usr/include/c++/13/ext/type_traits.h:
-
-/usr/include/c++/13/backward/binders.h:
-
-/usr/include/c++/13/bits/uniform_int_dist.h:
-
-/usr/include/c++/13/bits/locale_classes.tcc:
-
-/home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h:
 
 /usr/include/x86_64-linux-gnu/bits/long-double.h:
 
@@ -968,11 +925,13 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/c++/13/bits/concept_check.h:
 
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
+
+/usr/include/c++/13/bits/node_handle.h:
+
 /usr/include/c++/13/bit:
 
 /usr/include/c++/13/bits/allocated_ptr.h:
-
-/home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h:
 
 /usr/include/c++/13/clocale:
 
@@ -985,6 +944,14 @@ _deps/mimalloc-src/include/mimalloc.h:
 /usr/include/c++/13/bits/shared_ptr_base.h:
 
 /usr/include/c++/13/bits/basic_ios.h:
+
+/home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h:
+
+/usr/include/alloca.h:
+
+_deps/mimalloc-src/include/mimalloc.h:
+
+/usr/include/c++/13/bits/refwrap.h:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/ctype_inline.h:
 
@@ -1002,6 +969,8 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/c++/13/bits/deque.tcc:
 
+/usr/include/x86_64-linux-gnu/bits/endian.h:
+
 /usr/include/c++/13/bits/cxxabi_forced.h:
 
 /usr/include/c++/13/bits/exception.h:
@@ -1018,6 +987,10 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/c++/13/bits/localefwd.h:
 
+/usr/include/c++/13/bits/streambuf_iterator.h:
+
+/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
+
 /usr/include/x86_64-linux-gnu/bits/waitstatus.h:
 
 /usr/include/c++/13/bits/exception_defines.h:
@@ -1026,23 +999,15 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/math.h:
 
-/usr/include/c++/13/bits/specfun.h:
+/usr/include/c++/13/bits/functional_hash.h:
 
-/usr/include/c++/13/bits/streambuf.tcc:
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:
 
-/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
+/usr/include/c++/13/bits/stl_relops.h:
 
-/usr/include/c++/13/bits/streambuf_iterator.h:
+/usr/include/c++/13/stack:
 
-/usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h:
-
-/usr/include/c++/13/ostream:
-
-/usr/include/c++/13/tr1/riemann_zeta.tcc:
-
-/usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
-
-/usr/include/c++/13/bits/string_view.tcc:
+/usr/include/errno.h:
 
 /usr/include/c++/13/bits/unique_lock.h:
 
@@ -1100,6 +1065,10 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/c++/13/exception:
 
+/usr/include/c++/13/bits/stl_pair.h:
+
+/usr/include/x86_64-linux-gnu/bits/errno.h:
+
 /usr/include/c++/13/ext/aligned_buffer.h:
 
 /usr/include/locale.h:
@@ -1120,6 +1089,8 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/c++/13/ext/string_conversions.h:
 
+/usr/include/c++/13/ext/type_traits.h:
+
 /usr/include/c++/13/functional:
 
 /usr/include/c++/13/iostream:
@@ -1136,6 +1107,8 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/c++/13/memory:
 
+/usr/include/x86_64-linux-gnu/bits/floatn.h:
+
 /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h:
 
 /usr/include/c++/13/numeric:
@@ -1150,18 +1123,6 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/c++/13/pstl/pstl_config.h:
 
-/usr/include/c++/13/queue:
-
-/usr/include/c++/13/ratio:
-
-/home/cosmos/omoknuni_small/include/core/illegal_move_exception.h:
-
-/usr/include/linux/limits.h:
-
-/usr/include/endian.h:
-
-/usr/include/stdint.h:
-
 /usr/include/c++/13/shared_mutex:
 
 /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
@@ -1171,6 +1132,8 @@ _deps/mimalloc-src/include/mimalloc.h:
 /usr/include/parallel_hashmap/phmap_base.h:
 
 /usr/include/c++/13/stdexcept:
+
+/usr/include/c++/13/stdlib.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
 
@@ -1242,6 +1205,16 @@ lib/Release/libmimalloc.a:
 
 /usr/include/linux/errno.h:
 
+/usr/include/c++/13/ratio:
+
+/home/cosmos/omoknuni_small/include/core/illegal_move_exception.h:
+
+/usr/include/linux/limits.h:
+
+/usr/include/endian.h:
+
+/usr/include/stdint.h:
+
 /usr/include/parallel_hashmap/phmap.h:
 
 /usr/include/c++/13/bits/stl_deque.h:
@@ -1273,3 +1246,9 @@ lib/Release/libTracyClient.so.0.11.0:
 /usr/include/x86_64-linux-gnu/bits/byteswap.h:
 
 /usr/include/x86_64-linux-gnu/bits/cpu-set.h:
+
+/usr/include/c++/13/bits/requires_hosted.h:
+
+/usr/include/x86_64-linux-gnu/bits/floatn-common.h:
+
+/usr/include/x86_64-linux-gnu/bits/fp-fast.h:

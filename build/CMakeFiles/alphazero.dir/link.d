@@ -33,33 +33,19 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_virtual_loss.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/unified_inference_server.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/concurrent_request_aggregator.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/burst_coordinator.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/cuda_stream_optimizer.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/unified_memory_manager.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/adaptive_batch_sizer.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/lock_free_batch_accumulator.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/optimized_external_queue_processor.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_search.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/parallel_mcts_search.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized_control.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_tree.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_eval.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_common.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_taskflow_engine.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_adjuster.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/batch_barrier.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o \
@@ -187,35 +173,9 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/unified_inference_server.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/concurrent_request_aggregator.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/burst_coordinator.cpp.o:
-
 CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/cuda_stream_optimizer.cpp.o:
-
 CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/unified_memory_manager.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/adaptive_batch_sizer.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/lock_free_batch_accumulator.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/optimized_external_queue_processor.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_search.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/parallel_mcts_search.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimized_control.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/mcts_pipeline.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.o:
 
@@ -229,17 +189,15 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_common.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o:
 
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.o:
+
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/mcts_taskflow_engine.cpp.o:
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_adjuster.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/batch_barrier.cpp.o:
 
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o:
 

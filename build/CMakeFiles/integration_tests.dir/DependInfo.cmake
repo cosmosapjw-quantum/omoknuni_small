@@ -10,7 +10,6 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/tests/integration/games/self_play_games_test.cpp" "CMakeFiles/integration_tests.dir/tests/integration/games/self_play_games_test.cpp.o" "gcc" "CMakeFiles/integration_tests.dir/tests/integration/games/self_play_games_test.cpp.o.d"
   "/home/cosmos/omoknuni_small/tests/integration/mcts_with_nn_test.cpp" "CMakeFiles/integration_tests.dir/tests/integration/mcts_with_nn_test.cpp.o" "gcc" "CMakeFiles/integration_tests.dir/tests/integration/mcts_with_nn_test.cpp.o.d"
-  "/home/cosmos/omoknuni_small/tests/integration/optimized_architecture_test.cpp" "CMakeFiles/integration_tests.dir/tests/integration/optimized_architecture_test.cpp.o" "gcc" "CMakeFiles/integration_tests.dir/tests/integration/optimized_architecture_test.cpp.o.d"
   "" "bin/Release/integration_tests" "gcc" "CMakeFiles/integration_tests.dir/link.d"
   )
 

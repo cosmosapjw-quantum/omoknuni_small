@@ -12,7 +12,6 @@
 #include "core/export_macros.h"
 #include <moodycamel/concurrentqueue.h>
 #include "mcts/evaluation_types.h"
-#include "mcts/unified_inference_server.h"
 
 namespace alphazero {
 namespace selfplay {

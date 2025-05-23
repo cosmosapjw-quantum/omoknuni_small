@@ -13,17 +13,12 @@ CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o: /home/cosmos/omoknuni_sma
   /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
   /home/cosmos/omoknuni_small/include/games/go/go_state.h \
   /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
-  /home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h \
-  /home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h \
-  /home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h \
-  /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h \
   /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
   /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h \
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
-  /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
   /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
@@ -136,7 +131,6 @@ CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o: /home/cosmos/omoknuni_sma
   /usr/include/c++/13/bits/stl_multiset.h \
   /usr/include/c++/13/bits/stl_numeric.h \
   /usr/include/c++/13/bits/stl_pair.h \
-  /usr/include/c++/13/bits/stl_queue.h \
   /usr/include/c++/13/bits/stl_raw_storage_iter.h \
   /usr/include/c++/13/bits/stl_relops.h \
   /usr/include/c++/13/bits/stl_set.h \
@@ -220,7 +214,6 @@ CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o: /home/cosmos/omoknuni_sma
   /usr/include/c++/13/pstl/glue_memory_defs.h \
   /usr/include/c++/13/pstl/glue_numeric_defs.h \
   /usr/include/c++/13/pstl/pstl_config.h \
-  /usr/include/c++/13/queue \
   /usr/include/c++/13/random \
   /usr/include/c++/13/ratio \
   /usr/include/c++/13/set \
@@ -679,17 +672,9 @@ lib/Release/libalphazero.so:
 
 /usr/lib/python3/dist-packages/pybind11/include/pybind11/detail/class.h:
 
-/usr/lib/python3/dist-packages/pybind11/include/pybind11/cast.h:
+/usr/include/c++/13/future:
 
-/usr/lib/python3/dist-packages/pybind11/include/pybind11/buffer_info.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h:
+/home/cosmos/omoknuni_small/include/mcts/evaluation_types.h:
 
 /usr/include/c++/13/version:
 
@@ -711,6 +696,12 @@ lib/Release/libalphazero.so:
 
 /usr/include/x86_64-linux-gnu/bits/iscanonical.h:
 
+/usr/include/features.h:
+
+/usr/include/c++/13/string:
+
+/usr/include/c++/13/stdlib.h:
+
 /usr/include/parallel_hashmap/phmap_base.h:
 
 /usr/include/c++/13/sstream:
@@ -730,6 +721,10 @@ lib/Release/libalphazero.so:
 /usr/include/c++/13/bits/random.tcc:
 
 /usr/include/c++/13/pstl/glue_numeric_defs.h:
+
+/usr/lib/python3/dist-packages/pybind11/include/pybind11/detail/descr.h:
+
+/usr/include/python3.12/cpython/longintrepr.h:
 
 /usr/include/c++/13/memory:
 
@@ -774,14 +769,6 @@ lib/Release/libalphazero.so:
 /usr/include/c++/13/cmath:
 
 /usr/include/x86_64-linux-gnu/bits/select2.h:
-
-/usr/include/c++/13/future:
-
-/home/cosmos/omoknuni_small/include/mcts/evaluation_types.h:
-
-/usr/include/c++/13/string:
-
-/usr/include/features.h:
 
 /usr/include/c++/13/chrono:
 
@@ -833,25 +820,25 @@ lib/Release/libalphazero.so:
 
 /usr/include/c++/13/bits/ostream_insert.h:
 
-/usr/include/c++/13/bits/stl_queue.h:
-
 /usr/include/c++/13/bits/stl_numeric.h:
 
-/usr/include/c++/13/bits/new_allocator.h:
+/usr/include/c++/13/typeinfo:
 
-/usr/include/c++/13/debug/assertions.h:
+/usr/include/c++/13/bits/exception.h:
 
-/usr/include/c++/13/debug/debug.h:
-
-/usr/include/c++/13/bits/stl_list.h:
-
-/usr/include/c++/13/bits/stl_iterator_base_types.h:
-
-/usr/include/stdio.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h:
+/usr/include/c++/13/bits/cxxabi_forced.h:
 
 /usr/include/c++/13/bits/chrono.h:
+
+/home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h:
+
+/usr/include/c++/13/bits/char_traits.h:
+
+/usr/include/c++/13/bits/std_function.h:
+
+/usr/include/alloca.h:
+
+/home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h:
 
 /usr/include/c++/13/bits/algorithmfwd.h:
 
@@ -859,33 +846,43 @@ lib/Release/libalphazero.so:
 
 /usr/include/x86_64-linux-gnu/bits/long-double.h:
 
-/home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h:
-
-/usr/include/c++/13/bits/stl_uninitialized.h:
-
-/usr/include/c++/13/typeindex:
-
 /usr/include/c++/13/backward/binders.h:
 
 /usr/include/c++/13/bits/stl_raw_storage_iter.h:
 
 /home/cosmos/omoknuni_small/include/games/chess/chess_state.h:
 
-/home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h:
-
-/usr/include/python3.12/structseq.h:
-
 /usr/include/python3.12/osmodule.h:
 
 /usr/include/c++/13/bits/stl_pair.h:
 
+/usr/lib/python3/dist-packages/pybind11/include/pybind11/cast.h:
+
 /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
+
+/usr/include/parallel_hashmap/phmap_utils.h:
+
+/usr/include/c++/13/bit:
+
+/usr/include/c++/13/bits/allocated_ptr.h:
+
+/usr/include/python3.12/cpython/context.h:
 
 /usr/include/c++/13/bits/valarray_array.h:
 
 /usr/include/c++/13/bits/streambuf.tcc:
 
 /usr/include/python3.12/cpython/cellobject.h:
+
+/usr/include/c++/13/bits/stream_iterator.h:
+
+/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
+
+/usr/include/c++/13/bits/std_mutex.h:
+
+/usr/include/python3.12/cpython/pydebug.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
 
 /usr/include/c++/13/array:
 
@@ -903,26 +900,6 @@ lib/Release/libalphazero.so:
 
 /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
 
-/usr/include/c++/13/bits/alloc_traits.h:
-
-/usr/include/c++/13/bits/concept_check.h:
-
-/usr/include/c++/13/cxxabi.h:
-
-/usr/include/c++/13/bits/basic_string.h:
-
-/usr/include/c++/13/tr1/poly_laguerre.tcc:
-
-/usr/include/c++/13/tr1/special_function_util.h:
-
-/usr/include/asm-generic/posix_types.h:
-
-/usr/include/c++/13/set:
-
-/usr/include/c++/13/bits/shared_ptr_atomic.h:
-
-/usr/include/c++/13/bits/memoryfwd.h:
-
 /usr/include/c++/13/backward/auto_ptr.h:
 
 /usr/include/c++/13/new:
@@ -934,8 +911,6 @@ lib/Release/libalphazero.so:
 /usr/include/c++/13/bits/stl_relops.h:
 
 /usr/include/python3.12/pyconfig.h:
-
-/home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h:
 
 /usr/include/c++/13/bits/locale_facets.h:
 
@@ -949,35 +924,7 @@ lib/Release/libalphazero.so:
 
 /usr/include/linux/limits.h:
 
-/usr/include/c++/13/bit:
-
-/usr/include/c++/13/bits/allocated_ptr.h:
-
-/usr/include/python3.12/cpython/context.h:
-
-/usr/include/parallel_hashmap/phmap_utils.h:
-
-/usr/include/alloca.h:
-
-/home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h:
-
-/usr/lib/python3/dist-packages/pybind11/include/pybind11/detail/descr.h:
-
-/usr/include/python3.12/cpython/longintrepr.h:
-
-/home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h:
-
-/usr/include/assert.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h:
-
-/usr/include/limits.h:
-
-/usr/include/c++/13/cstdlib:
-
-/usr/include/c++/13/bits/std_function.h:
-
-/usr/include/c++/13/bits/char_traits.h:
+/usr/include/c++/13/bits/memoryfwd.h:
 
 /usr/include/c++/13/bits/codecvt.h:
 
@@ -987,15 +934,31 @@ lib/Release/libalphazero.so:
 
 /usr/include/python3.12/ceval.h:
 
+/usr/include/endian.h:
+
+/usr/include/python3.12/cpython/listobject.h:
+
+/usr/include/stdint.h:
+
 /usr/include/c++/13/climits:
 
-/usr/include/asm-generic/int-ll64.h:
+/usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
 
-/usr/include/python3.12/cpython/pyfpe.h:
+/usr/include/libintl.h:
 
-/usr/include/c++/13/thread:
+/usr/include/c++/13/cxxabi.h:
 
-/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
+/usr/include/c++/13/bits/basic_string.h:
+
+/usr/include/c++/13/bits/alloc_traits.h:
+
+/usr/include/c++/13/bits/concept_check.h:
+
+/usr/include/c++/13/tr1/poly_laguerre.tcc:
+
+/usr/include/c++/13/tr1/special_function_util.h:
+
+/usr/include/asm-generic/posix_types.h:
 
 /usr/include/c++/13/stack:
 
@@ -1013,6 +976,10 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /usr/include/c++/13/bits/unique_ptr.h:
 
+/home/cosmos/omoknuni_small/src/python/bindings.cpp:
+
+/usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h:
+
 /usr/include/c++/13/bits/align.h:
 
 /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h:
@@ -1026,32 +993,6 @@ _deps/mimalloc-src/include/mimalloc.h:
 /usr/include/c++/13/bits/basic_ios.h:
 
 /usr/include/c++/13/bits/shared_ptr_base.h:
-
-/usr/include/c++/13/iostream:
-
-/usr/include/asm-generic/errno.h:
-
-/usr/include/python3.12/cpython/bytearrayobject.h:
-
-/usr/include/c++/13/numeric:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
-
-/usr/include/c++/13/stdlib.h:
-
-/home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h:
-
-/home/cosmos/omoknuni_small/src/python/bindings.cpp:
-
-/usr/include/c++/13/bits/std_mutex.h:
-
-/usr/include/python3.12/cpython/pydebug.h:
-
-/usr/include/c++/13/stdexcept:
-
-/usr/include/c++/13/clocale:
 
 concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
@@ -1087,6 +1028,12 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /usr/include/python3.12/cpython/code.h:
 
+/usr/include/c++/13/bits/new_allocator.h:
+
+/usr/include/c++/13/typeindex:
+
+/usr/include/c++/13/bits/stl_uninitialized.h:
+
 /usr/include/c++/13/ext/atomicity.h:
 
 /usr/include/c++/13/deque:
@@ -1101,27 +1048,41 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h:
 
-/usr/include/c++/13/bits/cxxabi_forced.h:
+/usr/include/limits.h:
 
-/usr/include/c++/13/typeinfo:
+/usr/include/c++/13/cstdlib:
 
-/usr/include/c++/13/bits/exception.h:
+/usr/include/c++/13/iostream:
+
+/usr/include/asm-generic/errno.h:
+
+/usr/include/python3.12/cpython/bytearrayobject.h:
+
+/usr/include/c++/13/numeric:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
 
 /usr/include/c++/13/bits/deque.tcc:
 
-/usr/include/c++/13/bits/stream_iterator.h:
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
 
-/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
+/usr/include/c++/13/thread:
 
-/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
+/usr/include/c++/13/set:
+
+/usr/include/c++/13/bits/shared_ptr_atomic.h:
+
+/usr/include/python3.12/cpython/pyfpe.h:
+
+/usr/include/asm-generic/int-ll64.h:
 
 /usr/include/c++/13/bits/exception_defines.h:
 
 /usr/include/c++/13/bits/localefwd.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
-
 /usr/include/c++/13/bits/istream.tcc:
+
+/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 
 /usr/include/c++/13/bits/forward_list.h:
 
@@ -1133,7 +1094,11 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
 
+/usr/include/errno.h:
+
 /usr/include/c++/13/bits/valarray_array.tcc:
+
+/usr/lib/python3/dist-packages/pybind11/include/pybind11/buffer_info.h:
 
 /usr/include/c++/13/bits/indirect_array.h:
 
@@ -1141,11 +1106,13 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /usr/include/python3.12/cpython/fileutils.h:
 
-/usr/include/c++/13/bits/gslice.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/error_t.h:
 
 /usr/include/c++/13/bits/invoke.h:
+
+/usr/include/c++/13/stdexcept:
+
+/usr/include/c++/13/clocale:
 
 /usr/include/c++/13/bits/locale_classes.h:
 
@@ -1171,9 +1138,11 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /usr/include/c++/13/bits/basic_ios.tcc:
 
-/usr/include/c++/13/bits/move.h:
+/usr/include/c++/13/debug/debug.h:
 
-/home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h:
+/usr/include/c++/13/bits/stl_list.h:
+
+/usr/include/c++/13/bits/move.h:
 
 /usr/include/c++/13/tr1/beta_function.tcc:
 
@@ -1193,9 +1162,9 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /usr/include/linux/errno.h:
 
-/usr/include/x86_64-linux-gnu/bits/wchar2-decl.h:
-
 /usr/include/python3.12/cpython/complexobject.h:
+
+/usr/include/x86_64-linux-gnu/bits/wchar2-decl.h:
 
 /usr/include/c++/13/bits/std_abs.h:
 
@@ -1212,6 +1181,8 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /usr/include/x86_64-linux-gnu/bits/stdio2.h:
 
 /usr/include/c++/13/bits/stl_construct.h:
+
+/usr/include/c++/13/bits/gslice.h:
 
 /usr/include/c++/13/bits/locale_facets.tcc:
 
@@ -1230,12 +1201,6 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
 
 /usr/include/c++/13/bits/stl_deque.h:
-
-/usr/lib/python3/dist-packages/pybind11/include/pybind11/attr.h:
-
-/home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h:
-
-/usr/include/parallel_hashmap/phmap_fwd_decl.h:
 
 /usr/include/python3.12/cpython/methodobject.h:
 
@@ -1285,17 +1250,13 @@ concurrentqueue-wrapper/moodycamel/concurrentqueue.h:
 
 /usr/include/c++/13/bits/functexcept.h:
 
-/usr/include/endian.h:
+/usr/include/c++/13/bits/stl_iterator_base_types.h:
 
-/usr/include/python3.12/cpython/listobject.h:
+/usr/include/stdio.h:
 
-/usr/include/stdint.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h:
 
-/usr/include/errno.h:
-
-/usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
-
-/usr/include/libintl.h:
+/usr/include/c++/13/debug/assertions.h:
 
 lib/Release/libTracyClient.so.0.11.0:
 
@@ -1517,6 +1478,8 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /usr/include/python3.12/pythread.h:
 
+/usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h:
+
 /usr/include/python3.12/cpython/setobject.h:
 
 /usr/include/python3.12/setobject.h:
@@ -1526,6 +1489,8 @@ lib/Release/libTracyClient.so.0.11.0:
 /usr/include/c++/13/ios:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h:
+
+/usr/include/python3.12/structseq.h:
 
 /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0:
 
@@ -1595,6 +1560,12 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /usr/include/x86_64-linux-gnu/bits/wchar2.h:
 
+/home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h:
+
+/usr/include/parallel_hashmap/phmap_fwd_decl.h:
+
+/usr/lib/python3/dist-packages/pybind11/include/pybind11/attr.h:
+
 /usr/include/c++/13/ext/alloc_traits.h:
 
 /usr/include/c++/13/bits/random.h:
@@ -1614,8 +1585,6 @@ lib/Release/libTracyClient.so.0.11.0:
 /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h:
-
-/usr/include/c++/13/queue:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/ctype_inline.h:
 
@@ -1698,6 +1667,8 @@ lib/Release/libTracyClient.so.0.11.0:
 /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/crtendS.o:
 
@@ -1807,6 +1778,14 @@ CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h:
 
+/usr/include/assert.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h:
+
 /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h:

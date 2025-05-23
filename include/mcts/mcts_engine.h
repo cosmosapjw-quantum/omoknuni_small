@@ -13,8 +13,6 @@
 #include "mcts/mcts_object_pool.h"
 #include "mcts/transposition_table.h"
 #include "mcts/node_tracker.h"
-#include "mcts/unified_inference_server.h"
-#include "mcts/burst_coordinator.h"
 #include "core/igamestate.h"
 #include "core/export_macros.h"
 #include "nn/neural_network.h"
@@ -307,26 +305,6 @@ public:
     
         
     
-    /**
-     * @brief Get the unified inference server
-     * 
-     * @return Shared pointer to the inference server (may be nullptr)
-     */
-    std::shared_ptr<UnifiedInferenceServer> getInferenceServer() const { return inference_server_; }
-    
-    /**
-     * @brief Enable unified inference server mode (replaces traditional evaluator)
-     * 
-     * @param enable Whether to use the unified inference server
-     */
-    void setUseUnifiedInferenceServer(bool enable);
-    
-    /**
-     * @brief Check if using unified inference server
-     * 
-     * @return true if using unified inference server, false otherwise
-     */
-    bool isUsingUnifiedInferenceServer() const;
     
 
 public:
@@ -415,6 +393,9 @@ private:
     // NEW: Burst-mode optimized search with unified memory management
     void executeOptimizedSearchV2(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
     bool processBatchWithEvaluator(const std::vector<PendingEvaluation>& batch);
+    
+    // CRITICAL FIX: Simplified direct batching without complex layers
+    void executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
     
     // Performance mode for optimization configuration
     enum class PerformanceMode {
@@ -517,6 +498,11 @@ public:
         moodycamel::ConcurrentQueue<std::pair<NetworkOutput, PendingEvaluation>>* result_queue,
         std::function<void()> notify_fn);
     
+    // Memory management methods
+    void cleanupTree();
+    void cleanupPendingEvaluations();
+    void resetForNewSearch();
+    
     // Parallelization strategies
     void runOpenMPSearch();
     void runRootParallelSearch();
@@ -534,11 +520,6 @@ public:
     MCTSStats last_stats_;
     
     
-    // NEW: Unified inference server for improved batching and reduced deadlocks
-    std::shared_ptr<UnifiedInferenceServer> inference_server_;
-    
-    // NEW: Burst coordinator for coordinated batch collection
-    std::unique_ptr<BurstCoordinator> burst_coordinator_;
     
     // Tree root
     std::shared_ptr<MCTSNode> root_;
@@ -633,8 +614,6 @@ public:
     // Node tracker for lock-free pending evaluation management
     std::unique_ptr<NodeTracker> node_tracker_;
     
-    // Advanced optimization components - using singleton object pool manager
-    std::shared_ptr<UnifiedInferenceServer> unified_inference_server_;
     
     // New optimization control variables
     std::atomic<bool> use_advanced_optimizations_{false};

@@ -16,14 +16,28 @@ namespace mcts {
 
 // Clone a game state using the memory pool if enabled
 std::shared_ptr<core::IGameState> MCTSEngine::cloneGameState(const core::IGameState& state) {
-    // Use game state pool if enabled
+    // CRITICAL FIX: Always prioritize pool usage to reduce memory allocations
     if (game_state_pool_enabled_) {
-        // Try to use game state pool from utils
         auto& pool_manager = utils::GameStatePoolManager::getInstance();
+        
+        // Initialize pool if not exists
+        if (!pool_manager.hasPool(state.getGameType())) {
+            try {
+                // Create large pool to handle concurrent requests
+                size_t pool_size = std::max(size_t(2000), static_cast<size_t>(settings_.num_simulations * 2));
+                pool_manager.initializePool(state.getGameType(), pool_size);
+            } catch (const std::exception& e) {
+                std::cerr << "Failed to initialize game state pool: " << e.what() << std::endl;
+            }
+        }
+        
+        // Try to use game state pool
         auto unique_state = pool_manager.cloneState(state);
         
-        // Convert unique_ptr to shared_ptr
-        return unique_state ? std::shared_ptr<core::IGameState>(std::move(unique_state)) : state.clone();
+        if (unique_state) {
+            // Convert to shared_ptr (pool will handle memory internally)
+            return std::shared_ptr<core::IGameState>(std::move(unique_state));
+        }
     }
     
     // Use advanced memory pool if enabled
@@ -140,6 +154,85 @@ std::vector<float> MCTSEngine::createDefaultPolicy(int action_space_size) {
     std::vector<float> default_policy(action_space_size, 1.0f / action_space_size);
     
     return default_policy;
+}
+
+// Parallel search methods
+MCTSEngine::ParallelLeafResult MCTSEngine::selectLeafNodeParallel(
+    std::shared_ptr<MCTSNode> root, 
+    std::vector<std::shared_ptr<MCTSNode>>& path,
+    std::mt19937& rng) {
+    
+    ParallelLeafResult result;
+    path.clear();
+    
+    auto current = root;
+    bool virtual_loss_applied = false;
+    
+    // Traverse down the tree using optimized UCB selection
+    while (current && !current->isLeaf()) {
+        path.push_back(current);
+        
+        // Apply virtual loss to prevent thread collisions
+        if (!virtual_loss_applied && settings_.virtual_loss > 0) {
+            current->applyVirtualLoss(settings_.virtual_loss);
+            virtual_loss_applied = true;
+        }
+        
+        // Enhanced UCB selection with improved exploration
+        auto next = current->selectBestChildUCB(settings_.exploration_constant, rng);
+        
+        if (!next) {
+            // Selection failed - revert virtual loss and return
+            if (virtual_loss_applied) {
+                for (auto& node : path) {
+                    node->revertVirtualLoss(settings_.virtual_loss);
+                }
+            }
+            return result; // Empty result
+        }
+        
+        current = next;
+    }
+    
+    if (!current) {
+        return result; // Empty result
+    }
+    
+    path.push_back(current);
+    result.leaf_node = current;
+    result.path = path;
+    result.applied_virtual_loss = virtual_loss_applied;
+    
+    // Check if this is a terminal node
+    if (current->isTerminal()) {
+        result.terminal = true;
+        result.terminal_value = current->getState().getGameResult() == core::GameResult::WIN_PLAYER1 ? 1.0f : 
+                               (current->getState().getGameResult() == core::GameResult::WIN_PLAYER2 ? -1.0f : 0.0f);
+    }
+    
+    return result;
+}
+
+void MCTSEngine::backpropagateParallel(
+    const std::vector<std::shared_ptr<MCTSNode>>& path, 
+    float value, 
+    int virtual_loss_amount) {
+    
+    // Backpropagate value up the path
+    for (auto it = path.rbegin(); it != path.rend(); ++it) {
+        auto node = *it;
+        
+        // Update node statistics
+        node->updateStats(value);
+        
+        // Revert virtual loss
+        if (virtual_loss_amount > 0) {
+            node->revertVirtualLoss(virtual_loss_amount);
+        }
+        
+        // Flip value for opponent
+        value = -value;
+    }
 }
 
 } // namespace mcts

@@ -23,10 +23,7 @@ namespace mcts {
 
 // Force aggressive memory cleanup
 void MCTSEngine::forceCleanup() {
-    // Clear any batches waiting for processing
-    if (inference_server_) {
-        inference_server_->clearPendingRequests();
-    }
+    // UnifiedInferenceServer was removed in simplification
     
     // Clean up the transposition table
     if (transposition_table_) {

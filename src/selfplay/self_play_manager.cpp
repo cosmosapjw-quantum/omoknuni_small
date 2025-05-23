@@ -347,14 +347,7 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     // Engine performance summary
     if (!engines_.empty()) {
         auto& engine = *engines_[0];
-        if (auto inference_server = engine.getInferenceServer()) {
-            auto stats = inference_server->getStats();
-            std::cout << "[INFERENCE] Neural Network Statistics:" << std::endl;
-            std::cout << "  - Total batches processed: " << stats.total_batches << std::endl;
-            std::cout << "  - Average batch size: " << stats.getAverageBatchSize() << std::endl;
-            std::cout << "  - Average latency: " << stats.getAverageBatchLatency() << "ms" << std::endl;
-            std::cout << "  - Requests dropped: " << stats.dropped_requests << std::endl;
-        }
+        // UnifiedInferenceServer was removed in simplification
     }
     
     std::cout << "[THREADING] Configuration Used:" << std::endl;
@@ -539,12 +532,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 // Begin search
                 auto search_start_time = std::chrono::steady_clock::now();
                 
-                // Add diagnostic logging before search to track inference metrics
-                if (auto inference_server = engine.getInferenceServer()) {
-                    auto stats = inference_server->getStats();
-                    std::cout << "🔬 Pre-search - Avg batch: " << stats.getAverageBatchSize() 
-                             << ", Total batches: " << stats.total_batches << std::endl;
-                }
+                // UnifiedInferenceServer was removed in simplification
                 
                 // PERFORMANCE FIX: Use tree reuse for efficiency (except first move)
                 if (move_count == 0) {
@@ -559,13 +547,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 auto search_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     search_end_time - search_start_time).count();
                 
-                // Add diagnostic logging after search to track inference metrics
-                if (auto inference_server = engine.getInferenceServer()) {
-                    auto stats = inference_server->getStats();
-                    std::cout << "🔬 Post-search - Avg batch: " << stats.getAverageBatchSize() 
-                             << ", Total batches: " << stats.total_batches << std::endl;
-                    
-                }
+                // UnifiedInferenceServer was removed in simplification
                 
                 std::cout << "SelfPlayManager::generateGame - Completed MCTS search for game " << game_id 
                          << ", move " << move_count << " in " << search_duration << "ms" << std::endl;
@@ -685,6 +667,10 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
     // std::cout << "Game " << game_id << ": Completed with "
              // << data.moves.size() << " moves in "
              // << (data.total_time_ms / 1000.0) << " seconds" << std::endl;
+    
+    // FIX: Clean up MCTS tree after game ends to prevent memory accumulation
+    engine.cleanupTree();
+    engine.resetForNewSearch();
     
     return data;
 }

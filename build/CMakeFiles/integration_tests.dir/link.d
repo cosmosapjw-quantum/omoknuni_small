@@ -5,7 +5,6 @@ bin/Release/integration_tests: \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadbegin.o \
   CMakeFiles/integration_tests.dir/tests/integration/mcts_with_nn_test.cpp.o \
   CMakeFiles/integration_tests.dir/tests/integration/games/self_play_games_test.cpp.o \
-  CMakeFiles/integration_tests.dir/tests/integration/optimized_architecture_test.cpp.o \
   lib/Release/libalphazero.so \
   /usr/lib/x86_64-linux-gnu/libgtest_main.a \
   /usr/lib/x86_64-linux-gnu/libgtest.a \
@@ -94,8 +93,6 @@ bin/Release/integration_tests: \
 CMakeFiles/integration_tests.dir/tests/integration/mcts_with_nn_test.cpp.o:
 
 CMakeFiles/integration_tests.dir/tests/integration/games/self_play_games_test.cpp.o:
-
-CMakeFiles/integration_tests.dir/tests/integration/optimized_architecture_test.cpp.o:
 
 lib/Release/libalphazero.so:
 

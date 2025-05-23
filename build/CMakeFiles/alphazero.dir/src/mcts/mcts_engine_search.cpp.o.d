@@ -289,16 +289,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o: \
  /usr/include/parallel_hashmap/phmap_base.h \
  /usr/include/c++/13/shared_mutex \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
- /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
- /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
- /home/cosmos/omoknuni_small/include/mcts/concurrent_request_aggregator.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/mcts/adaptive_batch_sizer.h \
- /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_adjuster.h \
- /home/cosmos/omoknuni_small/include/mcts/burst_coordinator.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
- /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
- /home/cosmos/omoknuni_small/include/mcts/unified_inference_server.h \
  /home/cosmos/omoknuni_small/include/utils/advanced_memory_monitor.h \
  /usr/include/c++/13/fstream \
  /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
@@ -4820,6 +4811,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/detail/TensorDataContainer.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/detail/data_shuttle.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/detail/queue.h \
+ /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/detail/sequencers.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/iterator.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/samplers/random.h \
@@ -5157,7 +5149,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o: \
  /usr/include/taskflow/core/async_task.hpp \
  /usr/include/taskflow/core/async.hpp \
  /usr/include/taskflow/algorithm/critical.hpp \
- /home/cosmos/omoknuni_small/include/mcts/unified_memory_manager.h \
  /home/cosmos/omoknuni_small/include/mcts/advanced_memory_pool.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h \
  /home/cosmos/omoknuni_small/include/utils/gpu_memory_manager.h \
@@ -5589,5 +5580,4 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o: \
  /usr/local/include/rmm/device_uvector.hpp \
  /usr/local/include/rmm/detail/exec_check_disable.hpp \
  /home/cosmos/omoknuni_small/include/core/tensor_pool.h \
- /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
- /home/cosmos/omoknuni_small/include/mcts/lock_free_batch_accumulator.h
+ /home/cosmos/omoknuni_small/include/utils/memory_tracker.h

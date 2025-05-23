@@ -640,36 +640,19 @@ set(MCTS_SOURCES
     src/mcts/mcts_node_virtual_loss.cpp
     src/mcts/mcts_node_pool.cpp
     src/mcts/evaluation_types.cpp
-    src/mcts/unified_inference_server.cpp
-    src/mcts/concurrent_request_aggregator.cpp
-    src/mcts/burst_coordinator.cpp
     src/mcts/mcts_object_pool.cpp
-    src/mcts/cuda_stream_optimizer.cpp
     src/mcts/advanced_memory_pool.cpp
-    src/mcts/unified_memory_manager.cpp
-    src/mcts/adaptive_batch_sizer.cpp
-    src/mcts/lock_free_batch_accumulator.cpp
-    src/mcts/optimized_external_queue_processor.cpp
-    src/mcts/enhanced_mcts_search.cpp
-    src/mcts/parallel_mcts_search.cpp
-    # UPDATED: Now using UnifiedInferenceServer + BurstCoordinator architecture
-    src/mcts/mcts_engine_optimized.cpp
-    src/mcts/mcts_engine_optimized_control.cpp
-    # UPDATED: Advanced pipeline implementation for new architecture
-    src/mcts/mcts_pipeline.cpp
     src/mcts/mcts_engine_main.cpp
     src/mcts/mcts_engine_utils.cpp
     src/mcts/mcts_engine_tree.cpp
     src/mcts/mcts_engine_eval.cpp
     src/mcts/mcts_engine_common.cpp
     src/mcts/mcts_engine_search.cpp
+    src/mcts/mcts_engine_simple_batch.cpp
     src/mcts/mcts_engine_methods.cpp
-    # UPDATED: Taskflow-based engine with new architecture
-    src/mcts/mcts_taskflow_engine.cpp
+    src/mcts/mcts_engine_memory.cpp
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
-    src/mcts/dynamic_batch_adjuster.cpp
-    src/mcts/batch_barrier.cpp
 )
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp
@@ -1262,12 +1245,8 @@ if(BUILD_TESTS)
     set(GOMOKU_TEST_SOURCES tests/games/gomoku/gomoku_test.cpp)
     set(MCTS_TEST_SOURCES   tests/mcts/mcts_node_test.cpp
                             tests/mcts/mcts_engine_test.cpp tests/mcts/mcts_openmp_test.cpp
-                            tests/mcts/mcts_optimization_test.cpp
-                            tests/mcts/burst_coordinator_test.cpp
-                            tests/mcts/unified_inference_server_test.cpp
                             tests/mcts/progressive_widening_test.cpp
-                            tests/mcts/virtual_loss_test.cpp
-                            tests/mcts/shared_queue_test.cpp)
+                            tests/mcts/virtual_loss_test.cpp)
     set(TRANSPOSITION_TEST_SOURCES tests/mcts/transposition_table_test.cpp
                                  tests/mcts/transposition_integration_test.cpp)
     set(CLI_TEST_SOURCES    tests/cli/cli_manager_test.cpp)
@@ -1275,8 +1254,7 @@ if(BUILD_TESTS)
     set(SELFPLAY_TEST_SOURCES tests/selfplay/self_play_manager_test.cpp)
     set(TRAINING_TEST_SOURCES tests/training/training_data_manager_test.cpp)
     set(INTEGRATION_TEST_SOURCES tests/integration/mcts_with_nn_test.cpp
-                               tests/integration/games/self_play_games_test.cpp
-                               tests/integration/optimized_architecture_test.cpp)
+                               tests/integration/games/self_play_games_test.cpp)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/mcts/mcts_test.cpp")
         list(APPEND MCTS_TEST_SOURCES tests/mcts/mcts_test.cpp)
     endif()
