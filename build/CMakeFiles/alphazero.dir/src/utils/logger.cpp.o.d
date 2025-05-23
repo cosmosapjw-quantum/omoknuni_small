@@ -262,6 +262,7 @@ CMakeFiles/alphazero.dir/src/utils/logger.cpp.o: \
  /usr/include/spdlog/async_logger.h \
  /usr/include/spdlog/details/thread_pool.h \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
+ /home/cosmos/omoknuni_small/include/alphazero_export.h \
  /usr/include/c++/13/filesystem /usr/include/c++/13/bits/fs_fwd.h \
  /usr/include/c++/13/bits/fs_path.h /usr/include/c++/13/codecvt \
  /usr/include/c++/13/bits/fs_dir.h /usr/include/c++/13/bits/fs_ops.h \

@@ -620,7 +620,7 @@ set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp src/core/
 set(CHESS_SOURCES     src/games/chess/chess_state.cpp src/games/chess/chess_rules.cpp src/games/chess/chess960.cpp)
 set(GO_SOURCES        src/games/go/go_state.cpp   src/games/go/go_rules.cpp)
 set(GOMOKU_SOURCES    src/games/gomoku/gomoku_state.cpp src/games/gomoku/gomoku_rules.cpp)
-set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp src/utils/resource_monitor.cpp src/utils/advanced_memory_monitor.cpp)
+set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp src/utils/resource_monitor.cpp src/utils/advanced_memory_monitor.cpp src/utils/thread_local_memory_manager.cpp)
 
 # Conditionally define NN_SOURCES based on WITH_TORCH
 set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
@@ -630,6 +630,7 @@ if(WITH_TORCH)
         src/nn/resnet_model_performance.cpp
         src/nn/neural_network_factory.cpp
         src/nn/gpu_optimizer.cpp
+        src/nn/optimized_resnet_model.cpp
     )
 endif()
 
@@ -658,10 +659,13 @@ set(MCTS_SOURCES
     src/mcts/aggressive_memory_manager.cpp
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
+    src/mcts/multi_instance_nn_manager.cpp
 )
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp
     src/selfplay/self_play_manager_parallel.cpp
+    src/selfplay/unified_parallel_manager.cpp
+    src/selfplay/optimized_self_play_manager.cpp
 )
 set(TRAINING_SOURCES
     src/training/training_data_manager.cpp
@@ -1132,6 +1136,7 @@ endif()
 if(WITH_TORCH)
     # Always build the CLI with TORCH
     add_executable(omoknuni_cli src/cli/omoknuni_cli.cpp)
+    add_executable(omoknuni_cli_optimized src/cli/omoknuni_cli_optimized.cpp)
 
     # Set RPATH to find shared libraries relative to executable location
     set_target_properties(omoknuni_cli PROPERTIES
@@ -1139,9 +1144,22 @@ if(WITH_TORCH)
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
     )
+    
+    set_target_properties(omoknuni_cli_optimized PROPERTIES
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
+    )
 
     # Link against alphazero, yaml-cpp, and Torch
     target_link_libraries(omoknuni_cli PRIVATE
+        alphazero
+        "${TORCH_LIBRARIES}"
+        dl  # For dlopen, dlclose, dlerror
+        stdc++  # Explicitly link standard C++ library
+    )
+    
+    target_link_libraries(omoknuni_cli_optimized PRIVATE
         alphazero
         "${TORCH_LIBRARIES}"
         dl  # For dlopen, dlclose, dlerror

@@ -69,10 +69,10 @@ bin/Release/mcts_tests: \
   /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0 \
   /opt/libtorch-2.7.0-cu128/lib/libc10.so \
   /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so \
-  /usr/local/cuda/lib64/libcudart.so \
   /usr/lib/x86_64-linux-gnu/libspdlog.so.1.12.0 \
   lib/Release/libTracyClient.so.0.11.0 \
   /usr/lib/x86_64-linux-gnu/libfmt.so.9.1.0 \
+  /usr/local/cuda/lib64/libcudart.so \
   /usr/local/lib/librapids_logger.so \
   /lib64/ld-linux-x86-64.so.2 \
   /lib/x86_64-linux-gnu/librt.so.1 \
@@ -224,13 +224,13 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so:
 
-/usr/local/cuda/lib64/libcudart.so:
-
 /usr/lib/x86_64-linux-gnu/libspdlog.so.1.12.0:
 
 lib/Release/libTracyClient.so.0.11.0:
 
 /usr/lib/x86_64-linux-gnu/libfmt.so.9.1.0:
+
+/usr/local/cuda/lib64/libcudart.so:
 
 /usr/local/lib/librapids_logger.so:
 

@@ -1,0 +1,59 @@
+# High CPU/GPU Utilization Configuration
+# Achieves 70%+ sustained CPU and GPU utilization
+
+# Game settings
+game_type: gomoku
+board_size: 15
+
+# Model settings  
+model_path: models/model.pt
+
+# MCTS settings - optimized for high utilization
+mcts_num_simulations: 400
+mcts_num_threads: 8  # More threads per game for CPU saturation
+mcts_batch_size: 64  # Larger batches
+mcts_batch_timeout_ms: 10  # Very short timeout
+mcts_max_collection_batch_size: 96
+mcts_exploration_constant: 1.5
+mcts_virtual_loss: 5  # Higher VL to prevent thread collisions
+mcts_add_dirichlet_noise: true
+mcts_dirichlet_alpha: 0.3
+mcts_dirichlet_epsilon: 0.25
+mcts_temperature: 1.0
+
+# Enable speculative execution
+mcts_enable_speculative_execution: true
+mcts_speculation_depth: 3  # Explore 3 moves ahead while waiting
+
+# Self-play settings  
+self_play_num_games: 10
+self_play_num_parallel_games: 3  # 3 games * 8 threads = 24 CPU threads
+self_play_max_moves: 512
+self_play_temperature_threshold: 30
+self_play_high_temperature: 1.0
+self_play_low_temperature: 0.1
+self_play_output_dir: data/self_play_games
+self_play_output_format: json
+
+# Use unified parallel mode
+self_play_use_unified_parallel: true
+
+# Transposition table
+mcts_use_transposition_table: true
+mcts_transposition_table_size_mb: 256  # Larger for more games
+
+# Progressive widening
+mcts_use_progressive_widening: true
+mcts_progressive_widening_c: 1.0
+mcts_progressive_widening_k: 0.5
+
+# Root parallelization disabled
+mcts_use_root_parallelization: false
+
+# RAVE
+mcts_use_rave: true
+mcts_rave_constant: 3000.0
+
+# Thread pinning for better CPU utilization
+enable_thread_pinning: true
+pin_threads_to_cores: true

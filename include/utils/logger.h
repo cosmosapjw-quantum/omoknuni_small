@@ -8,6 +8,7 @@
 #include <spdlog/async.h>
 #include <memory>
 #include <string>
+#include "alphazero_export.h"
 
 namespace alphazero {
 namespace utils {
@@ -23,7 +24,7 @@ namespace utils {
  * - Structured logging with custom formatters
  * - Performance-optimized for MCTS operations
  */
-class Logger {
+class ALPHAZERO_API Logger {
 public:
     // Logger initialization
     static void init(const std::string& log_dir = "logs",

@@ -64,7 +64,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=
+CMAKE_BUILD_TYPE:STRING=Release
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -76,7 +76,7 @@ CMAKE_CUDA_ARCHITECTURES:STRING=70;75;80;86
 CMAKE_CUDA_COMPILER:FILEPATH=/usr/local/cuda-12.8/bin/nvcc
 
 //Flags used by the CUDA compiler during all build types.
-CMAKE_CUDA_FLAGS:STRING=
+CMAKE_CUDA_FLAGS:STRING=-O3 -arch=sm_86
 
 //Flags used by the CUDA compiler during DEBUG builds.
 CMAKE_CUDA_FLAGS_DEBUG:STRING=-g
@@ -99,7 +99,7 @@ CMAKE_CXX_COMPILER_AR:FILEPATH=/usr/bin/gcc-ar-13
 CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-13
 
 //Flags used by the CXX compiler during all build types.
-CMAKE_CXX_FLAGS:STRING=
+CMAKE_CXX_FLAGS:STRING=-O3 -march=native -mtune=native -flto -fvisibility=hidden
 
 //Flags used by the CXX compiler during DEBUG builds.
 CMAKE_CXX_FLAGS_DEBUG:STRING=-g
@@ -112,6 +112,9 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 
 //Flags used by the CXX compiler during RELWITHDEBINFO builds.
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
+
+//No help, variable specified on the command line.
+CMAKE_CXX_VISIBILITY_PRESET:UNINITIALIZED=hidden
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -210,6 +213,9 @@ CMAKE_INSTALL_SHAREDSTATEDIR:PATH=com
 
 //Read-only single-machine data (etc)
 CMAKE_INSTALL_SYSCONFDIR:PATH=etc
+
+//No help, variable specified on the command line.
+CMAKE_INTERPROCEDURAL_OPTIMIZATION:UNINITIALIZED=ON
 
 //Path to a program.
 CMAKE_LINKER:FILEPATH=/usr/bin/ld
@@ -334,6 +340,9 @@ CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 // during the make.  This is useful for debugging only. With Visual
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
+
+//No help, variable specified on the command line.
+CMAKE_VISIBILITY_INLINES_HIDDEN:UNINITIALIZED=ON
 
 //Path to a file.
 CONCURRENTQUEUE_INCLUDE_DIR:PATH=CONCURRENTQUEUE_INCLUDE_DIR-NOTFOUND
@@ -1577,8 +1586,6 @@ FIND_PACKAGE_MESSAGE_DETAILS_Torch:INTERNAL=[/opt/libtorch-2.7.0-cu128/lib/libto
 GITCOMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: GIT_EXECUTABLE
 GIT_EXECUTABLE-ADVANCED:INTERNAL=1
-//Test HAS_FLTO
-HAS_FLTO:INTERNAL=1
 LIBCUDACXX_VERSION:INTERNAL=2.7.0.0
 LIBCUDACXX_VERSION_COUNT:INTERNAL=4
 LIBCUDACXX_VERSION_MAJOR:INTERNAL=2
@@ -1660,8 +1667,6 @@ _Python_INCLUDE_DIR:INTERNAL=/usr/include/python3.12
 //Python Properties
 _Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;12;3;64;<none>;cpython-312-x86_64-linux-gnu;abi3;/usr/lib/python3.12;/usr/lib/python3.12;/usr/local/lib/python3.12/dist-packages;/usr/local/lib/python3.12/dist-packages
 _Python_INTERPRETER_SIGNATURE:INTERNAL=0b516266b7ed9a0986c924c82c2c3a08
-//Interpreter reason failure
-_Python_Interpreter_REASON_FAILURE:INTERNAL=
 //Path to a library.
 _Python_LIBRARY_RELEASE:INTERNAL=/usr/lib/x86_64-linux-gnu/libpython3.12.so
 //NumPy reason failure

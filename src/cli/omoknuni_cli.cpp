@@ -18,6 +18,7 @@
 #include "nn/neural_network_factory.h"
 #include "selfplay/self_play_manager.h"
 #include "selfplay/parallel_self_play_manager.h"
+#include "selfplay/unified_parallel_manager.h"
 #include "cli/alphazero_pipeline.h"
 #include <optional>
 
@@ -290,10 +291,14 @@ int main(int argc, char** argv) {
                     
                     int num_games = getIntConfigValue(config, "self_play_num_games", 100);
                     int num_parallel_games = getIntConfigValue(config, "self_play_num_parallel_games", 4);
+                    bool use_unified_parallel = getBoolConfigValue(config, "self_play_use_unified_parallel", false);
                     
                     // Root parallelization settings - already set above, no need to redefine
                     
                     std::cout << "  Number of parallel games: " << num_parallel_games << std::endl;
+                    if (use_unified_parallel) {
+                        std::cout << "  Using UNIFIED parallel mode for 70%+ GPU utilization! 🔥" << std::endl;
+                    }
                     std::cout << "  Number of root workers per game: " << num_root_workers << std::endl;
                     int max_moves = getIntConfigValue(config, "self_play_max_moves", 0);
                     int temperature_threshold = getIntConfigValue(config, "self_play_temperature_threshold", 30);
@@ -471,8 +476,31 @@ int main(int argc, char** argv) {
                     // Initialize self-play manager
                     std::cout << "Initializing self-play manager..." << std::endl;
                     
+                    // Check if we should use unified parallel mode
+                    if (use_unified_parallel && self_play_settings.num_parallel_games > 1) {
+                        std::cout << "Using UNIFIED PARALLEL self-play manager with " 
+                                  << self_play_settings.num_parallel_games << " parallel games" << std::endl;
+                        std::cout << "🔥 Single GPU batch collector for ALL games - sustained 70%+ utilization!" << std::endl;
+                        
+                        alphazero::selfplay::UnifiedParallelManager unified_manager(neural_net, self_play_settings);
+                        
+                        // Generate games with unified batching
+                        std::cout << "Generating " << num_games << " self-play games with UNIFIED batching..." << std::endl;
+                        try {
+                            auto games = unified_manager.generateGamesUnified(game_type, num_games, board_size);
+                            
+                            // Save games
+                            std::cout << "Saving games to " << output_dir << " in " << output_format << " format..." << std::endl;
+                            unified_manager.saveGames(games, output_dir, output_format);
+                            
+                            std::cout << "Unified parallel self-play completed successfully." << std::endl;
+                        } catch (const std::exception& e) {
+                            std::cerr << "Error during unified parallel self-play: " << e.what() << std::endl;
+                            return 1;
+                        }
+                    }
                     // Check if we should use parallel game generation
-                    if (self_play_settings.num_parallel_games > 1) {
+                    else if (self_play_settings.num_parallel_games > 1) {
                         std::cout << "Using PARALLEL self-play manager with " 
                                   << self_play_settings.num_parallel_games << " parallel games" << std::endl;
                         

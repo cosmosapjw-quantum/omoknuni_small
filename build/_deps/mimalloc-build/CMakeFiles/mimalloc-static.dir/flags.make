@@ -6,5 +6,5 @@ CXX_DEFINES = -DDEBUG_BATCH_PROCESSING=1 -DENABLE_CUDA_FALLBACK=1 -DMI_MALLOC_OV
 
 CXX_INCLUDES = -I/home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include
 
-CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -std=gnu++17 -fPIC -Wall -Wextra -mavx2 -O3 -Wno-unknown-pragmas -fvisibility=hidden -ftls-model=initial-exec -fno-builtin-malloc
+CXX_FLAGS = -O3 -march=native -mtune=native -flto -fvisibility=hidden -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -std=gnu++17 -flto=auto -fno-fat-lto-objects -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wextra -mavx2 -O3 -Wno-unknown-pragmas -fvisibility=hidden -ftls-model=initial-exec -fno-builtin-malloc
 

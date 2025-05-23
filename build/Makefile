@@ -608,6 +608,19 @@ omoknuni_cli/fast:
 .PHONY : omoknuni_cli/fast
 
 #=============================================================================
+# Target rules for targets named omoknuni_cli_optimized
+
+# Build rule for target.
+omoknuni_cli_optimized: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omoknuni_cli_optimized
+.PHONY : omoknuni_cli_optimized
+
+# fast build rule for target.
+omoknuni_cli_optimized/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_optimized.dir/build.make CMakeFiles/omoknuni_cli_optimized.dir/build
+.PHONY : omoknuni_cli_optimized/fast
+
+#=============================================================================
 # Target rules for targets named core_tests
 
 # Build rule for target.
@@ -910,6 +923,30 @@ src/cli/omoknuni_cli.s: src/cli/omoknuni_cli.cpp.s
 src/cli/omoknuni_cli.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.s
 .PHONY : src/cli/omoknuni_cli.cpp.s
+
+src/cli/omoknuni_cli_optimized.o: src/cli/omoknuni_cli_optimized.cpp.o
+.PHONY : src/cli/omoknuni_cli_optimized.o
+
+# target to build an object file
+src/cli/omoknuni_cli_optimized.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_optimized.dir/build.make CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.o
+.PHONY : src/cli/omoknuni_cli_optimized.cpp.o
+
+src/cli/omoknuni_cli_optimized.i: src/cli/omoknuni_cli_optimized.cpp.i
+.PHONY : src/cli/omoknuni_cli_optimized.i
+
+# target to preprocess a source file
+src/cli/omoknuni_cli_optimized.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_optimized.dir/build.make CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.i
+.PHONY : src/cli/omoknuni_cli_optimized.cpp.i
+
+src/cli/omoknuni_cli_optimized.s: src/cli/omoknuni_cli_optimized.cpp.s
+.PHONY : src/cli/omoknuni_cli_optimized.s
+
+# target to generate assembly for a file
+src/cli/omoknuni_cli_optimized.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_optimized.dir/build.make CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.s
+.PHONY : src/cli/omoknuni_cli_optimized.cpp.s
 
 src/core/game_export.o: src/core/game_export.cpp.o
 .PHONY : src/core/game_export.o
@@ -1703,6 +1740,30 @@ src/mcts/mcts_object_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.s
 .PHONY : src/mcts/mcts_object_pool.cpp.s
 
+src/mcts/multi_instance_nn_manager.o: src/mcts/multi_instance_nn_manager.cpp.o
+.PHONY : src/mcts/multi_instance_nn_manager.o
+
+# target to build an object file
+src/mcts/multi_instance_nn_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o
+.PHONY : src/mcts/multi_instance_nn_manager.cpp.o
+
+src/mcts/multi_instance_nn_manager.i: src/mcts/multi_instance_nn_manager.cpp.i
+.PHONY : src/mcts/multi_instance_nn_manager.i
+
+# target to preprocess a source file
+src/mcts/multi_instance_nn_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.i
+.PHONY : src/mcts/multi_instance_nn_manager.cpp.i
+
+src/mcts/multi_instance_nn_manager.s: src/mcts/multi_instance_nn_manager.cpp.s
+.PHONY : src/mcts/multi_instance_nn_manager.s
+
+# target to generate assembly for a file
+src/mcts/multi_instance_nn_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.s
+.PHONY : src/mcts/multi_instance_nn_manager.cpp.s
+
 src/mcts/node_tracker.o: src/mcts/node_tracker.cpp.o
 .PHONY : src/mcts/node_tracker.o
 
@@ -1823,6 +1884,30 @@ src/nn/neural_network_factory.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.s
 .PHONY : src/nn/neural_network_factory.cpp.s
 
+src/nn/optimized_resnet_model.o: src/nn/optimized_resnet_model.cpp.o
+.PHONY : src/nn/optimized_resnet_model.o
+
+# target to build an object file
+src/nn/optimized_resnet_model.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.o
+.PHONY : src/nn/optimized_resnet_model.cpp.o
+
+src/nn/optimized_resnet_model.i: src/nn/optimized_resnet_model.cpp.i
+.PHONY : src/nn/optimized_resnet_model.i
+
+# target to preprocess a source file
+src/nn/optimized_resnet_model.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.i
+.PHONY : src/nn/optimized_resnet_model.cpp.i
+
+src/nn/optimized_resnet_model.s: src/nn/optimized_resnet_model.cpp.s
+.PHONY : src/nn/optimized_resnet_model.s
+
+# target to generate assembly for a file
+src/nn/optimized_resnet_model.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.s
+.PHONY : src/nn/optimized_resnet_model.cpp.s
+
 src/nn/resnet_model_performance.o: src/nn/resnet_model_performance.cpp.o
 .PHONY : src/nn/resnet_model_performance.o
 
@@ -1895,6 +1980,30 @@ src/python/bindings.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.s
 .PHONY : src/python/bindings.cpp.s
 
+src/selfplay/optimized_self_play_manager.o: src/selfplay/optimized_self_play_manager.cpp.o
+.PHONY : src/selfplay/optimized_self_play_manager.o
+
+# target to build an object file
+src/selfplay/optimized_self_play_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.o
+.PHONY : src/selfplay/optimized_self_play_manager.cpp.o
+
+src/selfplay/optimized_self_play_manager.i: src/selfplay/optimized_self_play_manager.cpp.i
+.PHONY : src/selfplay/optimized_self_play_manager.i
+
+# target to preprocess a source file
+src/selfplay/optimized_self_play_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.i
+.PHONY : src/selfplay/optimized_self_play_manager.cpp.i
+
+src/selfplay/optimized_self_play_manager.s: src/selfplay/optimized_self_play_manager.cpp.s
+.PHONY : src/selfplay/optimized_self_play_manager.s
+
+# target to generate assembly for a file
+src/selfplay/optimized_self_play_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.s
+.PHONY : src/selfplay/optimized_self_play_manager.cpp.s
+
 src/selfplay/self_play_manager.o: src/selfplay/self_play_manager.cpp.o
 .PHONY : src/selfplay/self_play_manager.o
 
@@ -1942,6 +2051,30 @@ src/selfplay/self_play_manager_parallel.s: src/selfplay/self_play_manager_parall
 src/selfplay/self_play_manager_parallel.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.s
 .PHONY : src/selfplay/self_play_manager_parallel.cpp.s
+
+src/selfplay/unified_parallel_manager.o: src/selfplay/unified_parallel_manager.cpp.o
+.PHONY : src/selfplay/unified_parallel_manager.o
+
+# target to build an object file
+src/selfplay/unified_parallel_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/unified_parallel_manager.cpp.o
+.PHONY : src/selfplay/unified_parallel_manager.cpp.o
+
+src/selfplay/unified_parallel_manager.i: src/selfplay/unified_parallel_manager.cpp.i
+.PHONY : src/selfplay/unified_parallel_manager.i
+
+# target to preprocess a source file
+src/selfplay/unified_parallel_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/unified_parallel_manager.cpp.i
+.PHONY : src/selfplay/unified_parallel_manager.cpp.i
+
+src/selfplay/unified_parallel_manager.s: src/selfplay/unified_parallel_manager.cpp.s
+.PHONY : src/selfplay/unified_parallel_manager.s
+
+# target to generate assembly for a file
+src/selfplay/unified_parallel_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/unified_parallel_manager.cpp.s
+.PHONY : src/selfplay/unified_parallel_manager.cpp.s
 
 src/training/data_loader.o: src/training/data_loader.cpp.o
 .PHONY : src/training/data_loader.o
@@ -2230,6 +2363,30 @@ src/utils/resource_monitor.s: src/utils/resource_monitor.cpp.s
 src/utils/resource_monitor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.s
 .PHONY : src/utils/resource_monitor.cpp.s
+
+src/utils/thread_local_memory_manager.o: src/utils/thread_local_memory_manager.cpp.o
+.PHONY : src/utils/thread_local_memory_manager.o
+
+# target to build an object file
+src/utils/thread_local_memory_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o
+.PHONY : src/utils/thread_local_memory_manager.cpp.o
+
+src/utils/thread_local_memory_manager.i: src/utils/thread_local_memory_manager.cpp.i
+.PHONY : src/utils/thread_local_memory_manager.i
+
+# target to preprocess a source file
+src/utils/thread_local_memory_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.i
+.PHONY : src/utils/thread_local_memory_manager.cpp.i
+
+src/utils/thread_local_memory_manager.s: src/utils/thread_local_memory_manager.cpp.s
+.PHONY : src/utils/thread_local_memory_manager.s
+
+# target to generate assembly for a file
+src/utils/thread_local_memory_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.s
+.PHONY : src/utils/thread_local_memory_manager.cpp.s
 
 src/utils/zobrist_hash.o: src/utils/zobrist_hash.cpp.o
 .PHONY : src/utils/zobrist_hash.o
@@ -2870,6 +3027,7 @@ help:
 	@echo "... mimalloc-static"
 	@echo "... nn_tests"
 	@echo "... omoknuni_cli"
+	@echo "... omoknuni_cli_optimized"
 	@echo "... selfplay_tests"
 	@echo "... training_tests"
 	@echo "... transposition_tests"
@@ -2885,6 +3043,9 @@ help:
 	@echo "... src/cli/omoknuni_cli.o"
 	@echo "... src/cli/omoknuni_cli.i"
 	@echo "... src/cli/omoknuni_cli.s"
+	@echo "... src/cli/omoknuni_cli_optimized.o"
+	@echo "... src/cli/omoknuni_cli_optimized.i"
+	@echo "... src/cli/omoknuni_cli_optimized.s"
 	@echo "... src/core/game_export.o"
 	@echo "... src/core/game_export.i"
 	@echo "... src/core/game_export.s"
@@ -2984,6 +3145,9 @@ help:
 	@echo "... src/mcts/mcts_object_pool.o"
 	@echo "... src/mcts/mcts_object_pool.i"
 	@echo "... src/mcts/mcts_object_pool.s"
+	@echo "... src/mcts/multi_instance_nn_manager.o"
+	@echo "... src/mcts/multi_instance_nn_manager.i"
+	@echo "... src/mcts/multi_instance_nn_manager.s"
 	@echo "... src/mcts/node_tracker.o"
 	@echo "... src/mcts/node_tracker.i"
 	@echo "... src/mcts/node_tracker.s"
@@ -2999,6 +3163,9 @@ help:
 	@echo "... src/nn/neural_network_factory.o"
 	@echo "... src/nn/neural_network_factory.i"
 	@echo "... src/nn/neural_network_factory.s"
+	@echo "... src/nn/optimized_resnet_model.o"
+	@echo "... src/nn/optimized_resnet_model.i"
+	@echo "... src/nn/optimized_resnet_model.s"
 	@echo "... src/nn/resnet_model_performance.o"
 	@echo "... src/nn/resnet_model_performance.i"
 	@echo "... src/nn/resnet_model_performance.s"
@@ -3008,12 +3175,18 @@ help:
 	@echo "... src/python/bindings.o"
 	@echo "... src/python/bindings.i"
 	@echo "... src/python/bindings.s"
+	@echo "... src/selfplay/optimized_self_play_manager.o"
+	@echo "... src/selfplay/optimized_self_play_manager.i"
+	@echo "... src/selfplay/optimized_self_play_manager.s"
 	@echo "... src/selfplay/self_play_manager.o"
 	@echo "... src/selfplay/self_play_manager.i"
 	@echo "... src/selfplay/self_play_manager.s"
 	@echo "... src/selfplay/self_play_manager_parallel.o"
 	@echo "... src/selfplay/self_play_manager_parallel.i"
 	@echo "... src/selfplay/self_play_manager_parallel.s"
+	@echo "... src/selfplay/unified_parallel_manager.o"
+	@echo "... src/selfplay/unified_parallel_manager.i"
+	@echo "... src/selfplay/unified_parallel_manager.s"
 	@echo "... src/training/data_loader.o"
 	@echo "... src/training/data_loader.i"
 	@echo "... src/training/data_loader.s"
@@ -3050,6 +3223,9 @@ help:
 	@echo "... src/utils/resource_monitor.o"
 	@echo "... src/utils/resource_monitor.i"
 	@echo "... src/utils/resource_monitor.s"
+	@echo "... src/utils/thread_local_memory_manager.o"
+	@echo "... src/utils/thread_local_memory_manager.i"
+	@echo "... src/utils/thread_local_memory_manager.s"
 	@echo "... src/utils/zobrist_hash.o"
 	@echo "... src/utils/zobrist_hash.i"
 	@echo "... src/utils/zobrist_hash.s"

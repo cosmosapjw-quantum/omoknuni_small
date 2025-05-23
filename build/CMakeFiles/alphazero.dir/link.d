@@ -23,10 +23,12 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/utils/gpu_memory_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o \
+  CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_methods.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o \
@@ -51,11 +53,14 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o \
+  CMakeFiles/alphazero.dir/src/selfplay/unified_parallel_manager.cpp.o \
+  CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/training/dataset.cpp.o \
   CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o \
@@ -159,6 +164,8 @@ CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o:
 
+CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o:
+
 CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o:
@@ -166,6 +173,8 @@ CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o:
 CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o:
+
+CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o:
 
@@ -215,6 +224,8 @@ CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o:
 
+CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o:
+
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o:
@@ -224,6 +235,10 @@ CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o:
 CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o:
+
+CMakeFiles/alphazero.dir/src/selfplay/unified_parallel_manager.cpp.o:
+
+CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o:
 

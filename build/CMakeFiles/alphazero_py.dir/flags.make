@@ -6,5 +6,5 @@ CXX_DEFINES = -DDEBUG_BATCH_PROCESSING=1 -DENABLE_CUDA_FALLBACK=1 -DFMT_SHARED -
 
 CXX_INCLUDES = -I/home/cosmos/omoknuni_small/include -I/home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include -I/usr/local/include/rapids -I/usr/local/include/rapids/libcudacxx -isystem /usr/include/python3.12 -isystem /usr/lib/python3/dist-packages/pybind11/include -isystem /home/cosmos/omoknuni_small/build/_deps/tracy-src/public -isystem /opt/libtorch-2.7.0-cu128/include -isystem /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include -isystem /usr/local/cuda-12.8/include -isystem /usr/local/cuda/include -isystem /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper
 
-CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -std=gnu++17 -fPIC -fvisibility=hidden -Wall -Wextra -mavx2 -O3 -flto -fno-fat-lto-objects -fopenmp -D_GLIBCXX_USE_CXX11_ABI=1
+CXX_FLAGS = -O3 -march=native -mtune=native -flto -fvisibility=hidden -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -std=gnu++17 -flto=auto -fno-fat-lto-objects -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wextra -mavx2 -O3 -fopenmp -D_GLIBCXX_USE_CXX11_ABI=1
 

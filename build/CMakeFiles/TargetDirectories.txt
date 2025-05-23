@@ -30,6 +30,7 @@
 /home/cosmos/omoknuni_small/build/CMakeFiles/alphazero_pipeline.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/alphazero.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/omoknuni_cli.dir
+/home/cosmos/omoknuni_small/build/CMakeFiles/omoknuni_cli_optimized.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/core_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/chess_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/go_tests.dir

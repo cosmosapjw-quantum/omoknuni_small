@@ -307,6 +307,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o: \
  /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
  /usr/include/spdlog/details/thread_pool.h \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
+ /home/cosmos/omoknuni_small/include/alphazero_export.h \
  /home/cosmos/omoknuni_small/include/utils/profiler.h \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/Tracy.hpp \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyColor.hpp \

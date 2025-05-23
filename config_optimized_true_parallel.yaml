@@ -1,0 +1,56 @@
+# Optimized configuration for true parallel MCTS with independent neural networks
+# Designed for Ryzen 9 5900X (12 cores/24 threads) + RTX 3060 Ti (8GB VRAM)
+
+# Game settings
+game_type: gomoku
+board_size: 15
+
+# Neural Network settings
+model_path: models/model.pt
+input_channels: 17
+num_res_blocks: 10
+num_filters: 64
+
+# Self-play settings
+self_play_num_games: 100
+self_play_num_parallel_games: 8  # 8 independent MCTS engines with separate neural networks
+self_play_save_dir: data/self_play_games
+self_play_temperature: 1.0
+self_play_temperature_moves: 20
+
+# MCTS settings (per engine)
+mcts_num_simulations: 800
+mcts_num_threads: 3  # 3 threads per engine = 24 threads total
+mcts_batch_size: 16  # Larger batch size for better GPU utilization
+mcts_batch_timeout_ms: 2  # Shorter timeout for faster response
+mcts_virtual_loss: 3.0
+mcts_exploration_constant: 1.25
+mcts_progressive_widening_base: 1.0
+mcts_progressive_widening_scale: 0.0
+mcts_use_transposition_table: true
+mcts_use_dirichlet_noise: true
+mcts_dirichlet_alpha: 0.3
+mcts_dirichlet_epsilon: 0.25
+
+# Training settings
+training_batch_size: 256
+training_learning_rate: 0.001
+training_num_epochs: 10
+training_checkpoint_interval: 50
+training_save_dir: models/
+training_replay_buffer_size: 100000
+training_l2_regularization: 0.0001
+training_use_mixed_precision: true
+
+# Resource settings
+memory_limit_gb: 32  # Leave headroom for OS
+gpu_memory_fraction: 0.9  # Use 90% of GPU memory
+num_cpu_threads: 24  # Use all CPU threads
+enable_profiling: true
+profile_output_dir: logs/profile/
+
+# Logging
+log_level: INFO
+log_dir: logs/
+enable_throughput_monitoring: true
+monitoring_interval_sec: 5

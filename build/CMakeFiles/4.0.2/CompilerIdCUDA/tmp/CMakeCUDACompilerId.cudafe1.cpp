@@ -194,33 +194,33 @@ extern const __int32_t **__ctype_toupper_loc() noexcept(true)
 # 84
  __attribute((const)); 
 # 108 "/usr/include/ctype.h" 3
-extern int isalnum(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int isalnum(int) noexcept(true); 
 # 109
-extern int isalpha(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int isalpha(int) noexcept(true); 
 # 110
-extern int iscntrl(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int iscntrl(int) noexcept(true); 
 # 111
-extern int isdigit(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int isdigit(int) noexcept(true); 
 # 112
-extern int islower(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int islower(int) noexcept(true); 
 # 113
-extern int isgraph(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int isgraph(int) noexcept(true); 
 # 114
-extern int isprint(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int isprint(int) noexcept(true); 
 # 115
-extern int ispunct(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int ispunct(int) noexcept(true); 
 # 116
-extern int isspace(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int isspace(int) noexcept(true); 
 # 117
-extern int isupper(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int isupper(int) noexcept(true); 
 # 118
-extern int isxdigit(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int isxdigit(int) noexcept(true); 
 # 122
-extern int tolower(int __c) noexcept(true); 
+extern __attribute((gnu_inline)) inline int tolower(int __c) noexcept(true); 
 # 125
-extern int toupper(int __c) noexcept(true); 
+extern __attribute((gnu_inline)) inline int toupper(int __c) noexcept(true); 
 # 130
-extern int isblank(int) noexcept(true); 
+extern __attribute((gnu_inline)) inline int isblank(int) noexcept(true); 
 # 135
 extern int isctype(int __c, int __mask) noexcept(true); 
 # 142
@@ -231,6 +231,50 @@ extern int toascii(int __c) noexcept(true);
 extern int _toupper(int) noexcept(true); 
 # 151
 extern int _tolower(int) noexcept(true); 
+# 174 "/usr/include/ctype.h" 3
+__attribute((__gnu_inline__)) extern inline int isalnum(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISalnum); } 
+# 175
+__attribute((__gnu_inline__)) extern inline int isalpha(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISalpha); } 
+# 176
+__attribute((__gnu_inline__)) extern inline int iscntrl(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_IScntrl); } 
+# 177
+__attribute((__gnu_inline__)) extern inline int isdigit(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISdigit); } 
+# 178
+__attribute((__gnu_inline__)) extern inline int islower(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISlower); } 
+# 179
+__attribute((__gnu_inline__)) extern inline int isgraph(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISgraph); } 
+# 180
+__attribute((__gnu_inline__)) extern inline int isprint(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISprint); } 
+# 181
+__attribute((__gnu_inline__)) extern inline int ispunct(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISpunct); } 
+# 182
+__attribute((__gnu_inline__)) extern inline int isspace(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISspace); } 
+# 183
+__attribute((__gnu_inline__)) extern inline int isupper(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISupper); } 
+# 184
+__attribute((__gnu_inline__)) extern inline int isxdigit(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISxdigit); } 
+# 186
+__attribute((__gnu_inline__)) extern inline int isblank(int __c) noexcept(true) { return ((*__ctype_b_loc())[(int)__c]) & ((unsigned short)_ISblank); } 
+# 206 "/usr/include/ctype.h" 3
+__attribute((__gnu_inline__)) extern inline int 
+# 207
+ __attribute((__leaf__)) tolower(int __c) noexcept(true) 
+# 208
+{ 
+# 209
+return ((__c >= (-128)) && (__c < 256)) ? (*__ctype_tolower_loc())[__c] : __c; 
+# 210
+} 
+# 212
+__attribute((__gnu_inline__)) extern inline int 
+# 213
+ __attribute((__leaf__)) toupper(int __c) noexcept(true) 
+# 214
+{ 
+# 215
+return ((__c >= (-128)) && (__c < 256)) ? (*__ctype_toupper_loc())[__c] : __c; 
+# 216
+} 
 # 27 "/usr/include/x86_64-linux-gnu/bits/types/__locale_t.h" 3
 struct __locale_struct { 
 # 30
@@ -4500,23 +4544,23 @@ long long rem;
 # 81
 } lldiv_t; 
 # 98 "/usr/include/stdlib.h" 3
-extern size_t __ctype_get_mb_cur_max() noexcept(true); 
+extern size_t __ctype_get_mb_cur_max() noexcept(true) __attribute((__warn_unused_result__)); 
 # 102
-extern double atof(const char * __nptr) noexcept(true)
+extern __attribute((gnu_inline)) inline double atof(const char * __nptr) noexcept(true)
 # 103
- __attribute((__pure__)) __attribute((__nonnull__(1))); 
+ __attribute((__pure__)) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 105
-extern int atoi(const char * __nptr) noexcept(true)
+extern __attribute((gnu_inline)) inline int atoi(const char * __nptr) noexcept(true)
 # 106
- __attribute((__pure__)) __attribute((__nonnull__(1))); 
+ __attribute((__pure__)) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 108
-extern long atol(const char * __nptr) noexcept(true)
+extern __attribute((gnu_inline)) inline long atol(const char * __nptr) noexcept(true)
 # 109
- __attribute((__pure__)) __attribute((__nonnull__(1))); 
+ __attribute((__pure__)) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 113
-__extension__ extern long long atoll(const char * __nptr) noexcept(true)
+__extension__ extern __attribute((gnu_inline)) inline long long atoll(const char * __nptr) noexcept(true)
 # 114
- __attribute((__pure__)) __attribute((__nonnull__(1))); 
+ __attribute((__pure__)) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 118
 extern double strtod(const char *__restrict__ __nptr, char **__restrict__ __endptr) noexcept(true)
 # 120
@@ -4693,12 +4737,44 @@ extern _Float32x strtof32x_l(const char *__restrict__ __nptr, char **__restrict_
 extern _Float64x strtof64x_l(const char *__restrict__ __nptr, char **__restrict__ __endptr, locale_t __loc) noexcept(true)
 # 467
  __attribute((__nonnull__(1, 3))); 
+# 480 "/usr/include/stdlib.h" 3
+__attribute((__gnu_inline__)) extern inline int 
+# 481
+ __attribute((__leaf__)) atoi(const char *__nptr) noexcept(true) 
+# 482
+{ 
+# 483
+return (int)strtol(__nptr, (char **)__null, 10); 
+# 484
+} 
+# 485
+__attribute((__gnu_inline__)) extern inline long 
+# 486
+ __attribute((__leaf__)) atol(const char *__nptr) noexcept(true) 
+# 487
+{ 
+# 488
+return strtol(__nptr, (char **)__null, 10); 
+# 489
+} 
+# 493
+__extension__ 
+# 492
+__attribute((__gnu_inline__)) extern inline long long 
+# 493
+ __attribute((__leaf__)) atoll(const char *__nptr) noexcept(true) 
+# 494
+{ 
+# 495
+return strtoll(__nptr, (char **)__null, 10); 
+# 496
+} 
 # 505 "/usr/include/stdlib.h" 3
-extern char *l64a(long __n) noexcept(true); 
+extern char *l64a(long __n) noexcept(true) __attribute((__warn_unused_result__)); 
 # 508
 extern long a64l(const char * __s) noexcept(true)
 # 509
- __attribute((__pure__)) __attribute((__nonnull__(1))); 
+ __attribute((__pure__)) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 27 "/usr/include/x86_64-linux-gnu/sys/types.h" 3
 extern "C" {
 # 33
@@ -4875,6 +4951,12 @@ extern "C" {
 extern int select(int __nfds, fd_set *__restrict__ __readfds, fd_set *__restrict__ __writefds, fd_set *__restrict__ __exceptfds, timeval *__restrict__ __timeout); 
 # 127 "/usr/include/x86_64-linux-gnu/sys/select.h" 3
 extern int pselect(int __nfds, fd_set *__restrict__ __readfds, fd_set *__restrict__ __writefds, fd_set *__restrict__ __exceptfds, const timespec *__restrict__ __timeout, const __sigset_t *__restrict__ __sigmask); 
+# 27 "/usr/include/x86_64-linux-gnu/bits/select-decl.h" 3
+extern long __fdelt_chk(long __d); 
+# 28
+extern long __fdelt_warn(long __d)
+# 29
+ __attribute((__warning__("bit outside of fd_set selected"))); 
 # 153 "/usr/include/x86_64-linux-gnu/sys/select.h" 3
 }
 # 185 "/usr/include/x86_64-linux-gnu/sys/types.h" 3
@@ -5234,21 +5316,25 @@ extern int lcong48_r(unsigned short  __param[7], drand48_data * __buffer) noexce
 # 654
  __attribute((__nonnull__(1, 2))); 
 # 657
-extern __uint32_t arc4random() noexcept(true); 
+extern __uint32_t arc4random() noexcept(true)
+# 658
+ __attribute((__warn_unused_result__)); 
 # 661
 extern void arc4random_buf(void * __buf, size_t __size) noexcept(true)
 # 662
  __attribute((__nonnull__(1))); 
 # 666
-extern __uint32_t arc4random_uniform(__uint32_t __upper_bound) noexcept(true); 
+extern __uint32_t arc4random_uniform(__uint32_t __upper_bound) noexcept(true)
+# 667
+ __attribute((__warn_unused_result__)); 
 # 672
 extern void *malloc(size_t __size) noexcept(true) __attribute((__malloc__))
 # 673
- __attribute((__alloc_size__(1))); 
+ __attribute((__alloc_size__(1))) __attribute((__warn_unused_result__)); 
 # 675
 extern void *calloc(size_t __nmemb, size_t __size) noexcept(true)
 # 676
- __attribute((__malloc__)) __attribute((__alloc_size__(1, 2))); 
+ __attribute((__malloc__)) __attribute((__alloc_size__(1, 2))) __attribute((__warn_unused_result__)); 
 # 683
 extern void *realloc(void * __ptr, size_t __size) noexcept(true)
 # 684
@@ -5276,17 +5362,17 @@ extern void *alloca(size_t __size) noexcept(true);
 # 712 "/usr/include/stdlib.h" 3
 extern void *valloc(size_t __size) noexcept(true) __attribute((__malloc__))
 # 713
- __attribute((__alloc_size__(1))); 
+ __attribute((__alloc_size__(1))) __attribute((__warn_unused_result__)); 
 # 718
 extern int posix_memalign(void ** __memptr, size_t __alignment, size_t __size) noexcept(true)
 # 719
- __attribute((__nonnull__(1))); 
+ __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 724
 extern void *aligned_alloc(size_t __alignment, size_t __size) noexcept(true)
 # 725
  __attribute((__malloc__)) __attribute((__alloc_align__(1 )))
 # 726
- __attribute((__alloc_size__(2))); 
+ __attribute((__alloc_size__(2))) __attribute((__warn_unused_result__)); 
 # 730
 extern void abort() noexcept(true) __attribute((__noreturn__)); 
 # 734
@@ -5306,11 +5392,11 @@ extern void quick_exit(int __status) noexcept(true) __attribute((__noreturn__));
 # 768
 extern void _Exit(int __status) noexcept(true) __attribute((__noreturn__)); 
 # 773
-extern char *getenv(const char * __name) noexcept(true) __attribute((__nonnull__(1))); 
+extern char *getenv(const char * __name) noexcept(true) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 778
 extern char *secure_getenv(const char * __name) noexcept(true)
 # 779
- __attribute((__nonnull__(1))); 
+ __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 786
 extern int putenv(char * __string) noexcept(true) __attribute((__nonnull__(1))); 
 # 792
@@ -5324,39 +5410,41 @@ extern int clearenv() noexcept(true);
 # 814 "/usr/include/stdlib.h" 3
 extern char *mktemp(char * __template) noexcept(true) __attribute((__nonnull__(1))); 
 # 827 "/usr/include/stdlib.h" 3
-extern int mkstemp(char * __template) __attribute((__nonnull__(1))); 
+extern int mkstemp(char * __template) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 837 "/usr/include/stdlib.h" 3
-extern int mkstemp64(char * __template) __attribute((__nonnull__(1))); 
+extern int mkstemp64(char * __template) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 849 "/usr/include/stdlib.h" 3
-extern int mkstemps(char * __template, int __suffixlen) __attribute((__nonnull__(1))); 
+extern int mkstemps(char * __template, int __suffixlen) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 859 "/usr/include/stdlib.h" 3
 extern int mkstemps64(char * __template, int __suffixlen)
 # 860
- __attribute((__nonnull__(1))); 
+ __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 870 "/usr/include/stdlib.h" 3
-extern char *mkdtemp(char * __template) noexcept(true) __attribute((__nonnull__(1))); 
+extern char *mkdtemp(char * __template) noexcept(true) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 881 "/usr/include/stdlib.h" 3
-extern int mkostemp(char * __template, int __flags) __attribute((__nonnull__(1))); 
+extern int mkostemp(char * __template, int __flags) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 891 "/usr/include/stdlib.h" 3
-extern int mkostemp64(char * __template, int __flags) __attribute((__nonnull__(1))); 
+extern int mkostemp64(char * __template, int __flags) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 901 "/usr/include/stdlib.h" 3
 extern int mkostemps(char * __template, int __suffixlen, int __flags)
 # 902
- __attribute((__nonnull__(1))); 
+ __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 913 "/usr/include/stdlib.h" 3
 extern int mkostemps64(char * __template, int __suffixlen, int __flags)
 # 914
- __attribute((__nonnull__(1))); 
+ __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 923 "/usr/include/stdlib.h" 3
-extern int system(const char * __command); 
+extern int system(const char * __command) __attribute((__warn_unused_result__)); 
 # 929
 extern char *canonicalize_file_name(const char * __name) noexcept(true)
 # 930
  __attribute((__nonnull__(1))) __attribute((__malloc__))
 # 931
- __attribute((__malloc__(__builtin_free, 1))); 
+ __attribute((__malloc__(__builtin_free, 1))) __attribute((__warn_unused_result__)); 
 # 940 "/usr/include/stdlib.h" 3
-extern char *realpath(const char *__restrict__ __name, char *__restrict__ __resolved) noexcept(true); 
+extern __attribute((gnu_inline)) inline char *realpath(const char *__restrict__ __name, char *__restrict__ __resolved) noexcept(true)
+# 941
+ __attribute((__warn_unused_result__)); 
 # 948
 typedef int (*__compar_fn_t)(const void *, const void *); 
 # 951
@@ -5364,10 +5452,63 @@ typedef __compar_fn_t comparison_fn_t;
 # 955
 typedef int (*__compar_d_fn_t)(const void *, const void *, void *); 
 # 960
-extern void *bsearch(const void * __key, const void * __base, size_t __nmemb, size_t __size, __compar_fn_t __compar)
+extern __attribute((gnu_inline)) inline void *bsearch(const void * __key, const void * __base, size_t __nmemb, size_t __size, __compar_fn_t __compar)
 # 962
- __attribute((__nonnull__(1, 2, 5))); 
-# 970
+ __attribute((__nonnull__(1, 2, 5))) __attribute((__warn_unused_result__)); 
+# 19 "/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h" 3
+__attribute((__gnu_inline__)) extern inline void *
+# 20
+bsearch(const void *__key, const void *__base, size_t __nmemb, size_t __size, __compar_fn_t 
+# 21
+__compar) 
+# 22
+{ 
+# 23
+size_t __l, __u, __idx; 
+# 24
+const void *__p; 
+# 25
+int __comparison; 
+# 27
+__l = (0); 
+# 28
+__u = __nmemb; 
+# 29
+while (__l < __u) 
+# 30
+{ 
+# 31
+__idx = ((__l + __u) / (2)); 
+# 32
+__p = ((const void *)(((const char *)__base) + (__idx * __size))); 
+# 33
+__comparison = (*__compar)(__key, __p); 
+# 34
+if (__comparison < 0) { 
+# 35
+__u = __idx; } else { 
+# 36
+if (__comparison > 0) { 
+# 37
+__l = (__idx + (1)); } else 
+# 39
+{ 
+# 41
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
+# 44
+return (void *)__p; 
+# 46
+#pragma GCC diagnostic pop
+# 48
+}  }  
+# 49
+}  
+# 51
+return __null; 
+# 52
+} 
+# 970 "/usr/include/stdlib.h" 3
 extern void qsort(void * __base, size_t __nmemb, size_t __size, __compar_fn_t __compar)
 # 971
  __attribute((__nonnull__(1, 4))); 
@@ -5376,49 +5517,49 @@ extern void qsort_r(void * __base, size_t __nmemb, size_t __size, __compar_d_fn_
 # 975
  __attribute((__nonnull__(1, 4))); 
 # 980
-extern int abs(int __x) noexcept(true) __attribute((const)); 
+extern int abs(int __x) noexcept(true) __attribute((const)) __attribute((__warn_unused_result__)); 
 # 981
-extern long labs(long __x) noexcept(true) __attribute((const)); 
+extern long labs(long __x) noexcept(true) __attribute((const)) __attribute((__warn_unused_result__)); 
 # 984
 __extension__ extern long long llabs(long long __x) noexcept(true)
 # 985
- __attribute((const)); 
+ __attribute((const)) __attribute((__warn_unused_result__)); 
 # 992
 extern div_t div(int __numer, int __denom) noexcept(true)
 # 993
- __attribute((const)); 
+ __attribute((const)) __attribute((__warn_unused_result__)); 
 # 994
 extern ldiv_t ldiv(long __numer, long __denom) noexcept(true)
 # 995
- __attribute((const)); 
+ __attribute((const)) __attribute((__warn_unused_result__)); 
 # 998
 __extension__ extern lldiv_t lldiv(long long __numer, long long __denom) noexcept(true)
 # 1000
- __attribute((const)); 
+ __attribute((const)) __attribute((__warn_unused_result__)); 
 # 1012 "/usr/include/stdlib.h" 3
 extern char *ecvt(double __value, int __ndigit, int *__restrict__ __decpt, int *__restrict__ __sign) noexcept(true)
 # 1013
- __attribute((__nonnull__(3, 4))); 
+ __attribute((__nonnull__(3, 4))) __attribute((__warn_unused_result__)); 
 # 1018
 extern char *fcvt(double __value, int __ndigit, int *__restrict__ __decpt, int *__restrict__ __sign) noexcept(true)
 # 1019
- __attribute((__nonnull__(3, 4))); 
+ __attribute((__nonnull__(3, 4))) __attribute((__warn_unused_result__)); 
 # 1024
 extern char *gcvt(double __value, int __ndigit, char * __buf) noexcept(true)
 # 1025
- __attribute((__nonnull__(3))); 
+ __attribute((__nonnull__(3))) __attribute((__warn_unused_result__)); 
 # 1030
 extern char *qecvt(long double __value, int __ndigit, int *__restrict__ __decpt, int *__restrict__ __sign) noexcept(true)
 # 1032
- __attribute((__nonnull__(3, 4))); 
+ __attribute((__nonnull__(3, 4))) __attribute((__warn_unused_result__)); 
 # 1033
 extern char *qfcvt(long double __value, int __ndigit, int *__restrict__ __decpt, int *__restrict__ __sign) noexcept(true)
 # 1035
- __attribute((__nonnull__(3, 4))); 
+ __attribute((__nonnull__(3, 4))) __attribute((__warn_unused_result__)); 
 # 1036
 extern char *qgcvt(long double __value, int __ndigit, char * __buf) noexcept(true)
 # 1037
- __attribute((__nonnull__(3))); 
+ __attribute((__nonnull__(3))) __attribute((__warn_unused_result__)); 
 # 1042
 extern int ecvt_r(double __value, int __ndigit, int *__restrict__ __decpt, int *__restrict__ __sign, char *__restrict__ __buf, size_t __len) noexcept(true)
 # 1044
@@ -5440,41 +5581,183 @@ extern int mblen(const char * __s, size_t __n) noexcept(true);
 # 1065
 extern int mbtowc(wchar_t *__restrict__ __pwc, const char *__restrict__ __s, size_t __n) noexcept(true); 
 # 1069
-extern int wctomb(char * __s, wchar_t __wchar) noexcept(true); 
+extern __attribute((gnu_inline)) inline int wctomb(char * __s, wchar_t __wchar) noexcept(true); 
 # 1073
-extern size_t mbstowcs(wchar_t *__restrict__ __pwcs, const char *__restrict__ __s, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline size_t mbstowcs(wchar_t *__restrict__ __pwcs, const char *__restrict__ __s, size_t __n) noexcept(true)
 # 1075
  __attribute((__access__(__read_only__ , 2 ))); 
 # 1077
-extern size_t wcstombs(char *__restrict__ __s, const wchar_t *__restrict__ __pwcs, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline size_t wcstombs(char *__restrict__ __s, const wchar_t *__restrict__ __pwcs, size_t __n) noexcept(true)
 # 1080
- __attribute((__access__(__write_only__ , 1 , 3 )))
+ __attribute((__access__(__write_only__ , 1 )))
 # 1081
  __attribute((__access__(__read_only__ , 2 ))); 
 # 1088
-extern int rpmatch(const char * __response) noexcept(true) __attribute((__nonnull__(1))); 
+extern int rpmatch(const char * __response) noexcept(true) __attribute((__nonnull__(1))) __attribute((__warn_unused_result__)); 
 # 1099 "/usr/include/stdlib.h" 3
 extern int getsubopt(char **__restrict__ __optionp, char *const *__restrict__ __tokens, char **__restrict__ __valuep) noexcept(true)
 # 1102
- __attribute((__nonnull__(1, 2, 3))); 
+ __attribute((__nonnull__(1, 2, 3))) __attribute((__warn_unused_result__)); 
 # 1110
-extern int posix_openpt(int __oflag); 
+extern int posix_openpt(int __oflag) __attribute((__warn_unused_result__)); 
 # 1118
 extern int grantpt(int __fd) noexcept(true); 
 # 1122
 extern int unlockpt(int __fd) noexcept(true); 
 # 1127
-extern char *ptsname(int __fd) noexcept(true); 
+extern char *ptsname(int __fd) noexcept(true) __attribute((__warn_unused_result__)); 
 # 1134
-extern int ptsname_r(int __fd, char * __buf, size_t __buflen) noexcept(true)
+extern __attribute((gnu_inline)) inline int ptsname_r(int __fd, char * __buf, size_t __buflen) noexcept(true)
 # 1135
- __attribute((__nonnull__(2))) __attribute((__access__(__write_only__ , 2 , 3 ))); 
+ __attribute((__nonnull__(2))) __attribute((__access__(__write_only__ , 2 ))); 
 # 1138
 extern int getpt(); 
 # 1145
 extern int getloadavg(double  __loadavg[], int __nelem) noexcept(true)
 # 1146
  __attribute((__nonnull__(1))); 
+# 24 "/usr/include/x86_64-linux-gnu/bits/stdlib-float.h" 3
+__attribute((__gnu_inline__)) extern inline double 
+# 25
+ __attribute((__leaf__)) atof(const char *__nptr) noexcept(true) 
+# 26
+{ 
+# 27
+return strtod(__nptr, (char **)__null); 
+# 28
+} 
+# 23 "/usr/include/x86_64-linux-gnu/bits/stdlib.h" 3
+extern char *__realpath_chk(const char *__restrict__ __name, char *__restrict__ __resolved, size_t __resolvedlen) noexcept(true)
+# 25
+ __attribute((__warn_unused_result__)); 
+# 26
+extern char *__realpath_alias(const char *__restrict__ __name, char *__restrict__ __resolved) noexcept(true) __asm__("realpath")
+# 28
+ __attribute((__warn_unused_result__)); 
+# 29
+extern char *__realpath_chk_warn(const char *__restrict__ __name, char *__restrict__ __resolved, size_t __resolvedlen) noexcept(true) __asm__("__realpath_chk")
+# 32
+ __attribute((__warn_unused_result__))
+# 33
+ __attribute((__warning__("second argument of realpath must be either NULL or at least PATH_MAX bytes long buffer"))); 
+# 36
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) __attribute((__warn_unused_result__)) 
+# 37
+__attribute((__leaf__)) extern inline char *realpath(const char *__restrict__ __name, char *__restrict__ __resolved) noexcept(true) 
+# 38
+{ 
+# 39
+size_t sz = __builtin_dynamic_object_size(__resolved, 1); 
+# 41
+if (sz == ((size_t)(-1))) { 
+# 42
+return __realpath_alias(__name, __resolved); }  
+# 45
+if (((((__typeof__(4096))0) < ((__typeof__(4096))(-1))) || ((1) && (4096 > 0))) && (0) && (!(((unsigned long)4096) <= (sz / sizeof(char))))) { 
+# 46
+return __realpath_chk_warn(__name, __resolved, sz); }  
+# 48
+return __realpath_chk(__name, __resolved, sz); 
+# 49
+} 
+# 52
+extern int __ptsname_r_chk(int __fd, char * __buf, size_t __buflen, size_t __nreal) noexcept(true)
+# 53
+ __attribute((__nonnull__(2)))
+# 54
+ __attribute((__access__(__write_only__ , 2 , 3 ))); 
+# 55
+extern int __ptsname_r_alias(int __fd, char * __buf, size_t __buflen) noexcept(true) __asm__("ptsname_r")
+# 57
+ __attribute((__nonnull__(2))) __attribute((__access__(__write_only__ , 2 , 3 ))); 
+# 58
+extern int __ptsname_r_chk_warn(int __fd, char * __buf, size_t __buflen, size_t __nreal) noexcept(true) __asm__("__ptsname_r_chk")
+# 61
+ __attribute((__nonnull__(2))) __attribute((__warning__("ptsname_r called with buflen bigger than size of buf"))); 
+# 64
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) extern inline int 
+# 65
+ __attribute((__leaf__)) ptsname_r(int __fd, char *__buf, size_t __buflen) noexcept(true) 
+# 66
+{ 
+# 67
+return ((((0) && (__builtin_dynamic_object_size(__buf, 1) == ((unsigned long)(-1)))) || (((((__typeof__(__buflen))0) < ((__typeof__(__buflen))(-1))) || ((0) && (__buflen > (0)))) && (0) && (((unsigned long)__buflen) <= (__builtin_dynamic_object_size(__buf, 1) / sizeof(char))))) ? __ptsname_r_alias(__fd, __buf, __buflen) : ((((((__typeof__(__buflen))0) < ((__typeof__(__buflen))(-1))) || ((0) && (__buflen > (0)))) && (0) && (!(((unsigned long)__buflen) <= (__builtin_dynamic_object_size(__buf, 1) / sizeof(char))))) ? __ptsname_r_chk_warn(__fd, __buf, __buflen, __builtin_dynamic_object_size(__buf, 1)) : __ptsname_r_chk(__fd, __buf, __buflen, __builtin_dynamic_object_size(__buf, 1)))); 
+# 70
+} 
+# 73
+extern int __wctomb_chk(char * __s, wchar_t __wchar, size_t __buflen) noexcept(true)
+# 74
+ __attribute((__warn_unused_result__)); 
+# 75
+extern int __wctomb_alias(char * __s, wchar_t __wchar) noexcept(true) __asm__("wctomb")
+# 76
+ __attribute((__warn_unused_result__)); 
+# 78
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) __attribute((__warn_unused_result__)) extern inline int 
+# 79
+ __attribute((__leaf__)) wctomb(char *__s, wchar_t __wchar) noexcept(true) 
+# 80
+{ 
+# 88
+if ((__builtin_dynamic_object_size(__s, 1) != ((size_t)(-1))) && ((16) > __builtin_dynamic_object_size(__s, 1))) { 
+# 90
+return __wctomb_chk(__s, __wchar, __builtin_dynamic_object_size(__s, 1)); }  
+# 91
+return __wctomb_alias(__s, __wchar); 
+# 92
+} 
+# 95
+extern size_t __mbstowcs_chk(wchar_t *__restrict__ __dst, const char *__restrict__ __src, size_t __len, size_t __dstlen) noexcept(true)
+# 98
+ __attribute((__access__(__write_only__ , 1 , 3 ))) __attribute((__access__(__read_only__ , 2 ))); 
+# 99
+extern size_t __mbstowcs_nulldst(wchar_t *__restrict__ __dst, const char *__restrict__ __src, size_t __len) noexcept(true) __asm__("mbstowcs")
+# 103
+ __attribute((__access__(__read_only__ , 2 ))); 
+# 104
+extern size_t __mbstowcs_alias(wchar_t *__restrict__ __dst, const char *__restrict__ __src, size_t __len) noexcept(true) __asm__("mbstowcs")
+# 108
+ __attribute((__access__(__write_only__ , 1 , 3 ))) __attribute((__access__(__read_only__ , 2 ))); 
+# 109
+extern size_t __mbstowcs_chk_warn(wchar_t *__restrict__ __dst, const char *__restrict__ __src, size_t __len, size_t __dstlen) noexcept(true) __asm__("__mbstowcs_chk")
+# 113
+ __attribute((__warning__("mbstowcs called with dst buffer smaller than len * sizeof (wchar_t)"))); 
+# 116
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) extern inline size_t 
+# 117
+ __attribute((__leaf__)) mbstowcs(wchar_t *__restrict__ __dst, const char *__restrict__ __src, size_t __len) noexcept(true) 
+# 119
+{ 
+# 120
+if ((0) && (__dst == (__null))) { 
+# 121
+return __mbstowcs_nulldst(__dst, __src, __len); } else { 
+# 123
+return ((((0) && (__builtin_dynamic_object_size(__dst, 1) == ((unsigned long)(-1)))) || (((((__typeof__(__len))0) < ((__typeof__(__len))(-1))) || ((0) && (__len > (0)))) && (0) && (((unsigned long)__len) <= (__builtin_dynamic_object_size(__dst, 1) / sizeof(wchar_t))))) ? __mbstowcs_alias(__dst, __src, __len) : ((((((__typeof__(__len))0) < ((__typeof__(__len))(-1))) || ((0) && (__len > (0)))) && (0) && (!(((unsigned long)__len) <= (__builtin_dynamic_object_size(__dst, 1) / sizeof(wchar_t))))) ? __mbstowcs_chk_warn(__dst, __src, __len, __builtin_dynamic_object_size(__dst, 1) / sizeof(wchar_t)) : __mbstowcs_chk(__dst, __src, __len, __builtin_dynamic_object_size(__dst, 1) / sizeof(wchar_t)))); }  
+# 125
+} 
+# 127
+extern size_t __wcstombs_chk(char *__restrict__ __dst, const wchar_t *__restrict__ __src, size_t __len, size_t __dstlen) noexcept(true)
+# 130
+ __attribute((__access__(__write_only__ , 1 , 3 ))) __attribute((__access__(__read_only__ , 2 ))); 
+# 131
+extern size_t __wcstombs_alias(char *__restrict__ __dst, const wchar_t *__restrict__ __src, size_t __len) noexcept(true) __asm__("wcstombs")
+# 135
+ __attribute((__access__(__write_only__ , 1 , 3 ))) __attribute((__access__(__read_only__ , 2 ))); 
+# 136
+extern size_t __wcstombs_chk_warn(char *__restrict__ __dst, const wchar_t *__restrict__ __src, size_t __len, size_t __dstlen) noexcept(true) __asm__("__wcstombs_chk")
+# 140
+ __attribute((__warning__("wcstombs called with dst buffer smaller than len"))); 
+# 142
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) extern inline size_t 
+# 143
+ __attribute((__leaf__)) wcstombs(char *__restrict__ __dst, const wchar_t *__restrict__ __src, size_t __len) noexcept(true) 
+# 145
+{ 
+# 146
+return ((((0) && (__builtin_dynamic_object_size(__dst, 1) == ((unsigned long)(-1)))) || (((((__typeof__(__len))0) < ((__typeof__(__len))(-1))) || ((0) && (__len > (0)))) && (0) && (((unsigned long)__len) <= (__builtin_dynamic_object_size(__dst, 1) / sizeof(char))))) ? __wcstombs_alias(__dst, __src, __len) : ((((((__typeof__(__len))0) < ((__typeof__(__len))(-1))) || ((0) && (__len > (0)))) && (0) && (!(((unsigned long)__len) <= (__builtin_dynamic_object_size(__dst, 1) / sizeof(char))))) ? __wcstombs_chk_warn(__dst, __src, __len, __builtin_dynamic_object_size(__dst, 1)) : __wcstombs_chk(__dst, __src, __len, __builtin_dynamic_object_size(__dst, 1)))); 
+# 149
+} 
 # 1167 "/usr/include/stdlib.h" 3
 }
 # 46 "/usr/include/c++/13/bits/std_abs.h" 3
@@ -7714,11 +7997,11 @@ double4 t; (t.x) = x; (t.y) = y; (t.z) = z; (t.w) = w; return t;
 # 28 "/usr/include/string.h" 3
 extern "C" {
 # 43 "/usr/include/string.h" 3
-extern void *memcpy(void *__restrict__ __dest, const void *__restrict__ __src, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline void *memcpy(void *__restrict__ __dest, const void *__restrict__ __src, size_t __n) noexcept(true)
 # 44
  __attribute((__nonnull__(1, 2))); 
 # 47
-extern void *memmove(void * __dest, const void * __src, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline void *memmove(void * __dest, const void * __src, size_t __n) noexcept(true)
 # 48
  __attribute((__nonnull__(1, 2))); 
 # 54
@@ -7726,7 +8009,7 @@ extern void *memccpy(void *__restrict__ __dest, const void *__restrict__ __src, 
 # 56
  __attribute((__nonnull__(1, 2))) __attribute((__access__(__write_only__ , 1 , 4 ))); 
 # 61
-extern void *memset(void * __s, int __c, size_t __n) noexcept(true) __attribute((__nonnull__(1))); 
+extern __attribute((gnu_inline)) inline void *memset(void * __s, int __c, size_t __n) noexcept(true) __attribute((__nonnull__(1))); 
 # 64
 extern int memcmp(const void * __s1, const void * __s2, size_t __n) noexcept(true)
 # 65
@@ -7738,14 +8021,34 @@ extern int __memcmpeq(const void * __s1, const void * __s2, size_t __n) noexcept
 # 85
 extern "C++" {
 # 87
-extern void *memchr(void * __s, int __c, size_t __n) noexcept(true) __asm__("memchr")
+extern __attribute((gnu_inline)) inline void *memchr(void * __s, int __c, size_t __n) noexcept(true) __asm__("memchr")
 # 88
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
 # 89
-extern const void *memchr(const void * __s, int __c, size_t __n) noexcept(true) __asm__("memchr")
+extern __attribute((gnu_inline)) inline const void *memchr(const void * __s, int __c, size_t __n) noexcept(true) __asm__("memchr")
 # 90
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
-# 105 "/usr/include/string.h" 3
+# 93
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline void *
+# 94
+memchr(void *__s, int __c, size_t __n) noexcept(true) 
+# 95
+{ 
+# 96
+return __builtin_memchr(__s, __c, __n); 
+# 97
+} 
+# 99
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline const void *
+# 100
+memchr(const void *__s, int __c, size_t __n) noexcept(true) 
+# 101
+{ 
+# 102
+return __builtin_memchr(__s, __c, __n); 
+# 103
+} 
+# 105
 }
 # 115 "/usr/include/string.h" 3
 extern "C++" void *rawmemchr(void * __s, int __c) noexcept(true) __asm__("rawmemchr")
@@ -7768,19 +8071,19 @@ extern "C++" const void *memrchr(const void * __s, int __c, size_t __n) noexcept
 # 131
  __attribute((__access__(__read_only__ , 1 , 3 ))); 
 # 141 "/usr/include/string.h" 3
-extern char *strcpy(char *__restrict__ __dest, const char *__restrict__ __src) noexcept(true)
+extern __attribute((gnu_inline)) inline char *strcpy(char *__restrict__ __dest, const char *__restrict__ __src) noexcept(true)
 # 142
  __attribute((__nonnull__(1, 2))); 
 # 144
-extern char *strncpy(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline char *strncpy(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
 # 146
  __attribute((__nonnull__(1, 2))); 
 # 149
-extern char *strcat(char *__restrict__ __dest, const char *__restrict__ __src) noexcept(true)
+extern __attribute((gnu_inline)) inline char *strcat(char *__restrict__ __dest, const char *__restrict__ __src) noexcept(true)
 # 150
  __attribute((__nonnull__(1, 2))); 
 # 152
-extern char *strncat(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline char *strncat(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
 # 153
  __attribute((__nonnull__(1, 2))); 
 # 156
@@ -7820,26 +8123,66 @@ extern char *strndup(const char * __string, size_t __n) noexcept(true)
 # 224 "/usr/include/string.h" 3
 extern "C++" {
 # 226
-extern char *strchr(char * __s, int __c) noexcept(true) __asm__("strchr")
+extern __attribute((gnu_inline)) inline char *strchr(char * __s, int __c) noexcept(true) __asm__("strchr")
 # 227
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
 # 228
-extern const char *strchr(const char * __s, int __c) noexcept(true) __asm__("strchr")
+extern __attribute((gnu_inline)) inline const char *strchr(const char * __s, int __c) noexcept(true) __asm__("strchr")
 # 229
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
-# 244 "/usr/include/string.h" 3
+# 232
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline char *
+# 233
+strchr(char *__s, int __c) noexcept(true) 
+# 234
+{ 
+# 235
+return __builtin_strchr(__s, __c); 
+# 236
+} 
+# 238
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline const char *
+# 239
+strchr(const char *__s, int __c) noexcept(true) 
+# 240
+{ 
+# 241
+return __builtin_strchr(__s, __c); 
+# 242
+} 
+# 244
 }
 # 251
 extern "C++" {
 # 253
-extern char *strrchr(char * __s, int __c) noexcept(true) __asm__("strrchr")
+extern __attribute((gnu_inline)) inline char *strrchr(char * __s, int __c) noexcept(true) __asm__("strrchr")
 # 254
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
 # 255
-extern const char *strrchr(const char * __s, int __c) noexcept(true) __asm__("strrchr")
+extern __attribute((gnu_inline)) inline const char *strrchr(const char * __s, int __c) noexcept(true) __asm__("strrchr")
 # 256
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
-# 271 "/usr/include/string.h" 3
+# 259
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline char *
+# 260
+strrchr(char *__s, int __c) noexcept(true) 
+# 261
+{ 
+# 262
+return __builtin_strrchr(__s, __c); 
+# 263
+} 
+# 265
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline const char *
+# 266
+strrchr(const char *__s, int __c) noexcept(true) 
+# 267
+{ 
+# 268
+return __builtin_strrchr(__s, __c); 
+# 269
+} 
+# 271
 }
 # 281 "/usr/include/string.h" 3
 extern "C++" char *strchrnul(char * __s, int __c) noexcept(true) __asm__("strchrnul")
@@ -7860,26 +8203,66 @@ extern size_t strspn(const char * __s, const char * __accept) noexcept(true)
 # 301
 extern "C++" {
 # 303
-extern char *strpbrk(char * __s, const char * __accept) noexcept(true) __asm__("strpbrk")
+extern __attribute((gnu_inline)) inline char *strpbrk(char * __s, const char * __accept) noexcept(true) __asm__("strpbrk")
 # 304
  __attribute((__pure__)) __attribute((__nonnull__(1, 2))); 
 # 305
-extern const char *strpbrk(const char * __s, const char * __accept) noexcept(true) __asm__("strpbrk")
+extern __attribute((gnu_inline)) inline const char *strpbrk(const char * __s, const char * __accept) noexcept(true) __asm__("strpbrk")
 # 306
  __attribute((__pure__)) __attribute((__nonnull__(1, 2))); 
-# 321 "/usr/include/string.h" 3
+# 309
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline char *
+# 310
+strpbrk(char *__s, const char *__accept) noexcept(true) 
+# 311
+{ 
+# 312
+return __builtin_strpbrk(__s, __accept); 
+# 313
+} 
+# 315
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline const char *
+# 316
+strpbrk(const char *__s, const char *__accept) noexcept(true) 
+# 317
+{ 
+# 318
+return __builtin_strpbrk(__s, __accept); 
+# 319
+} 
+# 321
 }
 # 328
 extern "C++" {
 # 330
-extern char *strstr(char * __haystack, const char * __needle) noexcept(true) __asm__("strstr")
+extern __attribute((gnu_inline)) inline char *strstr(char * __haystack, const char * __needle) noexcept(true) __asm__("strstr")
 # 331
  __attribute((__pure__)) __attribute((__nonnull__(1, 2))); 
 # 332
-extern const char *strstr(const char * __haystack, const char * __needle) noexcept(true) __asm__("strstr")
+extern __attribute((gnu_inline)) inline const char *strstr(const char * __haystack, const char * __needle) noexcept(true) __asm__("strstr")
 # 333
  __attribute((__pure__)) __attribute((__nonnull__(1, 2))); 
-# 348 "/usr/include/string.h" 3
+# 336
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline char *
+# 337
+strstr(char *__haystack, const char *__needle) noexcept(true) 
+# 338
+{ 
+# 339
+return __builtin_strstr(__haystack, __needle); 
+# 340
+} 
+# 342
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline const char *
+# 343
+strstr(const char *__haystack, const char *__needle) noexcept(true) 
+# 344
+{ 
+# 345
+return __builtin_strstr(__haystack, __needle); 
+# 346
+} 
+# 348
 }
 # 356
 extern char *strtok(char *__restrict__ __s, const char *__restrict__ __delim) noexcept(true)
@@ -7914,7 +8297,7 @@ extern void *__mempcpy(void *__restrict__ __dest, const void *__restrict__ __src
 # 399
  __attribute((__nonnull__(1, 2))); 
 # 400
-extern void *mempcpy(void *__restrict__ __dest, const void *__restrict__ __src, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline void *mempcpy(void *__restrict__ __dest, const void *__restrict__ __src, size_t __n) noexcept(true)
 # 402
  __attribute((__nonnull__(1, 2))); 
 # 407
@@ -7930,7 +8313,7 @@ extern char *strerror(int __errnum) noexcept(true);
 # 444 "/usr/include/string.h" 3
 extern char *strerror_r(int __errnum, char * __buf, size_t __buflen) noexcept(true)
 # 445
- __attribute((__nonnull__(2))) __attribute((__access__(__write_only__ , 2 , 3 ))); 
+ __attribute((__nonnull__(2))) __attribute((__warn_unused_result__)) __attribute((__access__(__write_only__ , 2 , 3 ))); 
 # 450
 extern const char *strerrordesc_np(int __err) noexcept(true); 
 # 452
@@ -7944,34 +8327,74 @@ extern int bcmp(const void * __s1, const void * __s2, size_t __n) noexcept(true)
 # 35
  __attribute((__pure__)) __attribute((__nonnull__(1, 2))); 
 # 38
-extern void bcopy(const void * __src, void * __dest, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline void bcopy(const void * __src, void * __dest, size_t __n) noexcept(true)
 # 39
  __attribute((__nonnull__(1, 2))); 
 # 42
-extern void bzero(void * __s, size_t __n) noexcept(true) __attribute((__nonnull__(1))); 
+extern __attribute((gnu_inline)) inline void bzero(void * __s, size_t __n) noexcept(true) __attribute((__nonnull__(1))); 
 # 46
 extern "C++" {
 # 48
-extern char *index(char * __s, int __c) noexcept(true) __asm__("index")
+extern __attribute((gnu_inline)) inline char *index(char * __s, int __c) noexcept(true) __asm__("index")
 # 49
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
 # 50
-extern const char *index(const char * __s, int __c) noexcept(true) __asm__("index")
+extern __attribute((gnu_inline)) inline const char *index(const char * __s, int __c) noexcept(true) __asm__("index")
 # 51
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
-# 66 "/usr/include/strings.h" 3
+# 54
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline char *
+# 55
+index(char *__s, int __c) noexcept(true) 
+# 56
+{ 
+# 57
+return __builtin_index(__s, __c); 
+# 58
+} 
+# 60
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline const char *
+# 61
+index(const char *__s, int __c) noexcept(true) 
+# 62
+{ 
+# 63
+return __builtin_index(__s, __c); 
+# 64
+} 
+# 66
 }
 # 74
 extern "C++" {
 # 76
-extern char *rindex(char * __s, int __c) noexcept(true) __asm__("rindex")
+extern __attribute((gnu_inline)) inline char *rindex(char * __s, int __c) noexcept(true) __asm__("rindex")
 # 77
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
 # 78
-extern const char *rindex(const char * __s, int __c) noexcept(true) __asm__("rindex")
+extern __attribute((gnu_inline)) inline const char *rindex(const char * __s, int __c) noexcept(true) __asm__("rindex")
 # 79
  __attribute((__pure__)) __attribute((__nonnull__(1))); 
-# 94 "/usr/include/strings.h" 3
+# 82
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline char *
+# 83
+rindex(char *__s, int __c) noexcept(true) 
+# 84
+{ 
+# 85
+return __builtin_rindex(__s, __c); 
+# 86
+} 
+# 88
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) extern inline const char *
+# 89
+rindex(const char *__s, int __c) noexcept(true) 
+# 90
+{ 
+# 91
+return __builtin_rindex(__s, __c); 
+# 92
+} 
+# 94
 }
 # 104 "/usr/include/strings.h" 3
 extern int ffs(int __i) noexcept(true) __attribute((const)); 
@@ -7999,10 +8422,30 @@ extern int strncasecmp_l(const char * __s1, const char * __s2, size_t __n, local
  __attribute((__pure__)) __attribute((__nonnull__(1, 2, 4))); 
 # 138
 }
+# 22 "/usr/include/x86_64-linux-gnu/bits/strings_fortified.h" 3
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) extern inline void 
+# 23
+ __attribute((__leaf__)) bcopy(const void *__src, void *__dest, size_t __len) noexcept(true) 
+# 24
+{ 
+# 25
+(void)__builtin___memmove_chk(__dest, __src, __len, __builtin_dynamic_object_size(__dest, 0)); 
+# 27
+} 
+# 29
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) extern inline void 
+# 30
+ __attribute((__leaf__)) bzero(void *__dest, size_t __len) noexcept(true) 
+# 31
+{ 
+# 32
+(void)__builtin___memset_chk(__dest, '\000', __len, __builtin_dynamic_object_size(__dest, 0)); 
+# 34
+} 
 # 466 "/usr/include/string.h" 3
-extern void explicit_bzero(void * __s, size_t __n) noexcept(true) __attribute((__nonnull__(1)))
+extern __attribute((gnu_inline)) inline void explicit_bzero(void * __s, size_t __n) noexcept(true) __attribute((__nonnull__(1)))
 # 467
- __attribute((__access__(__write_only__ , 1 , 2 ))); 
+ __attribute((__access__(__write_only__ , 1 ))); 
 # 471
 extern char *strsep(char **__restrict__ __stringp, const char *__restrict__ __delim) noexcept(true)
 # 473
@@ -8018,7 +8461,7 @@ extern char *__stpcpy(char *__restrict__ __dest, const char *__restrict__ __src)
 # 490
  __attribute((__nonnull__(1, 2))); 
 # 491
-extern char *stpcpy(char *__restrict__ __dest, const char *__restrict__ __src) noexcept(true)
+extern __attribute((gnu_inline)) inline char *stpcpy(char *__restrict__ __dest, const char *__restrict__ __src) noexcept(true)
 # 492
  __attribute((__nonnull__(1, 2))); 
 # 496
@@ -8026,15 +8469,15 @@ extern char *__stpncpy(char *__restrict__ __dest, const char *__restrict__ __src
 # 498
  __attribute((__nonnull__(1, 2))); 
 # 499
-extern char *stpncpy(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline char *stpncpy(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
 # 501
  __attribute((__nonnull__(1, 2))); 
 # 506
-extern size_t strlcpy(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline size_t strlcpy(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
 # 508
  __attribute((__nonnull__(1, 2))) __attribute((__access__(__write_only__ , 1 , 3 ))); 
 # 512
-extern size_t strlcat(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
+extern __attribute((gnu_inline)) inline size_t strlcat(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true)
 # 514
  __attribute((__nonnull__(1, 2))) __attribute((__access__(__read_write__ , 1 , 3 ))); 
 # 519
@@ -8055,6 +8498,156 @@ extern "C++" char *basename(char * __filename) noexcept(true) __asm__("basename"
 extern "C++" const char *basename(const char * __filename) noexcept(true) __asm__("basename")
 # 538
  __attribute((__nonnull__(1))); 
+# 25 "/usr/include/x86_64-linux-gnu/bits/string_fortified.h" 3
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 26
+__attribute((__leaf__)) extern inline void *memcpy(void *__restrict__ __dest, const void *__restrict__ __src, size_t __len) noexcept(true) 
+# 28
+{ 
+# 29
+return __builtin___memcpy_chk(__dest, __src, __len, __builtin_dynamic_object_size(__dest, 0)); 
+# 31
+} 
+# 33
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 34
+__attribute((__leaf__)) extern inline void *memmove(void *__dest, const void *__src, size_t __len) noexcept(true) 
+# 35
+{ 
+# 36
+return __builtin___memmove_chk(__dest, __src, __len, __builtin_dynamic_object_size(__dest, 0)); 
+# 38
+} 
+# 41
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 42
+__attribute((__leaf__)) extern inline void *mempcpy(void *__restrict__ __dest, const void *__restrict__ __src, size_t __len) noexcept(true) 
+# 44
+{ 
+# 45
+return __builtin___mempcpy_chk(__dest, __src, __len, __builtin_dynamic_object_size(__dest, 0)); 
+# 47
+} 
+# 56 "/usr/include/x86_64-linux-gnu/bits/string_fortified.h" 3
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 57
+__attribute((__leaf__)) extern inline void *memset(void *__dest, int __ch, size_t __len) noexcept(true) 
+# 58
+{ 
+# 59
+return __builtin___memset_chk(__dest, __ch, __len, __builtin_dynamic_object_size(__dest, 0)); 
+# 61
+} 
+# 66
+void __explicit_bzero_chk(void * __dest, size_t __len, size_t __destlen) noexcept(true)
+# 67
+ __attribute((__nonnull__(1))) __attribute((__access__(__write_only__ , 1 ))); 
+# 69
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) extern inline void 
+# 70
+ __attribute((__leaf__)) explicit_bzero(void *__dest, size_t __len) noexcept(true) 
+# 71
+{ 
+# 72
+__explicit_bzero_chk(__dest, __len, __builtin_dynamic_object_size(__dest, 0)); 
+# 73
+} 
+# 76
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 77
+__attribute((__leaf__)) extern inline char *strcpy(char *__restrict__ __dest, const char *__restrict__ __src) noexcept(true) 
+# 78
+{ 
+# 79
+return __builtin___strcpy_chk(__dest, __src, __builtin_dynamic_object_size(__dest, 1)); 
+# 80
+} 
+# 83
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 84
+__attribute((__leaf__)) extern inline char *stpcpy(char *__restrict__ __dest, const char *__restrict__ __src) noexcept(true) 
+# 85
+{ 
+# 86
+return __builtin___stpcpy_chk(__dest, __src, __builtin_dynamic_object_size(__dest, 1)); 
+# 87
+} 
+# 91
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 92
+__attribute((__leaf__)) extern inline char *strncpy(char *__restrict__ __dest, const char *__restrict__ __src, size_t __len) noexcept(true) 
+# 94
+{ 
+# 95
+return __builtin___strncpy_chk(__dest, __src, __len, __builtin_dynamic_object_size(__dest, 1)); 
+# 97
+} 
+# 101
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 102
+__attribute((__leaf__)) extern inline char *stpncpy(char *__dest, const char *__src, size_t __n) noexcept(true) 
+# 103
+{ 
+# 104
+return __builtin___stpncpy_chk(__dest, __src, __n, __builtin_dynamic_object_size(__dest, 1)); 
+# 106
+} 
+# 127 "/usr/include/x86_64-linux-gnu/bits/string_fortified.h" 3
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 128
+__attribute((__leaf__)) extern inline char *strcat(char *__restrict__ __dest, const char *__restrict__ __src) noexcept(true) 
+# 129
+{ 
+# 130
+return __builtin___strcat_chk(__dest, __src, __builtin_dynamic_object_size(__dest, 1)); 
+# 131
+} 
+# 134
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) 
+# 135
+__attribute((__leaf__)) extern inline char *strncat(char *__restrict__ __dest, const char *__restrict__ __src, size_t __len) noexcept(true) 
+# 137
+{ 
+# 138
+return __builtin___strncat_chk(__dest, __src, __len, __builtin_dynamic_object_size(__dest, 1)); 
+# 140
+} 
+# 143
+extern size_t __strlcpy_chk(char * __dest, const char * __src, size_t __n, size_t __destlen) noexcept(true); 
+# 145
+extern size_t __strlcpy_alias(char * __dest, const char * __src, size_t __n) noexcept(true) __asm__("strlcpy"); 
+# 149
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) extern inline size_t 
+# 150
+ __attribute((__leaf__)) strlcpy(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true) 
+# 152
+{ 
+# 153
+if ((__builtin_dynamic_object_size(__dest, 1) != ((size_t)(-1))) && ((!(0)) || (__n > __builtin_dynamic_object_size(__dest, 1)))) { 
+# 156
+return __strlcpy_chk(__dest, __src, __n, __builtin_dynamic_object_size(__dest, 1)); }  
+# 157
+return __strlcpy_alias(__dest, __src, __n); 
+# 158
+} 
+# 160
+extern size_t __strlcat_chk(char * __dest, const char * __src, size_t __n, size_t __destlen) noexcept(true); 
+# 162
+extern size_t __strlcat_alias(char * __dest, const char * __src, size_t __n) noexcept(true) __asm__("strlcat"); 
+# 166
+__attribute((__always_inline__)) __attribute((__gnu_inline__)) __attribute((__artificial__)) extern inline size_t 
+# 167
+ __attribute((__leaf__)) strlcat(char *__restrict__ __dest, const char *__restrict__ __src, size_t __n) noexcept(true) 
+# 169
+{ 
+# 170
+if ((__builtin_dynamic_object_size(__dest, 1) != ((size_t)(-1))) && ((!(0)) || (__n > __builtin_dynamic_object_size(__dest, 1)))) { 
+# 173
+return __strlcat_chk(__dest, __src, __n, __builtin_dynamic_object_size(__dest, 1)); }  
+# 174
+return __strlcat_alias(__dest, __src, __n); 
+# 175
+} 
 # 552 "/usr/include/string.h" 3
 }
 # 26 "/usr/include/x86_64-linux-gnu/bits/timex.h" 3
