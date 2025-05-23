@@ -64,8 +64,16 @@ std::shared_ptr<MCTSNode> MCTSNode::create(std::unique_ptr<core::IGameState> sta
         weak_parent = parent;
     }
     
-    // Bypass the object pool for diagnostics - always use standard allocation
-    return std::shared_ptr<MCTSNode>(new MCTSNode(std::move(state), weak_parent));
+    // TODO: Use node pool when available
+    // For now, use standard allocation with tracking
+    TRACK_MEMORY_ALLOC("MCTSNode", sizeof(MCTSNode));
+    return std::shared_ptr<MCTSNode>(
+        new MCTSNode(std::move(state), weak_parent),
+        [](MCTSNode* node) {
+            TRACK_MEMORY_FREE("MCTSNode", sizeof(MCTSNode));
+            delete node;
+        }
+    );
 
     /* Original code using the object pool:
     // Use object pool for memory management when available

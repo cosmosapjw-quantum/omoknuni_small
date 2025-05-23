@@ -227,6 +227,10 @@ void AggressiveMemoryManager::forceCleanup(PressureLevel min_level) {
     cleanup_stats_.total_memory_freed += freed;
 }
 
+double AggressiveMemoryManager::getCurrentMemoryUsageGB() const {
+    return current_memory_usage_.load() / (1024.0 * 1024.0 * 1024.0);
+}
+
 std::string AggressiveMemoryManager::getMemoryReport() {
     std::ostringstream report;
     

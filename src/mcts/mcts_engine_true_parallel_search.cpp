@@ -32,26 +32,69 @@ struct EvalResult {
     NetworkOutput output;
 };
 
+// Helper function to count nodes in subtree
+int countNodes(MCTSNode* node) {
+    if (!node) return 0;
+    
+    int count = 1; // Count this node
+    auto& children = node->getChildren();
+    for (auto& child : children) {
+        if (child) {
+            count += countNodes(child.get());
+        }
+    }
+    return count;
+}
+
 // Helper function to prune low-visit branches
-void pruneTree(MCTSNode* node, int min_visits) {
-    if (!node) return;
+int pruneTree(MCTSNode* node, int min_visits) {
+    if (!node) return 0;
     
     auto& children = node->getChildren();
-    if (children.empty()) return;
+    if (children.empty()) return 0;
     
-    // Remove children with low visits
+    int total_removed = 0;
+    
+    // First, recursively prune children
+    for (auto& child : children) {
+        if (child) {
+            total_removed += pruneTree(child.get(), min_visits);
+        }
+    }
+    
+    // Then remove children with low visits
+    auto initial_size = children.size();
     children.erase(
         std::remove_if(children.begin(), children.end(),
-            [min_visits](const std::shared_ptr<MCTSNode>& child) {
-                return child && child->getVisitCount() < min_visits;
+            [min_visits, &total_removed](const std::shared_ptr<MCTSNode>& child) {
+                if (child && child->getVisitCount() < min_visits) {
+                    // Count all nodes in the subtree being removed
+                    total_removed += countNodes(child.get());
+                    return true;
+                }
+                return false;
             }),
         children.end()
     );
     
-    // Recursively prune remaining children
+    return total_removed;
+}
+
+// Helper function to clear all virtual losses (for deadlock recovery)
+void clearAllVirtualLosses(MCTSNode* node) {
+    if (!node) return;
+    
+    // Clear any virtual losses on this node
+    int vl = node->getVirtualLoss();
+    if (vl > 0) {
+        node->removeVirtualLoss(vl);
+    }
+    
+    // Recursively clear children
+    auto& children = node->getChildren();
     for (auto& child : children) {
         if (child) {
-            pruneTree(child.get(), min_visits);
+            clearAllVirtualLosses(child.get());
         }
     }
 }
@@ -90,14 +133,29 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
     std::atomic<int> total_batch_size(0);
     std::atomic<int> max_queue_size_seen(0);
     
-    // Tree pruning control
+    // Tree pruning control - memory-based dynamic pruning
     std::atomic<int> nodes_created(0);
-    std::atomic<int> last_prune_count(0);
-    const int prune_interval = 50;  // Prune every 50 simulations
-    
-    // Node budget to prevent runaway memory growth
-    const int max_nodes = settings_.num_simulations * 10;  // Allow 10x simulations as nodes
     std::atomic<int> current_node_count(1);  // Start with root
+    std::atomic<int> last_prune_count(0);
+    std::atomic<int> prune_threshold(1);     // Minimum visits to keep a node
+    
+    // Dynamic pruning based on memory pressure
+    const int prune_check_interval = 25;     // Check memory every 25 simulations
+    const size_t bytes_per_node = sizeof(MCTSNode) + 256; // Node + children vector estimate
+    
+    // Memory thresholds for different pruning aggressiveness
+    const size_t memory_warning_gb = 8;      // Start gentle pruning at 8GB
+    const size_t memory_critical_gb = 16;    // Aggressive pruning at 16GB
+    const size_t memory_emergency_gb = 24;   // Emergency pruning at 24GB
+    
+    std::cout << "Dynamic memory-based tree pruning enabled:" << std::endl;
+    std::cout << "  Warning threshold: " << memory_warning_gb << "GB (prune 1-visit nodes)" << std::endl;
+    std::cout << "  Critical threshold: " << memory_critical_gb << "GB (prune 2-visit nodes)" << std::endl;
+    std::cout << "  Emergency threshold: " << memory_emergency_gb << "GB (prune 5-visit nodes)" << std::endl;
+    
+    // Deadlock detection
+    std::atomic<std::chrono::steady_clock::time_point> last_progress_time(std::chrono::steady_clock::now());
+    std::atomic<int> stuck_threads(0);
     
     // PHASE 1: Launch collection workers that CONTINUOUSLY collect leaves
     std::vector<std::thread> collectors;
@@ -106,8 +164,20 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
     auto collector_fn = [&](int thread_id) {
         std::mt19937 thread_rng(std::random_device{}() + thread_id);
         int local_collected = 0;
+        auto last_collection_time = std::chrono::steady_clock::now();
         
         while (collection_active.load() && simulations_completed.load() < settings_.num_simulations) {
+            // Debug log every 10th iteration
+            static thread_local int iteration_count = 0;
+            iteration_count++;
+            bool debug_this_iter = (iteration_count % 10 == 0);
+            
+            if (debug_this_iter && thread_id == 0) {
+                std::cout << "Thread " << thread_id << " iter " << iteration_count 
+                          << ": sims=" << simulations_completed.load() 
+                          << ", collected=" << leaves_collected.load() << std::endl;
+            }
+            
             // Tree traversal to find leaf
             std::shared_ptr<MCTSNode> current = std::shared_ptr<MCTSNode>(root, [](MCTSNode*){});
             std::vector<std::shared_ptr<MCTSNode>> path;
@@ -115,7 +185,8 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
             // Selection phase with virtual loss
             while (current && !current->isTerminal() && current->isExpanded()) {
                 // Apply virtual loss BEFORE selection to prevent collision
-                current->applyVirtualLoss(settings_.virtual_loss);
+                // Use smaller virtual loss to prevent saturation
+                current->applyVirtualLoss(std::min(settings_.virtual_loss, 5));
                 path.push_back(current);
                 
                 // Select best child
@@ -149,27 +220,14 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
             
             // Expansion phase if needed
             if (current && !current->isTerminal() && !current->isExpanded()) {
-                // Check node budget before expansion
-                int node_count = current_node_count.load();
-                if (node_count >= max_nodes) {
-                    // Budget exceeded - skip expansion
-                    if (!path.empty()) {
-                        for (auto& node : path) {
-                            node->removeVirtualLoss(settings_.virtual_loss);
-                        }
-                    }
-                    
-                    // Brief pause to avoid spinning
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                    continue;
-                }
-                
                 auto state_clone = current->getState().clone();
                 if (state_clone) {
                     auto legal_moves = state_clone->getLegalMoves();
                     if (!legal_moves.empty()) {
-                        // Expand node
-                        current->expand();
+                        // Expand node with progressive widening to limit memory usage
+                        current->expand(settings_.use_progressive_widening, 
+                                      settings_.progressive_widening_c,
+                                      settings_.progressive_widening_k);
                         
                         // Track new nodes created
                         auto children = current->getChildren();
@@ -177,7 +235,7 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
                         
                         // Select first child as leaf
                         if (!children.empty()) {
-                            current->applyVirtualLoss(settings_.virtual_loss);
+                            current->applyVirtualLoss(std::min(settings_.virtual_loss, 5));
                             path.push_back(current);
                             current = children[0];
                         }
@@ -203,7 +261,7 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
                 if (queue_size >= max_queue_size * 0.8) {  // 80% full
                     // Revert virtual loss and wait
                     for (auto& node : path) {
-                        node->removeVirtualLoss(settings_.virtual_loss);
+                        node->removeVirtualLoss(std::min(settings_.virtual_loss, 5));
                     }
                     TRACK_MEMORY_FREE("LeafRequest", sizeof(LeafEvalRequest) + 
                                       (path.size() * sizeof(std::shared_ptr<MCTSNode>)));
@@ -237,7 +295,7 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
                 if (!enqueued) {
                     // Failed to enqueue - revert virtual loss
                     for (auto& node : path) {
-                        node->removeVirtualLoss(settings_.virtual_loss);
+                        node->removeVirtualLoss(std::min(settings_.virtual_loss, 5));
                     }
                     TRACK_MEMORY_FREE("LeafRequest", sizeof(LeafEvalRequest) + 
                                       (path.size() * sizeof(std::shared_ptr<MCTSNode>)));
@@ -245,12 +303,30 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
             } else if (!path.empty()) {
                 // Terminal node or expansion failed - revert virtual loss
                 for (auto& node : path) {
-                    node->removeVirtualLoss(settings_.virtual_loss);
+                    node->removeVirtualLoss(std::min(settings_.virtual_loss, 5));
                 }
             }
             
             // NO WAITING - immediately continue to next collection
             std::this_thread::yield();
+            
+            // Deadlock detection - check if stuck
+            auto now = std::chrono::steady_clock::now();
+            if (std::chrono::duration_cast<std::chrono::seconds>(now - last_collection_time).count() > 5) {
+                stuck_threads.fetch_add(1);
+                std::cout << "⚠️ Collector " << thread_id << " stuck for 5+ seconds. Virtual losses may be saturated." << std::endl;
+                
+                // Try to recover by clearing some virtual losses
+                if (current) {
+                    current->removeVirtualLoss(settings_.virtual_loss * 10);  // Remove extra to unstick
+                }
+                last_collection_time = now;
+            }
+            
+            // Update progress timestamp on successful collection
+            if (local_collected > 0) {
+                last_progress_time.store(now);
+            }
         }
         
         std::cout << "Collector " << thread_id << " finished with " 
@@ -279,17 +355,18 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
             
             // Continue collecting until batch is ready or timeout
             auto batch_start = std::chrono::steady_clock::now();
-            const auto min_batch_wait = std::chrono::milliseconds(5);  // Minimum wait for batching
+            const auto min_batch_wait = std::chrono::milliseconds(50);  // Increase to 50ms for better batching
             
             while (batch.size() < settings_.batch_size) {
                 auto elapsed = std::chrono::steady_clock::now() - batch_start;
                 
                 // Only process partial batch if:
-                // 1. Timeout exceeded AND we waited minimum time
+                // 1. Timeout exceeded AND we waited minimum time AND have minimum batch
                 // 2. No more simulations to run
+                const size_t min_batch_size = 8;  // Don't process less than 8
                 bool should_process_partial = 
-                    (elapsed > batch_timeout && elapsed > min_batch_wait && !batch.empty()) ||
-                    (simulations_completed.load() >= settings_.num_simulations);
+                    (elapsed > batch_timeout && elapsed > min_batch_wait && batch.size() >= min_batch_size) ||
+                    (simulations_completed.load() >= settings_.num_simulations && !batch.empty());
                 
                 if (should_process_partial) {
                     break;
@@ -302,10 +379,10 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
                     // Wait more aggressively for full batches
                     if (batch.size() < settings_.batch_size / 2) {
                         // Less than half full - wait longer
-                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(5));
                     } else {
-                        // More than half full - shorter wait
-                        std::this_thread::sleep_for(std::chrono::microseconds(200));
+                        // More than half full - shorter wait  
+                        std::this_thread::sleep_for(std::chrono::milliseconds(2));
                     }
                 }
             }
@@ -397,7 +474,8 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
                 // Backpropagate value
                 float value = result.output.value;
                 for (auto& node : result.path) {
-                    node->removeVirtualLoss(settings_.virtual_loss);
+                    // Remove same amount of virtual loss as applied
+                    node->removeVirtualLoss(std::min(settings_.virtual_loss, 5));
                     node->update(value);
                     value = -value;  // Flip for opponent
                 }
@@ -405,20 +483,57 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
                 simulations_completed.fetch_add(1);
                 local_processed++;
                 
-                // Periodic tree pruning
+                // Log every 10th completion
+                if (simulations_completed.load() % 10 == 0) {
+                    std::cout << "✓ Backprop completed " << simulations_completed.load() 
+                              << " simulations (queue: " << result_queue.size_approx() << ")" << std::endl;
+                }
+                
+                // Dynamic memory-based tree pruning
                 int sims = simulations_completed.load();
                 int last_prune = last_prune_count.load();
-                if (sims - last_prune >= prune_interval && 
+                if (sims - last_prune >= prune_check_interval && 
                     last_prune_count.compare_exchange_strong(last_prune, sims)) {
                     
-                    // Prune low-visit branches from the tree
-                    pruneTree(root, 2);  // Remove branches with < 2 visits
-                    
-                    // Force memory cleanup
+                    // Check memory usage and adjust pruning threshold
                     auto& mem_mgr = AggressiveMemoryManager::getInstance();
-                    mem_mgr.forceCleanup(AggressiveMemoryManager::PressureLevel::WARNING);
+                    double current_usage_gb = mem_mgr.getCurrentMemoryUsageGB();
+                    int nodes_before = current_node_count.load();
                     
-                    std::cout << "🌳 Tree pruned at " << sims << " simulations" << std::endl;
+                    // Determine pruning threshold based on memory
+                    int min_visits = 1;
+                    AggressiveMemoryManager::PressureLevel pressure_level = AggressiveMemoryManager::PressureLevel::NORMAL;
+                    
+                    if (current_usage_gb >= memory_emergency_gb) {
+                        min_visits = 5;  // Very aggressive pruning
+                        pressure_level = AggressiveMemoryManager::PressureLevel::EMERGENCY;
+                        std::cout << "🚨 EMERGENCY memory pruning (>" << memory_emergency_gb << "GB): removing nodes with <" << min_visits << " visits" << std::endl;
+                    } else if (current_usage_gb >= memory_critical_gb) {
+                        min_visits = 2;  // Aggressive pruning
+                        pressure_level = AggressiveMemoryManager::PressureLevel::CRITICAL;
+                        std::cout << "⚠️ Critical memory pruning (>" << memory_critical_gb << "GB): removing nodes with <" << min_visits << " visits" << std::endl;
+                    } else if (current_usage_gb >= memory_warning_gb) {
+                        min_visits = 1;  // Gentle pruning
+                        pressure_level = AggressiveMemoryManager::PressureLevel::WARNING;
+                        std::cout << "💡 Warning memory pruning (>" << memory_warning_gb << "GB): removing nodes with <" << min_visits << " visits" << std::endl;
+                    }
+                    
+                    // Prune tree if needed
+                    if (current_usage_gb >= memory_warning_gb) {
+                        int nodes_removed = pruneTree(root, min_visits);
+                        current_node_count.fetch_sub(nodes_removed);
+                        int nodes_after = current_node_count.load();
+                        
+                        std::cout << "🌳 Tree pruned at " << sims << " simulations: " 
+                                  << nodes_removed << " nodes removed (from " << nodes_before 
+                                  << " to " << nodes_after << "), memory: " 
+                                  << current_usage_gb << "GB" << std::endl;
+                        
+                        // Force memory cleanup
+                        mem_mgr.forceCleanup(pressure_level);
+                    }
+                    
+                    prune_threshold.store(min_visits);
                 }
             } else {
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
@@ -438,6 +553,70 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
         backprop_workers.emplace_back(backprop_fn);
     }
     
+    // Add a shutdown flag for clean termination
+    std::atomic<bool> shutdown_requested(false);
+    
+    // Launch deadlock monitor thread
+    std::thread deadlock_monitor([&]() {
+        auto last_sim_count = 0;
+        auto stuck_count = 0;
+        
+        while (!shutdown_requested.load() && simulations_completed.load() < settings_.num_simulations) {
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            
+            int current_sims = simulations_completed.load();
+            if (current_sims == last_sim_count && current_sims < settings_.num_simulations) {
+                stuck_count++;
+                std::cout << "\n🚨 DEADLOCK DETECTED! No progress for " << (stuck_count * 5) 
+                          << " seconds at " << current_sims << " simulations" << std::endl;
+                std::cout << "  Stuck threads: " << stuck_threads.load() << std::endl;
+                std::cout << "  Leaf queue size: " << leaf_queue.size_approx() << std::endl;
+                std::cout << "  Result queue size: " << result_queue.size_approx() << std::endl;
+                std::cout << "  Node count: " << current_node_count.load() << std::endl;
+                
+                // Attempt recovery after 10 seconds
+                if (stuck_count >= 2) {
+                    std::cout << "🔧 Attempting deadlock recovery..." << std::endl;
+                    
+                    // Clear virtual losses from root to help unstick
+                    if (root) {
+                        clearAllVirtualLosses(root);
+                    }
+                    
+                    // Reset stuck thread counter
+                    stuck_threads.store(0);
+                    
+                    // Print more diagnostic info
+                    std::cout << "🔍 Diagnostic info:" << std::endl;
+                    std::cout << "  Total threads: " << settings_.num_threads << std::endl;
+                    std::cout << "  Collectors running: " << collectors.size() << std::endl;
+                    std::cout << "  Simulations completed: " << simulations_completed.load() << std::endl;
+                    std::cout << "  Leaves collected: " << leaves_collected.load() << std::endl;
+                    std::cout << "  Current node count: " << current_node_count.load() << std::endl;
+                    
+                    // Check if we're stuck at exactly 30
+                    if (current_sims == 30) {
+                        std::cout << "⚠️ STUCK AT EXACTLY 30! This suggests a hardcoded limit." << std::endl;
+                    }
+                    
+                    // If still stuck after 20 seconds, break out
+                    if (stuck_count >= 4) {
+                        std::cout << "❌ Unable to recover from deadlock. Terminating search." << std::endl;
+                        collection_active.store(false);
+                        inference_active.store(false);
+                        shutdown_requested.store(true);
+                        break;
+                    }
+                }
+            } else {
+                stuck_count = 0;  // Reset if progress made
+                last_sim_count = current_sims;
+            }
+        }
+        
+        std::cout << "Deadlock monitor shutting down" << std::endl;
+    });
+    
     // Monitor progress
     auto last_report = std::chrono::steady_clock::now();
     while (simulations_completed.load() < settings_.num_simulations) {
@@ -456,6 +635,7 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
                       << "Queue sizes: " << leaf_queue.size_approx() << " leaves, "
                       << result_queue.size_approx() << " results | "
                       << "Max queue: " << max_queue_size_seen.load() << " | "
+                      << "Nodes: " << current_node_count.load() << " | "
                       << "Memory: " << AggressiveMemoryManager::formatBytes(
                           memory_manager.getCurrentMemoryUsage()) << std::endl;
             
@@ -463,20 +643,66 @@ void MCTSEngine::executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core:
         }
     }
     
-    // Shutdown
-    collection_active.store(false);
+    // Shutdown sequence
+    std::cout << "Starting shutdown sequence..." << std::endl;
     
-    // Wait for remaining items to process
-    while (leaf_queue.size_approx() > 0 || result_queue.size_approx() > 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    // Step 1: Stop collectors from generating new work
+    collection_active.store(false);
+    std::cout << "  - Collectors signaled to stop" << std::endl;
+    
+    // Step 2: Wait for remaining items to process (with timeout)
+    auto shutdown_start = std::chrono::steady_clock::now();
+    const auto shutdown_timeout = std::chrono::seconds(10);
+    
+    while ((leaf_queue.size_approx() > 0 || result_queue.size_approx() > 0) &&
+           std::chrono::steady_clock::now() - shutdown_start < shutdown_timeout) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::cout << "  - Waiting for queues to drain: " 
+                  << leaf_queue.size_approx() << " leaves, " 
+                  << result_queue.size_approx() << " results" << std::endl;
     }
     
+    // Step 3: Stop inference processor
     inference_active.store(false);
+    std::cout << "  - Inference processor signaled to stop" << std::endl;
+    
+    // Step 4: Signal deadlock monitor to shutdown
+    shutdown_requested.store(true);
+    std::cout << "  - Deadlock monitor signaled to stop" << std::endl;
+    
+    // Step 5: Join threads (they should exit cleanly now)
+    std::cout << "  - Joining threads..." << std::endl;
     
     // Join all threads
-    for (auto& t : collectors) t.join();
-    inference_processor.join();
-    for (auto& t : backprop_workers) t.join();
+    for (size_t i = 0; i < collectors.size(); ++i) {
+        if (collectors[i].joinable()) {
+            std::cout << "    - Joining collector " << i << std::endl;
+            collectors[i].join();
+        }
+    }
+    std::cout << "  - All collectors joined" << std::endl;
+    
+    if (inference_processor.joinable()) {
+        std::cout << "    - Joining inference processor" << std::endl;
+        inference_processor.join();
+    }
+    std::cout << "  - Inference processor joined" << std::endl;
+    
+    for (size_t i = 0; i < backprop_workers.size(); ++i) {
+        if (backprop_workers[i].joinable()) {
+            std::cout << "    - Joining backprop worker " << i << std::endl;
+            backprop_workers[i].join();
+        }
+    }
+    std::cout << "  - All backprop workers joined" << std::endl;
+    
+    if (deadlock_monitor.joinable()) {
+        std::cout << "    - Joining deadlock monitor" << std::endl;
+        deadlock_monitor.join();
+    }
+    std::cout << "  - Deadlock monitor joined" << std::endl;
+    
+    std::cout << "Shutdown sequence completed" << std::endl;
     
     // Final statistics
     auto search_end = std::chrono::steady_clock::now();

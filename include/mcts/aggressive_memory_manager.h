@@ -55,6 +55,7 @@ public:
     size_t getCurrentMemoryUsage();
     size_t getPeakMemoryUsage() const { return peak_memory_usage_; }
     PressureLevel getMemoryPressure();
+    double getCurrentMemoryUsageGB() const;
     
     // Cleanup management
     void registerCleanupCallback(const std::string& name, CleanupCallback callback, 
