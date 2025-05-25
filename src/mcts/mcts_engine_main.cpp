@@ -113,12 +113,10 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     
     // For true serial mode (num_threads <= 0), skip complex inference infrastructure
     if (settings.num_threads <= 0) {
-        std::cout << "MCTSEngine: Serial mode detected - using direct neural network inference (no threading)" << std::endl;
         return; // Skip creating complex infrastructure
     }
     
     // Simplified implementation - using direct batching approach
-    std::cout << "MCTSEngine: Using true parallel search with direct batching" << std::endl;
 }
 
 // Constructor with inference function
@@ -173,12 +171,10 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
     
     // For true serial mode (num_threads <= 0), skip complex inference infrastructure
     if (settings.num_threads <= 0) {
-        std::cout << "MCTSEngine: Serial mode detected - using direct inference (no threading)" << std::endl;
         return; // Skip creating complex infrastructure
     }
     
     // SIMPLIFIED: No more UnifiedInferenceServer or BurstCoordinator
-    std::cout << "MCTSEngine: Using simplified direct batching approach" << std::endl;
         
 }
 
@@ -190,12 +186,11 @@ bool MCTSEngine::ensureEvaluatorStarted() {
 
 // Main search method
 SearchResult MCTSEngine::search(const core::IGameState& state) {
-    std::cout << "Starting new search" << std::endl;
     auto start_time = std::chrono::steady_clock::now();
 
     // Validate the state
     if (!safeGameStateValidation(state)) {
-        std::cout << "Invalid game state, returning default result" << std::endl;
+        std::cerr << "Invalid game state, returning default result" << std::endl;
         SearchResult result;
         result.action = -1;
         result.value = 0.0f;
@@ -224,7 +219,6 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
 
     // Check if state is already terminal
     if (state.isTerminal()) {
-        std::cout << "Game state is already terminal. No search needed" << std::endl;
         SearchResult result;
         result.action = -1;
         
@@ -255,14 +249,12 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
         if (!direct_inference_fn_) {
             throw std::runtime_error("Direct inference function not available for serial mode");
         }
-        std::cout << "MCTSEngine: Using direct inference for serial mode evaluation" << std::endl;
     } else {
         // Parallel mode: simplified architecture no longer uses UnifiedInferenceServer
         // Always use traditional evaluator
         if (!ensureEvaluatorStarted()) {
             throw std::runtime_error("Failed to start evaluator");
         }
-        std::cout << "MCTSEngine: Using traditional MCTSEvaluator for evaluation" << std::endl;
         
         // UnifiedInferenceServer and BurstCoordinator were removed in simplification
         
@@ -272,13 +264,12 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
     // Run the search with enhanced error handling
     try {
         runSearch(state);
-        std::cout << "✅ MCTSEngine::search - runSearch completed successfully" << std::endl;
     } catch (const std::exception& e) {
-        std::cout << "❌ CRITICAL ERROR: MCTSEngine::search - Exception during runSearch: " << e.what() << std::endl;
+        std::cerr << "CRITICAL ERROR: MCTSEngine::search - Exception during runSearch: " << e.what() << std::endl;
         safelyStopEvaluator();
         throw;
     } catch (...) {
-        std::cout << "❌ CRITICAL ERROR: MCTSEngine::search - Unknown exception during runSearch" << std::endl;
+        std::cerr << "CRITICAL ERROR: MCTSEngine::search - Unknown exception during runSearch" << std::endl;
         safelyStopEvaluator();
         throw std::runtime_error("Unknown error during search");
     }

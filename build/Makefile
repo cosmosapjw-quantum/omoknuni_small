@@ -621,6 +621,45 @@ omoknuni_cli_optimized/fast:
 .PHONY : omoknuni_cli_optimized/fast
 
 #=============================================================================
+# Target rules for targets named omoknuni_cli_enhanced
+
+# Build rule for target.
+omoknuni_cli_enhanced: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omoknuni_cli_enhanced
+.PHONY : omoknuni_cli_enhanced
+
+# fast build rule for target.
+omoknuni_cli_enhanced/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_enhanced.dir/build.make CMakeFiles/omoknuni_cli_enhanced.dir/build
+.PHONY : omoknuni_cli_enhanced/fast
+
+#=============================================================================
+# Target rules for targets named omoknuni_cli_final
+
+# Build rule for target.
+omoknuni_cli_final: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omoknuni_cli_final
+.PHONY : omoknuni_cli_final
+
+# fast build rule for target.
+omoknuni_cli_final/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_final.dir/build.make CMakeFiles/omoknuni_cli_final.dir/build
+.PHONY : omoknuni_cli_final/fast
+
+#=============================================================================
+# Target rules for targets named omoknuni_cli_working
+
+# Build rule for target.
+omoknuni_cli_working: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omoknuni_cli_working
+.PHONY : omoknuni_cli_working
+
+# fast build rule for target.
+omoknuni_cli_working/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_working.dir/build.make CMakeFiles/omoknuni_cli_working.dir/build
+.PHONY : omoknuni_cli_working/fast
+
+#=============================================================================
 # Target rules for targets named core_tests
 
 # Build rule for target.
@@ -924,6 +963,54 @@ src/cli/omoknuni_cli.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.s
 .PHONY : src/cli/omoknuni_cli.cpp.s
 
+src/cli/omoknuni_cli_enhanced.o: src/cli/omoknuni_cli_enhanced.cpp.o
+.PHONY : src/cli/omoknuni_cli_enhanced.o
+
+# target to build an object file
+src/cli/omoknuni_cli_enhanced.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_enhanced.dir/build.make CMakeFiles/omoknuni_cli_enhanced.dir/src/cli/omoknuni_cli_enhanced.cpp.o
+.PHONY : src/cli/omoknuni_cli_enhanced.cpp.o
+
+src/cli/omoknuni_cli_enhanced.i: src/cli/omoknuni_cli_enhanced.cpp.i
+.PHONY : src/cli/omoknuni_cli_enhanced.i
+
+# target to preprocess a source file
+src/cli/omoknuni_cli_enhanced.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_enhanced.dir/build.make CMakeFiles/omoknuni_cli_enhanced.dir/src/cli/omoknuni_cli_enhanced.cpp.i
+.PHONY : src/cli/omoknuni_cli_enhanced.cpp.i
+
+src/cli/omoknuni_cli_enhanced.s: src/cli/omoknuni_cli_enhanced.cpp.s
+.PHONY : src/cli/omoknuni_cli_enhanced.s
+
+# target to generate assembly for a file
+src/cli/omoknuni_cli_enhanced.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_enhanced.dir/build.make CMakeFiles/omoknuni_cli_enhanced.dir/src/cli/omoknuni_cli_enhanced.cpp.s
+.PHONY : src/cli/omoknuni_cli_enhanced.cpp.s
+
+src/cli/omoknuni_cli_final.o: src/cli/omoknuni_cli_final.cpp.o
+.PHONY : src/cli/omoknuni_cli_final.o
+
+# target to build an object file
+src/cli/omoknuni_cli_final.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_final.dir/build.make CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o
+.PHONY : src/cli/omoknuni_cli_final.cpp.o
+
+src/cli/omoknuni_cli_final.i: src/cli/omoknuni_cli_final.cpp.i
+.PHONY : src/cli/omoknuni_cli_final.i
+
+# target to preprocess a source file
+src/cli/omoknuni_cli_final.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_final.dir/build.make CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.i
+.PHONY : src/cli/omoknuni_cli_final.cpp.i
+
+src/cli/omoknuni_cli_final.s: src/cli/omoknuni_cli_final.cpp.s
+.PHONY : src/cli/omoknuni_cli_final.s
+
+# target to generate assembly for a file
+src/cli/omoknuni_cli_final.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_final.dir/build.make CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.s
+.PHONY : src/cli/omoknuni_cli_final.cpp.s
+
 src/cli/omoknuni_cli_optimized.o: src/cli/omoknuni_cli_optimized.cpp.o
 .PHONY : src/cli/omoknuni_cli_optimized.o
 
@@ -947,6 +1034,30 @@ src/cli/omoknuni_cli_optimized.s: src/cli/omoknuni_cli_optimized.cpp.s
 src/cli/omoknuni_cli_optimized.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_optimized.dir/build.make CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.s
 .PHONY : src/cli/omoknuni_cli_optimized.cpp.s
+
+src/cli/omoknuni_cli_working.o: src/cli/omoknuni_cli_working.cpp.o
+.PHONY : src/cli/omoknuni_cli_working.o
+
+# target to build an object file
+src/cli/omoknuni_cli_working.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_working.dir/build.make CMakeFiles/omoknuni_cli_working.dir/src/cli/omoknuni_cli_working.cpp.o
+.PHONY : src/cli/omoknuni_cli_working.cpp.o
+
+src/cli/omoknuni_cli_working.i: src/cli/omoknuni_cli_working.cpp.i
+.PHONY : src/cli/omoknuni_cli_working.i
+
+# target to preprocess a source file
+src/cli/omoknuni_cli_working.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_working.dir/build.make CMakeFiles/omoknuni_cli_working.dir/src/cli/omoknuni_cli_working.cpp.i
+.PHONY : src/cli/omoknuni_cli_working.cpp.i
+
+src/cli/omoknuni_cli_working.s: src/cli/omoknuni_cli_working.cpp.s
+.PHONY : src/cli/omoknuni_cli_working.s
+
+# target to generate assembly for a file
+src/cli/omoknuni_cli_working.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_working.dir/build.make CMakeFiles/omoknuni_cli_working.dir/src/cli/omoknuni_cli_working.cpp.s
+.PHONY : src/cli/omoknuni_cli_working.cpp.s
 
 src/core/game_export.o: src/core/game_export.cpp.o
 .PHONY : src/core/game_export.o
@@ -1236,6 +1347,30 @@ src/mcts/advanced_memory_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.s
 .PHONY : src/mcts/advanced_memory_pool.cpp.s
 
+src/mcts/advanced_transposition_table.o: src/mcts/advanced_transposition_table.cpp.o
+.PHONY : src/mcts/advanced_transposition_table.o
+
+# target to build an object file
+src/mcts/advanced_transposition_table.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o
+.PHONY : src/mcts/advanced_transposition_table.cpp.o
+
+src/mcts/advanced_transposition_table.i: src/mcts/advanced_transposition_table.cpp.i
+.PHONY : src/mcts/advanced_transposition_table.i
+
+# target to preprocess a source file
+src/mcts/advanced_transposition_table.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.i
+.PHONY : src/mcts/advanced_transposition_table.cpp.i
+
+src/mcts/advanced_transposition_table.s: src/mcts/advanced_transposition_table.cpp.s
+.PHONY : src/mcts/advanced_transposition_table.s
+
+# target to generate assembly for a file
+src/mcts/advanced_transposition_table.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.s
+.PHONY : src/mcts/advanced_transposition_table.cpp.s
+
 src/mcts/aggressive_memory_manager.o: src/mcts/aggressive_memory_manager.cpp.o
 .PHONY : src/mcts/aggressive_memory_manager.o
 
@@ -1260,6 +1395,54 @@ src/mcts/aggressive_memory_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.s
 .PHONY : src/mcts/aggressive_memory_manager.cpp.s
 
+src/mcts/dynamic_batch_manager.o: src/mcts/dynamic_batch_manager.cpp.o
+.PHONY : src/mcts/dynamic_batch_manager.o
+
+# target to build an object file
+src/mcts/dynamic_batch_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.o
+.PHONY : src/mcts/dynamic_batch_manager.cpp.o
+
+src/mcts/dynamic_batch_manager.i: src/mcts/dynamic_batch_manager.cpp.i
+.PHONY : src/mcts/dynamic_batch_manager.i
+
+# target to preprocess a source file
+src/mcts/dynamic_batch_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.i
+.PHONY : src/mcts/dynamic_batch_manager.cpp.i
+
+src/mcts/dynamic_batch_manager.s: src/mcts/dynamic_batch_manager.cpp.s
+.PHONY : src/mcts/dynamic_batch_manager.s
+
+# target to generate assembly for a file
+src/mcts/dynamic_batch_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.s
+.PHONY : src/mcts/dynamic_batch_manager.cpp.s
+
+src/mcts/enhanced_mcts_engine.o: src/mcts/enhanced_mcts_engine.cpp.o
+.PHONY : src/mcts/enhanced_mcts_engine.o
+
+# target to build an object file
+src/mcts/enhanced_mcts_engine.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.o
+.PHONY : src/mcts/enhanced_mcts_engine.cpp.o
+
+src/mcts/enhanced_mcts_engine.i: src/mcts/enhanced_mcts_engine.cpp.i
+.PHONY : src/mcts/enhanced_mcts_engine.i
+
+# target to preprocess a source file
+src/mcts/enhanced_mcts_engine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.i
+.PHONY : src/mcts/enhanced_mcts_engine.cpp.i
+
+src/mcts/enhanced_mcts_engine.s: src/mcts/enhanced_mcts_engine.cpp.s
+.PHONY : src/mcts/enhanced_mcts_engine.s
+
+# target to generate assembly for a file
+src/mcts/enhanced_mcts_engine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.s
+.PHONY : src/mcts/enhanced_mcts_engine.cpp.s
+
 src/mcts/evaluation_types.o: src/mcts/evaluation_types.cpp.o
 .PHONY : src/mcts/evaluation_types.o
 
@@ -1283,6 +1466,30 @@ src/mcts/evaluation_types.s: src/mcts/evaluation_types.cpp.s
 src/mcts/evaluation_types.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.s
 .PHONY : src/mcts/evaluation_types.cpp.s
+
+src/mcts/gpu_memory_pool.o: src/mcts/gpu_memory_pool.cpp.o
+.PHONY : src/mcts/gpu_memory_pool.o
+
+# target to build an object file
+src/mcts/gpu_memory_pool.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o
+.PHONY : src/mcts/gpu_memory_pool.cpp.o
+
+src/mcts/gpu_memory_pool.i: src/mcts/gpu_memory_pool.cpp.i
+.PHONY : src/mcts/gpu_memory_pool.i
+
+# target to preprocess a source file
+src/mcts/gpu_memory_pool.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.i
+.PHONY : src/mcts/gpu_memory_pool.cpp.i
+
+src/mcts/gpu_memory_pool.s: src/mcts/gpu_memory_pool.cpp.s
+.PHONY : src/mcts/gpu_memory_pool.s
+
+# target to generate assembly for a file
+src/mcts/gpu_memory_pool.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.s
+.PHONY : src/mcts/gpu_memory_pool.cpp.s
 
 src/mcts/mcts_engine_common.o: src/mcts/mcts_engine_common.cpp.o
 .PHONY : src/mcts/mcts_engine_common.o
@@ -3027,7 +3234,10 @@ help:
 	@echo "... mimalloc-static"
 	@echo "... nn_tests"
 	@echo "... omoknuni_cli"
+	@echo "... omoknuni_cli_enhanced"
+	@echo "... omoknuni_cli_final"
 	@echo "... omoknuni_cli_optimized"
+	@echo "... omoknuni_cli_working"
 	@echo "... selfplay_tests"
 	@echo "... training_tests"
 	@echo "... transposition_tests"
@@ -3043,9 +3253,18 @@ help:
 	@echo "... src/cli/omoknuni_cli.o"
 	@echo "... src/cli/omoknuni_cli.i"
 	@echo "... src/cli/omoknuni_cli.s"
+	@echo "... src/cli/omoknuni_cli_enhanced.o"
+	@echo "... src/cli/omoknuni_cli_enhanced.i"
+	@echo "... src/cli/omoknuni_cli_enhanced.s"
+	@echo "... src/cli/omoknuni_cli_final.o"
+	@echo "... src/cli/omoknuni_cli_final.i"
+	@echo "... src/cli/omoknuni_cli_final.s"
 	@echo "... src/cli/omoknuni_cli_optimized.o"
 	@echo "... src/cli/omoknuni_cli_optimized.i"
 	@echo "... src/cli/omoknuni_cli_optimized.s"
+	@echo "... src/cli/omoknuni_cli_working.o"
+	@echo "... src/cli/omoknuni_cli_working.i"
+	@echo "... src/cli/omoknuni_cli_working.s"
 	@echo "... src/core/game_export.o"
 	@echo "... src/core/game_export.i"
 	@echo "... src/core/game_export.s"
@@ -3082,12 +3301,24 @@ help:
 	@echo "... src/mcts/advanced_memory_pool.o"
 	@echo "... src/mcts/advanced_memory_pool.i"
 	@echo "... src/mcts/advanced_memory_pool.s"
+	@echo "... src/mcts/advanced_transposition_table.o"
+	@echo "... src/mcts/advanced_transposition_table.i"
+	@echo "... src/mcts/advanced_transposition_table.s"
 	@echo "... src/mcts/aggressive_memory_manager.o"
 	@echo "... src/mcts/aggressive_memory_manager.i"
 	@echo "... src/mcts/aggressive_memory_manager.s"
+	@echo "... src/mcts/dynamic_batch_manager.o"
+	@echo "... src/mcts/dynamic_batch_manager.i"
+	@echo "... src/mcts/dynamic_batch_manager.s"
+	@echo "... src/mcts/enhanced_mcts_engine.o"
+	@echo "... src/mcts/enhanced_mcts_engine.i"
+	@echo "... src/mcts/enhanced_mcts_engine.s"
 	@echo "... src/mcts/evaluation_types.o"
 	@echo "... src/mcts/evaluation_types.i"
 	@echo "... src/mcts/evaluation_types.s"
+	@echo "... src/mcts/gpu_memory_pool.o"
+	@echo "... src/mcts/gpu_memory_pool.i"
+	@echo "... src/mcts/gpu_memory_pool.s"
 	@echo "... src/mcts/mcts_engine_common.o"
 	@echo "... src/mcts/mcts_engine_common.i"
 	@echo "... src/mcts/mcts_engine_common.s"

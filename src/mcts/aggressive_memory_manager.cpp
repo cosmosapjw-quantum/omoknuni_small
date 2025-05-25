@@ -45,10 +45,6 @@ AggressiveMemoryManager::AggressiveMemoryManager()
     // Start monitoring thread
     monitor_thread_ = std::thread(&AggressiveMemoryManager::monitoringLoop, this);
     
-    std::cout << "🛡️ AggressiveMemoryManager initialized with limits:" << std::endl;
-    std::cout << "  Warning: " << (config_.warning_threshold_gb) << "GB" << std::endl;
-    std::cout << "  Critical: " << (config_.critical_threshold_gb) << "GB" << std::endl;
-    std::cout << "  Emergency: " << (config_.emergency_threshold_gb) << "GB" << std::endl;
 }
 
 AggressiveMemoryManager::~AggressiveMemoryManager() {
@@ -93,8 +89,6 @@ void AggressiveMemoryManager::trackAllocation(const std::string& category, size_
     
     // Log significant allocations
     if (bytes > 10 * 1024 * 1024) { // > 10MB
-        std::cout << "📊 Large allocation: " << formatBytes(bytes) 
-                  << " for " << category << " at " << location << std::endl;
     }
 }
 
@@ -185,7 +179,6 @@ void AggressiveMemoryManager::forceCleanup(PressureLevel min_level) {
         return;
     }
     
-    std::cout << "🧹 AGGRESSIVE MEMORY CLEANUP triggered at level: " << static_cast<int>(level) << std::endl;
     
     size_t memory_before = getCurrentMemoryUsage();
     
@@ -194,7 +187,6 @@ void AggressiveMemoryManager::forceCleanup(PressureLevel min_level) {
         std::lock_guard<std::mutex> lock(callbacks_mutex_);
         for (const auto& callback_info : cleanup_callbacks_) {
             try {
-                std::cout << "  Executing cleanup: " << callback_info.name << std::endl;
                 callback_info.callback(level);
             } catch (const std::exception& e) {
                 std::cerr << "  Cleanup error in " << callback_info.name << ": " << e.what() << std::endl;
@@ -219,8 +211,6 @@ void AggressiveMemoryManager::forceCleanup(PressureLevel min_level) {
     size_t memory_after = getCurrentMemoryUsage();
     size_t freed = (memory_before > memory_after) ? (memory_before - memory_after) : 0;
     
-    std::cout << "  Memory freed: " << formatBytes(freed) 
-              << " (" << formatBytes(memory_after) << " remaining)" << std::endl;
     
     last_cleanup_time_ = std::chrono::steady_clock::now();
     cleanup_stats_.total_cleanups++;
@@ -318,7 +308,6 @@ void AggressiveMemoryManager::monitoringLoop() {
         static auto last_summary = std::chrono::steady_clock::now();
         if (std::chrono::duration_cast<std::chrono::seconds>(now - last_summary).count() >= 10) {
             if (pressure >= PressureLevel::WARNING) {
-                std::cout << getMemoryReport() << std::endl;
             }
             last_summary = now;
         }

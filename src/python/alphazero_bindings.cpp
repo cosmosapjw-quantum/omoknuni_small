@@ -261,7 +261,7 @@ public:
         // Get settings from config
         selfplay::SelfPlaySettings settings;
         settings.mcts_settings.num_simulations = config_.mcts_num_simulations;
-        settings.mcts_settings.num_threads = config_.mcts_num_threads;
+        settings.mcts_settings.num_threads = config_.mcts_threads_per_engine;
         settings.mcts_settings.exploration_constant = config_.mcts_exploration_constant;
         settings.mcts_settings.temperature = config_.mcts_temperature;
         settings.mcts_settings.add_dirichlet_noise = config_.mcts_add_dirichlet_noise;
@@ -583,7 +583,7 @@ private:
         
         // MCTS settings
         config.mcts_num_simulations = get_value("mcts_num_simulations", 800);
-        config.mcts_num_threads = get_value("mcts_num_threads", 8);
+        config.mcts_threads_per_engine = get_value("mcts_threads_per_engine", 8);
         
         // Batch parameters
         config.mcts_batch_size = get_value("mcts_batch_size", 64);
@@ -667,7 +667,7 @@ private:
         
         // MCTS settings
         dict["mcts_num_simulations"] = config.mcts_num_simulations;
-        dict["mcts_num_threads"] = config.mcts_num_threads;
+        dict["mcts_threads_per_engine"] = config.mcts_threads_per_engine;
         
         // Batch parameters
         dict["mcts_batch_size"] = config.mcts_batch_size;

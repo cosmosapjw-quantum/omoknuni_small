@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
                     int board_size = getIntConfigValue(config, "board_size", 15);
                     std::string model_path = getStringConfigValue(config, "model_path", "models/model.pt");
                     int num_simulations = getIntConfigValue(config, "mcts_num_simulations", 800);
-                    int num_threads = getIntConfigValue(config, "mcts_num_threads", 4);
+                    int num_threads = getIntConfigValue(config, "mcts_threads_per_engine", 4);
                     int batch_size = getIntConfigValue(config, "mcts_batch_size", 16);
                     int max_collection_batch_size = getIntConfigValue(config, "mcts_max_collection_batch_size", 32);
                     float exploration_constant = getFloatConfigValue(config, "mcts_exploration_constant", 1.5f);
@@ -964,7 +964,7 @@ int main(int argc, char** argv) {
                     
                     // MCTS settings for evaluation
                     int num_simulations_eval = getIntConfigValue(config, "mcts_num_simulations", 100);
-                    int num_threads_eval = getIntConfigValue(config, "mcts_num_threads", 4);
+                    int num_threads_eval = getIntConfigValue(config, "mcts_threads_per_engine", 4);
                     int batch_size_eval = getIntConfigValue(config, "mcts_batch_size", 32);
                     float exploration_constant_eval = getFloatConfigValue(config, "mcts_exploration_constant", 1.5f);
                     int virtual_loss_eval = getIntConfigValue(config, "mcts_virtual_loss", 3);
@@ -1167,7 +1167,7 @@ int main(int argc, char** argv) {
                     
                     // MCTS settings for play
                     int num_simulations_play = getIntConfigValue(config, "mcts_num_simulations", 800);
-                    int num_threads_play = getIntConfigValue(config, "mcts_num_threads", 2);
+                    int num_threads_play = getIntConfigValue(config, "mcts_threads_per_engine", 2);
                     int batch_size_play = getIntConfigValue(config, "mcts_batch_size", 1);
                     float exploration_constant_play = getFloatConfigValue(config, "mcts_exploration_constant", 1.0f);
                     int virtual_loss_play = getIntConfigValue(config, "mcts_virtual_loss", 3);

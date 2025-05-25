@@ -12,9 +12,6 @@ namespace alphazero {
 namespace mcts {
 
 void MCTSEngine::executeTaskflowSearch(MCTSNode* root, int num_simulations) {
-    std::cout << "🚀 OPTIMIZED LEAF PARALLELIZATION: " << num_simulations 
-              << " simulations, batch_size=" << settings_.batch_size 
-              << ", threads=" << settings_.num_threads << std::endl;
     
     if (!root) {
         std::cerr << "ERROR: Root node is null!" << std::endl;
@@ -34,9 +31,9 @@ void MCTSEngine::executeTaskflowSearch(MCTSNode* root, int num_simulations) {
     }
     
     auto search_start = std::chrono::steady_clock::now();
-    AggressiveMemoryManager& memory_manager = AggressiveMemoryManager::getInstance();
     
-    std::cout << "Initial memory: " << memory_manager.getCurrentMemoryUsageGB() << " GB" << std::endl;
+    // Defer memory manager access to avoid contention during initialization
+    // The memory manager will be accessed later in the monitoring thread
     
     // Performance metrics
     std::atomic<int> simulations_completed(0);
@@ -265,11 +262,6 @@ void MCTSEngine::executeTaskflowSearch(MCTSNode* root, int num_simulations) {
                 batches_processed.fetch_add(1);
                 total_batch_size.fetch_add(batch.size());
                 
-                if (batches_processed.load() % 5 == 0) {
-                    std::cout << "✅ Batch " << batches_processed.load() 
-                              << ": " << batch.size() << " states in " 
-                              << (eval_us / 1000.0) << "ms" << std::endl;
-                }
                 
                 last_batch_time = now;
             }
@@ -343,24 +335,6 @@ void MCTSEngine::executeTaskflowSearch(MCTSNode* root, int num_simulations) {
                     gpu_util = std::min(100.0f, inference_duty_cycle * 100.0f);
                 }
                 
-                std::cout << "\n📊 Progress: " << sims << "/" << num_simulations 
-                          << " (" << (100.0f * sims / num_simulations) << "%)"
-                          << " | Throughput: " << throughput << " sims/sec";
-                
-                if (throughput >= 70) {
-                    std::cout << " ✅";
-                } else if (throughput >= 50) {
-                    std::cout << " ⚠️";
-                } else {
-                    std::cout << " ❌";
-                }
-                
-                std::cout << "\n   Batches: " << batches << " (avg " << avg_batch << " states)"
-                          << " | Est. GPU: " << gpu_util << "%"
-                          << " | Memory: " << memory_manager.getCurrentMemoryUsageGB() << " GB"
-                          << " | Leaf Queue: " << leaf_queue.size_approx()
-                          << " | Result Queue: " << result_queue.size_approx()
-                          << std::endl;
             }
             
             last_report = now;
@@ -389,14 +363,6 @@ void MCTSEngine::executeTaskflowSearch(MCTSNode* root, int num_simulations) {
     float final_throughput = duration.count() > 0 ? 
         1000.0f * num_simulations / duration.count() : 0;
     
-    std::cout << "\n✅ Search completed in " << duration.count() << "ms" << std::endl;
-    std::cout << "  Final throughput: " << final_throughput << " sims/sec ";
-    
-    if (final_throughput >= 70) {
-        std::cout << "🎉 TARGET ACHIEVED!" << std::endl;
-    } else {
-        std::cout << "⚠️ Below target" << std::endl;
-    }
 }
 
 } // namespace mcts

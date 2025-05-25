@@ -362,15 +362,12 @@ using AggressiveMemoryController = UnifiedAggressiveMemoryController;
 // Renamed from runSearch to better reflect its function
 void MCTSEngine::runSearch(const core::IGameState& state) {
     auto search_start = std::chrono::steady_clock::now();
-    std::cout << "[MCTS_PERF] ========== RUN SEARCH START ==========" << std::endl;
     
     try {
         // Sequential steps to initialize and run the search
 
         // Step 1: Create the root node with the current state (always fresh for standard search)
         root_ = createRootNode(state);
-        std::cout << "[MCTS_PERF] Root node created at +" 
-                  << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - search_start).count() << "μs" << std::endl;
         
         // Step 2: Initialize game state pool if enabled
         initializeGameStatePool(state);
@@ -394,27 +391,18 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         auto exec_start = std::chrono::steady_clock::now();
         
         // TASKFLOW ROUTING - Always use leaf parallelization with taskflow
-        std::cout << "[MCTS_ROUTING] Using cpp-taskflow orchestration:" << std::endl;
-        std::cout << "  - settings_.num_threads = " << settings_.num_threads << std::endl;
-        std::cout << "  - Leaf parallelization only (no root parallelization)" << std::endl;
-        std::cout << "  - Target CPU/GPU throughput: 70%+" << std::endl;
         
         if (settings_.num_threads <= 0) {
             // Serial mode
-            std::cout << "[MCTS_PERF] Using executeSimpleSerialSearch (num_threads <= 0)" << std::endl;
             executeSimpleSerialSearch(search_roots);
         } else {
             // TASKFLOW PARALLELIZATION: High-performance leaf parallelization
-            std::cout << "[MCTS_PERF] 🚀 Using executeTaskflowSearch (cpp-taskflow, " 
-                      << settings_.num_threads << " threads)" << std::endl;
             if (!search_roots.empty() && search_roots[0]) {
                 executeTaskflowSearch(search_roots[0].get(), settings_.num_simulations);
             }
         }
         
         auto exec_end = std::chrono::steady_clock::now();
-        std::cout << "[MCTS_PERF] Search execution completed in " 
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(exec_end - exec_start).count() << "ms" << std::endl;
         
         // Step 8: No aggregation needed (root parallelization removed)
         

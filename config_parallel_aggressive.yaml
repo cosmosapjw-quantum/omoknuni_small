@@ -1,0 +1,42 @@
+# Aggressive parallel configuration for maximum throughput
+
+# Game settings
+game_type: gomoku
+board_size: 9
+
+# Neural network settings
+input_channels: 17
+num_res_blocks: 10
+num_filters: 128
+model_path: "models/model_gomoku_9x9.pt"
+
+# MCTS settings - optimized for throughput
+mcts_simulations: 400          # Lower simulations for more games
+mcts_threads_per_engine: 6     
+mcts_batch_size: 128            # Smaller batches, more frequent
+mcts_batch_timeout_ms: 20       # Shorter timeout
+mcts_c_puct: 1.4
+mcts_virtual_loss: 3
+mcts_value_init_penalty: 0.3
+mcts_root_dirichlet_alpha: 0.3
+mcts_root_exploration_fraction: 0.25
+mcts_enable_transposition: true  # Disable for speed
+mcts_temperature: 1.0
+mcts_temp_threshold: 20
+
+# Parallel settings - aggressive
+num_parallel_workers: 4       # 3 workers
+num_games: 100
+save_interval: 1             # Less frequent saves
+verbose: false
+output_dir: "data/self_play_games"
+
+# Simplified features for speed
+use_gpu_memory_pool: true
+use_dynamic_batching: true
+use_advanced_transposition: true
+
+# Memory management
+max_memory_gb: 48
+cleanup_threshold_gb: 40
+emergency_cleanup_gb: 45

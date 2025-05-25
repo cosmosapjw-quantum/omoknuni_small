@@ -48,14 +48,8 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         throw std::invalid_argument("Neural network cannot be null");
     }
     
-    // Log key configuration info
-    std::cout << "SelfPlayManager: Created with sequential game generation and " 
-              << settings_.mcts_settings.num_simulations 
-              << " MCTS simulations" << std::endl;
-              
     // Enable tensor pool periodic logging for memory monitoring
     core::GlobalTensorPool::getInstance().setPeriodicLogging(true, std::chrono::seconds(30));
-    std::cout << "SelfPlayManager: Enabled tensor pool periodic logging (every 30s)" << std::endl;
     
     // Track initial memory
     // alphazero::utils::trackMemory("SelfPlayManager created");
@@ -72,8 +66,6 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     settings_.mcts_settings.use_root_parallelization = false;
     settings_.mcts_settings.num_root_workers = 1;
     
-    std::cout << "SelfPlayManager: Using LEAF parallelization with " 
-              << settings_.mcts_settings.num_threads << " threads - Optimized for 70%+ CPU/GPU throughput" << std::endl;
     
     // NOTE: Each MCTSEngine now creates its own optimized UnifiedInferenceServer + BurstCoordinator
     // No need for a shared inference server
@@ -96,7 +88,6 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
 
     // OPTIMIZED: Use single engine with leaf parallelization for optimal performance
     // Focus on optimizing the leaf parallelization within a single engine
-    std::cout << "SelfPlayManager: Creating single optimized MCTS engine with leaf parallelization..." << std::endl;
     
     try {
         // Configure MCTS settings for memory-efficient parallelization
@@ -108,7 +99,6 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         // Apply a reasonable upper cap for threads based on hardware if not specified or too high.
         if (optimized_settings.num_threads <= 0 || optimized_settings.num_threads > static_cast<int>(std::thread::hardware_concurrency())) {
             optimized_settings.num_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency() / 2));
-             std::cout << "SelfPlayManager: Adjusted num_threads to " << optimized_settings.num_threads << " based on hardware." << std::endl;
         }
         
         // Respect num_simulations from config - remove hardcoded cap. User has already reduced it.
@@ -120,23 +110,6 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         // Respect batch_timeout from config - user has increased it for memory safety.
         // optimized_settings.batch_timeout = std::chrono::milliseconds(50);
         
-        std::cout << "SelfPlayManager: Applying MCTS settings from configuration:" << std::endl;
-        std::cout << "  - Threads: " << optimized_settings.num_threads << " (original: " << settings_.mcts_settings.num_threads << ")" << std::endl;
-        std::cout << "  - Simulations: " << optimized_settings.num_simulations << " (original: " << settings_.mcts_settings.num_simulations << ")" << std::endl;
-        std::cout << "  - Batch size: " << optimized_settings.batch_size << " (original: " << settings_.mcts_settings.batch_size << ")" << std::endl;
-        std::cout << "  - Batch timeout: " << optimized_settings.batch_timeout.count() << "ms (original: " << settings_.mcts_settings.batch_timeout.count() << "ms)" << std::endl;
-        
-        std::cout << "SelfPlayManager: Configuring MCTS with " << optimized_settings.num_threads 
-                  << " threads for true leaf parallelization" << std::endl;
-        
-        // COMPREHENSIVE SETTINGS VERIFICATION
-        std::cout << "[CONFIG_VERIFY] MCTS Settings Verification:" << std::endl;
-        std::cout << "  - Original config num_threads: " << settings_.mcts_settings.num_threads << std::endl;
-        std::cout << "  - Applied num_threads: " << optimized_settings.num_threads << std::endl;
-        std::cout << "  - batch_size: " << optimized_settings.batch_size << std::endl;
-        std::cout << "  - num_simulations: " << optimized_settings.num_simulations << std::endl;
-        std::cout << "  - use_root_parallelization: " << (optimized_settings.use_root_parallelization ? "YES" : "NO") << std::endl;
-        std::cout << "  - Expected routing: " << (optimized_settings.num_threads > 1 ? "executeParallelSearch" : "executeOptimizedSearchV2") << std::endl;
         
         // Create engine directly with neural network to get the optimized UnifiedInferenceServer + BurstCoordinator architecture
         auto single_engine = std::make_unique<mcts::MCTSEngine>(neural_net_, optimized_settings);
@@ -144,13 +117,11 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         engines_.clear();
         engines_.push_back(std::move(single_engine));
         
-        std::cout << "SelfPlayManager: Created single optimized engine with leaf parallelization" << std::endl;
         
     } catch (const std::exception& e) {
         std::cerr << "ERROR creating optimized MCTS engine: " << e.what() << std::endl;
         throw std::runtime_error("Failed to create optimized MCTS engine: " + std::string(e.what()));
     }
-    std::cout << "SelfPlayManager: Created " << engines_.size() << " MCTS engine(s) sharing one evaluator." << std::endl;
 
     // GPU Warm-up sequence on the engine
     try {

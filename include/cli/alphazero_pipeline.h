@@ -45,7 +45,7 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     
     // MCTS settings
     int mcts_num_simulations = 800;
-    int mcts_num_threads = 8;
+    int mcts_threads_per_engine = 8;
     
     // Batch parameters
     int mcts_batch_size = 64;  // Optimal target batch size

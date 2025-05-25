@@ -242,8 +242,13 @@ void runOptimizedSelfPlay(const std::string& config_path) {
 }
 
 int main(int argc, char* argv[]) {
-    // Initialize logging
-    alphazero::utils::Logger::init();
+    // Initialize logging with SYNCHRONOUS mode to prevent segfault
+    alphazero::utils::Logger::init("logs", 
+                                  spdlog::level::info,  // console level
+                                  spdlog::level::debug, // file level
+                                  10485760,             // 10MB max file size
+                                  3,                    // max 3 files
+                                  false);               // DISABLE async logging
     
     if (argc < 3) {
         std::cout << "Usage: " << argv[0] << " <command> --config <config_file>" << std::endl;

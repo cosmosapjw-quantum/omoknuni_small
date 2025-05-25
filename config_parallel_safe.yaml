@@ -1,0 +1,42 @@
+# Safe parallel configuration to avoid crashes
+
+# Game settings
+game_type: gomoku
+board_size: 15
+
+# Neural network settings
+input_channels: 17
+num_res_blocks: 10
+num_filters: 64
+model_path: "models/model.pt"
+
+# MCTS settings - conservative for stability
+mcts_simulations: 200          
+mcts_threads_per_engine: 6     # 6 threads per engine     
+mcts_batch_size: 64            
+mcts_batch_timeout_ms: 10       
+mcts_c_puct: 1.4
+mcts_virtual_loss: 3
+mcts_value_init_penalty: 0.3
+mcts_root_dirichlet_alpha: 0.3
+mcts_root_exploration_fraction: 0.25
+mcts_enable_transposition: true
+mcts_temperature: 1.0
+mcts_temp_threshold: 30
+
+# Parallel settings - 4 workers × 6 threads = 24 threads (matches CPU)
+num_parallel_workers: 4       
+num_games: 100
+save_interval: 10             
+verbose: true
+output_dir: "data/self_play_games"
+
+# Disable advanced features to reduce complexity
+use_gpu_memory_pool: false
+use_dynamic_batching: false
+use_advanced_transposition: false
+
+# Memory management
+max_memory_gb: 48
+cleanup_threshold_gb: 40
+emergency_cleanup_gb: 45

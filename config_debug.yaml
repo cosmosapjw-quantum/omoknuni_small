@@ -1,0 +1,48 @@
+# Debug configuration to test game completion
+
+# Game settings
+game_type: gomoku
+board_size: 15
+
+# Neural network settings
+input_channels: 17
+num_res_blocks: 10
+num_filters: 64
+model_path: "models/model.pt"
+
+# MCTS settings - very light for debugging
+mcts_simulations: 100          # Very low for quick testing
+mcts_num_threads: 1
+mcts_threads_per_engine: 1
+mcts_batch_size: 32           # Small batches
+mcts_batch_timeout_ms: 10
+mcts_c_puct: 1.4
+mcts_virtual_loss: 3
+mcts_value_init_penalty: 0.3
+mcts_root_dirichlet_alpha: 0.3
+mcts_root_exploration_fraction: 0.25
+mcts_enable_transposition: false  # Disable for debugging
+mcts_temperature: 1.0
+mcts_temp_threshold: 30
+
+# Self-play settings - minimal for testing
+num_actors: 10                # Just 10 games total
+num_parallel_workers: 2       # Only 2 workers
+games_per_worker: 5           # 5 games each
+num_games: 10
+save_interval: 1
+verbose: true
+output_dir: "data/self_play_games"
+
+# Disable enhanced features for debugging
+use_gpu_memory_pool: false
+use_dynamic_batching: false
+use_advanced_transposition: false
+
+# Performance tuning
+enable_profiling: false
+
+# Memory management
+max_memory_gb: 32
+cleanup_threshold_gb: 25
+emergency_cleanup_gb: 30

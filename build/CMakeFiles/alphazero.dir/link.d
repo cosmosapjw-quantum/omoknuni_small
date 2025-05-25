@@ -54,6 +54,10 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o \
@@ -225,6 +229,14 @@ CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o:
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.o:
 
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o:
 

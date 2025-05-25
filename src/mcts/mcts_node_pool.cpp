@@ -22,8 +22,6 @@ MCTSNodePool::MemoryBlock::MemoryBlock(size_t block_size)
 
 MCTSNodePool::MCTSNodePool(const Config& config) 
     : config_(config) {
-    LOG_SYSTEM_INFO("Initializing MCTS node pool with {} initial nodes", 
-                   config.initial_pool_size);
     
     // Initialize last compaction time
     last_compaction_time_.store(std::chrono::steady_clock::now());

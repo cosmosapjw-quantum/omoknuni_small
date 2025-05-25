@@ -90,8 +90,6 @@ public:
             expandPool(initial_pool_size_);
         }
         
-        std::cout << "🏊 LockFreeObjectPool initialized with " << initial_pool_size_ 
-                  << " objects of size " << object_size_ << std::endl;
     }
     
     ~LockFreeObjectPool() {
@@ -99,9 +97,6 @@ public:
         for (void* memory : object_storage_) {
             std::free(memory);
         }
-        std::cout << "🏊 LockFreeObjectPool destroyed. Final stats - hits: " << pool_hits_.load()
-                  << ", misses: " << pool_misses_.load()
-                  << ", hit rate: " << getHitRate() << "%" << std::endl;
     }
     
     /**

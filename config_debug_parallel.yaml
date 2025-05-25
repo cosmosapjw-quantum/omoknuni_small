@@ -1,0 +1,43 @@
+# Debug configuration for parallel self-play
+
+# Game settings
+game_type: gomoku
+board_size: 15
+
+# Neural network settings
+input_channels: 17
+num_res_blocks: 10
+num_filters: 64
+model_path: "models/model.pt"
+
+# MCTS settings - reduced for debugging
+mcts_simulations: 50          # Very low for debugging
+mcts_num_threads: 1           # Single thread per engine
+mcts_threads_per_engine: 1
+mcts_batch_size: 16           # Small batch
+mcts_batch_timeout_ms: 10
+mcts_c_puct: 1.4
+mcts_virtual_loss: 3
+mcts_value_init_penalty: 0.3
+mcts_root_dirichlet_alpha: 0.3
+mcts_root_exploration_fraction: 0.25
+mcts_enable_transposition: false  # Disable for debugging
+mcts_temperature: 1.0
+mcts_temp_threshold: 30
+
+# Parallel settings - minimal
+num_parallel_workers: 1       # Just 1 worker for debugging
+num_games: 2                  # Just 2 games
+save_interval: 1
+verbose: true
+output_dir: "data/self_play_games"
+
+# Disable advanced features
+use_gpu_memory_pool: false
+use_dynamic_batching: false
+use_advanced_transposition: false
+
+# Memory management
+max_memory_gb: 32
+cleanup_threshold_gb: 25
+emergency_cleanup_gb: 30

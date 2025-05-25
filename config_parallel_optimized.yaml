@@ -1,0 +1,58 @@
+# Optimized parallel configuration for Ryzen 9 5900X + RTX 3060 Ti
+
+# Game settings
+game_type: gomoku
+board_size: 15
+
+# Neural network settings
+input_channels: 17
+num_res_blocks: 10
+num_filters: 64
+model_path: "models/model.pt"
+
+# MCTS settings - balanced for parallel execution
+mcts_simulations: 200          # Reduced from 400 for better parallelism
+mcts_threads_per_engine: 8     # 8 threads per engine for true MCTS parallelism     
+mcts_batch_size: 64            # Smaller batch for faster response
+mcts_batch_timeout_ms: 5
+mcts_c_puct: 1.4
+mcts_virtual_loss: 3
+mcts_value_init_penalty: 0.3
+mcts_root_dirichlet_alpha: 0.3
+mcts_root_exploration_fraction: 0.25
+mcts_enable_transposition: true
+mcts_temperature: 1.0
+mcts_temp_threshold: 30
+
+# Parallel settings - optimized for your hardware
+num_parallel_workers: 2       # Start with 2 workers
+num_games: 100
+save_interval: 10
+verbose: true
+output_dir: "data/self_play_games"
+
+# GPU optimization
+use_gpu_memory_pool: true
+gpu_pool_initial_size_mb: 1024    # 1GB per worker = 2GB total
+gpu_pool_max_size_mb: 2048        # 2GB max per worker
+gpu_pool_block_sizes: [1048576, 4194304, 16777216]
+
+# Dynamic batching
+use_dynamic_batching: true
+dynamic_batch_min_size: 16
+dynamic_batch_max_size: 128
+dynamic_batch_timeout_us: 1000
+dynamic_batch_collect_mode: 2
+
+# Transposition table
+use_advanced_transposition: true
+tt_size_mb: 256              # Smaller table per worker
+tt_num_buckets: 4
+tt_enable_compression: true
+tt_cache_size: 32768
+tt_cleanup_interval: 1000
+
+# Memory management
+max_memory_gb: 48
+cleanup_threshold_gb: 40
+emergency_cleanup_gb: 45

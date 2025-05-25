@@ -1,0 +1,108 @@
+# Enhanced Ultra Performance Configuration
+# This configuration uses all advanced optimizations for maximum performance
+
+# Game settings
+game_type: gomoku
+board_size: 15
+
+# Neural network settings
+input_channels: 17
+num_res_blocks: 10
+num_filters: 64
+policy_output_size: 225
+use_gpu: true
+model_path: "models/model.pt"
+
+# Enhanced MCTS settings
+mcts_num_simulations: 800
+mcts_num_threads: 8
+mcts_batch_size: 16
+mcts_batch_timeout_ms: 2
+mcts_virtual_loss: 3.0
+mcts_exploration_constant: 1.0
+mcts_dirichlet_alpha: 0.3
+mcts_dirichlet_epsilon: 0.25
+nn_instances_per_engine: 2  # Multiple NN instances per engine
+
+# GPU Memory Pool settings
+gpu_memory_pool:
+  enabled: true
+  initial_size_mb: 1024
+  max_size_mb: 4096
+  pinned_memory_size_mb: 256
+  enable_peer_access: true
+  use_unified_memory: false
+
+# Dynamic Batching settings
+dynamic_batching:
+  enabled: true
+  min_batch_size: 4
+  max_batch_size: 64
+  preferred_batch_size: 16
+  max_wait_time_ms: 2
+  target_gpu_utilization_percent: 85
+  low_queue_threshold: 10
+  high_queue_threshold: 100
+  critical_queue_threshold: 500
+  optimization_mode: "ADAPTIVE"  # THROUGHPUT, LATENCY, BALANCED, ADAPTIVE
+
+# Advanced Transposition Table settings
+transposition_table:
+  enabled: true
+  size_mb: 2048
+  num_hash_functions: 4
+  enable_compression: true
+  enable_prefetch: true
+  verify_hash: true
+  load_factor: 0.75
+  max_age: 10
+  # Replacement policy weights
+  depth_weight: 0.3
+  visits_weight: 0.4
+  age_weight: 0.3
+
+# Self-play settings
+num_actors: 8
+num_parallel_games: 8
+games_per_generation: 10000
+save_every_n_games: 100
+
+# Temperature settings
+high_temperature: 1.0
+low_temperature: 0.1
+temperature_threshold: 30
+
+# Training settings
+batch_size: 256
+learning_rate: 0.001
+weight_decay: 0.0001
+num_epochs: 10
+checkpoint_every_n_epochs: 1
+validation_split: 0.1
+
+# Performance monitoring
+enable_profiling: true
+log_level: "INFO"
+monitor_gpu_memory: true
+monitor_cpu_usage: true
+
+# Thread affinity (for optimal CPU usage)
+enable_thread_affinity: true
+pin_threads_to_cores: true
+
+# Advanced memory settings
+enable_huge_pages: true
+memory_pool_size_mb: 8192
+aggressive_memory_cleanup: false
+
+# CUDA settings
+cuda_device_id: 0
+cuda_memory_fraction: 0.9
+enable_cudnn_benchmark: true
+enable_tf32: true  # For Ampere GPUs
+
+# Optimization flags
+use_lock_free_queues: true
+use_numa_aware_allocation: true
+prefetch_distance: 8
+cache_line_size: 64

@@ -5196,107 +5196,20 @@ CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.o: /hom
   /usr/include/x86_64-linux-gnu/sys/single_threaded.h \
   /usr/include/x86_64-linux-gnu/sys/types.h \
   /usr/include/x86_64-linux-gnu/sys/ucontext.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/adxintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/amxbf16intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/amxcomplexintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/amxfp16intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/amxint8intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/amxtileintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx2intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx5124fmapsintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx5124vnniwintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bf16intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bf16vlintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bitalgintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bwintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512cdintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512dqintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512erintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16vlintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512ifmaintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512ifmavlintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512pfintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmi2intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmi2vlintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmiintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmivlintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlbwintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vldqintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vnniintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vnnivlintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vp2intersectintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vp2intersectvlintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vpopcntdqintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vpopcntdqvlintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avxifmaintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avxintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avxneconvertintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avxvnniint8intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/avxvnniintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/bmi2intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/bmiintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/cetintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/cldemoteintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/clflushoptintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/clwbintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/clzerointrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/cmpccxaddintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/enqcmdintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/f16cintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/fmaintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/fxsrintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/gfniintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/hresetintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/ia32intrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/immintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/keylockerintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/lwpintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/lzcntintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/movdirintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitxintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/pconfigintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/pkuintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/popcntintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/prfchiintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/prfchwintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/raointintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/rdseedintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/rtmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/serializeintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/sgxintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/shaintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/smmintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/tbmintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/tsxldtrkintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/uintrintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/vaesintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/vpclmulqdqintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/waitpkgintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/wbnoinvdintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/wmmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/x86gprintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/xsavecintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveoptintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/xsavesintrin.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/xtestintrin.h \
   /usr/local/cuda-12.8/include/builtin_types.h \
   /usr/local/cuda-12.8/include/channel_descriptor.h \
   /usr/local/cuda-12.8/include/crt/host_config.h \
@@ -5444,25 +5357,9 @@ CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.o:
 
 /usr/local/cuda-12.8/include/crt/host_config.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xtestintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xsavesintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveoptintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveintrin.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/waitpkgintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/vaesintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/tsxldtrkintrin.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/tbmintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h:
 
@@ -5470,113 +5367,15 @@ CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.o:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/smmintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/serializeintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/rtmintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/rdseedintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/raointintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/prfchiintrin.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/pkuintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/movdirintrin.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/lwpintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/keylockerintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/immintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/ia32intrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/hresetintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/gfniintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/fxsrintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/fmaintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/f16cintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/enqcmdintrin.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/cmpccxaddintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/clzerointrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/clflushoptintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/sgxintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/cldemoteintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/cetintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/bmiintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/bmi2intrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avxvnniintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vpopcntdqvlintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vp2intersectvlintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vp2intersectintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vnnivlintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vnniintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vldqintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmiintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmi2intrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512ifmavlintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16vlintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16intrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512dqintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512cdintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bf16vlintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bf16intrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx5124fmapsintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/amxtileintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/amxint8intrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/amxcomplexintrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/amxbf16intrin.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/x86gprintrin.h:
 
 /usr/include/x86_64-linux-gnu/sys/ucontext.h:
 
@@ -5983,8 +5782,6 @@ CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.o:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fake_quantize_per_channel_affine_cachemask_backward.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fake_quantize_per_channel_affine_cachemask.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512pfintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_coo_tensor_unsafe.h:
 
@@ -6496,8 +6293,6 @@ CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.o:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_scaled_dot_product_fused_attention_overrideable_backward_native.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlintrin.h:
-
 /usr/include/x86_64-linux-gnu/sys/resource.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h:
@@ -6797,8 +6592,6 @@ _deps/tracy-src/public/tracy/Tracy.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/arctan_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/full_like_ops.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/prfchwintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/chain_matmul.h:
 
@@ -7218,8 +7011,6 @@ _deps/tracy-src/public/common/TracyQueue.hpp:
 
 /usr/include/x86_64-linux-gnu/bits/confname.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avxneconvertintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_bsc_tensor_args_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/mkldnn_reorder_conv3d_weight_native.h:
@@ -7283,8 +7074,6 @@ _deps/tracy-src/public/common/TracyQueue.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_upsample_nearest_exact1d_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/log_sigmoid_native.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlbwintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_chebyshev_polynomial_u_native.h:
 
@@ -8068,8 +7857,6 @@ _deps/tracy-src/public/common/TracyMutex.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_csr_prod.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bitalgintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/pixel_unshuffle_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_has_same_storage_numel_ops.h:
@@ -8311,8 +8098,6 @@ _deps/tracy-src/public/common/TracyMutex.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/diagflat_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/addmv_native.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/wbnoinvdintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/unfold_backward.h:
 
@@ -9752,8 +9537,6 @@ _deps/tracy-src/public/common/TracyForceInline.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_trunc.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avxifmaintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/histogramdd_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_flash_attention_forward.h:
@@ -10170,8 +9953,6 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_expm1_ops.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bwintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/row_indices_copy.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_log_softmax_meta.h:
@@ -10223,8 +10004,6 @@ _deps/mimalloc-src/include/mimalloc.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/adjoint.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_log1p_ops.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/pconfigintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_log2.h:
 
@@ -10820,8 +10599,6 @@ lib/Release/libmimalloc.a:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/var.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx5124vnniwintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_linalg_solve_ex_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/grid_sampler_native.h:
@@ -10829,8 +10606,6 @@ lib/Release/libmimalloc.a:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/exp2_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_linalg_svd_native.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512ifmaintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/erfc.h:
 
@@ -11014,15 +10789,11 @@ lib/Release/libmimalloc.a:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/addbmm.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/shaintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/q_per_channel_scales.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cholesky_inverse_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_compressed_tensor_unsafe_ops.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/amxfp16intrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/affine_grid_generator_backward_native.h:
 
@@ -11135,8 +10906,6 @@ _deps/tracy-src/public/common/TracyProtocol.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_get_max_seqlen.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/embedding_ops.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/popcntintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/subtract_ops.h:
 
@@ -11294,8 +11063,6 @@ _deps/tracy-src/public/common/TracyProtocol.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cudnn_convolution_native.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avxintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_gather_sparse_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/huber_loss_ops.h:
@@ -11383,8 +11150,6 @@ _deps/tracy-src/public/common/TracyProtocol.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/rename_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/poisson_ops.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmi2vlintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_fused_adam_ops.h:
 
@@ -11900,8 +11665,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/quantize_per_channel.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/uintrintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/index_select.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/one_hot_native.h:
@@ -12140,8 +11903,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/kthvalue_native.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/vpclmulqdqintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/nextafter.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/kthvalue_ops.h:
@@ -12374,8 +12135,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_ldl_factor_native.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitxintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_ldl_solve_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_ldl_solve_native.h:
@@ -12407,8 +12166,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_matrix_exp_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_matrix_norm.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xsavecintrin.h:
 
 /usr/include/c++/13/thread:
 
@@ -12576,8 +12333,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/logaddexp.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512erintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/logaddexp2_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_ctc_loss_backward.h:
@@ -12683,8 +12438,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/slow_conv_transpose3d.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/view_as_real_ops.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avxvnniint8intrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_amp_update_scale_ops.h:
 
@@ -13710,8 +13463,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/rad2deg_native.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vpopcntdqintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/sparse.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/rad2deg_ops.h:
@@ -14218,8 +13969,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/sparse_coo_tensor_ops.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/wmmintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/smooth_l1_loss_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_exp2_native.h:
@@ -14251,8 +14000,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/softplus_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/softshrink_backward_meta.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/clwbintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cslt_compress_ops.h:
 
@@ -14562,8 +14309,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_multigammaln_native.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx2intrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_ndtr_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_ndtri.h:
@@ -14649,8 +14394,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/c10/core/ScalarType.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_zeta_native.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmivlintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_pinv_native.h:
 
@@ -15360,8 +15103,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/c10/util/SmallVector.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/adxintrin.h:
-
 /opt/libtorch-2.7.0-cu128/include/c10/util/StringUtil.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/add_meta.h:
@@ -15607,8 +15348,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/optim/schedulers/step_lr.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/optim/serialize.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/lzcntintrin.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/serialize/input-archive.h:
 

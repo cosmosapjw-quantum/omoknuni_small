@@ -6,5 +6,5 @@ CXX_DEFINES = -DC10_CUDA_DRIVER_INIT=1 -DCAFFE2_USE_CUDNN=1 -DCUDA_VERSION=12080
 
 CXX_INCLUDES = -I/home/cosmos/omoknuni_small/include -I/home/cosmos/omoknuni_small/src -I/home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include -I/usr/local/include/rapids -I/usr/local/include/rapids/libcudacxx -isystem /home/cosmos/omoknuni_small/build/_deps/tracy-src/public -isystem /opt/libtorch-2.7.0-cu128/include -isystem /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include -isystem /usr/local/cuda-12.8/include -isystem /usr/local/cuda/include -isystem /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper
 
-CXX_FLAGS = -O3 -march=native -mtune=native -flto -fvisibility=hidden -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -std=gnu++17 -flto=auto -fno-fat-lto-objects -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wextra -mavx2 -O3 -fopenmp -D_GLIBCXX_USE_CXX11_ABI=1
+CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -std=gnu++17 -Wall -Wextra -mavx2 -O3 -fopenmp -D_GLIBCXX_USE_CXX11_ABI=1
 

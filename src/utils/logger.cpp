@@ -1,6 +1,8 @@
 #include "utils/logger.h"
 #include <filesystem>
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 namespace alphazero {
 namespace utils {
@@ -28,7 +30,13 @@ void Logger::init(const std::string& log_dir,
             std::filesystem::create_directories(log_dir);
         }
         
-        // Create loggers
+        // CRITICAL FIX: Initialize thread pool BEFORE creating async loggers
+        if (async_logging) {
+            spdlog::init_thread_pool(32768, 4); // Larger queue and more threads
+            spdlog::flush_every(std::chrono::seconds(3));
+        }
+        
+        // Create loggers AFTER thread pool initialization
         mcts_logger_ = create_logger("mcts", log_dir, console_level, file_level, 
                                     max_file_size, max_files, async_logging);
         nn_logger_ = create_logger("neural_net", log_dir, console_level, file_level, 
@@ -40,11 +48,6 @@ void Logger::init(const std::string& log_dir,
         
         // Set global log level
         spdlog::set_level(console_level);
-        
-        // Configure async logging thread pool if enabled
-        if (async_logging) {
-            spdlog::init_thread_pool(8192, 2); // queue size, worker threads
-        }
         
         initialized_ = true;
         system_logger_->info("Logging system initialized. Log directory: {}", log_dir);
@@ -86,7 +89,7 @@ std::shared_ptr<spdlog::logger> Logger::create_logger(
         logger = std::make_shared<spdlog::async_logger>(
             name, sinks.begin(), sinks.end(), 
             spdlog::thread_pool(),
-            spdlog::async_overflow_policy::block);
+            spdlog::async_overflow_policy::overrun_oldest); // Don't block, drop old messages
     } else {
         logger = std::make_shared<spdlog::logger>(
             name, sinks.begin(), sinks.end());
@@ -131,7 +134,19 @@ std::shared_ptr<spdlog::logger> Logger::get_system_logger() {
 
 void Logger::shutdown() {
     if (initialized_) {
+        // Flush all pending messages
         flush_all();
+        
+        // Give time for async loggers to process remaining messages
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        
+        // Drop logger references to prevent use after free
+        mcts_logger_.reset();
+        nn_logger_.reset();
+        game_logger_.reset();
+        system_logger_.reset();
+        
+        // Shutdown spdlog (this destroys the thread pool)
         spdlog::shutdown();
         initialized_ = false;
     }

@@ -227,7 +227,7 @@ std::vector<selfplay::GameData> AlphaZeroPipeline::runSelfPlay(const std::string
         // Setup self-play settings
         selfplay::SelfPlaySettings settings;
         settings.mcts_settings.num_simulations = config_.mcts_num_simulations;
-        settings.mcts_settings.num_threads = config_.mcts_num_threads;
+        settings.mcts_settings.num_threads = config_.mcts_threads_per_engine;
         settings.mcts_settings.exploration_constant = config_.mcts_exploration_constant;
         settings.mcts_settings.temperature = config_.mcts_temperature;
         settings.mcts_settings.add_dirichlet_noise = config_.mcts_add_dirichlet_noise;
@@ -1208,8 +1208,8 @@ AlphaZeroPipelineConfig parseConfigFile(const std::string& config_path) {
                 config.mcts_num_simulations = mcts["num_simulations"].as<int>();
             }
             
-            if (mcts["num_threads"]) {
-                config.mcts_num_threads = mcts["num_threads"].as<int>();
+            if (mcts["threads_per_engine"]) {
+                config.mcts_threads_per_engine = mcts["threads_per_engine"].as<int>();
             }
             
             if (mcts["batch_size"]) {

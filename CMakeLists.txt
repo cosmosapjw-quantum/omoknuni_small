@@ -660,6 +660,10 @@ set(MCTS_SOURCES
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
     src/mcts/multi_instance_nn_manager.cpp
+    src/mcts/gpu_memory_pool.cpp
+    src/mcts/dynamic_batch_manager.cpp
+    src/mcts/advanced_transposition_table.cpp
+    src/mcts/enhanced_mcts_engine.cpp
 )
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp
@@ -1137,6 +1141,11 @@ if(WITH_TORCH)
     # Always build the CLI with TORCH
     add_executable(omoknuni_cli src/cli/omoknuni_cli.cpp)
     add_executable(omoknuni_cli_optimized src/cli/omoknuni_cli_optimized.cpp)
+    add_executable(omoknuni_cli_enhanced src/cli/omoknuni_cli_enhanced.cpp)
+    # add_executable(omoknuni_cli_simple_enhanced src/cli/omoknuni_cli_simple_enhanced.cpp)
+    # Removed omoknuni_cli_enhanced_v2 - functionality merged into omoknuni_cli_final
+    add_executable(omoknuni_cli_final src/cli/omoknuni_cli_final.cpp)
+    add_executable(omoknuni_cli_working src/cli/omoknuni_cli_working.cpp)
 
     # Set RPATH to find shared libraries relative to executable location
     set_target_properties(omoknuni_cli PROPERTIES
@@ -1146,6 +1155,32 @@ if(WITH_TORCH)
     )
     
     set_target_properties(omoknuni_cli_optimized PROPERTIES
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
+    )
+    
+    set_target_properties(omoknuni_cli_enhanced PROPERTIES
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
+    )
+    
+    # set_target_properties(omoknuni_cli_simple_enhanced PROPERTIES
+    #     INSTALL_RPATH_USE_LINK_PATH TRUE
+    #     BUILD_WITH_INSTALL_RPATH TRUE
+    #     INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
+    # )
+    
+    # Removed set_target_properties for omoknuni_cli_enhanced_v2
+    
+    set_target_properties(omoknuni_cli_final PROPERTIES
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
+    )
+    
+    set_target_properties(omoknuni_cli_working PROPERTIES
         INSTALL_RPATH_USE_LINK_PATH TRUE
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
@@ -1160,6 +1195,36 @@ if(WITH_TORCH)
     )
     
     target_link_libraries(omoknuni_cli_optimized PRIVATE
+        alphazero
+        "${TORCH_LIBRARIES}"
+        dl  # For dlopen, dlclose, dlerror
+        stdc++  # Explicitly link standard C++ library
+    )
+    
+    target_link_libraries(omoknuni_cli_enhanced PRIVATE
+        alphazero
+        "${TORCH_LIBRARIES}"
+        dl  # For dlopen, dlclose, dlerror
+        stdc++  # Explicitly link standard C++ library
+    )
+    
+    # target_link_libraries(omoknuni_cli_simple_enhanced PRIVATE
+    #     alphazero
+    #     "${TORCH_LIBRARIES}"
+    #     dl  # For dlopen, dlclose, dlerror
+    #     stdc++  # Explicitly link standard C++ library
+    # )
+    
+    # Removed target_link_libraries for omoknuni_cli_enhanced_v2
+    
+    target_link_libraries(omoknuni_cli_final PRIVATE
+        alphazero
+        "${TORCH_LIBRARIES}"
+        dl  # For dlopen, dlclose, dlerror
+        stdc++  # Explicitly link standard C++ library
+    )
+    
+    target_link_libraries(omoknuni_cli_working PRIVATE
         alphazero
         "${TORCH_LIBRARIES}"
         dl  # For dlopen, dlclose, dlerror
