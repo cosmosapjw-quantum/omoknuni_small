@@ -137,31 +137,50 @@ PHMapTranspositionTable::Stats PHMapTranspositionTable::getStats() const {
 }
 
 void PHMapTranspositionTable::enforceMemoryLimit() {
-    // Get all entries with their scores
-    std::vector<std::pair<uint64_t, float>> entries_with_scores;
-    entries_with_scores.reserve(entries_.size());
-    
+    // CRITICAL FIX: More aggressive cleanup and handle expired weak_ptrs
     uint32_t current_time = access_counter_.load();
+    [[maybe_unused]] size_t initial_size = entries_.size();
     
-    // Collect entries and scores
+    // First pass: remove entries with expired nodes
+    std::vector<uint64_t> expired_entries;
     for (const auto& [hash, entry] : entries_) {
-        if (entry) {
-            float score = entry->getReplacementScore(current_time);
-            entries_with_scores.emplace_back(hash, score);
+        if (!entry || entry->node.expired()) {
+            expired_entries.push_back(hash);
         }
     }
     
-    // Sort by score (lowest first)
-    std::partial_sort(entries_with_scores.begin(),
-                     entries_with_scores.begin() + entries_with_scores.size() / 4,
-                     entries_with_scores.end(),
-                     [](const auto& a, const auto& b) { return a.second < b.second; });
-    
-    // Remove bottom 25%
-    size_t remove_count = entries_with_scores.size() / 4;
-    for (size_t i = 0; i < remove_count; ++i) {
-        entries_.erase(entries_with_scores[i].first);
+    // Remove all expired entries
+    for (uint64_t hash : expired_entries) {
+        entries_.erase(hash);
     }
+    
+    // If still over limit, remove by score
+    if (entries_.size() > max_entries_ * 0.75) {
+        std::vector<std::pair<uint64_t, float>> entries_with_scores;
+        entries_with_scores.reserve(entries_.size());
+        
+        // Collect entries and scores
+        for (const auto& [hash, entry] : entries_) {
+            if (entry) {
+                float score = entry->getReplacementScore(current_time);
+                entries_with_scores.emplace_back(hash, score);
+            }
+        }
+        
+        // Sort by score (lowest first)
+        std::partial_sort(entries_with_scores.begin(),
+                         entries_with_scores.begin() + entries_with_scores.size() / 2,
+                         entries_with_scores.end(),
+                         [](const auto& a, const auto& b) { return a.second < b.second; });
+        
+        // Remove bottom 50% to free more memory
+        size_t remove_count = entries_with_scores.size() / 2;
+        for (size_t i = 0; i < remove_count; ++i) {
+            entries_.erase(entries_with_scores[i].first);
+        }
+    }
+    
+    LOG_MCTS_DEBUG("Transposition table cleanup: {} -> {} entries", initial_size, entries_.size());
 }
 
 PHMapTranspositionTable::EntryPtr PHMapTranspositionTable::createEntry(

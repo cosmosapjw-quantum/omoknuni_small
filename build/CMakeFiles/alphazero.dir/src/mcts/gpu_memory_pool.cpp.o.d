@@ -4973,7 +4973,7 @@ CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o: \
  /usr/local/cuda-12.8/include/driver_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.hpp \
- /home/cosmos/omoknuni_small/include/alphazero_export.h \
+ /home/cosmos/omoknuni_small/include/core/export_macros.h \
  /home/cosmos/omoknuni_small/include/utils/logger.h \
  /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
  /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \

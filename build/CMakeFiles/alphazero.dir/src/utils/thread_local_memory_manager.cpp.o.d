@@ -288,5 +288,4 @@ CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o: \
  /usr/include/c++/13/bits/quoted_string.h /usr/include/spdlog/async.h \
  /usr/include/spdlog/async_logger.h \
  /usr/include/spdlog/details/thread_pool.h \
- /usr/include/spdlog/details/mpmc_blocking_q.h \
- /home/cosmos/omoknuni_small/include/alphazero_export.h
+ /usr/include/spdlog/details/mpmc_blocking_q.h

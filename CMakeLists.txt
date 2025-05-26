@@ -73,13 +73,14 @@ endif()
 
 # ─────────────────────────── Configure library exports ────────────────────────
 # Define macros for symbol visibility in shared libraries
-set(ALPHAZERO_DLL_EXPORT "__attribute__((visibility(\"default\")))")
-set(ALPHAZERO_DLL_IMPORT "")
-
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/alphazero_export.h.in"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/alphazero_export.h"
-)
+# REMOVED: alphazero_export.h generation - using core/export_macros.h instead
+# set(ALPHAZERO_DLL_EXPORT "__attribute__((visibility(\"default\")))")
+# set(ALPHAZERO_DLL_IMPORT "")
+# 
+# configure_file(
+#     "${CMAKE_CURRENT_SOURCE_DIR}/include/alphazero_export.h.in"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/include/alphazero_export.h"
+# )
 
 # ───────────────────────────────────── Tests setup ────────────────────────────
 if(BUILD_TESTS)
@@ -469,10 +470,7 @@ if(PYBIND11_FOUND AND BUILD_PYTHON_BINDINGS AND COMMAND pybind11_add_module)
     pybind11_add_module(alphazero_py src/python/bindings.cpp)
     target_link_libraries(alphazero_py PRIVATE alphazero)
     
-    # Add AlphaZero pipeline bindings
-    message(STATUS "Building AlphaZero pipeline Python module...")
-    pybind11_add_module(alphazero_pipeline src/python/alphazero_bindings.cpp)
-    target_link_libraries(alphazero_pipeline PRIVATE alphazero)
+    # Note: Removed alphazero_pipeline module as the file doesn't exist
     
     if(Python_FOUND)
         # Set the Python module installation path
@@ -485,7 +483,6 @@ if(PYBIND11_FOUND AND BUILD_PYTHON_BINDINGS AND COMMAND pybind11_add_module)
         if(PYTHON_SITE_PACKAGES)
             message(STATUS "Python site-packages directory: ${PYTHON_SITE_PACKAGES}")
             install(TARGETS alphazero_py DESTINATION "${PYTHON_SITE_PACKAGES}")
-            install(TARGETS alphazero_pipeline DESTINATION "${PYTHON_SITE_PACKAGES}")
         endif()
     endif()
 else()
@@ -620,7 +617,7 @@ set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp src/core/
 set(CHESS_SOURCES     src/games/chess/chess_state.cpp src/games/chess/chess_rules.cpp src/games/chess/chess960.cpp)
 set(GO_SOURCES        src/games/go/go_state.cpp   src/games/go/go_rules.cpp)
 set(GOMOKU_SOURCES    src/games/gomoku/gomoku_state.cpp src/games/gomoku/gomoku_rules.cpp)
-set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp src/utils/resource_monitor.cpp src/utils/advanced_memory_monitor.cpp src/utils/thread_local_memory_manager.cpp)
+set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp src/utils/resource_monitor.cpp src/utils/advanced_memory_monitor.cpp src/utils/thread_local_memory_manager.cpp src/utils/shutdown_manager.cpp)
 
 # Conditionally define NN_SOURCES based on WITH_TORCH
 set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
@@ -1418,6 +1415,29 @@ if(BUILD_TESTS)
         endif()
         # Set rpath for benchmark
         set_target_properties(mcts_openmp_benchmark PROPERTIES
+            INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${Torch_LIB_DIR}"
+            BUILD_WITH_INSTALL_RPATH TRUE
+            INSTALL_RPATH_USE_LINK_PATH TRUE
+        )
+        
+        # Add DDW-RandWire-ResNet test executable
+        add_executable(test_ddw_randwire_resnet test_ddw_randwire_resnet.cpp)
+        target_link_libraries(test_ddw_randwire_resnet PRIVATE alphazero ${TORCH_LIBRARIES} pthread)
+        target_include_directories(test_ddw_randwire_resnet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+        if(WITH_CUDA)
+            target_compile_definitions(test_ddw_randwire_resnet PRIVATE WITH_CUDA)
+        endif()
+        # Set rpath for test
+        set_target_properties(test_ddw_randwire_resnet PROPERTIES
+            INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${Torch_LIB_DIR}"
+            BUILD_WITH_INSTALL_RPATH TRUE
+            INSTALL_RPATH_USE_LINK_PATH TRUE
+        )
+        
+        # Add minimal test
+        add_executable(test_ddw_minimal test_ddw_minimal.cpp)
+        target_link_libraries(test_ddw_minimal PRIVATE ${TORCH_LIBRARIES} pthread)
+        set_target_properties(test_ddw_minimal PROPERTIES
             INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${Torch_LIB_DIR}"
             BUILD_WITH_INSTALL_RPATH TRUE
             INSTALL_RPATH_USE_LINK_PATH TRUE

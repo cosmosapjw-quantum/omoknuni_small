@@ -10,7 +10,7 @@
 #include <mutex>
 #include <atomic>
 #include <unordered_map>
-#include "alphazero_export.h"
+#include "core/export_macros.h"
 #include "utils/logger.h"
 
 namespace alphazero {

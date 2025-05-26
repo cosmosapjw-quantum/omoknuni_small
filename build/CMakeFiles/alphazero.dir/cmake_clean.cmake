@@ -126,6 +126,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o"
   "CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o.d"
+  "CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.o"
+  "CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o"
   "CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o.d"
   "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o"

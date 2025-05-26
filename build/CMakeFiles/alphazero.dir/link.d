@@ -24,6 +24,7 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o \
@@ -168,6 +169,8 @@ CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o:
 CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o:
 

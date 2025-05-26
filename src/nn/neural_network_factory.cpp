@@ -5,6 +5,8 @@
 #include <stdexcept> // For std::exception (though likely brought in by other headers)
 #include <iostream> // For std::cerr
 #include <fstream> // For std::ifstream
+#include <cstdlib> // For setenv
+#include <mutex> // For std::mutex
 
 #ifdef WITH_TORCH
 #include "utils/device_utils.h" // Moved to global scope
@@ -239,6 +241,120 @@ std::shared_ptr<ResNetModel> NeuralNetworkFactory::loadResNet(
         }
     }
 
+    return model;
+}
+
+std::shared_ptr<DDWRandWireResNet> NeuralNetworkFactory::createDDWRandWireResNet(
+    const DDWRandWireResNetConfig& config,
+    bool use_gpu) {
+    
+    // Set PyTorch manual seed if specified to ensure deterministic model creation
+    // This must be done BEFORE creating the model
+    if (config.randwire_config.seed >= 0) {
+        torch::manual_seed(config.randwire_config.seed);
+        if (torch::cuda::is_available()) {
+            torch::cuda::manual_seed(config.randwire_config.seed);
+            torch::cuda::manual_seed_all(config.randwire_config.seed);
+        }
+    }
+    
+    // Set environment to avoid CUDA initialization if not needed
+    if (!use_gpu) {
+        setenv("CUDA_VISIBLE_DEVICES", "", 1);
+    }
+    
+    // Create the model
+    auto model = std::make_shared<DDWRandWireResNet>(config);
+    
+    // Verify CUDA availability if requested
+    if (use_gpu && !isCudaAvailable()) {
+        std::cerr << "WARNING: GPU requested but CUDA is not available. Using CPU instead." << std::endl;
+        use_gpu = false;
+    }
+    
+    // Move to appropriate device
+    torch::Device device = getDevice(!use_gpu);
+    model->to(device);
+    
+    std::cout << "Created DDW-RandWire-ResNet model on " << device << std::endl;
+    std::cout << "  Input channels: " << config.input_channels << std::endl;
+    std::cout << "  Board size: " << config.board_height << "x" << config.board_width << std::endl;
+    std::cout << "  Output size: " << config.output_size << std::endl;
+    std::cout << "  Channels: " << config.channels << std::endl;
+    std::cout << "  Blocks: " << config.num_blocks << std::endl;
+    std::cout << "  Graph method: " << static_cast<int>(config.randwire_config.method) << std::endl;
+    std::cout << "  Dynamic routing: " << (config.use_dynamic_routing ? "enabled" : "disabled") << std::endl;
+    
+    return model;
+}
+
+std::shared_ptr<DDWRandWireResNet> NeuralNetworkFactory::loadDDWRandWireResNet(
+    const std::string& path, 
+    const DDWRandWireResNetConfig& config,
+    bool use_gpu) {
+    
+    // Check if file exists
+    {
+        std::ifstream file_check(path);
+        if (!file_check.good()) {
+            // Use a mutex to prevent multiple workers from creating the model simultaneously
+            static std::mutex model_creation_mutex;
+            std::lock_guard<std::mutex> lock(model_creation_mutex);
+            
+            // Double-check after acquiring lock
+            std::ifstream file_check2(path);
+            if (file_check2.good()) {
+                // Another thread created it while we were waiting
+                file_check2.close();
+            } else {
+                std::cerr << "Model file not found: " << path << ". Creating new model." << std::endl;
+                auto model = createDDWRandWireResNet(config, use_gpu);
+                
+                // Create directories if needed
+                size_t last_slash = path.find_last_of('/');
+                if (last_slash != std::string::npos) {
+                    std::string dir_path = path.substr(0, last_slash);
+                    std::string mkdir_cmd = "mkdir -p \"" + dir_path + "\"";
+                    int result = std::system(mkdir_cmd.c_str());
+                    if (result != 0) {
+                        std::cerr << "Warning: Failed to create directory: " << dir_path << std::endl;
+                    }
+                }
+                
+                // Save the new model
+                try {
+                    model->save(path);
+                    std::cout << "Saved new DDW-RandWire-ResNet model to: " << path << std::endl;
+                } catch (const std::exception& save_exception) {
+                    std::cerr << "Warning: Failed to save initial model: " << save_exception.what() << std::endl;
+                }
+                
+                return model;
+            }
+        }
+    }
+    
+    // Create model with the provided configuration
+    auto model = createDDWRandWireResNet(config, use_gpu);
+    
+    // Load weights with error handling
+    try {
+        model->load(path);
+        std::cout << "Successfully loaded DDW-RandWire-ResNet model from: " << path << std::endl;
+    } catch (const std::exception& e) {
+        // Only show warning for actual file issues, not architecture mismatches
+        std::string error_msg = e.what();
+        if (error_msg.find("No such serialized submodule") != std::string::npos) {
+            std::cerr << "Warning: Model architecture mismatch. This is expected with random graph generation." << std::endl;
+            std::cerr << "Using newly created model with specified configuration." << std::endl;
+        } else {
+            std::cerr << "Error loading DDW-RandWire-ResNet model: " << e.what() << std::endl;
+        }
+        
+        // Don't save over existing model - it might be used by other workers
+        // The model we created will be used for this worker
+    }
+    
     return model;
 }
 #endif // WITH_TORCH

@@ -62,10 +62,10 @@ void MCTSEngine::executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MC
                 queue_depth, gpu_utilization, recent_inference_time);
         }
         
-        // OPTIMIZATION: Increase minimum batch size for better GPU utilization
-        // For RTX 3060 Ti with 4864 CUDA cores, larger batches are more efficient
-        const int min_efficient_batch = 64;  // Minimum for good GPU utilization
-        const int max_efficient_batch = 256; // Maximum to avoid memory issues
+        // OPTIMIZATION: Adjust batch sizes for balanced CPU-GPU utilization
+        // For RTX 3060 Ti with Ryzen 9 5900X, balance is key
+        const int min_efficient_batch = 32;  // Lower minimum to reduce waiting
+        const int max_efficient_batch = 128; // Lower maximum to process faster
         
         optimal_batch_size = std::max(optimal_batch_size, min_efficient_batch);
         optimal_batch_size = std::min(optimal_batch_size, max_efficient_batch);

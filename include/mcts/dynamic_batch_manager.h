@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
-#include "alphazero_export.h"
+#include "core/export_macros.h"
 
 namespace alphazero {
 namespace mcts {

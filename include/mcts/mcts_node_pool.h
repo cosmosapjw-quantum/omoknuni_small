@@ -95,9 +95,9 @@ public:
 private:
     // Memory blocks for nodes
     struct MemoryBlock {
+        size_t size;
         std::unique_ptr<MCTSNode[], std::function<void(MCTSNode*)>> nodes;
         std::vector<MCTSNode*> raw_pointers;  // Individual pointers for efficient access
-        size_t size;
         
         MemoryBlock(size_t block_size);
     };

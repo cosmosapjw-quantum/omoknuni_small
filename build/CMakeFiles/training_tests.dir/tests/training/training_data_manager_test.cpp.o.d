@@ -379,7 +379,6 @@ CMakeFiles/training_tests.dir/tests/training/training_data_manager_test.cpp.o: \
  /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
  /usr/include/spdlog/details/thread_pool.h \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
- /home/cosmos/omoknuni_small/include/alphazero_export.h \
  /home/cosmos/omoknuni_small/include/utils/profiler.h \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/Tracy.hpp \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyColor.hpp \
@@ -5141,6 +5140,7 @@ CMakeFiles/training_tests.dir/tests/training/training_data_manager_test.cpp.o: \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
+ /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
  /usr/include/c++/13/filesystem /usr/include/c++/13/bits/fs_fwd.h \

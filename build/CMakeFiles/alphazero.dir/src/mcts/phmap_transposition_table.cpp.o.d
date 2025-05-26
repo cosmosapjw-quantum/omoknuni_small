@@ -129,7 +129,7 @@ CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o: \
  /usr/include/c++/13/bits/chrono.h /usr/include/c++/13/ratio \
  /usr/include/c++/13/limits /usr/include/c++/13/ctime \
  /usr/include/c++/13/bits/parse_numbers.h \
- /home/cosmos/omoknuni_small/include/alphazero_export.h \
+ /home/cosmos/omoknuni_small/include/core/export_macros.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
  /usr/include/c++/13/mutex \
  /usr/include/x86_64-linux-gnu/c++/13/bits/error_constants.h \
@@ -217,7 +217,6 @@ CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o: \
  /home/cosmos/omoknuni_small/include/core/igamestate.h \
  /usr/include/c++/13/optional \
  /usr/include/c++/13/bits/enable_special_members.h \
- /home/cosmos/omoknuni_small/include/core/export_macros.h \
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
  /usr/include/c++/13/sstream /usr/include/c++/13/istream \
  /usr/include/c++/13/ios /usr/include/c++/13/bits/ios_base.h \

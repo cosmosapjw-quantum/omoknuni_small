@@ -1,0 +1,42 @@
+Unused Files Backup - Created on 2025-05-27 07:52:57
+=====================================================
+
+This backup contains files that were identified as unused or obsolete in the codebase.
+These files were not included in CMakeLists.txt or were replaced by newer implementations.
+
+Files Removed:
+--------------
+
+FROM src/:
+- src/utils/logger_fixed.cpp (replaced by logger.cpp)
+- tests/integration/self_play_integration_test.cpp (not included in CMakeLists.txt)
+
+FROM include/:
+- include/cli/alphazero_pipeline.h (header without implementation)
+- include/mcts/memory_pressure_monitor.h (header without implementation)
+- include/mcts/unified_inference_server.h (replaced by multi_instance_nn_manager)
+- include/mcts/burst_coordinator.h (replaced by simpler batch processing)
+- include/mcts/concurrent_request_aggregator.h (functionality integrated into mcts engine)
+- include/mcts/cuda_stream_optimizer.h (integrated into gpu_optimizer)
+- include/mcts/adaptive_batch_sizer.h (replaced by dynamic_batch_manager)
+- include/mcts/dynamic_batch_adjuster.h (replaced by dynamic_batch_manager)
+- include/mcts/adaptive_backoff.h (header without implementation)
+- include/selfplay/parallel_self_play_manager.h (header without implementation)
+- include/utils/debug_logger.h (header without implementation)
+- include/utils/memory_allocator.h (header without implementation)
+- include/utils/thread_local_allocator.h (header without implementation)
+- include/utils/cuda_utils.h (header without implementation)
+- include/utils/device_utils.h (header without implementation)
+- include/utils/profiler.h (header without implementation)
+- include/utils/safe_async_logger.h (header without implementation)
+- include/core/illegal_move_exception.h (header without implementation)
+- include/core/export_macros.h (utility header without implementation)
+
+FROM root directory:
+- simple_test.cpp (standalone test file)
+- test_simple_signal.cpp (standalone signal handling test)
+
+Total files removed: 23
+
+Note: The backup_overengineered_components/ and backups/test-files/ directories
+contain additional obsolete files that were already backed up previously.

@@ -4982,7 +4982,6 @@ CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
  /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h \
- /home/cosmos/omoknuni_small/include/alphazero_export.h \
  /home/cosmos/omoknuni_small/include/utils/logger.h \
  /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
  /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \
@@ -5007,4 +5006,15 @@ CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o: \
  /usr/include/fmt/format.h /usr/include/spdlog/details/os.h \
  /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
  /usr/include/spdlog/details/thread_pool.h \
- /usr/include/spdlog/details/mpmc_blocking_q.h
+ /usr/include/spdlog/details/mpmc_blocking_q.h \
+ /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
+ /usr/include/c++/13/random /usr/include/c++/13/bits/random.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
+ /usr/include/c++/13/stdlib.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
+ /usr/include/c++/13/bits/random.tcc

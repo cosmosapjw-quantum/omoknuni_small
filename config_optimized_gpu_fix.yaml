@@ -6,16 +6,16 @@ game_type: gomoku
 board_size: 9
 
 # MCTS configuration
-mcts_num_simulations: 1600
-mcts_num_threads: 20  # Leave 4 threads for system/GPU management
+mcts_num_simulations: 800  # Reduced per game since we run games in parallel
+mcts_num_threads: 12  # 12 threads distributed across parallel games
 mcts_exploration_constant: 1.4
 mcts_use_transposition_table: true
 mcts_transposition_table_size_mb: 256
-mcts_virtual_loss: 1
+mcts_virtual_loss: 3  # Increased for better thread collision avoidance
 
 # CRITICAL: Optimized batch configuration for RTX 3060 Ti
-mcts_batch_size: 128  # Increased from typical 32-64 for better GPU utilization
-mcts_batch_timeout_ms: 5  # Reduced timeout for faster batching
+mcts_batch_size: 256  # Larger batches for RTX 3060 Ti's 4864 CUDA cores
+mcts_batch_timeout_ms: 2  # Very short timeout - we want fast batching
 mcts_enable_batched_inference: true
 
 # Memory management

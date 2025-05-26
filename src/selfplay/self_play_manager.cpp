@@ -8,6 +8,7 @@
 #include "games/go/go_state.h"
 #include "games/gomoku/gomoku_state.h"
 #include "utils/memory_tracker.h"
+#include "utils/shutdown_manager.h"
 #include "core/tensor_pool.h"
 #include <vector>
 #include <string>
@@ -16,6 +17,9 @@
 #include <iomanip>
 #include <iostream>
 #include <filesystem>
+#include <thread>
+#include <mutex>
+#include <atomic>
 #include <nlohmann/json.hpp>
 #include "core/game_export.h"
 
@@ -234,61 +238,85 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     // Create a timestamp base for game IDs
     std::string timestamp_base = getCurrentTimestamp();
     
-    // Generate games with optimized leaf parallelization
-    std::cout << "Generating " << num_games << " self-play games..." << std::endl;
-    // Thread-safe game collection
+    // CRITICAL FIX: Run multiple games in parallel for better CPU/GPU utilization
+    std::cout << "Generating " << num_games << " games in parallel for optimal CPU/GPU utilization..." << std::endl;
+    
+    mcts::MCTSEngine& engine = *engines_[0];  // Primary engine
+    
+    const int parallel_games = std::min(8, num_games);  // Run up to 8 games concurrently
+    std::atomic<int> games_started(0);
+    std::atomic<int> games_completed(0);
     std::mutex games_mutex;
-    std::atomic<int> completed_games(0);
     
-    // PERFORMANCE FIX: Parallel game generation for maximum CPU/GPU utilization
-    // Use OpenMP parallel for to generate games concurrently across cores
-    std::cout << "Generating " << num_games << " games in parallel with optimized resource utilization..." << std::endl;
-    
-    // PERFORMANCE OPTIMIZATION: Sequential game generation with maximum MCTS parallelization
-    // Run games one at a time but use full 8 threads per game for optimal GPU batch utilization
-    std::cout << "Generating " << num_games << " games sequentially with " 
-              << settings_.mcts_settings.num_threads << " MCTS threads per game" << std::endl;
-    
-    mcts::MCTSEngine& engine = *engines_[0];  // Single engine with full parallelization
-    
-    for (int i = 0; i < num_games; i++) {
-        std::cout << "Starting game " << i << " with " << settings_.mcts_settings.num_threads 
-                  << " parallel MCTS threads" << std::endl;
+    // Create additional engines for parallel games
+    std::vector<std::unique_ptr<mcts::MCTSEngine>> parallel_engines;
+    for (int i = 1; i < parallel_games; i++) {
+        // Each parallel game gets a portion of the threads
+        auto parallel_settings = settings_.mcts_settings;
+        parallel_settings.num_threads = std::max(1, settings_.mcts_settings.num_threads / parallel_games);
         
-        // Periodic memory cleanup
-        if (i > 0 && i % 50 == 0) {
-            utils::GameStatePoolManager::getInstance().clearAllPools();
-            std::cout << "Progress: " << games.size() << "/" << num_games << " games" << std::endl;
+        if (neural_net_) {
+            parallel_engines.push_back(std::make_unique<mcts::MCTSEngine>(neural_net_, parallel_settings));
         }
-        
-        std::string game_id = timestamp_base + "_" + std::to_string(i);
-        
-        try {
-            auto game_data = generateGame(engine, game_type, board_size, game_id);
+    }
+    
+    // Worker threads for parallel game generation
+    std::vector<std::thread> game_threads;
+    for (int worker_id = 0; worker_id < parallel_games; worker_id++) {
+        game_threads.emplace_back([&, worker_id]() {
+            // Select engine for this worker
+            mcts::MCTSEngine* worker_engine = nullptr;
+            if (worker_id == 0) {
+                worker_engine = &engine;
+            } else if (worker_id - 1 < parallel_engines.size()) {
+                worker_engine = parallel_engines[worker_id - 1].get();
+            } else {
+                return;  // No engine available
+            }
             
-            // Sequential game collection (no locking needed)
-            if (!game_data.moves.empty()) {
-                games.push_back(std::move(game_data));
+            while (!utils::isShutdownRequested()) {
+                int game_idx = games_started.fetch_add(1);
+                if (game_idx >= num_games) break;
                 
-                // Progress tracking
-                std::cout << "Completed " << games.size() << "/" << num_games << " games" << std::endl;
+                std::string game_id = timestamp_base + "_" + std::to_string(game_idx);
                 
-                // More aggressive cleanup between games
+                try {
+                    auto game_data = generateGame(*worker_engine, game_type, board_size, game_id);
+                    
+                    if (!game_data.moves.empty()) {
+                        std::lock_guard<std::mutex> lock(games_mutex);
+                        games.push_back(std::move(game_data));
+                        games_completed.fetch_add(1);
+                        
+                        // Progress tracking
+                        if (games_completed % 10 == 0) {
+                            std::cout << "Progress: " << games_completed << "/" << num_games 
+                                      << " games completed" << std::endl;
+                        }
+                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "Error in worker " << worker_id << " generating game " 
+                              << game_idx << ": " << e.what() << std::endl;
+                }
+                
+                // CRITICAL FIX: More aggressive cleanup to prevent VRAM accumulation
+                // Clean after EVERY game instead of every 20 games
                 utils::GameStatePoolManager::getInstance().clearAllPools();
+                #ifdef WITH_TORCH
                 if (torch::cuda::is_available()) {
                     try {
                         torch::cuda::synchronize();
                         c10::cuda::CUDACachingAllocator::emptyCache();
                     } catch (...) {}
                 }
-            } else {
-                std::cerr << "Failed to generate game " << i << ": no moves were made" << std::endl;
-                // Don't increment the counter for empty games
+                #endif
             }
-        } catch (const std::exception& e) {
-            std::cerr << "Error generating game " << i << ": " << e.what() << std::endl;
-            throw;
-        }
+        });
+    }
+    
+    // Wait for all games to complete
+    for (auto& thread : game_threads) {
+        thread.join();
     }
     
     std::cout << "Successfully generated " << games.size() << " games" << std::endl;
@@ -312,7 +340,6 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     
     // Engine performance summary
     if (!engines_.empty()) {
-        auto& engine = *engines_[0];
         // UnifiedInferenceServer was removed in simplification
     }
     
@@ -415,7 +442,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
     int move_count = 0;
     
     try {
-        while (!game->isTerminal() && move_count < max_moves) {
+        while (!game->isTerminal() && move_count < max_moves && !utils::isShutdownRequested()) {
             // Set temperature based on move number
             float temperature;
             if (move_count < settings_.temperature_threshold) {
@@ -519,6 +546,12 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 std::cout << "SelfPlayManager::generateGame - Completed MCTS search for game " << game_id 
                          << ", move " << move_count << " in " << search_duration << "ms" << std::endl;
                 std::cout << "=============================================================" << std::endl;
+                
+                // Check for shutdown after search
+                if (utils::isShutdownRequested()) {
+                    std::cout << "Shutdown requested during game generation" << std::endl;
+                    break;
+                }
                 
                 // AGGRESSIVE memory cleanup after every move to prevent stacking
                 utils::GameStatePoolManager::getInstance().clearAllPools();

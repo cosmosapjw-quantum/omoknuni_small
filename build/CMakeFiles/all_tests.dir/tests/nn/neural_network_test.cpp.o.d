@@ -5045,7 +5045,6 @@ CMakeFiles/all_tests.dir/tests/nn/neural_network_test.cpp.o: \
  /usr/local/cuda-12.8/include/driver_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.hpp \
- /home/cosmos/omoknuni_small/include/alphazero_export.h \
  /home/cosmos/omoknuni_small/include/utils/logger.h \
  /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
  /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \
@@ -5071,8 +5070,7 @@ CMakeFiles/all_tests.dir/tests/nn/neural_network_test.cpp.o: \
  /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
  /usr/include/spdlog/details/thread_pool.h \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
- /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
- /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
+ /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
  /usr/include/c++/13/random /usr/include/c++/13/bits/random.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h \
@@ -5081,4 +5079,6 @@ CMakeFiles/all_tests.dir/tests/nn/neural_network_test.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
- /usr/include/c++/13/bits/random.tcc
+ /usr/include/c++/13/bits/random.tcc \
+ /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
+ /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h

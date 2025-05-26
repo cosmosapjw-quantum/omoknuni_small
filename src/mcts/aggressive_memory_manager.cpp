@@ -148,8 +148,34 @@ void AggressiveMemoryManager::updateMemoryUsage() {
     size_t peak = peak_memory_usage_.load();
     while (current > peak && !peak_memory_usage_.compare_exchange_weak(peak, current)) {}
     
-    // Calculate memory pressure
-    double usage_gb = current / (1024.0 * 1024.0 * 1024.0);
+    // CRITICAL FIX: Also monitor GPU memory usage
+    size_t gpu_memory_bytes = 0;
+    #ifdef WITH_TORCH
+    if (torch::cuda::is_available()) {
+        try {
+            // Get allocated memory from PyTorch's allocator
+            auto stats = c10::cuda::CUDACachingAllocator::getDeviceStats(0);
+            gpu_memory_bytes = stats.allocated_bytes[0].current;
+            
+            // Also try to get actual device memory usage
+            size_t free_bytes, total_bytes;
+            cudaMemGetInfo(&free_bytes, &total_bytes);
+            size_t used_bytes = total_bytes - free_bytes;
+            
+            // Use the larger of the two values
+            gpu_memory_bytes = std::max(gpu_memory_bytes, used_bytes);
+        } catch (...) {
+            // Ignore errors in GPU memory query
+        }
+    }
+    #endif
+    
+    // Store GPU memory for reporting
+    gpu_memory_usage_ = gpu_memory_bytes;
+    
+    // Calculate total memory pressure including GPU
+    size_t total_memory = current + gpu_memory_bytes;
+    double usage_gb = total_memory / (1024.0 * 1024.0 * 1024.0);
     
     if (usage_gb >= config_.emergency_threshold_gb) {
         current_pressure_level_ = PressureLevel::EMERGENCY;
@@ -232,10 +258,13 @@ std::string AggressiveMemoryManager::getMemoryReport() {
     updateMemoryUsage();
     
     report << "\n=== MEMORY REPORT ===\n";
-    report << "Current Usage: " << formatBytes(current_memory_usage_) 
+    report << "Current RAM Usage: " << formatBytes(current_memory_usage_) 
            << " (" << std::fixed << std::setprecision(1) 
            << (current_memory_usage_ / (1024.0 * 1024.0 * 1024.0)) << " GB)\n";
-    report << "Peak Usage: " << formatBytes(peak_memory_usage_) << "\n";
+    report << "Current GPU Usage: " << formatBytes(gpu_memory_usage_) 
+           << " (" << std::fixed << std::setprecision(1) 
+           << (gpu_memory_usage_ / (1024.0 * 1024.0 * 1024.0)) << " GB)\n";
+    report << "Peak RAM Usage: " << formatBytes(peak_memory_usage_) << "\n";
     report << "Pressure Level: ";
     
     switch (current_pressure_level_.load()) {

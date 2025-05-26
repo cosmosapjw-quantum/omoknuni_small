@@ -3,13 +3,13 @@
 
 CMakeFiles/nn_tests.dir/tests/nn/neural_network_test.cpp.o
  /home/cosmos/omoknuni_small/tests/nn/neural_network_test.cpp
- /home/cosmos/omoknuni_small/include/alphazero_export.h
  /home/cosmos/omoknuni_small/include/core/export_macros.h
  /home/cosmos/omoknuni_small/include/core/igamestate.h
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h
  /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h
+ /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h

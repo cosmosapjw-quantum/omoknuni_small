@@ -10,9 +10,19 @@
 #include <tuple>
 #include "nn/neural_network.h"
 #include "mcts/gpu_memory_pool.h"
+#include "core/export_macros.h"
 
 namespace alphazero {
 namespace nn {
+
+/**
+ * @brief Graph generation method for RandWire networks
+ */
+enum class GraphGenMethod {
+    WATTS_STROGATZ,  // Small-world graph
+    ERDOS_RENYI,     // Random graph
+    BARABASI_ALBERT  // Scale-free graph
+};
 
 /**
  * @brief Squeeze-and-Excitation Block for attention mechanism
@@ -91,6 +101,34 @@ public:
 
 private:
     torch::nn::Conv2d conv{nullptr};
+    torch::nn::BatchNorm2d bn{nullptr};
+};
+
+/**
+ * @brief Dynamic routing gate for instance-aware connections
+ */
+class DynamicRoutingGate : public torch::nn::Module {
+public:
+    /**
+     * @brief Constructor
+     * 
+     * @param channels Number of channels
+     * @param num_nodes Number of nodes in the graph
+     */
+    DynamicRoutingGate(int64_t channels, int64_t num_nodes);
+    
+    /**
+     * @brief Compute dynamic routing weights
+     * 
+     * @param x Input tensor
+     * @param edge_features Edge feature tensor
+     * @return Routing weights for each edge
+     */
+    torch::Tensor forward(torch::Tensor x, torch::Tensor edge_features);
+
+private:
+    torch::nn::Conv2d feature_extractor{nullptr};
+    torch::nn::Linear edge_scorer{nullptr};
     torch::nn::BatchNorm2d bn{nullptr};
 };
 
@@ -215,6 +253,20 @@ private:
 };
 
 /**
+ * @brief Configuration for RandWire block
+ */
+struct RandWireConfig {
+    int64_t num_nodes = 32;
+    GraphGenMethod method = GraphGenMethod::WATTS_STROGATZ;
+    double p = 0.75;  // For WS model
+    double edge_prob = 0.1;  // For ER model
+    int64_t m = 5;  // For BA model
+    int64_t k = 4;  // For WS model
+    int64_t seed = -1;
+    bool use_dynamic_routing = true;
+};
+
+/**
  * @brief Random wiring block with dynamic connections
  */
 class RandWireBlock : public torch::nn::Module {
@@ -223,12 +275,9 @@ public:
      * @brief Constructor
      * 
      * @param channels Number of input and output channels
-     * @param num_nodes Number of nodes in the random graph
-     * @param p Rewiring probability (Watts-Strogatz model)
-     * @param seed Random seed for reproducibility
+     * @param config Configuration for the block
      */
-    RandWireBlock(int64_t channels, int64_t num_nodes = 32, 
-                 double p = 0.75, int64_t seed = -1);
+    RandWireBlock(int64_t channels, const RandWireConfig& config = RandWireConfig());
     
     /**
      * @brief Forward pass
@@ -237,43 +286,82 @@ public:
      * @return Output tensor after graph processing
      */
     torch::Tensor forward(torch::Tensor x);
+    
+    /**
+     * @brief Forward pass with dynamic routing
+     * 
+     * @param x Input tensor
+     * @param use_dynamic Whether to use dynamic routing for this forward pass
+     * @return Output tensor after graph processing
+     */
+    torch::Tensor forward(torch::Tensor x, bool use_dynamic);
 
 private:
     int64_t channels_;
-    int64_t num_nodes_;
+    RandWireConfig config_;
     DiGraph graph_;
     std::vector<int> input_nodes_;
     std::vector<int> output_nodes_;
-    std::unordered_map<std::string, std::shared_ptr<RouterModule>> routers_;
+    std::vector<int> active_nodes_;  // Only nodes that are actually connected
+    std::unordered_map<std::string, std::shared_ptr<RouterModule>> routers_;  // Legacy, kept for compatibility
+    std::unordered_map<std::string, std::shared_ptr<RouterModule>> adaptive_routers_;  // Dynamic routers created on-demand
     std::unordered_map<std::string, std::shared_ptr<ResidualBlock>> blocks_;
     std::shared_ptr<RouterModule> output_router_{nullptr};
+    std::shared_ptr<DynamicRoutingGate> routing_gate_{nullptr};
     
     /**
-     * @brief Generate a small-world graph using Watts-Strogatz model
+     * @brief Generate a graph based on the selected method
      * 
-     * @param num_nodes Number of nodes
-     * @param p Rewiring probability
-     * @param seed Random seed
      * @return Directed graph
      */
-    DiGraph _generate_graph(int64_t num_nodes, double p, int64_t seed);
+    DiGraph _generate_graph();
+    
+    /**
+     * @brief Generate Watts-Strogatz small-world graph
+     */
+    DiGraph _generate_ws_graph();
+    
+    /**
+     * @brief Generate Erdos-Renyi random graph
+     */
+    DiGraph _generate_er_graph();
+    
+    /**
+     * @brief Generate Barabasi-Albert scale-free graph
+     */
+    DiGraph _generate_ba_graph();
+    
+    /**
+     * @brief Find active nodes (nodes that are actually connected)
+     */
+    void _find_active_nodes();
+};
+
+/**
+ * @brief Configuration for DDWRandWireResNet
+ */
+struct ALPHAZERO_API DDWRandWireResNetConfig {
+    int64_t input_channels;
+    int64_t output_size;
+    int64_t board_height;
+    int64_t board_width;
+    int64_t channels = 128;
+    int64_t num_blocks = 20;
+    RandWireConfig randwire_config;
+    bool use_dynamic_routing = true;
 };
 
 /**
  * @brief Dynamic Dense-Wired Random-Wire ResNet for AlphaZero
  */
-class DDWRandWireResNet : public nn::NeuralNetwork, public torch::nn::Module {
+class ALPHAZERO_API DDWRandWireResNet : public nn::NeuralNetwork, public torch::nn::Module {
 public:
     /**
      * @brief Constructor
      * 
-     * @param input_channels Number of input channels
-     * @param output_size Size of policy output
-     * @param channels Number of channels in the network
-     * @param num_blocks Number of random wire blocks
+     * @param config Configuration for the network
      */
-    DDWRandWireResNet(int64_t input_channels, int64_t output_size, 
-                      int64_t channels = 128, int64_t num_blocks = 20);
+    DDWRandWireResNet(const DDWRandWireResNetConfig& config);
     
     /**
      * @brief Forward pass
@@ -282,6 +370,15 @@ public:
      * @return Tuple of policy and value tensors
      */
     std::tuple<torch::Tensor, torch::Tensor> forward(torch::Tensor x);
+    
+    /**
+     * @brief Forward pass with dynamic routing control
+     * 
+     * @param x Input tensor
+     * @param use_dynamic Whether to use dynamic routing
+     * @return Tuple of policy and value tensors
+     */
+    std::tuple<torch::Tensor, torch::Tensor> forward(torch::Tensor x, bool use_dynamic);
     
     /**
      * @brief Save the model to a file
@@ -326,9 +423,26 @@ public:
     void setGPUMemoryPool(std::shared_ptr<mcts::GPUMemoryPool> pool) {
         gpu_memory_pool_ = pool;
     }
+    
+    /**
+     * @brief Override to method to track device changes
+     */
+    void to(torch::Device device, bool non_blocking = false) {
+        torch::nn::Module::to(device, non_blocking);
+        device_ = device;
+    }
+    
+    void to(torch::ScalarType dtype, bool non_blocking = false) {
+        torch::nn::Module::to(dtype, non_blocking);
+    }
+    
+    void to(torch::Device device, torch::ScalarType dtype, bool non_blocking = false) {
+        torch::nn::Module::to(device, dtype, non_blocking);
+        device_ = device;
+    }
 
 private:
-    int64_t input_channels_;
+    DDWRandWireResNetConfig config_;
     torch::nn::Conv2d input_conv_{nullptr};
     torch::nn::BatchNorm2d input_bn_{nullptr};
     torch::nn::ModuleList rand_wire_blocks_{nullptr};

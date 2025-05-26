@@ -308,7 +308,6 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
  /usr/include/spdlog/details/thread_pool.h \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
- /home/cosmos/omoknuni_small/include/alphazero_export.h \
  /home/cosmos/omoknuni_small/include/utils/profiler.h \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/Tracy.hpp \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyColor.hpp \
@@ -5117,6 +5116,7 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
+ /home/cosmos/omoknuni_small/include/utils/shutdown_manager.h \
  /home/cosmos/omoknuni_small/include/core/tensor_pool.h \
  /usr/include/c++/13/filesystem /usr/include/c++/13/bits/fs_fwd.h \
  /usr/include/c++/13/bits/fs_path.h /usr/include/c++/13/codecvt \

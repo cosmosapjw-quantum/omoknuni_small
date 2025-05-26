@@ -27,7 +27,6 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
@@ -43,6 +42,7 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
   /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
@@ -5258,7 +5258,6 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_table_test.cpp.o: /h
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
@@ -5274,6 +5273,7 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_table_test.cpp.o: /h
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
   /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
@@ -12591,6 +12591,10 @@ _deps/tracy-src/public/client/TracyKCore.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_to_cpu.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/cross_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/resize_as_sparse_ops.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_thnn_fused_lstm_cell.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/slow_conv_dilated3d_native.h:
@@ -13117,10 +13121,6 @@ _deps/tracy-src/public/common/TracyMutex.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/broadcast_tensors_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dim_arange.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/record_function.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/empty_permuted.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_cos.h:
@@ -13641,10 +13641,6 @@ _deps/tracy-src/public/common/TracyApi.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_erfc_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/cross_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/resize_as_sparse_ops.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_fftfreq_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/i0_native.h:
@@ -13887,10 +13883,6 @@ _deps/tracy-src/public/client/TracySysTime.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_frac_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_coo_tensor_with_dims_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/cudnn_is_acceptable_native.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_flash_attention_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/logical_xor.h:
@@ -14073,30 +14065,6 @@ _deps/tracy-src/public/client/TracyScoped.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/core/DeprecatedTypePropertiesRegistry.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/permute_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_flash_attention_forward_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Int_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cdist_backward_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/TensorOperators.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/bitwise_or_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/rot90_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_convolution_double_backward.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_tensorsolve_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/mkldnn_adaptive_avg_pool2d_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/vsplit_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_addmm_activation.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/core/custom_class.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/convolution_backward_overrideable_native.h:
@@ -14167,6 +14135,34 @@ _deps/tracy-src/public/common/TracyAlloc.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_shifted_chebyshev_polynomial_w_ops.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fft_r2c.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/randint_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/index_select_backward_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_adaptive_avg_pool3d_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_conj_physical_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_norm_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/to_sparse_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_tanh.h:
+
+/lib/x86_64-linux-gnu/libmvec.so.1:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/contiguous.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/sym_constrain_range_for_size.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fused_adagrad_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/addmm_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/function_schema.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_bsc_tensor_args_ops.h:
 
 /home/cosmos/omoknuni_small/include/core/igamestate.h:
@@ -14194,12 +14190,6 @@ _deps/tracy-src/public/common/TracyForceInline.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/multi_margin_loss.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/upsample_linear1d_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fft_r2c.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/randint_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/index_select_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_efficient_attention_backward_native.h:
 
@@ -14302,6 +14292,30 @@ _deps/tracy-src/public/common/TracyForceInline.hpp:
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/api/method.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/Device.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/permute_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_flash_attention_forward_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Int_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cdist_backward_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/TensorOperators.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/bitwise_or_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/rot90_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_convolution_double_backward.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_tensorsolve_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/mkldnn_adaptive_avg_pool2d_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/vsplit_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_addmm_activation.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_compute_contiguous_strides_offsets.h:
 
@@ -14425,28 +14439,6 @@ _deps/tracy-src/public/common/TracyAlign.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/StorageUtils.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_adaptive_avg_pool3d_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_conj_physical_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_norm_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/to_sparse_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_tanh.h:
-
-/lib/x86_64-linux-gnu/libmvec.so.1:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/contiguous.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/sym_constrain_range_for_size.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fused_adagrad_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/addmm_meta.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/function_schema.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_addmm_activation_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/isposinf.h:
@@ -14553,6 +14545,14 @@ _deps/tracy-src/public/client/TracyCallstack.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/isclose_native.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dim_arange.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/cudnn_is_acceptable_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_coo_tensor_with_dims_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/record_function.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/flatten_dense_tensors.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_pack_padded_sequence_ops.h:
@@ -14566,10 +14566,6 @@ _deps/tracy-src/public/client/TracyCallstack.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cosine_embedding_loss_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/c10/util/order_preserving_flat_hash_map.h:
-
-/usr/include/c++/13/bits/stl_deque.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/boxing/BoxedKernel.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_erfc.h:
 
@@ -15311,9 +15307,9 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/native_norm_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/ravel_native.h:
-
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/python/update_graph_executor_opt.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/ravel_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_fake_quantize_learnable_per_channel_affine.h:
 
@@ -16071,8 +16067,6 @@ _deps/tracy-src/public/common/TracyProtocol.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cudnn_batch_norm_backward_ops.h:
 
-/home/cosmos/omoknuni_small/include/alphazero_export.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_efficient_attention_forward_ops.h:
 
 /usr/include/c++/13/bits/stl_tempbuf.h:
@@ -16148,6 +16142,8 @@ _deps/tracy-src/public/common/TracyProtocol.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_shifted_chebyshev_polynomial_u.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/narrow_copy.h:
+
+/home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_get_values_ops.h:
 
@@ -20778,6 +20774,10 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 /usr/include/c++/13/utility:
 
 /usr/include/c++/13/bits/std_function.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/boxing/BoxedKernel.h:
+
+/usr/include/c++/13/bits/stl_deque.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/core/dispatch/RegistrationHandleRAII.h:
 

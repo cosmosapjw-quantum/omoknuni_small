@@ -65,12 +65,12 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     node_pool_config.max_pool_size = std::min(size_t(1000000), size_t(settings.num_simulations * 50));
     node_pool_ = std::make_unique<MCTSNodePool>(node_pool_config);
     
-    // Initialize memory pressure monitor
+    // Initialize memory pressure monitor with aggressive thresholds
     MemoryPressureMonitor::Config mem_monitor_config;
-    mem_monitor_config.max_memory_bytes = 48ULL * 1024 * 1024 * 1024; // 48GB limit
-    mem_monitor_config.warning_threshold = 0.75; // 75% warning
-    mem_monitor_config.critical_threshold = 0.85; // 85% critical
-    mem_monitor_config.check_interval = std::chrono::milliseconds(500); // Check every 500ms
+    mem_monitor_config.max_memory_bytes = 16ULL * 1024 * 1024 * 1024; // 16GB limit
+    mem_monitor_config.warning_threshold = 0.50; // 50% warning (8GB)
+    mem_monitor_config.critical_threshold = 0.75; // 75% critical (12GB)
+    mem_monitor_config.check_interval = std::chrono::milliseconds(200); // Check every 200ms
     
     memory_pressure_monitor_ = std::make_unique<MemoryPressureMonitor>(mem_monitor_config);
     memory_pressure_monitor_->setCleanupCallback(
@@ -79,11 +79,9 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
         });
     memory_pressure_monitor_->start();
     
-    // Initialize GPU memory pool (always enabled)
-    GPUMemoryPool::PoolConfig gpu_pool_config;
-    gpu_pool_config.initial_pool_size_mb = 1024;  // 1GB initial allocation
-    gpu_pool_config.max_pool_size_mb = 4096;      // 4GB max allocation
-    gpu_memory_pool_ = std::make_unique<GPUMemoryPool>(gpu_pool_config);
+    // CRITICAL FIX: Don't create GPU memory pool - it causes VRAM accumulation
+    // The neural network manages its own GPU memory more efficiently
+    // gpu_memory_pool_ = nullptr;
     
     // Initialize dynamic batch manager (always enabled)
     DynamicBatchManager::Config batch_config;
@@ -94,12 +92,12 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     batch_config.target_gpu_utilization_percent = 0.9;
     dynamic_batch_manager_ = std::make_unique<DynamicBatchManager>(batch_config);
     
-    // Initialize aggressive memory manager
+    // Initialize aggressive memory manager with MUCH lower thresholds
     auto& aggressive_memory_manager = AggressiveMemoryManager::getInstance();
     AggressiveMemoryManager::Config aggressive_config;
-    aggressive_config.warning_threshold_gb = 28.0;
-    aggressive_config.critical_threshold_gb = 35.0;
-    aggressive_config.emergency_threshold_gb = 40.0;
+    aggressive_config.warning_threshold_gb = 8.0;   // Warning at 8GB
+    aggressive_config.critical_threshold_gb = 12.0; // Critical at 12GB
+    aggressive_config.emergency_threshold_gb = 16.0; // Emergency at 16GB
     aggressive_memory_manager.setConfig(aggressive_config);
     
     // Register cleanup callbacks
@@ -166,15 +164,7 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     // Store neural network reference
     neural_network_ = neural_net;
     
-    // Pass GPU memory pool to neural network if it's a ResNetModel
-    if (gpu_memory_pool_) {
-        auto resnet = std::dynamic_pointer_cast<nn::ResNetModel>(neural_net);
-        if (resnet && gpu_memory_pool_) {
-            // Convert unique_ptr to shared_ptr with a no-op deleter since we still own it
-            auto shared_pool = std::shared_ptr<GPUMemoryPool>(gpu_memory_pool_.get(), [](GPUMemoryPool*){});
-            resnet->setGPUMemoryPool(shared_pool);
-        }
-    }
+    // CRITICAL FIX: Don't pass GPU memory pool - removed to prevent VRAM accumulation
     
     // Create direct inference function for serial mode
     direct_inference_fn_ = [neural_net](const std::vector<std::unique_ptr<core::IGameState>>& states) -> std::vector<NetworkOutput> {
@@ -281,9 +271,12 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
         return result;
     }
 
-    // Clear the transposition table for new search
+    // CRITICAL FIX: Don't clear entire table, just old entries
     if (use_transposition_table_ && transposition_table_) {
-        transposition_table_->clear();
+        // Only clear if table is too large
+        if (transposition_table_->size() > 100000) {
+            transposition_table_->clear();
+        }
         // Stats are reset automatically when clearing
     }
 

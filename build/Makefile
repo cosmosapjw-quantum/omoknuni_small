@@ -738,6 +738,32 @@ mcts_openmp_benchmark/fast:
 .PHONY : mcts_openmp_benchmark/fast
 
 #=============================================================================
+# Target rules for targets named test_ddw_randwire_resnet
+
+# Build rule for target.
+test_ddw_randwire_resnet: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_ddw_randwire_resnet
+.PHONY : test_ddw_randwire_resnet
+
+# fast build rule for target.
+test_ddw_randwire_resnet/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_randwire_resnet.dir/build.make CMakeFiles/test_ddw_randwire_resnet.dir/build
+.PHONY : test_ddw_randwire_resnet/fast
+
+#=============================================================================
+# Target rules for targets named test_ddw_minimal
+
+# Build rule for target.
+test_ddw_minimal: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_ddw_minimal
+.PHONY : test_ddw_minimal
+
+# fast build rule for target.
+test_ddw_minimal/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_minimal.dir/build.make CMakeFiles/test_ddw_minimal.dir/build
+.PHONY : test_ddw_minimal/fast
+
+#=============================================================================
 # Target rules for targets named mimalloc-static
 
 # Build rule for target.
@@ -2325,6 +2351,30 @@ src/utils/resource_monitor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.s
 .PHONY : src/utils/resource_monitor.cpp.s
 
+src/utils/shutdown_manager.o: src/utils/shutdown_manager.cpp.o
+.PHONY : src/utils/shutdown_manager.o
+
+# target to build an object file
+src/utils/shutdown_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.o
+.PHONY : src/utils/shutdown_manager.cpp.o
+
+src/utils/shutdown_manager.i: src/utils/shutdown_manager.cpp.i
+.PHONY : src/utils/shutdown_manager.i
+
+# target to preprocess a source file
+src/utils/shutdown_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.i
+.PHONY : src/utils/shutdown_manager.cpp.i
+
+src/utils/shutdown_manager.s: src/utils/shutdown_manager.cpp.s
+.PHONY : src/utils/shutdown_manager.s
+
+# target to generate assembly for a file
+src/utils/shutdown_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.s
+.PHONY : src/utils/shutdown_manager.cpp.s
+
 src/utils/thread_local_memory_manager.o: src/utils/thread_local_memory_manager.cpp.o
 .PHONY : src/utils/thread_local_memory_manager.o
 
@@ -2372,6 +2422,54 @@ src/utils/zobrist_hash.s: src/utils/zobrist_hash.cpp.s
 src/utils/zobrist_hash.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.s
 .PHONY : src/utils/zobrist_hash.cpp.s
+
+test_ddw_minimal.o: test_ddw_minimal.cpp.o
+.PHONY : test_ddw_minimal.o
+
+# target to build an object file
+test_ddw_minimal.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_minimal.dir/build.make CMakeFiles/test_ddw_minimal.dir/test_ddw_minimal.cpp.o
+.PHONY : test_ddw_minimal.cpp.o
+
+test_ddw_minimal.i: test_ddw_minimal.cpp.i
+.PHONY : test_ddw_minimal.i
+
+# target to preprocess a source file
+test_ddw_minimal.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_minimal.dir/build.make CMakeFiles/test_ddw_minimal.dir/test_ddw_minimal.cpp.i
+.PHONY : test_ddw_minimal.cpp.i
+
+test_ddw_minimal.s: test_ddw_minimal.cpp.s
+.PHONY : test_ddw_minimal.s
+
+# target to generate assembly for a file
+test_ddw_minimal.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_minimal.dir/build.make CMakeFiles/test_ddw_minimal.dir/test_ddw_minimal.cpp.s
+.PHONY : test_ddw_minimal.cpp.s
+
+test_ddw_randwire_resnet.o: test_ddw_randwire_resnet.cpp.o
+.PHONY : test_ddw_randwire_resnet.o
+
+# target to build an object file
+test_ddw_randwire_resnet.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_randwire_resnet.dir/build.make CMakeFiles/test_ddw_randwire_resnet.dir/test_ddw_randwire_resnet.cpp.o
+.PHONY : test_ddw_randwire_resnet.cpp.o
+
+test_ddw_randwire_resnet.i: test_ddw_randwire_resnet.cpp.i
+.PHONY : test_ddw_randwire_resnet.i
+
+# target to preprocess a source file
+test_ddw_randwire_resnet.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_randwire_resnet.dir/build.make CMakeFiles/test_ddw_randwire_resnet.dir/test_ddw_randwire_resnet.cpp.i
+.PHONY : test_ddw_randwire_resnet.cpp.i
+
+test_ddw_randwire_resnet.s: test_ddw_randwire_resnet.cpp.s
+.PHONY : test_ddw_randwire_resnet.s
+
+# target to generate assembly for a file
+test_ddw_randwire_resnet.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_randwire_resnet.dir/build.make CMakeFiles/test_ddw_randwire_resnet.dir/test_ddw_randwire_resnet.cpp.s
+.PHONY : test_ddw_randwire_resnet.cpp.s
 
 tests/all_tests_main.o: tests/all_tests_main.cpp.o
 .PHONY : tests/all_tests_main.o
@@ -2987,6 +3085,8 @@ help:
 	@echo "... nn_tests"
 	@echo "... omoknuni_cli_final"
 	@echo "... selfplay_tests"
+	@echo "... test_ddw_minimal"
+	@echo "... test_ddw_randwire_resnet"
 	@echo "... training_tests"
 	@echo "... transposition_tests"
 	@echo "... src/cli/cli_manager.o"
@@ -3181,12 +3281,21 @@ help:
 	@echo "... src/utils/resource_monitor.o"
 	@echo "... src/utils/resource_monitor.i"
 	@echo "... src/utils/resource_monitor.s"
+	@echo "... src/utils/shutdown_manager.o"
+	@echo "... src/utils/shutdown_manager.i"
+	@echo "... src/utils/shutdown_manager.s"
 	@echo "... src/utils/thread_local_memory_manager.o"
 	@echo "... src/utils/thread_local_memory_manager.i"
 	@echo "... src/utils/thread_local_memory_manager.s"
 	@echo "... src/utils/zobrist_hash.o"
 	@echo "... src/utils/zobrist_hash.i"
 	@echo "... src/utils/zobrist_hash.s"
+	@echo "... test_ddw_minimal.o"
+	@echo "... test_ddw_minimal.i"
+	@echo "... test_ddw_minimal.s"
+	@echo "... test_ddw_randwire_resnet.o"
+	@echo "... test_ddw_randwire_resnet.i"
+	@echo "... test_ddw_randwire_resnet.s"
 	@echo "... tests/all_tests_main.o"
 	@echo "... tests/all_tests_main.i"
 	@echo "... tests/all_tests_main.s"

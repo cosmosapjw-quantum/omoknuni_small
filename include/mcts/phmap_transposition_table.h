@@ -7,7 +7,7 @@
 #include <vector>
 #include <cstdint>
 #include <chrono>
-#include "alphazero_export.h"
+#include "core/export_macros.h"
 #include "mcts/mcts_node.h"
 #include "parallel_hashmap/phmap.h"
 
@@ -112,6 +112,10 @@ public:
         size_t memory_usage_mb;
     };
     Stats getStats() const;
+    /**
+     * @brief Force memory limit enforcement
+     */
+    void enforceMemoryLimit();
     
 private:
     // Use parallel_flat_hash_map with custom allocator and sharding
@@ -143,7 +147,6 @@ private:
     std::atomic<size_t> current_memory_usage_{0};
     
     // Helper methods
-    void enforceMemoryLimit();
     EntryPtr createEntry(uint64_t hash, std::shared_ptr<MCTSNode> node, int depth);
     size_t estimateEntrySize(const Entry& entry) const;
 };

@@ -33,9 +33,9 @@ public:
     };
     
     struct Config {
-        double warning_threshold_gb = 28.0;   // 28GB warning
-        double critical_threshold_gb = 35.0;  // 35GB critical  
-        double emergency_threshold_gb = 40.0; // 40GB emergency
+        double warning_threshold_gb = 32.0;   // 32GB warning (50% of 64GB)
+        double critical_threshold_gb = 40.0;  // 40GB critical (62.5% of 64GB)
+        double emergency_threshold_gb = 48.0; // 48GB emergency (75% of 64GB)
         std::chrono::seconds cleanup_interval{30};
         bool auto_cleanup = true;
         bool track_allocations = true;
@@ -95,6 +95,7 @@ private:
     // Memory tracking
     std::atomic<size_t> current_memory_usage_;
     std::atomic<size_t> peak_memory_usage_;
+    std::atomic<size_t> gpu_memory_usage_{0};  // GPU memory tracking
     std::atomic<PressureLevel> current_pressure_level_{PressureLevel::NORMAL};
     
     // Allocation tracking

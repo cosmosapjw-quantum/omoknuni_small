@@ -1,0 +1,73 @@
+# DDW-RandWire-ResNet Balanced Configuration
+# Optimized for Ryzen 9 5900X + RTX 3060 Ti to prevent CPU bottlenecks
+# Target: 70-80% GPU utilization with stable performance
+
+# Game settings
+game_type: gomoku
+board_size: 9
+input_channels: 17  # Gomoku enhanced representation with history
+
+# Network type selection
+network_type: ddw_randwire
+
+# Model path
+model_path: models/ddw_randwire_balanced.pt
+
+# DDW-RandWire-ResNet settings - conservative for stability
+ddw_channels: 48          # Reduced for faster inference
+ddw_num_blocks: 8         # Reduced for lower computational load
+ddw_num_nodes: 12         # Smaller graph for efficiency
+ddw_graph_method: watts_strogatz
+ddw_ws_p: 0.75
+ddw_ws_k: 4
+ddw_dynamic_routing: true
+ddw_seed: 42
+
+# MCTS settings - balanced for CPU-GPU harmony
+mcts_simulations: 400     # Conservative to prevent CPU overload
+mcts_threads_per_engine: 12  # Increased to use more CPU cores
+mcts_batch_size: 64       # Reduced to process batches faster
+mcts_batch_timeout_ms: 5  # Shorter timeout to reduce waiting
+mcts_c_puct: 1.0
+mcts_virtual_loss: 3.0
+mcts_enable_transposition: true
+mcts_temperature: 1.0
+mcts_temp_threshold: 10
+mcts_dirichlet_alpha: 0.25
+mcts_dirichlet_epsilon: 0.25
+mcts_use_progressive_widening: true
+mcts_progressive_widening_c: 1.0
+mcts_progressive_widening_k: 10.0
+mcts_transposition_table_size_mb: 128
+
+# Parallel settings - conservative for stability
+num_parallel_workers: 8   # Increased to better utilize CPU
+num_games: 100
+save_interval: 10
+output_dir: data/self_play_games_ddw_balanced
+max_game_length: 200
+clear_pools_every_n_games: 10
+force_gpu_cleanup_every_n_games: 20
+
+# Memory settings for 64GB RAM
+max_memory_gb: 60
+cleanup_threshold_gb: 50
+emergency_cleanup_gb: 55
+enable_memory_pool: true
+tensor_pool_size: 512
+node_pool_initial_size: 5000
+node_pool_max_size: 50000
+game_state_pool_size: 500
+check_interval_ms: 500
+cleanup_interval_ms: 5000
+
+# GPU optimization
+cuda_device: 0
+gpu_memory_fraction: 0.8  # Conservative GPU memory usage
+enable_mixed_precision: false
+
+# Performance expectations:
+# - GPU utilization: 60-75% (stable, no CPU bottleneck)
+# - Throughput: 200-300 sims/s (consistent)
+# - Memory usage: 15-25GB RAM, 3-5GB VRAM
+# - No CPU bottlenecks or performance drops

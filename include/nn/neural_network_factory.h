@@ -7,6 +7,7 @@
 #include "nn/neural_network.h"
 #ifdef WITH_TORCH
 #include "nn/resnet_model.h"
+#include "nn/ddw_randwire_resnet.h"
 #endif
 #include "core/export_macros.h"
 
@@ -67,6 +68,30 @@ public:
         const std::string& path, int64_t input_channels, int64_t board_size,
         int64_t num_res_blocks, int64_t num_filters,
         int64_t policy_size = 0,
+        bool use_gpu = true);
+    
+    /**
+     * @brief Create a DDW-RandWire-ResNet model
+     *
+     * @param config Configuration for the model
+     * @param use_gpu Whether to use GPU for the model if available
+     * @return Shared pointer to the model
+     */
+    static std::shared_ptr<DDWRandWireResNet> createDDWRandWireResNet(
+        const DDWRandWireResNetConfig& config,
+        bool use_gpu = true);
+    
+    /**
+     * @brief Load a DDW-RandWire-ResNet model from a file
+     *
+     * @param path File path
+     * @param config Configuration for the model
+     * @param use_gpu Whether to use GPU for the model if available
+     * @return Shared pointer to the loaded model
+     */
+    static std::shared_ptr<DDWRandWireResNet> loadDDWRandWireResNet(
+        const std::string& path, 
+        const DDWRandWireResNetConfig& config,
         bool use_gpu = true);
 #endif // WITH_TORCH
 };

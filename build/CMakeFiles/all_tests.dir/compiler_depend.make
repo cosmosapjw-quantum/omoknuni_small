@@ -2687,7 +2687,6 @@ CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o: /ho
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/game_export.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
@@ -7922,7 +7921,6 @@ CMakeFiles/all_tests.dir/tests/integration/mcts_with_nn_test.cpp.o: /home/cosmos
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
@@ -7938,6 +7936,7 @@ CMakeFiles/all_tests.dir/tests/integration/mcts_with_nn_test.cpp.o: /home/cosmos
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
   /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
@@ -13153,7 +13152,6 @@ CMakeFiles/all_tests.dir/tests/mcts/mcts_engine_test.cpp.o: /home/cosmos/omoknun
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
@@ -18814,7 +18812,6 @@ CMakeFiles/all_tests.dir/tests/mcts/mcts_openmp_test.cpp.o: /home/cosmos/omoknun
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
@@ -24467,7 +24464,6 @@ CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.o: /home/
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
@@ -24483,6 +24479,7 @@ CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.o: /home/
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
   /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
@@ -29698,7 +29695,6 @@ CMakeFiles/all_tests.dir/tests/mcts/transposition_table_test.cpp.o: /home/cosmos
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
@@ -29714,6 +29710,7 @@ CMakeFiles/all_tests.dir/tests/mcts/transposition_table_test.cpp.o: /home/cosmos
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
   /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
@@ -35325,13 +35322,13 @@ CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o: /home/cosmos/omoknu
   /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h
 
 CMakeFiles/all_tests.dir/tests/nn/neural_network_test.cpp.o: /home/cosmos/omoknuni_small/tests/nn/neural_network_test.cpp \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
   /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
   /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
   /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h \
+  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
   /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
@@ -40525,7 +40522,6 @@ CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o: /home/cosm
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
@@ -40541,6 +40537,7 @@ CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o: /home/cosm
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
   /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
@@ -45757,7 +45754,6 @@ CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o: /home/
   _deps/tracy-src/public/tracy/Tracy.hpp \
   _deps/tracy-src/public/tracy/TracyC.h \
   concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
-  /home/cosmos/omoknuni_small/include/alphazero_export.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
@@ -45773,6 +45769,7 @@ CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o: /home/
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
   /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
@@ -53400,8 +53397,6 @@ CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/squeeze_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_is_any_true.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/addcdiv.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_batch_norm_impl_index_ops.h:
@@ -53892,6 +53887,8 @@ CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o:
 
 /home/cosmos/omoknuni_small/include/mcts/node_tracker.h:
 
+/home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_get_values_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/crow_indices.h:
@@ -53991,6 +53988,8 @@ CMakeFiles/all_tests.dir/tests/cli/cli_manager_test.cpp.o:
 /usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/adaptive_max_pool2d_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_is_any_true.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/bucketize_ops.h:
 
@@ -54710,6 +54709,8 @@ _deps/tracy-src/public/client/tracy_SPSCQueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cudnn_batch_norm_backward_ops.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_efficient_attention_forward_ops.h:
+
 /usr/include/c++/13/bits/stl_tempbuf.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/amin_meta.h:
@@ -55284,6 +55285,18 @@ _deps/tracy-src/public/client/TracyProfiler.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/eq_native.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/cross_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/resize_as_sparse_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_thnn_fused_lstm_cell_backward_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/fmax_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_get_max_seqlen_ops.h:
+
+/usr/include/c++/13/bits/nested_exception.h:
+
 /home/cosmos/omoknuni_small/include/mcts/mcts_node_pool.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/polygamma_meta.h:
@@ -55360,6 +55373,18 @@ _deps/tracy-src/public/common/TracyMutex.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/NestedTensorImpl.h:
 
+/opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/cpp_hook.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/hsplit_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/alias_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/UnsafeFromTH.h:
+
+/usr/include/c++/13/random:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/tril_native.h:
+
 /usr/include/x86_64-linux-gnu/bits/sigstack.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/bilinear_native.h:
@@ -55379,28 +55404,6 @@ _deps/tracy-src/public/common/TracyMutex.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/slice_inverse_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/Tensor.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/cross_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/resize_as_sparse_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_thnn_fused_lstm_cell_backward_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/fmax_meta.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_get_max_seqlen_ops.h:
-
-/usr/include/c++/13/bits/nested_exception.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_efficient_attention_forward_ops.h:
-
-/home/cosmos/omoknuni_small/include/alphazero_export.h:
-
-/usr/include/libintl.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_lstm_mps_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/nanmedian.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/adaptive_avg_pool1d.h:
 
@@ -55567,6 +55570,10 @@ _deps/tracy-src/public/common/TracyMutex.hpp:
 /usr/include/stdlib.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/core/NamedTensor.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/deg2rad_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/isneginf_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/lift_fresh_ops.h:
 
@@ -55751,18 +55758,6 @@ _deps/tracy-src/public/common/TracyMutex.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Char_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/sigmoid_meta.h:
-
-/opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/cpp_hook.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/hsplit_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/alias_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/UnsafeFromTH.h:
-
-/usr/include/c++/13/random:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/tril_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_neg_view_copy.h:
 
@@ -56656,6 +56651,12 @@ _deps/tracy-src/public/client/TracySysTime.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/mH_ops.h:
 
+/usr/include/libintl.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_lstm_mps_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/nanmedian.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_fft_c2c_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_fft_c2r.h:
@@ -57197,10 +57198,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/exp.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/deg2rad_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/isneginf_meta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/dense_dim_ops.h:
 
@@ -59419,10 +59416,6 @@ CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.o:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/movedim.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/movedim_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/mps_convolution_transpose_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/mse_loss.h:
 
@@ -61749,3 +61742,7 @@ CMakeFiles/all_tests.dir/tests/mcts/progressive_widening_test.cpp.o:
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/serialize.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/serialize/input-archive.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/mps_convolution_transpose_backward_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h:

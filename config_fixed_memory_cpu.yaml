@@ -1,0 +1,106 @@
+# Optimized configuration for fixed memory accumulation and improved CPU usage
+# For Ryzen 9 5900X (24 threads) + RTX 3060 Ti (8GB VRAM)
+
+# Game settings
+game_type: gomoku
+board_size: 9
+
+# MCTS settings optimized for memory efficiency and CPU utilization
+mcts:
+  num_simulations: 800
+  num_threads: 12  # 12 threads distributed across parallel games
+  exploration_constant: 1.0
+  temperature: 1.0
+  dirichlet_alpha: 0.25
+  dirichlet_epsilon: 0.25
+  virtual_loss: 3.0
+  
+  # Batch settings optimized for RTX 3060 Ti
+  batch_size: 256  # Larger batch for better GPU utilization
+  batch_timeout_ms: 2  # Very short timeout for responsiveness
+  
+  # Memory optimization features
+  use_transposition_table: true
+  transposition_table_size_mb: 64  # Reduced to prevent memory growth
+  
+  # Progressive widening for memory efficiency
+  use_progressive_widening: true
+  progressive_widening_c: 1.0
+  progressive_widening_k: 10.0
+  
+  # Force leaf parallelization
+  use_root_parallelization: false
+  num_root_workers: 1
+
+# Neural network settings
+neural_network:
+  model_type: resnet
+  num_filters: 64
+  num_res_blocks: 10
+  value_head_hidden_size: 256
+  use_batch_norm: false
+  
+  # Memory pool settings
+  tensor_pool_size: 1024  # Limit tensor pool
+  enable_tensor_reuse: true
+  
+  # GPU memory optimization
+  gpu_memory_fraction: 0.7  # Leave headroom
+  enable_mixed_precision: false
+
+# Self-play settings
+self_play:
+  num_games: 100
+  max_game_length: 200
+  save_games: true
+  save_directory: data/self_play_games
+  random_seed: 42
+  
+  # Parallel game generation for CPU utilization
+  parallel_games: 8  # Run 8 games concurrently
+  
+  # Memory safety
+  clear_pools_every_n_games: 10
+  force_gpu_cleanup_every_n_games: 20
+
+# Training settings
+training:
+  batch_size: 32
+  num_epochs: 10
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  value_loss_weight: 1.0
+  checkpoint_interval: 1000
+  validation_interval: 100
+  max_training_steps: 100000
+  replay_buffer_size: 50000
+  replay_buffer_reuse_rate: 0.8
+
+# Memory management settings
+memory:
+  # Memory thresholds for 64GB RAM system (GB)
+  warning_threshold_gb: 32.0     # 50% of RAM
+  critical_threshold_gb: 40.0    # 62.5% of RAM
+  emergency_threshold_gb: 48.0   # 75% of RAM
+  
+  # Cleanup intervals
+  check_interval_ms: 200
+  cleanup_interval_ms: 2000
+  
+  # Pool limits
+  node_pool_initial_size: 10000
+  node_pool_max_size: 100000
+  game_state_pool_size: 1000
+  
+  # GPU memory management
+  gpu_pool_initial_mb: 1024
+  gpu_pool_max_mb: 4096
+  empty_cuda_cache_on_pressure: true
+
+# Debug/monitoring settings
+debug:
+  enable_memory_tracking: true
+  enable_performance_profiling: true
+  log_interval_seconds: 10
+  save_memory_snapshots: true
+  snapshot_directory: memory_snapshots

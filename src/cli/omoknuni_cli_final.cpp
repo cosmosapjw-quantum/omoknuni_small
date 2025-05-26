@@ -16,6 +16,7 @@
 #include <sstream>
 #include <iomanip>
 #include <deque>
+#include <torch/torch.h>
 
 #include "cli/cli_manager.h"
 #include "mcts/mcts_engine.h"
@@ -27,20 +28,90 @@
 #include "games/go/go_state.h"
 #include "utils/logger.h"
 #include "utils/advanced_memory_monitor.h"
+#include "utils/shutdown_manager.h"
 #include "core/game_export.h"
 
 using namespace alphazero;
 
-// Global shutdown flag
-std::atomic<bool> g_shutdown_requested(false);
-
 // Global mutex for GPU initialization
 std::mutex g_gpu_init_mutex;
 
-// Signal handler
+// Enhanced signal handling
+namespace {
+    std::atomic<int> g_signal_count(0);
+    std::atomic<bool> g_force_exit(false);
+    std::vector<std::thread::id> g_active_threads;
+    std::mutex g_thread_registry_mutex;
+    std::condition_variable g_shutdown_cv;
+    
+    void registerThread(std::thread::id id) {
+        std::lock_guard<std::mutex> lock(g_thread_registry_mutex);
+        g_active_threads.push_back(id);
+    }
+    
+    void unregisterThread(std::thread::id id) noexcept {
+        try {
+            std::lock_guard<std::mutex> lock(g_thread_registry_mutex);
+            g_active_threads.erase(
+                std::remove(g_active_threads.begin(), g_active_threads.end(), id),
+                g_active_threads.end()
+            );
+            g_shutdown_cv.notify_all();
+        } catch (...) {
+            // Ignore exceptions during thread cleanup
+        }
+    }
+    
+    size_t getActiveThreadCount() {
+        std::lock_guard<std::mutex> lock(g_thread_registry_mutex);
+        return g_active_threads.size();
+    }
+}
+
+// Enhanced signal handler
 void signalHandler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
-        g_shutdown_requested.store(true);
+        int count = ++g_signal_count;
+        
+        if (count == 1) {
+            LOG_SYSTEM_INFO("Shutdown requested. Gracefully stopping all workers...");
+            std::cout << "\n*** Shutdown requested. Gracefully stopping all workers... ***" << std::endl;
+            std::cout << "*** Press Ctrl+C again to force immediate exit ***" << std::endl;
+            utils::requestShutdown();
+            
+            // Start a watchdog thread for forced shutdown
+            std::thread watchdog([]() {
+                std::this_thread::sleep_for(std::chrono::seconds(10));
+                if (!g_force_exit.load()) {
+                    LOG_SYSTEM_ERROR("Graceful shutdown timeout. Force exiting...");
+                    std::cout << "\n*** Graceful shutdown timeout after 10 seconds. Force exiting... ***" << std::endl;
+                    
+                    // Try to clean up GPU resources
+                    if (torch::cuda::is_available()) {
+                        torch::cuda::synchronize();
+                        // Note: empty_cache() not available in all PyTorch versions
+                    }
+                    
+                    std::_Exit(1);
+                }
+            });
+            watchdog.detach();
+            
+        } else if (count == 2) {
+            LOG_SYSTEM_INFO("Force shutdown requested. Terminating immediately...");
+            std::cout << "\n*** Force shutdown requested. Terminating immediately... ***" << std::endl;
+            g_force_exit.store(true);
+            
+            // Force flush output
+            std::cout.flush();
+            std::cerr.flush();
+            
+            // Use abort() for immediate termination
+            std::abort();
+        } else if (count >= 3) {
+            // Third Ctrl+C - absolutely force exit
+            _exit(1);
+        }
     }
 }
 
@@ -74,7 +145,7 @@ public:
         
         auto deadline = std::chrono::steady_clock::now() + timeout;
         cv_.wait_until(lock, deadline, [this, batch_size, all_games_complete] {
-            return games_.size() >= batch_size || g_shutdown_requested.load() || 
+            return games_.size() >= batch_size || utils::isShutdownRequested() || 
                    (all_games_complete && !games_.empty());
         });
         
@@ -119,7 +190,9 @@ public:
                    int num_filters,
                    const selfplay::SelfPlaySettings& settings,
                    core::GameType game_type,
-                   std::shared_ptr<GameCollector> collector)
+                   std::shared_ptr<GameCollector> collector,
+                   const std::string& network_type = "resnet",
+                   const nn::DDWRandWireResNetConfig& ddw_config = nn::DDWRandWireResNetConfig())
         : id_(id),
           model_path_(model_path),
           input_channels_(input_channels),
@@ -128,12 +201,17 @@ public:
           num_filters_(num_filters),
           settings_(settings),
           game_type_(game_type),
-          collector_(collector) {}
+          collector_(collector),
+          network_type_(network_type),
+          ddw_config_(ddw_config) {}
     
     void run(int games_per_worker) {
+        // Register this thread
+        registerThread(std::this_thread::get_id());
+        
         try {
-            // Stagger worker starts slightly to avoid GPU contention
-            std::this_thread::sleep_for(std::chrono::milliseconds(id_ * 100));
+            // Stagger worker starts to avoid GPU contention and model creation races
+            std::this_thread::sleep_for(std::chrono::milliseconds(id_ * 500));
             
             
             // Synchronized GPU initialization
@@ -149,10 +227,16 @@ public:
                 }
                 
                 // Each worker loads its own neural network instance
-                network = nn::NeuralNetworkFactory::loadResNet(
-                    model_path_, input_channels_, board_size_, 
-                    num_res_blocks_, num_filters_
-                );
+                if (network_type_ == "ddw_randwire") {
+                    network = nn::NeuralNetworkFactory::loadDDWRandWireResNet(
+                        model_path_, ddw_config_
+                    );
+                } else {
+                    network = nn::NeuralNetworkFactory::loadResNet(
+                        model_path_, input_channels_, board_size_, 
+                        num_res_blocks_, num_filters_
+                    );
+                }
                 
                 if (!network) {
                     LOG_SYSTEM_ERROR("Worker {} failed to load neural network", id_);
@@ -170,7 +254,7 @@ public:
             int games_generated = 0;
             
             // Generate games
-            while (games_generated < games_per_worker && !g_shutdown_requested.load()) {
+            while (games_generated < games_per_worker && !utils::isShutdownRequested()) {
                 // Generate one game at a time for better debugging
                 int batch_size = 1;
                 
@@ -198,6 +282,9 @@ public:
         } catch (const std::exception& e) {
             LOG_SYSTEM_ERROR("Worker {} error: {}", id_, e.what());
         }
+        
+        // Unregister thread before exit
+        unregisterThread(std::this_thread::get_id());
     }
     
 private:
@@ -210,6 +297,8 @@ private:
     selfplay::SelfPlaySettings settings_;
     core::GameType game_type_;
     std::shared_ptr<GameCollector> collector_;
+    std::string network_type_;
+    nn::DDWRandWireResNetConfig ddw_config_;
 };
 
 // Parallel self-play command
@@ -243,6 +332,39 @@ int runSelfPlay(const std::vector<std::string>& args) {
     int num_res_blocks = config["num_res_blocks"].as<int>(10);
     int num_filters = config["num_filters"].as<int>(64);
     std::string model_path = config["model_path"].as<std::string>("models/model.pt");
+    std::string network_type = config["network_type"].as<std::string>("resnet");
+    
+    // DDW-RandWire-ResNet configuration
+    nn::DDWRandWireResNetConfig ddw_config;
+    if (network_type == "ddw_randwire") {
+        ddw_config.input_channels = input_channels;
+        ddw_config.output_size = board_size * board_size;
+        ddw_config.board_height = board_size;
+        ddw_config.board_width = board_size;
+        ddw_config.channels = config["ddw_channels"].as<int>(128);
+        ddw_config.num_blocks = config["ddw_num_blocks"].as<int>(20);
+        ddw_config.use_dynamic_routing = config["ddw_dynamic_routing"].as<bool>(true);
+        
+        // RandWire configuration
+        ddw_config.randwire_config.num_nodes = config["ddw_num_nodes"].as<int>(32);
+        ddw_config.randwire_config.seed = config["ddw_seed"].as<int>(-1);
+        
+        // Graph generation method
+        std::string graph_method = config["ddw_graph_method"].as<std::string>("watts_strogatz");
+        if (graph_method == "watts_strogatz") {
+            ddw_config.randwire_config.method = nn::GraphGenMethod::WATTS_STROGATZ;
+            ddw_config.randwire_config.p = config["ddw_ws_p"].as<double>(0.75);
+            ddw_config.randwire_config.k = config["ddw_ws_k"].as<int>(4);
+        } else if (graph_method == "erdos_renyi") {
+            ddw_config.randwire_config.method = nn::GraphGenMethod::ERDOS_RENYI;
+            ddw_config.randwire_config.edge_prob = config["ddw_er_edge_prob"].as<double>(0.1);
+        } else if (graph_method == "barabasi_albert") {
+            ddw_config.randwire_config.method = nn::GraphGenMethod::BARABASI_ALBERT;
+            ddw_config.randwire_config.m = config["ddw_ba_m"].as<int>(5);
+        }
+        
+        ddw_config.randwire_config.use_dynamic_routing = ddw_config.use_dynamic_routing;
+    }
     
     // MCTS settings
     mcts::MCTSSettings mcts_settings;
@@ -288,9 +410,16 @@ int runSelfPlay(const std::vector<std::string>& args) {
         
         // Pre-warm neural network to avoid initial contention
         {
-            auto warmup_network = nn::NeuralNetworkFactory::loadResNet(
-                model_path, input_channels, board_size, num_res_blocks, num_filters
-            );
+            std::shared_ptr<nn::NeuralNetwork> warmup_network;
+            if (network_type == "ddw_randwire") {
+                warmup_network = nn::NeuralNetworkFactory::loadDDWRandWireResNet(
+                    model_path, ddw_config
+                );
+            } else {
+                warmup_network = nn::NeuralNetworkFactory::loadResNet(
+                    model_path, input_channels, board_size, num_res_blocks, num_filters
+                );
+            }
             
             if (warmup_network) {
                 // Create dummy state and do one inference
@@ -313,6 +442,21 @@ int runSelfPlay(const std::vector<std::string>& args) {
         // Progress tracking
         auto start_time = std::chrono::steady_clock::now();
         
+        // Pre-create and save the model in the main thread to ensure consistency
+        if (network_type == "ddw_randwire") {
+            std::ifstream model_check(model_path);
+            if (!model_check.good()) {
+                LOG_SYSTEM_INFO("Creating initial DDW-RandWire-ResNet model in main thread...");
+                auto initial_model = nn::NeuralNetworkFactory::createDDWRandWireResNet(ddw_config);
+                try {
+                    std::dynamic_pointer_cast<nn::DDWRandWireResNet>(initial_model)->save(model_path);
+                    LOG_SYSTEM_INFO("Initial model saved to: {}", model_path);
+                } catch (const std::exception& e) {
+                    LOG_SYSTEM_ERROR("Failed to save initial model: {}", e.what());
+                }
+            }
+        }
+        
         // Create and start worker threads
         std::vector<std::thread> worker_threads;
         std::vector<std::unique_ptr<SelfPlayWorker>> workers;
@@ -322,7 +466,7 @@ int runSelfPlay(const std::vector<std::string>& args) {
             workers.push_back(std::make_unique<SelfPlayWorker>(
                 i, model_path, input_channels, board_size,
                 num_res_blocks, num_filters, sp_settings,
-                game_type, collector
+                game_type, collector, network_type, ddw_config
             ));
         }
         
@@ -341,7 +485,7 @@ int runSelfPlay(const std::vector<std::string>& args) {
             } catch (const std::exception& e) {
                 LOG_SYSTEM_ERROR("Failed to create worker thread {}: {}", i, e.what());
                 // Signal shutdown and clean up existing threads
-                g_shutdown_requested.store(true);
+                utils::requestShutdown();
                 for (auto& t : worker_threads) {
                     if (t.joinable()) t.join();
                 }
@@ -351,9 +495,12 @@ int runSelfPlay(const std::vector<std::string>& args) {
         
         // Saver thread - saves games as they complete
         std::thread saver_thread([&]() {
+            // Register saver thread
+            registerThread(std::this_thread::get_id());
+            
             int total_saved = 0;
             
-            while (total_saved < num_games && !g_shutdown_requested.load()) {
+            while (total_saved < num_games && !utils::isShutdownRequested()) {
                 // Collect a batch of games - use min(save_interval, remaining games) to avoid waiting forever
                 int remaining_games = num_games - total_saved;
                 int batch_size = std::min(save_interval, remaining_games);
@@ -419,27 +566,74 @@ int runSelfPlay(const std::vector<std::string>& args) {
                     }
                 }
             }
+            
+            // Unregister saver thread
+            unregisterThread(std::this_thread::get_id());
         });
         
         // Wait for all workers to complete
-        for (auto& thread : worker_threads) {
-            if (thread.joinable()) {
-                thread.join();
+        if (utils::isShutdownRequested()) {
+            // Enhanced thread cleanup with timeout only during shutdown
+            auto cleanup_start = std::chrono::steady_clock::now();
+            const auto max_wait_time = std::chrono::seconds(5);
+            
+            for (size_t i = 0; i < worker_threads.size(); ++i) {
+                if (worker_threads[i].joinable()) {
+                    // Calculate remaining time
+                    auto elapsed = std::chrono::steady_clock::now() - cleanup_start;
+                    auto remaining = max_wait_time - elapsed;
+                    
+                    if (remaining > std::chrono::seconds(0)) {
+                        // Try to join with timeout using condition variable
+                        std::unique_lock<std::mutex> lock(g_thread_registry_mutex);
+                        if (g_shutdown_cv.wait_for(lock, remaining, [&]() {
+                            return !worker_threads[i].joinable() || 
+                                   std::find(g_active_threads.begin(), g_active_threads.end(), 
+                                           worker_threads[i].get_id()) == g_active_threads.end();
+                        })) {
+                            if (worker_threads[i].joinable()) {
+                                worker_threads[i].join();
+                            }
+                        } else {
+                            LOG_SYSTEM_ERROR("Worker thread {} failed to stop within timeout", i);
+                        }
+                    } else {
+                        LOG_SYSTEM_ERROR("Timeout waiting for worker threads to stop");
+                        break;
+                    }
+                }
+            }
+        } else {
+            // Normal operation - wait indefinitely for threads to complete
+            for (auto& thread : worker_threads) {
+                if (thread.joinable()) {
+                    thread.join();
+                }
             }
         }
         
-        
         // Signal saver to stop and wait
-        g_shutdown_requested.store(true);
+        utils::requestShutdown();
         if (saver_thread.joinable()) {
+            // For normal operation, just wait for saver thread to complete
             saver_thread.join();
         }
         
         // Ensure all workers are properly destroyed before exiting
         workers.clear();
         
-        // Give time for any background threads to finish
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // Wait for all threads to unregister (only log warnings if this was an interrupted shutdown)
+        {
+            std::unique_lock<std::mutex> lock(g_thread_registry_mutex);
+            if (!g_shutdown_cv.wait_for(lock, std::chrono::seconds(2), []() {
+                return g_active_threads.empty();
+            })) {
+                // Only log as error if shutdown was requested but threads are still active
+                if (g_signal_count.load() > 0) {
+                    LOG_SYSTEM_ERROR("Warning: {} threads still active after cleanup", g_active_threads.size());
+                }
+            }
+        }
         
         // Final statistics
         auto end_time = std::chrono::steady_clock::now();
@@ -455,23 +649,36 @@ int runSelfPlay(const std::vector<std::string>& args) {
                       << total_elapsed << " seconds (" << avg_games_per_sec << " games/sec)" << std::endl;
         }
         
-        // Ensure all background threads are properly cleaned up
-        // Stop the AggressiveMemoryManager monitoring thread before exit
+        // Comprehensive cleanup sequence
+        LOG_SYSTEM_INFO("Starting cleanup sequence...");
+        
+        // 1. Stop the AggressiveMemoryManager monitoring thread
         mcts::AggressiveMemoryManager::getInstance().shutdown();
         
-        // Give GPU time to finish any pending operations
+        // 2. Force collection of any pending games
+        collector.reset();
+        
+        // 3. Synchronize and clear GPU resources
         if (torch::cuda::is_available()) {
-            torch::cuda::synchronize();
+            try {
+                torch::cuda::synchronize();
+                // Note: empty_cache() not available in all PyTorch versions
+                // Manual cleanup would require lower-level CUDA API
+            } catch (const std::exception& e) {
+                LOG_SYSTEM_ERROR("GPU cleanup error: {}", e.what());
+            }
         }
         
-        // Give a bit more time for any background threads to finish cleanly
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // 4. Give time for any remaining cleanup
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        
+        LOG_SYSTEM_INFO("Cleanup sequence completed");
         
         return 0;
         
     } catch (const std::exception& e) {
         LOG_SYSTEM_ERROR("Self-play failed: {}", e.what());
-        g_shutdown_requested.store(true);
+        utils::requestShutdown();
         return 1;
     }
 }
@@ -514,12 +721,46 @@ int main(int argc, char* argv[]) {
     }
     
     // Ensure all singletons are properly shut down before exit
+    LOG_SYSTEM_INFO("Starting final cleanup...");
+    
     try {
+        // Set global shutdown flag
+        utils::requestShutdown();
+        
+        // Wait for any remaining threads
+        {
+            std::unique_lock<std::mutex> lock(g_thread_registry_mutex);
+            if (!g_shutdown_cv.wait_for(lock, std::chrono::seconds(3), []() {
+                return g_active_threads.empty();
+            })) {
+                LOG_SYSTEM_ERROR("Warning: {} threads still active at exit", g_active_threads.size());
+                
+                // Force exit if threads won't stop
+                if (g_active_threads.size() > 0) {
+                    std::cout << "\n*** Forcing exit due to stuck threads ***" << std::endl;
+                    
+                    // Try GPU cleanup one more time
+                    if (torch::cuda::is_available()) {
+                        torch::cuda::synchronize();
+                        // Note: empty_cache() not available in all PyTorch versions
+                    }
+                    
+                    std::_Exit(result);
+                }
+            }
+        }
+        
         // Shutdown the AggressiveMemoryManager singleton
         mcts::AggressiveMemoryManager::getInstance().shutdown();
         
-        // Give time for threads to finish
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        // Final GPU cleanup
+        if (torch::cuda::is_available()) {
+            torch::cuda::synchronize();
+            // Note: empty_cache() not available in all PyTorch versions
+        }
+        
+        // Give time for final cleanup
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     } catch (...) {
         // Ignore exceptions during cleanup
     }

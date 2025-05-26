@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <chrono>
 #include <functional>
-#include "alphazero_export.h"
+#include "core/export_macros.h"
 #include "mcts/mcts_node.h"
 #include "parallel_hashmap/phmap.h"
 

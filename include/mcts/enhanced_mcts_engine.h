@@ -7,7 +7,7 @@
 #include "mcts/gpu_memory_pool.h"
 #include "mcts/dynamic_batch_manager.h"
 #include "mcts/advanced_transposition_table.h"
-#include "alphazero_export.h"
+#include "core/export_macros.h"
 #include <yaml-cpp/yaml.h>
 
 namespace alphazero {

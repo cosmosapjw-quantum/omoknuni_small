@@ -26,14 +26,14 @@ MCTSNodePool::MCTSNodePool(const Config& config)
     // Initialize last compaction time
     last_compaction_time_.store(std::chrono::steady_clock::now());
     
-    // Pre-allocate initial pool
-    allocateBlock(config_.initial_pool_size);
+    // CRITICAL FIX: Start with smaller initial allocation
+    size_t initial_size = std::min(size_t(10000), config_.initial_pool_size);
+    allocateBlock(initial_size);
 }
 
 MCTSNodePool::~MCTSNodePool() {
     clear();
-    LOG_SYSTEM_INFO("MCTS node pool destroyed. Total allocations: {}, Total deallocations: {}",
-                   allocations_.load(), deallocations_.load());
+    // Remove verbose logging on destruction
 }
 
 void MCTSNodePool::allocateBlock(size_t size) {
@@ -61,8 +61,10 @@ void MCTSNodePool::allocateBlock(size_t size) {
     memory_blocks_.push_back(std::move(block));
     total_allocated_ += size;
     
-    LOG_SYSTEM_DEBUG("Allocated new block of {} nodes. Total allocated: {}",
-                    size, total_allocated_.load());
+    // Only log large allocations
+    if (size > 10000) {
+        LOG_SYSTEM_DEBUG("Allocated large block of {} nodes", size);
+    }
 }
 
 std::shared_ptr<MCTSNode> MCTSNodePool::allocateNode(
@@ -152,16 +154,16 @@ void MCTSNodePool::freeNode(MCTSNode* node) {
     int thread_id = omp_get_thread_num() % MAX_THREADS;
     auto& thread_pool = thread_pools_[thread_id];
     
-    const size_t MAX_THREAD_LOCAL_NODES = 128; // Limit to avoid excessive memory usage
+    // CRITICAL FIX: Much smaller thread-local pools to prevent memory accumulation
+    const size_t MAX_THREAD_LOCAL_NODES = 16; // Reduced from 128
     
     // Check if thread-local pool is getting too large
     if (thread_pool.free_nodes.size() >= MAX_THREAD_LOCAL_NODES) {
-        // Thread-local pool is full, move some nodes to the global pool
+        // Thread-local pool is full, move ALL excess nodes to global pool
         std::lock_guard<std::mutex> lock(pool_mutex_);
         
-        // Move half of the local nodes to the global pool
-        size_t half_size = thread_pool.free_nodes.size() / 2;
-        for (size_t i = 0; i < half_size; ++i) {
+        // Move all but a few nodes to the global pool
+        while (thread_pool.free_nodes.size() > 8) {
             free_nodes_.push(thread_pool.free_nodes.back());
             thread_pool.free_nodes.pop_back();
         }
@@ -204,7 +206,7 @@ void MCTSNodePool::clear() {
         in_use_ = 0;
     }
     
-    LOG_SYSTEM_INFO("Node pool cleared (global and thread-local)");
+    // Remove verbose logging
 }
 
 MCTSNodePool::PoolStats MCTSNodePool::getStats() const {
@@ -277,13 +279,16 @@ void MCTSNodePool::compact() {
     }
     
     // If we have too many free nodes, release some memory
+    size_t nodes_to_release = 0;
     if (total_free > MIN_FREE_NODES_AFTER_COMPACT) {
-        size_t nodes_to_release = total_free - MIN_FREE_NODES_AFTER_COMPACT;
+        nodes_to_release = total_free - MIN_FREE_NODES_AFTER_COMPACT;
         releaseMemory(nodes_to_release);
     }
     
-    LOG_SYSTEM_INFO("Node pool compacted: {} free nodes, {} in use",
-                    total_free, in_use_.load());
+    // Remove verbose logging - only log if significant compaction occurred
+    if (nodes_to_release > 1000) {
+        LOG_SYSTEM_DEBUG("Node pool compacted: released {} nodes", nodes_to_release);
+    }
 }
 
 void MCTSNodePool::releaseMemory(size_t nodes_to_release) {
@@ -318,8 +323,7 @@ void MCTSNodePool::releaseMemory(size_t nodes_to_release) {
         ++it;
     }
     
-    LOG_SYSTEM_DEBUG("Released memory for {} nodes, total allocated: {}",
-                    nodes_to_release, total_allocated_.load());
+    // Remove verbose logging
 }
 
 } // namespace mcts

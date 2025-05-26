@@ -155,7 +155,7 @@ CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
  /usr/include/c++/13/bits/std_abs.h \
- /home/cosmos/omoknuni_small/include/alphazero_export.h \
+ /home/cosmos/omoknuni_small/include/core/export_macros.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
  /usr/include/c++/13/mutex \
  /usr/include/x86_64-linux-gnu/c++/13/bits/error_constants.h \
@@ -226,7 +226,6 @@ CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o: \
  /usr/include/c++/13/pstl/glue_numeric_defs.h \
  /home/cosmos/omoknuni_small/include/core/igamestate.h \
  /usr/include/c++/13/optional \
- /home/cosmos/omoknuni_small/include/core/export_macros.h \
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
  /usr/include/c++/13/sstream /usr/include/c++/13/istream \
  /usr/include/c++/13/ios /usr/include/c++/13/bits/ios_base.h \

@@ -71,6 +71,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/src/utils/logger.cpp" "CMakeFiles/alphazero.dir/src/utils/logger.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/logger.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/memory_tracker.cpp" "CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/resource_monitor.cpp" "CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/utils/shutdown_manager.cpp" "CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/thread_local_memory_manager.cpp" "CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/utils/zobrist_hash.cpp" "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o.d"
   "" "lib/Release/libalphazero.so" "gcc" "CMakeFiles/alphazero.dir/link.d"

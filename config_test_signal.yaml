@@ -1,0 +1,36 @@
+# Test configuration for signal handling
+game_type: gomoku
+board_size: 15
+
+# Neural network configuration
+input_channels: 17
+num_res_blocks: 4
+num_filters: 32
+model_path: models/model.pt
+network_type: resnet
+
+# MCTS configuration (minimal for testing)
+mcts_num_simulations: 50
+mcts_exploration_constant: 1.0
+mcts_num_threads: 2
+mcts_batch_size: 16
+mcts_batch_timeout_ms: 100
+mcts_virtual_loss: 3.0
+mcts_eval_batch_size: 8
+mcts_eval_timeout_ms: 50
+mcts_use_dirichlet: true
+mcts_dirichlet_alpha: 0.3
+mcts_dirichlet_epsilon: 0.25
+
+# Self-play configuration (minimal for testing)
+num_games: 10
+num_parallel_workers: 2
+temperature: 1.0
+temperature_drop_move: 30
+save_interval: 5
+output_dir: data/signal_test_games
+
+# Memory management (conservative)
+max_memory_gb: 8
+cleanup_threshold_gb: 6 
+emergency_cleanup_gb: 7

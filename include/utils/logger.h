@@ -8,7 +8,7 @@
 #include <spdlog/async.h>
 #include <memory>
 #include <string>
-#include "alphazero_export.h"
+#include "core/export_macros.h"
 
 namespace alphazero {
 namespace utils {

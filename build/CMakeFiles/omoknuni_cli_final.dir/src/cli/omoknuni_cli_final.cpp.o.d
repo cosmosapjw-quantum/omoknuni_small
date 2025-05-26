@@ -312,126 +312,6 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
  /usr/include/c++/13/bits/fstream.tcc \
- /home/cosmos/omoknuni_small/include/cli/cli_manager.h \
- /usr/include/c++/13/functional \
- /home/cosmos/omoknuni_small/include/core/export_macros.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
- /usr/include/c++/13/random /usr/include/c++/13/bits/random.h \
- /usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
- /usr/include/c++/13/stdlib.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
- /usr/include/c++/13/bits/random.tcc /usr/include/c++/13/numeric \
- /usr/include/c++/13/bits/stl_numeric.h \
- /usr/include/c++/13/pstl/glue_numeric_defs.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
- /home/cosmos/omoknuni_small/include/core/igamestate.h \
- /usr/include/c++/13/optional \
- /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
- /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
- /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
- /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
- /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h \
- /usr/include/c++/13/stack /usr/include/c++/13/bits/stl_stack.h \
- /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
- /usr/include/c++/13/cassert /usr/include/assert.h \
- /usr/include/c++/13/climits \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
- /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
- /usr/include/x86_64-linux-gnu/bits/local_lim.h \
- /usr/include/linux/limits.h \
- /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
- /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
- /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
- /home/cosmos/omoknuni_small/include/mcts/mcts_node_pool.h \
- /home/cosmos/omoknuni_small/include/utils/memory_allocator.h \
- /home/cosmos/omoknuni_small/include/utils/logger.h \
- /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
- /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \
- /usr/include/spdlog/fmt/fmt.h /usr/include/fmt/core.h \
- /usr/include/c++/13/cstring /usr/include/string.h /usr/include/strings.h \
- /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
- /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
- /usr/include/fmt/format.h /usr/include/fmt/core.h \
- /usr/include/spdlog/details/registry.h \
- /usr/include/spdlog/details/periodic_worker.h \
- /usr/include/spdlog/logger.h /usr/include/spdlog/details/log_msg.h \
- /usr/include/spdlog/details/backtracer.h \
- /usr/include/spdlog/details/log_msg_buffer.h \
- /usr/include/spdlog/details/circular_q.h /usr/include/spdlog/version.h \
- /usr/include/spdlog/details/synchronous_factory.h \
- /usr/include/spdlog/sinks/stdout_color_sinks.h \
- /usr/include/spdlog/sinks/ansicolor_sink.h \
- /usr/include/spdlog/details/console_globals.h \
- /usr/include/spdlog/sinks/sink.h /usr/include/spdlog/formatter.h \
- /usr/include/spdlog/sinks/rotating_file_sink.h \
- /usr/include/spdlog/sinks/base_sink.h \
- /usr/include/spdlog/details/file_helper.h \
- /usr/include/spdlog/sinks/daily_file_sink.h \
- /usr/include/spdlog/fmt/chrono.h /usr/include/fmt/chrono.h \
- /usr/include/fmt/format.h /usr/include/spdlog/details/os.h \
- /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
- /usr/include/spdlog/details/thread_pool.h \
- /usr/include/spdlog/details/mpmc_blocking_q.h \
- /home/cosmos/omoknuni_small/include/alphazero_export.h \
- /home/cosmos/omoknuni_small/include/utils/profiler.h \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/Tracy.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyColor.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracySystem.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyLock.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracySystem.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyAlign.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyForceInline.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyProfiler.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_concurrentqueue.h \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyAlloc.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_rpmalloc.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyForceInline.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_SPSCQueue.h \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.h \
- /usr/include/x86_64-linux-gnu/sys/param.h \
- /usr/include/x86_64-linux-gnu/bits/param.h /usr/include/linux/param.h \
- /usr/include/x86_64-linux-gnu/asm/param.h \
- /usr/include/asm-generic/param.h /usr/include/execinfo.h \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyKCore.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyFastVector.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracySysPower.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracySysTime.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyQueue.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyMutex.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyProtocol.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyProfiler.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyScoped.hpp \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/TracyC.h \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.h \
- /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
- /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
- /usr/include/parallel_hashmap/phmap.h \
- /usr/include/parallel_hashmap/phmap_fwd_decl.h \
- /usr/include/parallel_hashmap/phmap_utils.h \
- /usr/include/parallel_hashmap/phmap_bits.h /usr/include/byteswap.h \
- /usr/include/parallel_hashmap/phmap_config.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
- /usr/include/parallel_hashmap/phmap_base.h \
- /usr/include/c++/13/shared_mutex \
- /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
- /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
- /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
- /usr/include/x86_64-linux-gnu/sys/resource.h \
- /usr/include/x86_64-linux-gnu/bits/resource.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h \
- /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h \
@@ -448,13 +328,15 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/TensorBody.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/Device.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/DeviceType.h \
+ /usr/include/c++/13/functional \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Exception.h \
  /opt/libtorch-2.7.0-cu128/include/c10/macros/Macros.h \
+ /usr/include/c++/13/cassert /usr/include/assert.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Backtrace.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Lazy.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/StringUtil.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/string_utils.h \
- /usr/include/c++/13/variant \
+ /usr/include/c++/13/optional /usr/include/c++/13/variant \
  /opt/libtorch-2.7.0-cu128/include/c10/core/Layout.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/Backend.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/DispatchKey.h \
@@ -464,6 +346,18 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/util/TypeTraits.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/llvmMathExtras.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/bit_cast.h \
+ /usr/include/c++/13/cstring /usr/include/string.h /usr/include/strings.h \
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /usr/include/c++/13/climits \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
+ /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+ /usr/include/linux/limits.h \
+ /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/MemoryFormat.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/ArrayRef.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Deprecated.h \
@@ -508,6 +402,8 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/core/SymFloat.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/SymInt.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Optional.h \
+ /usr/include/c++/13/numeric /usr/include/c++/13/bits/stl_numeric.h \
+ /usr/include/c++/13/pstl/glue_numeric_defs.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/TypeCast.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/overflows.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/ScalarTypeToTypeMeta.h \
@@ -524,6 +420,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/core/StorageImpl.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/COW.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/COWDeleter.h \
+ /usr/include/c++/13/shared_mutex \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PyObjectSlot.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/HermeticPyObjectTLS.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PyInterpreter.h \
@@ -1081,6 +978,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/FuncTorchTLS.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/PythonTorchFunctionTLS.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/SavedTensorHooks.h \
+ /usr/include/c++/13/stack /usr/include/c++/13/bits/stl_stack.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/ThreadLocalPythonObjects.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/PythonDispatcherTLS.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/TorchDispatchModeTLS.h \
@@ -5017,6 +4915,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/Parallel.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/Config.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/ParallelOpenMP.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/Parallel-inl.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/ParallelGuard.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/profiler.h \
@@ -5122,6 +5021,105 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
+ /home/cosmos/omoknuni_small/include/cli/cli_manager.h \
+ /home/cosmos/omoknuni_small/include/core/export_macros.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
+ /usr/include/c++/13/random /usr/include/c++/13/bits/random.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
+ /usr/include/c++/13/stdlib.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
+ /usr/include/c++/13/bits/random.tcc \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /home/cosmos/omoknuni_small/include/core/igamestate.h \
+ /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
+ /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
+ /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
+ /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h \
+ /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/stdbool.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h \
+ /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h \
+ /home/cosmos/omoknuni_small/include/mcts/mcts_node_pool.h \
+ /home/cosmos/omoknuni_small/include/utils/memory_allocator.h \
+ /home/cosmos/omoknuni_small/include/utils/logger.h \
+ /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
+ /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \
+ /usr/include/spdlog/fmt/fmt.h /usr/include/fmt/core.h \
+ /usr/include/fmt/format.h /usr/include/fmt/core.h \
+ /usr/include/spdlog/details/registry.h \
+ /usr/include/spdlog/details/periodic_worker.h \
+ /usr/include/spdlog/logger.h /usr/include/spdlog/details/log_msg.h \
+ /usr/include/spdlog/details/backtracer.h \
+ /usr/include/spdlog/details/log_msg_buffer.h \
+ /usr/include/spdlog/details/circular_q.h /usr/include/spdlog/version.h \
+ /usr/include/spdlog/details/synchronous_factory.h \
+ /usr/include/spdlog/sinks/stdout_color_sinks.h \
+ /usr/include/spdlog/sinks/ansicolor_sink.h \
+ /usr/include/spdlog/details/console_globals.h \
+ /usr/include/spdlog/sinks/sink.h /usr/include/spdlog/formatter.h \
+ /usr/include/spdlog/sinks/rotating_file_sink.h \
+ /usr/include/spdlog/sinks/base_sink.h \
+ /usr/include/spdlog/details/file_helper.h \
+ /usr/include/spdlog/sinks/daily_file_sink.h \
+ /usr/include/spdlog/fmt/chrono.h /usr/include/fmt/chrono.h \
+ /usr/include/fmt/format.h /usr/include/spdlog/details/os.h \
+ /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
+ /usr/include/spdlog/details/thread_pool.h \
+ /usr/include/spdlog/details/mpmc_blocking_q.h \
+ /home/cosmos/omoknuni_small/include/utils/profiler.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/Tracy.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyColor.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracySystem.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyLock.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracySystem.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyAlign.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyForceInline.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyProfiler.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_concurrentqueue.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyAlloc.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_rpmalloc.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyForceInline.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/tracy_SPSCQueue.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.h \
+ /usr/include/x86_64-linux-gnu/sys/param.h \
+ /usr/include/x86_64-linux-gnu/bits/param.h /usr/include/linux/param.h \
+ /usr/include/x86_64-linux-gnu/asm/param.h \
+ /usr/include/asm-generic/param.h /usr/include/execinfo.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyKCore.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyFastVector.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracySysPower.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracySysTime.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyQueue.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyMutex.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyProtocol.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyProfiler.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyScoped.hpp \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/TracyC.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.h \
+ /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
+ /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
+ /usr/include/parallel_hashmap/phmap.h \
+ /usr/include/parallel_hashmap/phmap_fwd_decl.h \
+ /usr/include/parallel_hashmap/phmap_utils.h \
+ /usr/include/parallel_hashmap/phmap_bits.h /usr/include/byteswap.h \
+ /usr/include/parallel_hashmap/phmap_config.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
+ /usr/include/parallel_hashmap/phmap_base.h \
+ /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
+ /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
+ /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
+ /usr/include/x86_64-linux-gnu/sys/resource.h \
+ /usr/include/x86_64-linux-gnu/bits/resource.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h \
+ /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h \
  /usr/local/cuda-12.8/include/cuda_runtime.h \
  /usr/local/cuda-12.8/include/crt/host_config.h \
  /usr/local/cuda-12.8/include/builtin_types.h \
@@ -5143,6 +5141,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
+ /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
  /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
@@ -5151,4 +5150,5 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /home/cosmos/omoknuni_small/include/games/go/go_state.h \
  /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
  /home/cosmos/omoknuni_small/include/utils/advanced_memory_monitor.h \
+ /home/cosmos/omoknuni_small/include/utils/shutdown_manager.h \
  /home/cosmos/omoknuni_small/include/core/game_export.h

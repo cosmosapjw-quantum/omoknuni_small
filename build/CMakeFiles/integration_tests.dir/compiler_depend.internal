@@ -28,7 +28,6 @@ CMakeFiles/integration_tests.dir/tests/integration/games/self_play_games_test.cp
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/Tracy.hpp
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/TracyC.h
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h
- /home/cosmos/omoknuni_small/include/alphazero_export.h
  /home/cosmos/omoknuni_small/include/core/export_macros.h
  /home/cosmos/omoknuni_small/include/core/game_export.h
  /home/cosmos/omoknuni_small/include/core/igamestate.h
@@ -5264,7 +5263,6 @@ CMakeFiles/integration_tests.dir/tests/integration/mcts_with_nn_test.cpp.o
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/Tracy.hpp
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/TracyC.h
  /home/cosmos/omoknuni_small/build/concurrentqueue-wrapper/moodycamel/concurrentqueue.h
- /home/cosmos/omoknuni_small/include/alphazero_export.h
  /home/cosmos/omoknuni_small/include/core/export_macros.h
  /home/cosmos/omoknuni_small/include/core/igamestate.h
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h
@@ -5280,6 +5278,7 @@ CMakeFiles/integration_tests.dir/tests/integration/mcts_with_nn_test.cpp.o
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
  /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
+ /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h

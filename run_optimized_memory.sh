@@ -26,7 +26,7 @@ sleep 2
 # Run self-play with optimized config
 echo "Starting self-play with optimized settings..."
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./build/lib/Release \
-    ./build/bin/Release/omoknuni_cli_final self-play config_optimized_memory.yaml
+    ./build/bin/Release/omoknuni_cli_final self-play config_fixed_memory_cpu.yaml
 
 # Stop memory monitor
 echo "Stopping memory monitor..."

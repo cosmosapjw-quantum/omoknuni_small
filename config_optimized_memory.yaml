@@ -8,12 +8,12 @@ board_size: 9
 # Neural network settings
 input_channels: 17
 num_res_blocks: 10
-num_filters: 64
+num_filters: 128
 model_path: "models/model_gomoku_9x9.pt"
 
 # MCTS settings - optimized for GPU efficiency
 mcts_simulations: 400              # Increased for better quality
-mcts_threads_per_engine: 5         # Reduced thread contention
+mcts_threads_per_engine: 7         # Reduced thread contention
 mcts_batch_size: 128               # Larger batches for GPU efficiency
 mcts_batch_timeout_ms: 50          # Longer timeout for better batching
 mcts_c_puct: 1.4
@@ -26,7 +26,7 @@ mcts_temperature: 1.0
 mcts_temp_threshold: 10
 
 # Parallel settings - optimized for your hardware
-num_parallel_workers: 2            # Reduced to prevent GPU contention
+num_parallel_workers: 3            # Reduced to prevent GPU contention
 num_games: 100
 save_interval: 5                   # Save more frequently
 verbose: true
