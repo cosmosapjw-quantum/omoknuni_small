@@ -9,6 +9,7 @@
 #include <memory>
 #include <tuple>
 #include "nn/neural_network.h"
+#include "mcts/gpu_memory_pool.h"
 
 namespace alphazero {
 namespace nn {
@@ -312,6 +313,19 @@ public:
     std::vector<int64_t> getInputShape() const override;
     
     int64_t getPolicySize() const override;
+    
+    /**
+     * @brief Clean up tensor pool to free memory
+     */
+    void cleanupTensorPool();
+    
+    /**
+     * @brief Set GPU memory pool for efficient tensor allocation
+     * @param pool Shared pointer to GPU memory pool
+     */
+    void setGPUMemoryPool(std::shared_ptr<mcts::GPUMemoryPool> pool) {
+        gpu_memory_pool_ = pool;
+    }
 
 private:
     int64_t input_channels_;
@@ -334,6 +348,46 @@ private:
      * @brief Initialize weights using Kaiming initialization
      */
     void _initialize_weights();
+    
+    /**
+     * @brief Prepare input tensor for batch inference
+     * @param states Vector of game states
+     * @return Prepared input tensor
+     */
+    torch::Tensor prepareInputTensor(
+        const std::vector<std::unique_ptr<core::IGameState>>& states);
+    
+    /**
+     * @brief Prepare input tensor with target device
+     * @param states Vector of game states
+     * @param target_device Target device for the tensor
+     * @return Prepared input tensor
+     */
+    torch::Tensor prepareInputTensor(
+        const std::vector<std::unique_ptr<core::IGameState>>& states,
+        torch::Device target_device);
+    
+    // Tensor pool for efficient memory management
+    struct TensorPool {
+        std::vector<torch::Tensor> cpu_tensors;
+        std::vector<torch::Tensor> gpu_tensors;
+        size_t current_cpu_idx = 0;
+        size_t current_gpu_idx = 0;
+        size_t pool_size = 4;
+        
+        void init(const std::vector<int64_t>& shape, size_t size = 4);
+        torch::Tensor getCPUTensor(const std::vector<int64_t>& shape);
+        torch::Tensor getGPUTensor(const std::vector<int64_t>& shape, torch::Device device);
+        void cleanup();
+    };
+    
+    TensorPool tensor_pool_;
+    
+    // GPU memory pool for efficient tensor allocation
+    std::shared_ptr<mcts::GPUMemoryPool> gpu_memory_pool_;
+    
+    // Device for the model
+    torch::Device device_ = torch::kCPU;
 };
 
 } // namespace nn

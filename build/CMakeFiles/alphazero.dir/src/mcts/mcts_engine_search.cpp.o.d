@@ -381,21 +381,13 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
  /usr/include/parallel_hashmap/phmap_base.h \
  /usr/include/c++/13/shared_mutex \
+ /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
  /usr/include/x86_64-linux-gnu/sys/resource.h \
  /usr/include/x86_64-linux-gnu/bits/resource.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h \
- /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/utils/advanced_memory_monitor.h \
- /usr/include/c++/13/fstream \
- /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
- /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
- /usr/include/c++/13/bits/fstream.tcc \
- /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h \
- /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
- /usr/include/c++/13/bits/stl_map.h \
- /usr/include/c++/13/bits/stl_multimap.h \
+ /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h \
@@ -988,7 +980,10 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/util/FunctionRef.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Logging.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/logging_is_not_google_glog.h \
- /usr/include/c++/13/set /usr/include/c++/13/bits/stl_set.h \
+ /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
+ /usr/include/c++/13/bits/stl_map.h \
+ /usr/include/c++/13/bits/stl_multimap.h /usr/include/c++/13/set \
+ /usr/include/c++/13/bits/stl_set.h \
  /usr/include/c++/13/bits/stl_multiset.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/WrapDimUtilsMulti.h \
  /usr/include/c++/13/bitset \
@@ -5090,19 +5085,35 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
+ /usr/local/cuda-12.8/include/cuda_runtime.h \
+ /usr/local/cuda-12.8/include/crt/host_config.h \
+ /usr/local/cuda-12.8/include/builtin_types.h \
+ /usr/local/cuda-12.8/include/device_types.h \
+ /usr/local/cuda-12.8/include/crt/host_defines.h \
+ /usr/local/cuda-12.8/include/driver_types.h \
+ /usr/local/cuda-12.8/include/vector_types.h \
+ /usr/local/cuda-12.8/include/surface_types.h \
+ /usr/local/cuda-12.8/include/texture_types.h \
+ /usr/local/cuda-12.8/include/library_types.h \
+ /usr/local/cuda-12.8/include/channel_descriptor.h \
+ /usr/local/cuda-12.8/include/cuda_runtime_api.h \
+ /usr/local/cuda-12.8/include/cuda_device_runtime_api.h \
+ /usr/local/cuda-12.8/include/driver_functions.h \
+ /usr/local/cuda-12.8/include/vector_functions.h \
+ /usr/local/cuda-12.8/include/vector_functions.hpp \
+ /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h \
+ /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/utils/advanced_memory_monitor.h \
+ /usr/include/c++/13/fstream \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
+ /usr/include/c++/13/bits/fstream.tcc \
+ /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDACachingAllocator.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/CachingDeviceAllocator.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAGraphsC10Utils.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAStream.h \
  /usr/local/cuda-12.8/include/cuda_runtime_api.h \
- /usr/local/cuda-12.8/include/crt/host_defines.h \
- /usr/local/cuda-12.8/include/builtin_types.h \
- /usr/local/cuda-12.8/include/device_types.h \
- /usr/local/cuda-12.8/include/driver_types.h \
- /usr/local/cuda-12.8/include/vector_types.h \
- /usr/local/cuda-12.8/include/surface_types.h \
- /usr/local/cuda-12.8/include/texture_types.h \
- /usr/local/cuda-12.8/include/cuda_device_runtime_api.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAFunctions.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/GPUTrace.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAException.h \
@@ -5361,14 +5372,6 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o: \
  /usr/local/include/rapids/libcudacxx/cuda/std/detail/libcxx/include/stdexcept \
  /usr/local/include/rapids/libcudacxx/cuda/__memory_resource/managed_memory_resource.h \
  /usr/local/include/rapids/libcudacxx/cuda/__memory_resource/pinned_memory_resource.h \
- /usr/local/cuda-12.8/include/cuda_runtime.h \
- /usr/local/cuda-12.8/include/crt/host_config.h \
- /usr/local/cuda-12.8/include/library_types.h \
- /usr/local/cuda-12.8/include/channel_descriptor.h \
- /usr/local/cuda-12.8/include/cuda_runtime_api.h \
- /usr/local/cuda-12.8/include/driver_functions.h \
- /usr/local/cuda-12.8/include/vector_functions.h \
- /usr/local/cuda-12.8/include/vector_functions.hpp \
  /usr/local/include/rmm/detail/nvtx/ranges.hpp \
  /usr/local/include/nvtx3/nvtx3.hpp /usr/local/include/nvtx3/nvToolsExt.h \
  /usr/local/include/nvtx3/nvtxDetail/nvtxLinkOnce.h \

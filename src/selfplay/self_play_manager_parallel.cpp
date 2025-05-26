@@ -11,6 +11,11 @@
 #include <algorithm>
 #include <cmath>
 
+#ifdef WITH_TORCH
+#include <torch/torch.h>
+#include <c10/cuda/CUDACachingAllocator.h>
+#endif
+
 namespace alphazero {
 namespace selfplay {
 
@@ -146,6 +151,26 @@ void ParallelSelfPlayManager::workerThread(std::shared_ptr<nn::NeuralNetwork> ne
             {
                 std::lock_guard<std::mutex> lock(results_mutex_);
                 completed_games_.push_back(std::move(game_record));
+            }
+            
+            // Force cleanup after each game to prevent memory accumulation
+            {
+                std::lock_guard<std::mutex> lock(results_mutex_);
+                size_t games_completed = completed_games_.size();
+                
+                // Cleanup every 5 games or when memory pressure is high
+                if (games_completed % 5 == 0) {
+#ifdef WITH_TORCH
+                    if (torch::cuda::is_available()) {
+                        c10::cuda::CUDACachingAllocator::emptyCache();
+                        torch::cuda::synchronize();
+                    }
+#endif
+                    // Force garbage collection in engine
+                    if (engine) {
+                        engine->resetForNewSearch();
+                    }
+                }
             }
         } catch (const std::exception& e) {
             std::cerr << "\nError in worker thread: " << e.what() << std::endl;

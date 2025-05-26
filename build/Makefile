@@ -556,32 +556,6 @@ ContinuousSubmit/fast:
 .PHONY : ContinuousSubmit/fast
 
 #=============================================================================
-# Target rules for targets named alphazero_py
-
-# Build rule for target.
-alphazero_py: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 alphazero_py
-.PHONY : alphazero_py
-
-# fast build rule for target.
-alphazero_py/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/build
-.PHONY : alphazero_py/fast
-
-#=============================================================================
-# Target rules for targets named alphazero_pipeline
-
-# Build rule for target.
-alphazero_pipeline: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 alphazero_pipeline
-.PHONY : alphazero_pipeline
-
-# fast build rule for target.
-alphazero_pipeline/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/build
-.PHONY : alphazero_pipeline/fast
-
-#=============================================================================
 # Target rules for targets named alphazero
 
 # Build rule for target.
@@ -595,45 +569,6 @@ alphazero/fast:
 .PHONY : alphazero/fast
 
 #=============================================================================
-# Target rules for targets named omoknuni_cli
-
-# Build rule for target.
-omoknuni_cli: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omoknuni_cli
-.PHONY : omoknuni_cli
-
-# fast build rule for target.
-omoknuni_cli/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/build
-.PHONY : omoknuni_cli/fast
-
-#=============================================================================
-# Target rules for targets named omoknuni_cli_optimized
-
-# Build rule for target.
-omoknuni_cli_optimized: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omoknuni_cli_optimized
-.PHONY : omoknuni_cli_optimized
-
-# fast build rule for target.
-omoknuni_cli_optimized/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_optimized.dir/build.make CMakeFiles/omoknuni_cli_optimized.dir/build
-.PHONY : omoknuni_cli_optimized/fast
-
-#=============================================================================
-# Target rules for targets named omoknuni_cli_enhanced
-
-# Build rule for target.
-omoknuni_cli_enhanced: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omoknuni_cli_enhanced
-.PHONY : omoknuni_cli_enhanced
-
-# fast build rule for target.
-omoknuni_cli_enhanced/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_enhanced.dir/build.make CMakeFiles/omoknuni_cli_enhanced.dir/build
-.PHONY : omoknuni_cli_enhanced/fast
-
-#=============================================================================
 # Target rules for targets named omoknuni_cli_final
 
 # Build rule for target.
@@ -645,19 +580,6 @@ omoknuni_cli_final: cmake_check_build_system
 omoknuni_cli_final/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_final.dir/build.make CMakeFiles/omoknuni_cli_final.dir/build
 .PHONY : omoknuni_cli_final/fast
-
-#=============================================================================
-# Target rules for targets named omoknuni_cli_working
-
-# Build rule for target.
-omoknuni_cli_working: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 omoknuni_cli_working
-.PHONY : omoknuni_cli_working
-
-# fast build rule for target.
-omoknuni_cli_working/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_working.dir/build.make CMakeFiles/omoknuni_cli_working.dir/build
-.PHONY : omoknuni_cli_working/fast
 
 #=============================================================================
 # Target rules for targets named core_tests
@@ -867,54 +789,6 @@ TracyClient/fast:
 	$(MAKE) $(MAKESILENT) -f _deps/tracy-build/CMakeFiles/TracyClient.dir/build.make _deps/tracy-build/CMakeFiles/TracyClient.dir/build
 .PHONY : TracyClient/fast
 
-src/cli/alphazero_cli_pipeline.o: src/cli/alphazero_cli_pipeline.cpp.o
-.PHONY : src/cli/alphazero_cli_pipeline.o
-
-# target to build an object file
-src/cli/alphazero_cli_pipeline.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o
-.PHONY : src/cli/alphazero_cli_pipeline.cpp.o
-
-src/cli/alphazero_cli_pipeline.i: src/cli/alphazero_cli_pipeline.cpp.i
-.PHONY : src/cli/alphazero_cli_pipeline.i
-
-# target to preprocess a source file
-src/cli/alphazero_cli_pipeline.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.i
-.PHONY : src/cli/alphazero_cli_pipeline.cpp.i
-
-src/cli/alphazero_cli_pipeline.s: src/cli/alphazero_cli_pipeline.cpp.s
-.PHONY : src/cli/alphazero_cli_pipeline.s
-
-# target to generate assembly for a file
-src/cli/alphazero_cli_pipeline.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.s
-.PHONY : src/cli/alphazero_cli_pipeline.cpp.s
-
-src/cli/alphazero_pipeline.o: src/cli/alphazero_pipeline.cpp.o
-.PHONY : src/cli/alphazero_pipeline.o
-
-# target to build an object file
-src/cli/alphazero_pipeline.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o
-.PHONY : src/cli/alphazero_pipeline.cpp.o
-
-src/cli/alphazero_pipeline.i: src/cli/alphazero_pipeline.cpp.i
-.PHONY : src/cli/alphazero_pipeline.i
-
-# target to preprocess a source file
-src/cli/alphazero_pipeline.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.i
-.PHONY : src/cli/alphazero_pipeline.cpp.i
-
-src/cli/alphazero_pipeline.s: src/cli/alphazero_pipeline.cpp.s
-.PHONY : src/cli/alphazero_pipeline.s
-
-# target to generate assembly for a file
-src/cli/alphazero_pipeline.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.s
-.PHONY : src/cli/alphazero_pipeline.cpp.s
-
 src/cli/cli_manager.o: src/cli/cli_manager.cpp.o
 .PHONY : src/cli/cli_manager.o
 
@@ -939,54 +813,6 @@ src/cli/cli_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.s
 .PHONY : src/cli/cli_manager.cpp.s
 
-src/cli/omoknuni_cli.o: src/cli/omoknuni_cli.cpp.o
-.PHONY : src/cli/omoknuni_cli.o
-
-# target to build an object file
-src/cli/omoknuni_cli.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.o
-.PHONY : src/cli/omoknuni_cli.cpp.o
-
-src/cli/omoknuni_cli.i: src/cli/omoknuni_cli.cpp.i
-.PHONY : src/cli/omoknuni_cli.i
-
-# target to preprocess a source file
-src/cli/omoknuni_cli.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.i
-.PHONY : src/cli/omoknuni_cli.cpp.i
-
-src/cli/omoknuni_cli.s: src/cli/omoknuni_cli.cpp.s
-.PHONY : src/cli/omoknuni_cli.s
-
-# target to generate assembly for a file
-src/cli/omoknuni_cli.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli.dir/build.make CMakeFiles/omoknuni_cli.dir/src/cli/omoknuni_cli.cpp.s
-.PHONY : src/cli/omoknuni_cli.cpp.s
-
-src/cli/omoknuni_cli_enhanced.o: src/cli/omoknuni_cli_enhanced.cpp.o
-.PHONY : src/cli/omoknuni_cli_enhanced.o
-
-# target to build an object file
-src/cli/omoknuni_cli_enhanced.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_enhanced.dir/build.make CMakeFiles/omoknuni_cli_enhanced.dir/src/cli/omoknuni_cli_enhanced.cpp.o
-.PHONY : src/cli/omoknuni_cli_enhanced.cpp.o
-
-src/cli/omoknuni_cli_enhanced.i: src/cli/omoknuni_cli_enhanced.cpp.i
-.PHONY : src/cli/omoknuni_cli_enhanced.i
-
-# target to preprocess a source file
-src/cli/omoknuni_cli_enhanced.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_enhanced.dir/build.make CMakeFiles/omoknuni_cli_enhanced.dir/src/cli/omoknuni_cli_enhanced.cpp.i
-.PHONY : src/cli/omoknuni_cli_enhanced.cpp.i
-
-src/cli/omoknuni_cli_enhanced.s: src/cli/omoknuni_cli_enhanced.cpp.s
-.PHONY : src/cli/omoknuni_cli_enhanced.s
-
-# target to generate assembly for a file
-src/cli/omoknuni_cli_enhanced.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_enhanced.dir/build.make CMakeFiles/omoknuni_cli_enhanced.dir/src/cli/omoknuni_cli_enhanced.cpp.s
-.PHONY : src/cli/omoknuni_cli_enhanced.cpp.s
-
 src/cli/omoknuni_cli_final.o: src/cli/omoknuni_cli_final.cpp.o
 .PHONY : src/cli/omoknuni_cli_final.o
 
@@ -1010,54 +836,6 @@ src/cli/omoknuni_cli_final.s: src/cli/omoknuni_cli_final.cpp.s
 src/cli/omoknuni_cli_final.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_final.dir/build.make CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.s
 .PHONY : src/cli/omoknuni_cli_final.cpp.s
-
-src/cli/omoknuni_cli_optimized.o: src/cli/omoknuni_cli_optimized.cpp.o
-.PHONY : src/cli/omoknuni_cli_optimized.o
-
-# target to build an object file
-src/cli/omoknuni_cli_optimized.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_optimized.dir/build.make CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.o
-.PHONY : src/cli/omoknuni_cli_optimized.cpp.o
-
-src/cli/omoknuni_cli_optimized.i: src/cli/omoknuni_cli_optimized.cpp.i
-.PHONY : src/cli/omoknuni_cli_optimized.i
-
-# target to preprocess a source file
-src/cli/omoknuni_cli_optimized.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_optimized.dir/build.make CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.i
-.PHONY : src/cli/omoknuni_cli_optimized.cpp.i
-
-src/cli/omoknuni_cli_optimized.s: src/cli/omoknuni_cli_optimized.cpp.s
-.PHONY : src/cli/omoknuni_cli_optimized.s
-
-# target to generate assembly for a file
-src/cli/omoknuni_cli_optimized.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_optimized.dir/build.make CMakeFiles/omoknuni_cli_optimized.dir/src/cli/omoknuni_cli_optimized.cpp.s
-.PHONY : src/cli/omoknuni_cli_optimized.cpp.s
-
-src/cli/omoknuni_cli_working.o: src/cli/omoknuni_cli_working.cpp.o
-.PHONY : src/cli/omoknuni_cli_working.o
-
-# target to build an object file
-src/cli/omoknuni_cli_working.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_working.dir/build.make CMakeFiles/omoknuni_cli_working.dir/src/cli/omoknuni_cli_working.cpp.o
-.PHONY : src/cli/omoknuni_cli_working.cpp.o
-
-src/cli/omoknuni_cli_working.i: src/cli/omoknuni_cli_working.cpp.i
-.PHONY : src/cli/omoknuni_cli_working.i
-
-# target to preprocess a source file
-src/cli/omoknuni_cli_working.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_working.dir/build.make CMakeFiles/omoknuni_cli_working.dir/src/cli/omoknuni_cli_working.cpp.i
-.PHONY : src/cli/omoknuni_cli_working.cpp.i
-
-src/cli/omoknuni_cli_working.s: src/cli/omoknuni_cli_working.cpp.s
-.PHONY : src/cli/omoknuni_cli_working.s
-
-# target to generate assembly for a file
-src/cli/omoknuni_cli_working.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/omoknuni_cli_working.dir/build.make CMakeFiles/omoknuni_cli_working.dir/src/cli/omoknuni_cli_working.cpp.s
-.PHONY : src/cli/omoknuni_cli_working.cpp.s
 
 src/core/game_export.o: src/core/game_export.cpp.o
 .PHONY : src/core/game_export.o
@@ -1635,6 +1413,30 @@ src/mcts/mcts_engine_methods.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.s
 .PHONY : src/mcts/mcts_engine_methods.cpp.s
 
+src/mcts/mcts_engine_optimization_stubs.o: src/mcts/mcts_engine_optimization_stubs.cpp.o
+.PHONY : src/mcts/mcts_engine_optimization_stubs.o
+
+# target to build an object file
+src/mcts/mcts_engine_optimization_stubs.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.o
+.PHONY : src/mcts/mcts_engine_optimization_stubs.cpp.o
+
+src/mcts/mcts_engine_optimization_stubs.i: src/mcts/mcts_engine_optimization_stubs.cpp.i
+.PHONY : src/mcts/mcts_engine_optimization_stubs.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_optimization_stubs.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.i
+.PHONY : src/mcts/mcts_engine_optimization_stubs.cpp.i
+
+src/mcts/mcts_engine_optimization_stubs.s: src/mcts/mcts_engine_optimization_stubs.cpp.s
+.PHONY : src/mcts/mcts_engine_optimization_stubs.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_optimization_stubs.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.s
+.PHONY : src/mcts/mcts_engine_optimization_stubs.cpp.s
+
 src/mcts/mcts_engine_parallel_batch.o: src/mcts/mcts_engine_parallel_batch.cpp.o
 .PHONY : src/mcts/mcts_engine_parallel_batch.o
 
@@ -1995,6 +1797,30 @@ src/mcts/node_tracker.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.s
 .PHONY : src/mcts/node_tracker.cpp.s
 
+src/mcts/phmap_transposition_table.o: src/mcts/phmap_transposition_table.cpp.o
+.PHONY : src/mcts/phmap_transposition_table.o
+
+# target to build an object file
+src/mcts/phmap_transposition_table.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o
+.PHONY : src/mcts/phmap_transposition_table.cpp.o
+
+src/mcts/phmap_transposition_table.i: src/mcts/phmap_transposition_table.cpp.i
+.PHONY : src/mcts/phmap_transposition_table.i
+
+# target to preprocess a source file
+src/mcts/phmap_transposition_table.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.i
+.PHONY : src/mcts/phmap_transposition_table.cpp.i
+
+src/mcts/phmap_transposition_table.s: src/mcts/phmap_transposition_table.cpp.s
+.PHONY : src/mcts/phmap_transposition_table.s
+
+# target to generate assembly for a file
+src/mcts/phmap_transposition_table.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.s
+.PHONY : src/mcts/phmap_transposition_table.cpp.s
+
 src/mcts/transposition_table.o: src/mcts/transposition_table.cpp.o
 .PHONY : src/mcts/transposition_table.o
 
@@ -2091,101 +1917,29 @@ src/nn/neural_network_factory.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.s
 .PHONY : src/nn/neural_network_factory.cpp.s
 
-src/nn/optimized_resnet_model.o: src/nn/optimized_resnet_model.cpp.o
-.PHONY : src/nn/optimized_resnet_model.o
+src/nn/resnet_model.o: src/nn/resnet_model.cpp.o
+.PHONY : src/nn/resnet_model.o
 
 # target to build an object file
-src/nn/optimized_resnet_model.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.o
-.PHONY : src/nn/optimized_resnet_model.cpp.o
+src/nn/resnet_model.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o
+.PHONY : src/nn/resnet_model.cpp.o
 
-src/nn/optimized_resnet_model.i: src/nn/optimized_resnet_model.cpp.i
-.PHONY : src/nn/optimized_resnet_model.i
-
-# target to preprocess a source file
-src/nn/optimized_resnet_model.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.i
-.PHONY : src/nn/optimized_resnet_model.cpp.i
-
-src/nn/optimized_resnet_model.s: src/nn/optimized_resnet_model.cpp.s
-.PHONY : src/nn/optimized_resnet_model.s
-
-# target to generate assembly for a file
-src/nn/optimized_resnet_model.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.s
-.PHONY : src/nn/optimized_resnet_model.cpp.s
-
-src/nn/resnet_model_performance.o: src/nn/resnet_model_performance.cpp.o
-.PHONY : src/nn/resnet_model_performance.o
-
-# target to build an object file
-src/nn/resnet_model_performance.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o
-.PHONY : src/nn/resnet_model_performance.cpp.o
-
-src/nn/resnet_model_performance.i: src/nn/resnet_model_performance.cpp.i
-.PHONY : src/nn/resnet_model_performance.i
+src/nn/resnet_model.i: src/nn/resnet_model.cpp.i
+.PHONY : src/nn/resnet_model.i
 
 # target to preprocess a source file
-src/nn/resnet_model_performance.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.i
-.PHONY : src/nn/resnet_model_performance.cpp.i
+src/nn/resnet_model.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.i
+.PHONY : src/nn/resnet_model.cpp.i
 
-src/nn/resnet_model_performance.s: src/nn/resnet_model_performance.cpp.s
-.PHONY : src/nn/resnet_model_performance.s
-
-# target to generate assembly for a file
-src/nn/resnet_model_performance.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.s
-.PHONY : src/nn/resnet_model_performance.cpp.s
-
-src/python/alphazero_bindings.o: src/python/alphazero_bindings.cpp.o
-.PHONY : src/python/alphazero_bindings.o
-
-# target to build an object file
-src/python/alphazero_bindings.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/src/python/alphazero_bindings.cpp.o
-.PHONY : src/python/alphazero_bindings.cpp.o
-
-src/python/alphazero_bindings.i: src/python/alphazero_bindings.cpp.i
-.PHONY : src/python/alphazero_bindings.i
-
-# target to preprocess a source file
-src/python/alphazero_bindings.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/src/python/alphazero_bindings.cpp.i
-.PHONY : src/python/alphazero_bindings.cpp.i
-
-src/python/alphazero_bindings.s: src/python/alphazero_bindings.cpp.s
-.PHONY : src/python/alphazero_bindings.s
+src/nn/resnet_model.s: src/nn/resnet_model.cpp.s
+.PHONY : src/nn/resnet_model.s
 
 # target to generate assembly for a file
-src/python/alphazero_bindings.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_pipeline.dir/build.make CMakeFiles/alphazero_pipeline.dir/src/python/alphazero_bindings.cpp.s
-.PHONY : src/python/alphazero_bindings.cpp.s
-
-src/python/bindings.o: src/python/bindings.cpp.o
-.PHONY : src/python/bindings.o
-
-# target to build an object file
-src/python/bindings.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.o
-.PHONY : src/python/bindings.cpp.o
-
-src/python/bindings.i: src/python/bindings.cpp.i
-.PHONY : src/python/bindings.i
-
-# target to preprocess a source file
-src/python/bindings.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.i
-.PHONY : src/python/bindings.cpp.i
-
-src/python/bindings.s: src/python/bindings.cpp.s
-.PHONY : src/python/bindings.s
-
-# target to generate assembly for a file
-src/python/bindings.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero_py.dir/build.make CMakeFiles/alphazero_py.dir/src/python/bindings.cpp.s
-.PHONY : src/python/bindings.cpp.s
+src/nn/resnet_model.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.s
+.PHONY : src/nn/resnet_model.cpp.s
 
 src/selfplay/optimized_self_play_manager.o: src/selfplay/optimized_self_play_manager.cpp.o
 .PHONY : src/selfplay/optimized_self_play_manager.o
@@ -3221,8 +2975,6 @@ help:
 	@echo "... TracyClient"
 	@echo "... all_tests"
 	@echo "... alphazero"
-	@echo "... alphazero_pipeline"
-	@echo "... alphazero_py"
 	@echo "... chess_tests"
 	@echo "... core_tests"
 	@echo "... go_tests"
@@ -3233,38 +2985,16 @@ help:
 	@echo "... mimalloc-obj"
 	@echo "... mimalloc-static"
 	@echo "... nn_tests"
-	@echo "... omoknuni_cli"
-	@echo "... omoknuni_cli_enhanced"
 	@echo "... omoknuni_cli_final"
-	@echo "... omoknuni_cli_optimized"
-	@echo "... omoknuni_cli_working"
 	@echo "... selfplay_tests"
 	@echo "... training_tests"
 	@echo "... transposition_tests"
-	@echo "... src/cli/alphazero_cli_pipeline.o"
-	@echo "... src/cli/alphazero_cli_pipeline.i"
-	@echo "... src/cli/alphazero_cli_pipeline.s"
-	@echo "... src/cli/alphazero_pipeline.o"
-	@echo "... src/cli/alphazero_pipeline.i"
-	@echo "... src/cli/alphazero_pipeline.s"
 	@echo "... src/cli/cli_manager.o"
 	@echo "... src/cli/cli_manager.i"
 	@echo "... src/cli/cli_manager.s"
-	@echo "... src/cli/omoknuni_cli.o"
-	@echo "... src/cli/omoknuni_cli.i"
-	@echo "... src/cli/omoknuni_cli.s"
-	@echo "... src/cli/omoknuni_cli_enhanced.o"
-	@echo "... src/cli/omoknuni_cli_enhanced.i"
-	@echo "... src/cli/omoknuni_cli_enhanced.s"
 	@echo "... src/cli/omoknuni_cli_final.o"
 	@echo "... src/cli/omoknuni_cli_final.i"
 	@echo "... src/cli/omoknuni_cli_final.s"
-	@echo "... src/cli/omoknuni_cli_optimized.o"
-	@echo "... src/cli/omoknuni_cli_optimized.i"
-	@echo "... src/cli/omoknuni_cli_optimized.s"
-	@echo "... src/cli/omoknuni_cli_working.o"
-	@echo "... src/cli/omoknuni_cli_working.i"
-	@echo "... src/cli/omoknuni_cli_working.s"
 	@echo "... src/core/game_export.o"
 	@echo "... src/core/game_export.i"
 	@echo "... src/core/game_export.s"
@@ -3337,6 +3067,9 @@ help:
 	@echo "... src/mcts/mcts_engine_methods.o"
 	@echo "... src/mcts/mcts_engine_methods.i"
 	@echo "... src/mcts/mcts_engine_methods.s"
+	@echo "... src/mcts/mcts_engine_optimization_stubs.o"
+	@echo "... src/mcts/mcts_engine_optimization_stubs.i"
+	@echo "... src/mcts/mcts_engine_optimization_stubs.s"
 	@echo "... src/mcts/mcts_engine_parallel_batch.o"
 	@echo "... src/mcts/mcts_engine_parallel_batch.i"
 	@echo "... src/mcts/mcts_engine_parallel_batch.s"
@@ -3382,6 +3115,9 @@ help:
 	@echo "... src/mcts/node_tracker.o"
 	@echo "... src/mcts/node_tracker.i"
 	@echo "... src/mcts/node_tracker.s"
+	@echo "... src/mcts/phmap_transposition_table.o"
+	@echo "... src/mcts/phmap_transposition_table.i"
+	@echo "... src/mcts/phmap_transposition_table.s"
 	@echo "... src/mcts/transposition_table.o"
 	@echo "... src/mcts/transposition_table.i"
 	@echo "... src/mcts/transposition_table.s"
@@ -3394,18 +3130,9 @@ help:
 	@echo "... src/nn/neural_network_factory.o"
 	@echo "... src/nn/neural_network_factory.i"
 	@echo "... src/nn/neural_network_factory.s"
-	@echo "... src/nn/optimized_resnet_model.o"
-	@echo "... src/nn/optimized_resnet_model.i"
-	@echo "... src/nn/optimized_resnet_model.s"
-	@echo "... src/nn/resnet_model_performance.o"
-	@echo "... src/nn/resnet_model_performance.i"
-	@echo "... src/nn/resnet_model_performance.s"
-	@echo "... src/python/alphazero_bindings.o"
-	@echo "... src/python/alphazero_bindings.i"
-	@echo "... src/python/alphazero_bindings.s"
-	@echo "... src/python/bindings.o"
-	@echo "... src/python/bindings.i"
-	@echo "... src/python/bindings.s"
+	@echo "... src/nn/resnet_model.o"
+	@echo "... src/nn/resnet_model.i"
+	@echo "... src/nn/resnet_model.s"
 	@echo "... src/selfplay/optimized_self_play_manager.o"
 	@echo "... src/selfplay/optimized_self_play_manager.i"
 	@echo "... src/selfplay/optimized_self_play_manager.s"

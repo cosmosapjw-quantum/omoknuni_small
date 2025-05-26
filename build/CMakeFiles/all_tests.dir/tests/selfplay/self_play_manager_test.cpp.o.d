@@ -422,14 +422,13 @@ CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
  /usr/include/parallel_hashmap/phmap_base.h \
  /usr/include/c++/13/shared_mutex \
+ /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
  /usr/include/x86_64-linux-gnu/sys/resource.h \
  /usr/include/x86_64-linux-gnu/bits/resource.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h \
- /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
- /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
+ /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h \
@@ -5121,5 +5120,25 @@ CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
+ /usr/local/cuda-12.8/include/cuda_runtime.h \
+ /usr/local/cuda-12.8/include/crt/host_config.h \
+ /usr/local/cuda-12.8/include/builtin_types.h \
+ /usr/local/cuda-12.8/include/device_types.h \
+ /usr/local/cuda-12.8/include/crt/host_defines.h \
+ /usr/local/cuda-12.8/include/driver_types.h \
+ /usr/local/cuda-12.8/include/vector_types.h \
+ /usr/local/cuda-12.8/include/surface_types.h \
+ /usr/local/cuda-12.8/include/texture_types.h \
+ /usr/local/cuda-12.8/include/library_types.h \
+ /usr/local/cuda-12.8/include/channel_descriptor.h \
+ /usr/local/cuda-12.8/include/cuda_runtime_api.h \
+ /usr/local/cuda-12.8/include/cuda_device_runtime_api.h \
+ /usr/local/cuda-12.8/include/driver_functions.h \
+ /usr/local/cuda-12.8/include/vector_functions.h \
+ /usr/local/cuda-12.8/include/vector_functions.hpp \
+ /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h \
+ /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
+ /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h

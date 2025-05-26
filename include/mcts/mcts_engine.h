@@ -13,8 +13,11 @@
 #include "mcts/mcts_object_pool.h"
 #include "mcts/mcts_node_pool.h"
 #include "mcts/transposition_table.h"
+#include "mcts/phmap_transposition_table.h"
 #include "mcts/node_tracker.h"
 #include "mcts/memory_pressure_monitor.h"
+#include "mcts/gpu_memory_pool.h"
+#include "mcts/dynamic_batch_manager.h"
 // Removed complex components for simplified implementation
 // #include "mcts/unified_inference_server.h"
 // #include "mcts/burst_coordinator.h"
@@ -289,6 +292,13 @@ public:
      * @return Hit rate (0.0 to 1.0)
      */
     float getTranspositionTableHitRate() const;
+    
+    /**
+     * @brief Enable or disable PHMap transposition table implementation
+     * 
+     * @param use_phmap Whether to use PHMap implementation (true) or standard (false)
+     */
+    void setUsePHMapTransposition(bool use_phmap);
 
     
     /**
@@ -516,6 +526,15 @@ public:
     void cleanupTree();
     void cleanupPendingEvaluations();
     void resetForNewSearch();
+    void performAggressiveGPUCleanup();
+    void monitorAndCleanupMemory();
+    
+    // CPU optimization methods
+    void performParallelExpansion(std::shared_ptr<MCTSNode> root, 
+                                 int num_expansions);
+    void performCPUOptimizedSearch(const core::IGameState& root_state,
+                                  int num_simulations);
+    void optimizeBatchProcessing();
     
     // Parallelization strategies
     void runOpenMPSearch();
@@ -550,8 +569,8 @@ public:
     // Random generator for stochastic actions
     std::mt19937 random_engine_;
 
-    // Transposition table
-    std::unique_ptr<TranspositionTable> transposition_table_;
+    // High-performance transposition table using parallel-hashmap (always used)
+    std::unique_ptr<PHMapTranspositionTable> transposition_table_;
     
     // Whether to use the transposition table
     bool use_transposition_table_;
@@ -655,6 +674,12 @@ public:
     
     // Memory pressure monitoring
     std::unique_ptr<MemoryPressureMonitor> memory_pressure_monitor_;
+    
+    // GPU memory pool for efficient tensor management
+    std::unique_ptr<GPUMemoryPool> gpu_memory_pool_;
+    
+    // Dynamic batch manager for adaptive batching
+    std::unique_ptr<DynamicBatchManager> dynamic_batch_manager_;
     
     // Advanced components for optimized parallelization (commented out for simplification)
     // std::unique_ptr<UnifiedInferenceServer> inference_server_;

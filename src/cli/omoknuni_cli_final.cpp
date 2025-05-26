@@ -26,6 +26,7 @@
 #include "games/chess/chess_state.h"
 #include "games/go/go_state.h"
 #include "utils/logger.h"
+#include "utils/advanced_memory_monitor.h"
 #include "core/game_export.h"
 
 using namespace alphazero;
@@ -67,12 +68,14 @@ public:
     }
     
     std::vector<selfplay::GameData> collectBatch(size_t batch_size, 
-                                                  std::chrono::milliseconds timeout) {
+                                                  std::chrono::milliseconds timeout,
+                                                  bool all_games_complete = false) {
         std::unique_lock<std::mutex> lock(mutex_);
         
         auto deadline = std::chrono::steady_clock::now() + timeout;
-        cv_.wait_until(lock, deadline, [this, batch_size] {
-            return games_.size() >= batch_size || g_shutdown_requested.load();
+        cv_.wait_until(lock, deadline, [this, batch_size, all_games_complete] {
+            return games_.size() >= batch_size || g_shutdown_requested.load() || 
+                   (all_games_complete && !games_.empty());
         });
         
         std::vector<selfplay::GameData> batch;
@@ -351,9 +354,13 @@ int runSelfPlay(const std::vector<std::string>& args) {
             int total_saved = 0;
             
             while (total_saved < num_games && !g_shutdown_requested.load()) {
-                // Collect a batch of games
-                auto games = collector->collectBatch(save_interval, 
-                                                    std::chrono::milliseconds(5000));
+                // Collect a batch of games - use min(save_interval, remaining games) to avoid waiting forever
+                int remaining_games = num_games - total_saved;
+                int batch_size = std::min(save_interval, remaining_games);
+                
+                // Use shorter timeout and allow partial batch collection
+                auto games = collector->collectBatch(batch_size, 
+                                                    std::chrono::milliseconds(1000));
                 
                 if (!games.empty()) {
                     // Save games directly without SelfPlayManager
@@ -444,7 +451,21 @@ int runSelfPlay(const std::vector<std::string>& args) {
         if (total_elapsed > 0) {
             // Calculate average games per second
             float avg_games_per_sec = static_cast<float>(total_games) / total_elapsed;
+            std::cout << "\nFinal statistics: " << total_games << " games generated in " 
+                      << total_elapsed << " seconds (" << avg_games_per_sec << " games/sec)" << std::endl;
         }
+        
+        // Ensure all background threads are properly cleaned up
+        // Stop the AggressiveMemoryManager monitoring thread before exit
+        mcts::AggressiveMemoryManager::getInstance().shutdown();
+        
+        // Give GPU time to finish any pending operations
+        if (torch::cuda::is_available()) {
+            torch::cuda::synchronize();
+        }
+        
+        // Give a bit more time for any background threads to finish cleanly
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
         return 0;
         
@@ -474,6 +495,7 @@ int main(int argc, char* argv[]) {
                        3,                    // max 3 files
                        false);               // SYNCHRONOUS logging
     
+    int result = 0;
     try {
         // Create CLI manager
         cli::CLIManager cli_manager;
@@ -484,15 +506,27 @@ int main(int argc, char* argv[]) {
         cli_manager.addCommand("eval", "Evaluate model (not yet implemented)", runEvaluation);
         
         // Execute
-        int result = cli_manager.run(argc, argv);
-        
-        // Clean shutdown
-        utils::Logger::shutdown();
-        return result;
+        result = cli_manager.run(argc, argv);
         
     } catch (const std::exception& e) {
         LOG_SYSTEM_ERROR("Fatal error: {}", e.what());
-        utils::Logger::shutdown();
-        return 1;
+        result = 1;
     }
+    
+    // Ensure all singletons are properly shut down before exit
+    try {
+        // Shutdown the AggressiveMemoryManager singleton
+        mcts::AggressiveMemoryManager::getInstance().shutdown();
+        
+        // Give time for threads to finish
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    } catch (...) {
+        // Ignore exceptions during cleanup
+    }
+    
+    // Clean shutdown of logger
+    utils::Logger::shutdown();
+    
+    // Exit cleanly
+    std::exit(result);
 }

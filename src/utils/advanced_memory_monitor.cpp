@@ -13,6 +13,8 @@ namespace alphazero {
 namespace utils {
 
 void AdvancedMemoryMonitor::startMonitoring(const std::string& log_file) {
+    std::lock_guard<std::mutex> lock(snapshots_mutex_);
+    
     if (monitoring_active_.load()) {
         return; // Already monitoring
     }
@@ -35,6 +37,10 @@ void AdvancedMemoryMonitor::startMonitoring(const std::string& log_file) {
 }
 
 void AdvancedMemoryMonitor::stopMonitoring() {
+    // Use a separate mutex for stop to avoid deadlock
+    static std::mutex stop_mutex;
+    std::lock_guard<std::mutex> lock(stop_mutex);
+    
     if (!monitoring_active_.load()) {
         return;
     }

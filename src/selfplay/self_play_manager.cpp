@@ -202,9 +202,13 @@ SelfPlayManager::~SelfPlayManager() {
 std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager::generateGames(core::GameType game_type,
                                                     int num_games,
                                                     int board_size) {
-    // Start advanced memory monitoring
+    // Start advanced memory monitoring (only for the main thread)
     auto& monitor = utils::AdvancedMemoryMonitor::getInstance();
-    monitor.startMonitoring("resource_monitor.log");
+    static std::atomic<bool> monitor_started(false);
+    bool expected = false;
+    if (monitor_started.compare_exchange_strong(expected, true)) {
+        monitor.startMonitoring("resource_monitor.log");
+    }
     monitor.logEvent("Starting self-play game generation");
     monitor.captureSnapshot("generate_games_start");
     
@@ -319,8 +323,9 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     
     std::cout << "========================================" << std::endl;
     
-    // Stop monitoring
-    monitor.stopMonitoring();
+    // Stop monitoring (only if we started it)
+    // Don't stop monitoring - let the singleton destructor handle it
+    // monitor.stopMonitoring();
     
     return games;
 }

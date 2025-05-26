@@ -11,13 +11,86 @@ namespace alphazero {
 namespace games {
 namespace go {
 
-// Constructor
+// Constructor with rule set
+GoState::GoState(int board_size, RuleSet rule_set, float custom_komi)
+    : IGameState(core::GameType::GO),
+      board_size_(board_size),
+      current_player_(1),  // Black goes first
+      rule_set_(rule_set),
+      ko_point_(-1),
+      consecutive_passes_(0),
+      hash_dirty_(true),
+      zobrist_(board_size, 2, 2)  // board_size, 2 piece types (black and white), 2 players
+{
+    // Set default komi based on rule set
+    if (custom_komi < 0) {
+        switch (rule_set_) {
+            case RuleSet::CHINESE:
+                komi_ = 7.5f;
+                break;
+            case RuleSet::JAPANESE:
+            case RuleSet::KOREAN:
+                komi_ = 6.5f;
+                break;
+        }
+    } else {
+        komi_ = custom_komi;
+    }
+    
+    // Set chinese_rules_ for backward compatibility
+    chinese_rules_ = (rule_set_ == RuleSet::CHINESE);
+    
+    // Determine if we should enforce superko
+    bool enforce_superko = (rule_set_ == RuleSet::CHINESE);
+    
+    // Validate board size
+    if (board_size != 9 && board_size != 13 && board_size != 19) {
+        board_size_ = 19;  // Default to standard 19x19 if invalid
+    }
+
+    // Initialize board with empty intersections
+    board_.resize(board_size_ * board_size_, 0);
+    
+    // Initialize capture counts
+    captured_stones_.resize(3, 0);  // Index 0 unused, 1=Black, 2=White
+    
+    // Initialize Zobrist hash
+    hash_ = 0;
+    hash_dirty_ = true;
+    
+    // Initialize repetitive cycle detection
+    has_repetitive_cycle_ = false;
+    no_result_reason_ = "";
+    
+    // Initialize rules
+    rules_ = std::make_shared<GoRules>(board_size_, chinese_rules_, enforce_superko);
+    
+    // Set up board accessor functions for rules
+    rules_->setBoardAccessor(
+        [this](int pos) { return this->getStone(pos); },
+        [this](int pos) { return this->isInBounds(pos); },
+        [this](int pos) { return this->getAdjacentPositions(pos); }
+    );
+
+    // Add named features for hash calculation
+    zobrist_.addFeature("ko_point", board_size_ * board_size_ + 1);  // All positions + none
+    zobrist_.addFeature("rules", 2);          // Chinese or Japanese rules
+    zobrist_.addFeature("komi", 16);          // Discretized komi values
+    
+    // Initialize position frequency with initial position
+    if (rule_set_ != RuleSet::CHINESE) {
+        position_frequency_[getHash()] = 1;
+    }
+}
+
+// Legacy constructor
 GoState::GoState(int board_size, float komi, bool chinese_rules, bool enforce_superko)
     : IGameState(core::GameType::GO),
       board_size_(board_size),
       current_player_(1),  // Black goes first
       komi_(komi),
       chinese_rules_(chinese_rules),
+      rule_set_(chinese_rules ? RuleSet::CHINESE : RuleSet::JAPANESE),
       ko_point_(-1),
       consecutive_passes_(0),
       hash_dirty_(true),
@@ -38,6 +111,10 @@ GoState::GoState(int board_size, float komi, bool chinese_rules, bool enforce_su
     hash_ = 0;
     hash_dirty_ = true;
     
+    // Initialize repetitive cycle detection
+    has_repetitive_cycle_ = false;
+    no_result_reason_ = "";
+    
     // Initialize rules
     rules_ = std::make_shared<GoRules>(board_size_, chinese_rules_, enforce_superko);
     
@@ -52,6 +129,11 @@ GoState::GoState(int board_size, float komi, bool chinese_rules, bool enforce_su
     zobrist_.addFeature("ko_point", board_size_ * board_size_ + 1);  // All positions + none
     zobrist_.addFeature("rules", 2);          // Chinese or Japanese rules
     zobrist_.addFeature("komi", 16);          // Discretized komi values
+    
+    // Initialize position frequency with initial position
+    if (!chinese_rules_) {
+        position_frequency_[getHash()] = 1;
+    }
 }
 
 // Copy constructor
@@ -62,6 +144,7 @@ GoState::GoState(const GoState& other)
       board_(other.board_),
       komi_(other.komi_),
       chinese_rules_(other.chinese_rules_),
+      rule_set_(other.rule_set_),
       ko_point_(other.ko_point_),
       captured_stones_(other.captured_stones_),
       consecutive_passes_(other.consecutive_passes_),
@@ -72,6 +155,9 @@ GoState::GoState(const GoState& other)
       zobrist_(other.zobrist_),
       hash_(other.hash_),
       hash_dirty_(other.hash_dirty_),
+      has_repetitive_cycle_(other.has_repetitive_cycle_),
+      no_result_reason_(other.no_result_reason_),
+      position_frequency_(other.position_frequency_),
       // Don't copy cached tensors - force recomputation to avoid memory issues
       tensor_cache_dirty_(true),
       enhanced_tensor_cache_dirty_(true),
@@ -99,6 +185,7 @@ GoState& GoState::operator=(const GoState& other) {
         board_ = other.board_;
         komi_ = other.komi_;
         chinese_rules_ = other.chinese_rules_;
+        rule_set_ = other.rule_set_;
         ko_point_ = other.ko_point_;
         captured_stones_ = other.captured_stones_;
         consecutive_passes_ = other.consecutive_passes_;
@@ -108,6 +195,9 @@ GoState& GoState::operator=(const GoState& other) {
         dead_stones_ = other.dead_stones_;
         hash_ = other.hash_;
         hash_dirty_ = other.hash_dirty_;
+        has_repetitive_cycle_ = other.has_repetitive_cycle_;
+        no_result_reason_ = other.no_result_reason_;
+        position_frequency_ = other.position_frequency_;
         
         // Clear old tensor caches before assignment
         clearTensorCache();
@@ -248,6 +338,22 @@ void GoState::makeMove(int action) {
     
     // Invalidate hash after all state changes
     invalidateHash();
+    
+    // Track position frequency for Japanese/Korean repetitive cycle detection
+    if (rule_set_ != RuleSet::CHINESE && !has_repetitive_cycle_) {
+        uint64_t currentHash = getHash();
+        position_frequency_[currentHash]++;
+        
+        // Check for triple ko or similar (position repeated 3+ times)
+        if (position_frequency_[currentHash] >= 3) {
+            has_repetitive_cycle_ = true;
+            if (rule_set_ == RuleSet::JAPANESE) {
+                no_result_reason_ = "Triple repetition detected (possible triple ko) - No Result";
+            } else if (rule_set_ == RuleSet::KOREAN) {
+                no_result_reason_ = "Triple repetition detected (possible triple ko) - Draw";
+            }
+        }
+    }
 }
 
 bool GoState::isLegalMove(int action) const {
@@ -330,6 +436,33 @@ bool GoState::undoMove() {
         position_history_.pop_back();
     }
     
+    // Update position frequency tracking
+    if (!chinese_rules_) {
+        uint64_t currentHash = getHash();
+        if (position_frequency_[currentHash] > 0) {
+            position_frequency_[currentHash]--;
+            if (position_frequency_[currentHash] == 0) {
+                position_frequency_.erase(currentHash);
+            }
+        }
+        
+        // Reset repetitive cycle if we've undone enough moves
+        if (has_repetitive_cycle_) {
+            // Check if any position still has frequency >= 3
+            bool stillHasTripleRep = false;
+            for (const auto& [hash, freq] : position_frequency_) {
+                if (freq >= 3) {
+                    stillHasTripleRep = true;
+                    break;
+                }
+            }
+            if (!stillHasTripleRep) {
+                has_repetitive_cycle_ = false;
+                no_result_reason_ = "";
+            }
+        }
+    }
+    
     // Switch back to previous player
     current_player_ = 3 - current_player_;
     
@@ -368,12 +501,33 @@ bool GoState::undoMove() {
 
 bool GoState::isTerminal() const {
     // Game ends when both players pass consecutively
-    return consecutive_passes_ >= 2;
+    if (consecutive_passes_ >= 2) {
+        return true;
+    }
+    
+    // For Japanese/Korean rules, game also ends if repetitive cycle detected
+    if (rule_set_ != RuleSet::CHINESE && has_repetitive_cycle_) {
+        return true;
+    }
+    
+    return false;
 }
 
 core::GameResult GoState::getGameResult() const {
     if (!isTerminal()) {
         return core::GameResult::ONGOING;
+    }
+    
+    // Check for repetitive cycle handling based on rule set
+    if (has_repetitive_cycle_) {
+        if (rule_set_ == RuleSet::JAPANESE) {
+            // Japanese rules: triple ko leads to no result
+            return core::GameResult::NO_RESULT;
+        } else if (rule_set_ == RuleSet::KOREAN) {
+            // Korean rules: triple ko leads to draw
+            return core::GameResult::DRAW;
+        }
+        // Chinese rules: continue to normal scoring (triple ko allowed)
     }
     
     // Calculate scores
@@ -598,6 +752,7 @@ void GoState::copyFrom(const core::IGameState& source) {
     board_ = go_source->board_;
     komi_ = go_source->komi_;
     chinese_rules_ = go_source->chinese_rules_;
+    rule_set_ = go_source->rule_set_;
     ko_point_ = go_source->ko_point_;
     captured_stones_ = go_source->captured_stones_;
     consecutive_passes_ = go_source->consecutive_passes_;
@@ -608,6 +763,9 @@ void GoState::copyFrom(const core::IGameState& source) {
     zobrist_ = go_source->zobrist_;
     hash_ = go_source->hash_;
     hash_dirty_ = go_source->hash_dirty_;
+    has_repetitive_cycle_ = go_source->has_repetitive_cycle_;
+    no_result_reason_ = go_source->no_result_reason_;
+    position_frequency_ = go_source->position_frequency_;
     
     // Re-create rules with proper configuration
     rules_ = std::make_shared<GoRules>(board_size_, chinese_rules_, go_source->rules_->isSuperkoenforced());
@@ -748,7 +906,13 @@ std::string GoState::toString() const {
     ss << "Current player: " << (current_player_ == 1 ? "Black" : "White") << std::endl;
     ss << "Captures - Black: " << captured_stones_[1] << ", White: " << captured_stones_[2] << std::endl;
     ss << "Komi: " << komi_ << std::endl;
-    ss << "Rules: " << (chinese_rules_ ? "Chinese" : "Japanese") << std::endl;
+    ss << "Rules: ";
+    switch (rule_set_) {
+        case RuleSet::CHINESE: ss << "Chinese"; break;
+        case RuleSet::JAPANESE: ss << "Japanese"; break;
+        case RuleSet::KOREAN: ss << "Korean"; break;
+    }
+    ss << std::endl;
     ss << "Superko enforcement: " << (rules_->isSuperkoenforced() ? "Yes" : "No") << std::endl;
     
     if (isTerminal()) {
@@ -783,6 +947,7 @@ bool GoState::equals(const core::IGameState& other) const {
             ko_point_ != otherGo.ko_point_ ||
             komi_ != otherGo.komi_ ||
             chinese_rules_ != otherGo.chinese_rules_ ||
+            rule_set_ != otherGo.rule_set_ ||
             consecutive_passes_ != otherGo.consecutive_passes_ ||
             captured_stones_ != otherGo.captured_stones_ ||
             dead_stones_ != otherGo.dead_stones_) {
@@ -892,6 +1057,10 @@ bool GoState::isChineseRules() const {
     return chinese_rules_;
 }
 
+GoState::RuleSet GoState::getRuleSet() const {
+    return rule_set_;
+}
+
 bool GoState::isEnforcingSuperko() const {
     return rules_->isSuperkoenforced();
 }
@@ -957,6 +1126,40 @@ void GoState::clearDeadStones() {
 
 std::pair<float, float> GoState::calculateScore() const {
     return rules_->calculateScores(captured_stones_, komi_, dead_stones_);
+}
+
+std::vector<int> GoState::findDamePoints() const {
+    std::vector<int> damePoints;
+    
+    // Get territory ownership
+    std::vector<int> territory = getTerritoryOwnership(dead_stones_);
+    
+    // Dame points are empty positions with neutral territory (0)
+    for (int pos = 0; pos < board_size_ * board_size_; pos++) {
+        if (getStone(pos) == 0 && territory[pos] == 0) {
+            damePoints.push_back(pos);
+        }
+    }
+    
+    return damePoints;
+}
+
+bool GoState::areAllDameFilled() const {
+    // For Chinese rules, check if there are any unfilled dame
+    if (!chinese_rules_) {
+        return true;  // Japanese rules don't require dame filling
+    }
+    
+    std::vector<int> damePoints = findDamePoints();
+    return damePoints.empty();
+}
+
+bool GoState::hasRepetitiveCycle() const {
+    return has_repetitive_cycle_;
+}
+
+std::string GoState::getNoResultReason() const {
+    return no_result_reason_;
 }
 
 // Helper methods
@@ -1079,8 +1282,13 @@ void GoState::updateHash() const {
         }
     }
     
-    // Hash current player
-    hash_ ^= zobrist_.getPlayerHash(current_player_ - 1);
+    // Hash current player only for non-Chinese rules
+    // Chinese rules use Positional Superko (PSK) - no player in hash
+    // AGA/other rules use Situational Superko (SSK) - include player in hash
+    // Japanese rules don't use superko but we include player for consistency
+    if (!chinese_rules_) {
+        hash_ ^= zobrist_.getPlayerHash(current_player_ - 1);
+    }
     
     // Hash ko point
     if (ko_point_ >= 0) {

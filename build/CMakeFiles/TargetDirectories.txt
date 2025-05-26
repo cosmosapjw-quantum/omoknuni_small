@@ -26,14 +26,8 @@
 /home/cosmos/omoknuni_small/build/CMakeFiles/ContinuousCoverage.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/ContinuousMemCheck.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/ContinuousSubmit.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/alphazero_py.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/alphazero_pipeline.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/alphazero.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/omoknuni_cli.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/omoknuni_cli_optimized.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/omoknuni_cli_enhanced.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/omoknuni_cli_final.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/omoknuni_cli_working.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/core_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/chess_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/go_tests.dir

@@ -1,0 +1,53 @@
+# Optimized configuration for RTX 3060 Ti with VRAM leak fixes
+# Hardware: Ryzen 9 5900X (12C/24T), 64GB RAM, RTX 3060 Ti (8GB VRAM)
+
+# Game configuration
+game_type: gomoku
+board_size: 9
+
+# MCTS configuration
+mcts_num_simulations: 1600
+mcts_num_threads: 20  # Leave 4 threads for system/GPU management
+mcts_exploration_constant: 1.4
+mcts_use_transposition_table: true
+mcts_transposition_table_size_mb: 256
+mcts_virtual_loss: 1
+
+# CRITICAL: Optimized batch configuration for RTX 3060 Ti
+mcts_batch_size: 128  # Increased from typical 32-64 for better GPU utilization
+mcts_batch_timeout_ms: 5  # Reduced timeout for faster batching
+mcts_enable_batched_inference: true
+
+# Memory management
+enable_aggressive_memory_cleanup: true
+memory_cleanup_interval_batches: 5  # Clean every 5 batches
+max_memory_gb: 48  # Leave 16GB for system
+
+# Neural network configuration  
+nn_model_type: resnet
+nn_num_filters: 128
+nn_num_res_blocks: 10
+nn_model_path: models/model_gomoku_9x9.pt
+
+# GPU optimization
+gpu_memory_pool_size_mb: 2048  # 2GB GPU memory pool
+gpu_batch_optimization: true
+enable_async_inference: true
+
+# Self-play configuration
+self_play_num_games: 100
+self_play_num_parallel_games: 8  # Parallel games for better throughput
+self_play_temperature: 1.0
+self_play_temperature_drop_move: 30
+self_play_save_dir: data/self_play_games
+
+# Training configuration
+training_batch_size: 256
+training_learning_rate: 0.001
+training_num_epochs: 10
+training_checkpoint_interval: 10
+
+# Performance monitoring
+enable_performance_monitoring: true
+log_inference_times: true
+log_memory_usage: true

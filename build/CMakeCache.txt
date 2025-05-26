@@ -27,7 +27,7 @@ AlphaZero_SOURCE_DIR:STATIC=/home/cosmos/omoknuni_small
 BUILD_EXAMPLES:BOOL=OFF
 
 //Build Python bindings (DISABLED due to pybind11 issues)
-BUILD_PYTHON_BINDINGS:BOOL=ON
+BUILD_PYTHON_BINDINGS:BOOL=OFF
 
 //Build shared libs
 BUILD_SHARED_LIBS:BOOL=ON
@@ -1085,9 +1085,6 @@ nvtx3_dir:PATH=nvtx3_dir-NOTFOUND
 //The directory containing a CMake configuration file for phmap.
 phmap_DIR:PATH=phmap_DIR-NOTFOUND
 
-//pybind11 CMake directory from Python
-pybind11_DIR:PATH=/usr/lib/python3/dist-packages/pybind11/share/cmake/pybind11
-
 //The directory containing a CMake configuration file for rapids_logger.
 rapids_logger_DIR:PATH=/usr/local/lib/cmake/rapids_logger
 
@@ -1577,8 +1574,6 @@ FIND_PACKAGE_MESSAGE_DETAILS_Torch:INTERNAL=[/opt/libtorch-2.7.0-cu128/lib/libto
 GITCOMMAND-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: GIT_EXECUTABLE
 GIT_EXECUTABLE-ADVANCED:INTERNAL=1
-//Test HAS_FLTO
-HAS_FLTO:INTERNAL=1
 LIBCUDACXX_VERSION:INTERNAL=2.7.0.0
 LIBCUDACXX_VERSION_COUNT:INTERNAL=4
 LIBCUDACXX_VERSION_MAJOR:INTERNAL=2
@@ -1615,11 +1610,6 @@ OpenMP_SPECTEST_CXX_:INTERNAL=TRUE
 OpenMP_gomp_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OpenMP_pthread_LIBRARY
 OpenMP_pthread_LIBRARY-ADVANCED:INTERNAL=1
-//Python executable during the last CMake run
-PYBIND11_PYTHON_EXECUTABLE_LAST:INTERNAL=/usr/bin/python3.12
-//Python debug status
-PYTHON_IS_DEBUG:INTERNAL=0
-PYTHON_MODULE_EXTENSION:INTERNAL=.cpython-312-x86_64-linux-gnu.so
 //ADVANCED property for variable: SITE
 SITE-ADVANCED:INTERNAL=1
 //CUB version used by Thrust
@@ -1647,21 +1637,15 @@ _CUB_QUIET_FLAG:INTERNAL=QUIET
 _CUB_VERSION_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids
 //CMAKE_INSTALL_PREFIX during last run
 _GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/usr/local
-_Python:INTERNAL=Python
 //Compiler reason failure
 _Python_Compiler_REASON_FAILURE:INTERNAL=
-_Python_DEVELOPMENT_EMBED_SIGNATURE:INTERNAL=a8fd6906d9078ad7f0c724cee5c37e33
-_Python_DEVELOPMENT_MODULE_SIGNATURE:INTERNAL=e176b05b75342c1dd2b5202bb344a689
 //Development reason failure
 _Python_Development_REASON_FAILURE:INTERNAL=
+//Path to a program.
 _Python_EXECUTABLE:INTERNAL=/usr/bin/python3.12
-//Path to a file.
-_Python_INCLUDE_DIR:INTERNAL=/usr/include/python3.12
 //Python Properties
-_Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;12;3;64;<none>;cpython-312-x86_64-linux-gnu;abi3;/usr/lib/python3.12;/usr/lib/python3.12;/usr/local/lib/python3.12/dist-packages;/usr/local/lib/python3.12/dist-packages
+_Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;12;3;64;32;<none>;cpython-312-x86_64-linux-gnu;abi3;/usr/lib/python3.12;/usr/lib/python3.12;/usr/local/lib/python3.12/dist-packages;/usr/local/lib/python3.12/dist-packages
 _Python_INTERPRETER_SIGNATURE:INTERNAL=0b516266b7ed9a0986c924c82c2c3a08
-//Path to a library.
-_Python_LIBRARY_RELEASE:INTERNAL=/usr/lib/x86_64-linux-gnu/libpython3.12.so
 //NumPy reason failure
 _Python_NumPy_REASON_FAILURE:INTERNAL=
 //Location of thrust-config.cmake
@@ -1679,8 +1663,6 @@ _libcudacxx_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids/libcudacxx
 _libcudacxx_VERSION_INCLUDE_DIR:INTERNAL=/usr/local/include/rapids/libcudacxx
 //Result of TRY_COMPILE
 compile_result:INTERNAL=TRUE
-//Directories where pybind11 and possibly Python headers are located
-pybind11_INCLUDE_DIRS:INTERNAL=/usr/lib/python3/dist-packages/pybind11/include;/usr/include/python3.12
 //Result of try_run()
 run_result:INTERNAL=0
 

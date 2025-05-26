@@ -58,7 +58,7 @@ endif()
 add_compile_options($<$<CONFIG:Release>:-O3>)
 
 # ───────────────────────────────────── Options ─────────────────────────────────
-option(BUILD_PYTHON_BINDINGS  "Build Python bindings (DISABLED due to pybind11 issues)"  ON)
+option(BUILD_PYTHON_BINDINGS  "Build Python bindings (DISABLED due to pybind11 issues)"  OFF)
 option(BUILD_TESTS            "Build tests"            ON)
 option(WITH_TORCH             "Build with PyTorch"     ON)
 option(BUILD_SHARED_LIBS      "Build shared libs"      ON)
@@ -627,10 +627,9 @@ set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
 if(WITH_TORCH)
     list(APPEND NN_SOURCES
         src/nn/ddw_randwire_resnet.cpp
-        src/nn/resnet_model_performance.cpp
+        src/nn/resnet_model.cpp
         src/nn/neural_network_factory.cpp
         src/nn/gpu_optimizer.cpp
-        src/nn/optimized_resnet_model.cpp
     )
 endif()
 
@@ -663,7 +662,9 @@ set(MCTS_SOURCES
     src/mcts/gpu_memory_pool.cpp
     src/mcts/dynamic_batch_manager.cpp
     src/mcts/advanced_transposition_table.cpp
+    src/mcts/phmap_transposition_table.cpp
     src/mcts/enhanced_mcts_engine.cpp
+    src/mcts/mcts_engine_optimization_stubs.cpp
 )
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp
@@ -680,8 +681,6 @@ set(EVALUATION_SOURCES
 )
 set(CLI_SOURCES 
     src/cli/cli_manager.cpp
-    src/cli/alphazero_pipeline.cpp
-    src/cli/alphazero_cli_pipeline.cpp
 )
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/mcts/mcts.cpp")
@@ -1139,92 +1138,17 @@ endif()
 # Main CLI executable conditionally built based on WITH_TORCH availability
 if(WITH_TORCH)
     # Always build the CLI with TORCH
-    add_executable(omoknuni_cli src/cli/omoknuni_cli.cpp)
-    add_executable(omoknuni_cli_optimized src/cli/omoknuni_cli_optimized.cpp)
-    add_executable(omoknuni_cli_enhanced src/cli/omoknuni_cli_enhanced.cpp)
-    # add_executable(omoknuni_cli_simple_enhanced src/cli/omoknuni_cli_simple_enhanced.cpp)
-    # Removed omoknuni_cli_enhanced_v2 - functionality merged into omoknuni_cli_final
     add_executable(omoknuni_cli_final src/cli/omoknuni_cli_final.cpp)
-    add_executable(omoknuni_cli_working src/cli/omoknuni_cli_working.cpp)
 
     # Set RPATH to find shared libraries relative to executable location
-    set_target_properties(omoknuni_cli PROPERTIES
-        INSTALL_RPATH_USE_LINK_PATH TRUE
-        BUILD_WITH_INSTALL_RPATH TRUE
-        INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
-    )
-    
-    set_target_properties(omoknuni_cli_optimized PROPERTIES
-        INSTALL_RPATH_USE_LINK_PATH TRUE
-        BUILD_WITH_INSTALL_RPATH TRUE
-        INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
-    )
-    
-    set_target_properties(omoknuni_cli_enhanced PROPERTIES
-        INSTALL_RPATH_USE_LINK_PATH TRUE
-        BUILD_WITH_INSTALL_RPATH TRUE
-        INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
-    )
-    
-    # set_target_properties(omoknuni_cli_simple_enhanced PROPERTIES
-    #     INSTALL_RPATH_USE_LINK_PATH TRUE
-    #     BUILD_WITH_INSTALL_RPATH TRUE
-    #     INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
-    # )
-    
-    # Removed set_target_properties for omoknuni_cli_enhanced_v2
-    
     set_target_properties(omoknuni_cli_final PROPERTIES
-        INSTALL_RPATH_USE_LINK_PATH TRUE
-        BUILD_WITH_INSTALL_RPATH TRUE
-        INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
-    )
-    
-    set_target_properties(omoknuni_cli_working PROPERTIES
         INSTALL_RPATH_USE_LINK_PATH TRUE
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH "$ORIGIN/../lib/Release:$ORIGIN/../lib:$ORIGIN/../../lib/Release:$ORIGIN/../../lib"
     )
 
     # Link against alphazero, yaml-cpp, and Torch
-    target_link_libraries(omoknuni_cli PRIVATE
-        alphazero
-        "${TORCH_LIBRARIES}"
-        dl  # For dlopen, dlclose, dlerror
-        stdc++  # Explicitly link standard C++ library
-    )
-    
-    target_link_libraries(omoknuni_cli_optimized PRIVATE
-        alphazero
-        "${TORCH_LIBRARIES}"
-        dl  # For dlopen, dlclose, dlerror
-        stdc++  # Explicitly link standard C++ library
-    )
-    
-    target_link_libraries(omoknuni_cli_enhanced PRIVATE
-        alphazero
-        "${TORCH_LIBRARIES}"
-        dl  # For dlopen, dlclose, dlerror
-        stdc++  # Explicitly link standard C++ library
-    )
-    
-    # target_link_libraries(omoknuni_cli_simple_enhanced PRIVATE
-    #     alphazero
-    #     "${TORCH_LIBRARIES}"
-    #     dl  # For dlopen, dlclose, dlerror
-    #     stdc++  # Explicitly link standard C++ library
-    # )
-    
-    # Removed target_link_libraries for omoknuni_cli_enhanced_v2
-    
     target_link_libraries(omoknuni_cli_final PRIVATE
-        alphazero
-        "${TORCH_LIBRARIES}"
-        dl  # For dlopen, dlclose, dlerror
-        stdc++  # Explicitly link standard C++ library
-    )
-    
-    target_link_libraries(omoknuni_cli_working PRIVATE
         alphazero
         "${TORCH_LIBRARIES}"
         dl  # For dlopen, dlclose, dlerror
@@ -1238,32 +1162,32 @@ if(WITH_TORCH)
         set(SYSTEM_GCC_MAJOR_VERSION 11) # Adjust if your /usr/bin/g++ is different
         set(SYSTEM_GCC_LIB_DIR "/usr/lib/gcc/x86_64-linux-gnu/${SYSTEM_GCC_MAJOR_VERSION}")
         if(EXISTS "${SYSTEM_GCC_LIB_DIR}")
-            target_link_directories(omoknuni_cli BEFORE PRIVATE "${SYSTEM_GCC_LIB_DIR}")
-            message(STATUS "Prepending system GCC lib path for omoknuni_cli: ${SYSTEM_GCC_LIB_DIR}")
+            target_link_directories(omoknuni_cli_final BEFORE PRIVATE "${SYSTEM_GCC_LIB_DIR}")
+            message(STATUS "Prepending system GCC lib path for omoknuni_cli_final: ${SYSTEM_GCC_LIB_DIR}")
         else()
             message(WARNING "System GCC lib path NOT found: ${SYSTEM_GCC_LIB_DIR}. Linker might still pick up incorrect libstdc++.")
         endif()
         # Also prepend the general system library path
         if(EXISTS "/usr/lib/x86_64-linux-gnu")
-             target_link_directories(omoknuni_cli BEFORE PRIVATE "/usr/lib/x86_64-linux-gnu")
-             message(STATUS "Prepending system library path for omoknuni_cli: /usr/lib/x86_64-linux-gnu")
+             target_link_directories(omoknuni_cli_final BEFORE PRIVATE "/usr/lib/x86_64-linux-gnu")
+             message(STATUS "Prepending system library path for omoknuni_cli_final: /usr/lib/x86_64-linux-gnu")
         endif()
     endif()
 
     # Handle yaml-cpp linking - different distributions may have different target names
     if(TARGET yaml-cpp::yaml-cpp)
-        target_link_libraries(omoknuni_cli PRIVATE yaml-cpp::yaml-cpp)
+        target_link_libraries(omoknuni_cli_final PRIVATE yaml-cpp::yaml-cpp)
     elseif(TARGET yaml-cpp)
-        target_link_libraries(omoknuni_cli PRIVATE yaml-cpp)
+        target_link_libraries(omoknuni_cli_final PRIVATE yaml-cpp)
     elseif(YAML_CPP_LIBRARY)
-        target_link_libraries(omoknuni_cli PRIVATE ${YAML_CPP_LIBRARY})
+        target_link_libraries(omoknuni_cli_final PRIVATE ${YAML_CPP_LIBRARY})
     else()
         message(WARNING "yaml-cpp target not found. Trying with -lyaml-cpp")
-        target_link_libraries(omoknuni_cli PRIVATE -lyaml-cpp)
+        target_link_libraries(omoknuni_cli_final PRIVATE -lyaml-cpp)
     endif()
 
     # Add compiler and linker flags to properly enable CUDA
-    target_compile_definitions(omoknuni_cli PRIVATE
+    target_compile_definitions(omoknuni_cli_final PRIVATE
       PYTORCH_NO_CUDA_INIT_OVERRIDE=0
       USE_TORCH=1
       C10_CUDA_DRIVER_INIT=1
@@ -1282,30 +1206,30 @@ if(WITH_TORCH)
     # CMAKE_BUILD_TYPE will be e.g. "Release", "Debug"
     set(CLI_RPATH "$ORIGIN/../lib/${CMAKE_BUILD_TYPE}:${Local_Torch_LIB_DIR}")
 
-    set_target_properties(omoknuni_cli PROPERTIES
+    set_target_properties(omoknuni_cli_final PROPERTIES
         SKIP_BUILD_RPATH FALSE
         BUILD_WITH_INSTALL_RPATH TRUE # Uses INSTALL_RPATH as RPATH for build tree
         INSTALL_RPATH "${CLI_RPATH}" # RPATH for installation and build tree due to BUILD_WITH_INSTALL_RPATH
     )
 
     # Add debug output - prints a message when run
-    target_compile_definitions(omoknuni_cli PRIVATE DEBUG_CLI=1)
+    target_compile_definitions(omoknuni_cli_final PRIVATE DEBUG_CLI=1)
 
     # Make sure WITH_TORCH is defined
-    target_compile_definitions(omoknuni_cli PRIVATE WITH_TORCH)
+    target_compile_definitions(omoknuni_cli_final PRIVATE WITH_TORCH)
 
     # Add include directories
-    target_include_directories(omoknuni_cli PRIVATE
+    target_include_directories(omoknuni_cli_final PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
 
     # Install the CLI executable
-    install(TARGETS omoknuni_cli DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(TARGETS omoknuni_cli_final DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-    message(STATUS "Building omoknuni_cli with PyTorch support")
+    message(STATUS "Building omoknuni_cli_final with PyTorch support")
 else()
-    message(STATUS "Skipping omoknuni_cli (requires WITH_TORCH=ON)")
+    message(STATUS "Skipping omoknuni_cli_final (requires WITH_TORCH=ON)")
 endif()
 
 # ───────────────────────────── Example executables ────────────────────────────

@@ -1825,3 +1825,23 @@
 [2025-05-25 21:07:00.312] [system] [info] [19144] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
 [2025-05-25 21:07:22.945] [system] [info] [19145] [mcts_node_pool.cpp:207] Node pool cleared (global and thread-local)
 [2025-05-25 21:07:22.945] [system] [info] [19145] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
+[2025-05-25 21:08:12.291] [system] [info] [22743] [:] Logging system initialized. Log directory: logs
+[2025-05-25 21:58:01.508] [system] [info] [22779] [mcts_node_pool.cpp:207] Node pool cleared (global and thread-local)
+[2025-05-25 21:58:01.509] [system] [info] [22779] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
+[2025-05-25 21:58:03.324] [system] [info] [22780] [mcts_node_pool.cpp:207] Node pool cleared (global and thread-local)
+[2025-05-25 21:58:03.324] [system] [info] [22780] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
+[2025-05-25 21:59:29.952] [system] [info] [22778] [mcts_node_pool.cpp:207] Node pool cleared (global and thread-local)
+[2025-05-25 21:59:29.952] [system] [info] [22778] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
+[2025-05-25 22:02:23.386] [system] [info] [22777] [mcts_node_pool.cpp:207] Node pool cleared (global and thread-local)
+[2025-05-25 22:02:23.386] [system] [info] [22777] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
+[2025-05-26 00:20:44.166] [system] [info] [11096] [:] Logging system initialized. Log directory: logs
+[2025-05-26 00:20:49.659] [system] [info] [11167] [mcts_node_pool.cpp:207] Node pool cleared (global and thread-local)
+[2025-05-26 00:20:49.659] [system] [info] [11167] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
+[2025-05-26 00:20:49.787] [system] [info] [11168] [mcts_node_pool.cpp:207] Node pool cleared (global and thread-local)
+[2025-05-26 00:20:49.787] [system] [info] [11168] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
+[2025-05-26 00:20:49.919] [system] [info] [11169] [mcts_node_pool.cpp:207] Node pool cleared (global and thread-local)
+[2025-05-26 00:20:49.919] [system] [info] [11169] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
+[2025-05-26 00:20:50.123] [system] [info] [11170] [mcts_node_pool.cpp:207] Node pool cleared (global and thread-local)
+[2025-05-26 00:20:50.123] [system] [info] [11170] [mcts_node_pool.cpp:35] MCTS node pool destroyed. Total allocations: 0, Total deallocations: 0
+[2025-05-26 16:27:23.194] [system] [info] [29563] [:] Logging system initialized. Log directory: logs
+[2025-05-26 16:27:23.198] [system] [error] [29581] [omoknuni_cli_final.cpp:228] Failed to load config file: bad file: --config

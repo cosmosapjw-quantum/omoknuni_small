@@ -5,6 +5,7 @@
 #include <torch/torch.h>
 #include "nn/neural_network.h"
 #include "core/export_macros.h"
+#include "mcts/gpu_memory_pool.h"
 
 namespace alphazero {
 namespace nn {
@@ -98,6 +99,14 @@ public:
      */
     void cleanupTensorPool();
     
+    /**
+     * @brief Set GPU memory pool for efficient tensor allocation
+     * @param pool Shared pointer to GPU memory pool
+     */
+    void setGPUMemoryPool(std::shared_ptr<mcts::GPUMemoryPool> pool) {
+        gpu_memory_pool_ = pool;
+    }
+    
 private:
     int64_t input_channels_;
     int64_t board_size_;
@@ -138,6 +147,9 @@ private:
     };
     
     TensorPool tensor_pool_;
+    
+    // GPU memory pool for efficient tensor allocation
+    std::shared_ptr<mcts::GPUMemoryPool> gpu_memory_pool_;
 };
 
 } // namespace nn

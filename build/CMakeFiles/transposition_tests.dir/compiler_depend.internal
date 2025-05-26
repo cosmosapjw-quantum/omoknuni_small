@@ -33,13 +33,16 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp
  /home/cosmos/omoknuni_small/include/core/igamestate.h
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h
+ /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h
+ /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_node_pool.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
+ /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h
@@ -5213,6 +5216,22 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp
  /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h
  /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h
+ /usr/local/cuda-12.8/include/builtin_types.h
+ /usr/local/cuda-12.8/include/channel_descriptor.h
+ /usr/local/cuda-12.8/include/crt/host_config.h
+ /usr/local/cuda-12.8/include/crt/host_defines.h
+ /usr/local/cuda-12.8/include/cuda_device_runtime_api.h
+ /usr/local/cuda-12.8/include/cuda_runtime.h
+ /usr/local/cuda-12.8/include/cuda_runtime_api.h
+ /usr/local/cuda-12.8/include/device_types.h
+ /usr/local/cuda-12.8/include/driver_functions.h
+ /usr/local/cuda-12.8/include/driver_types.h
+ /usr/local/cuda-12.8/include/library_types.h
+ /usr/local/cuda-12.8/include/surface_types.h
+ /usr/local/cuda-12.8/include/texture_types.h
+ /usr/local/cuda-12.8/include/vector_functions.h
+ /usr/local/cuda-12.8/include/vector_functions.hpp
+ /usr/local/cuda-12.8/include/vector_types.h
 
 CMakeFiles/transposition_tests.dir/tests/mcts/transposition_table_test.cpp.o
  /home/cosmos/omoknuni_small/tests/mcts/transposition_table_test.cpp
@@ -5246,13 +5265,16 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_table_test.cpp.o
  /home/cosmos/omoknuni_small/include/core/igamestate.h
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h
+ /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h
+ /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_node_pool.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
+ /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h
@@ -10426,6 +10448,22 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_table_test.cpp.o
  /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h
  /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h
+ /usr/local/cuda-12.8/include/builtin_types.h
+ /usr/local/cuda-12.8/include/channel_descriptor.h
+ /usr/local/cuda-12.8/include/crt/host_config.h
+ /usr/local/cuda-12.8/include/crt/host_defines.h
+ /usr/local/cuda-12.8/include/cuda_device_runtime_api.h
+ /usr/local/cuda-12.8/include/cuda_runtime.h
+ /usr/local/cuda-12.8/include/cuda_runtime_api.h
+ /usr/local/cuda-12.8/include/device_types.h
+ /usr/local/cuda-12.8/include/driver_functions.h
+ /usr/local/cuda-12.8/include/driver_types.h
+ /usr/local/cuda-12.8/include/library_types.h
+ /usr/local/cuda-12.8/include/surface_types.h
+ /usr/local/cuda-12.8/include/texture_types.h
+ /usr/local/cuda-12.8/include/vector_functions.h
+ /usr/local/cuda-12.8/include/vector_functions.hpp
+ /usr/local/cuda-12.8/include/vector_types.h
 
 bin/Release/transposition_tests
  /lib/x86_64-linux-gnu/libc.so.6

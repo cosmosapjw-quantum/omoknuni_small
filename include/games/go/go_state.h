@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <unordered_set>
+#include <unordered_map>
 #include <memory>
 #include <optional>
 #include <atomic>
@@ -30,8 +31,23 @@ struct ALPHAZERO_API MoveRecord {
  */
 class ALPHAZERO_API GoState : public core::IGameState {
 public:
+    enum class RuleSet {
+        CHINESE,    // Area scoring, positional superko, komi 7.5
+        JAPANESE,   // Territory scoring, basic ko only, no-result on triple ko, komi 6.5
+        KOREAN      // Territory scoring, basic ko only, draw on triple ko, komi 6.5
+    };
+    
     /**
-     * @brief Constructor
+     * @brief Constructor with rule set
+     * 
+     * @param board_size Board size (9, 13, or 19)
+     * @param rule_set Rule set to use (Chinese, Japanese, or Korean)
+     * @param custom_komi Optional custom komi value (overrides rule set default)
+     */
+    GoState(int board_size, RuleSet rule_set, float custom_komi = -1.0f);
+    
+    /**
+     * @brief Legacy constructor for backward compatibility
      * 
      * @param board_size Board size (9, 13, or 19)
      * @param komi Komi value
@@ -130,9 +146,16 @@ public:
     /**
      * @brief Check if using Chinese rules
      * 
-     * @return true if using Chinese rules, false if Japanese
+     * @return true if using Chinese rules, false if Japanese/Korean
      */
     bool isChineseRules() const;
+    
+    /**
+     * @brief Get the current rule set
+     * 
+     * @return Current rule set (Chinese, Japanese, or Korean)
+     */
+    RuleSet getRuleSet() const;
     
     /**
      * @brief Check if enforcing superko rule
@@ -209,12 +232,41 @@ public:
      */
     std::pair<float, float> calculateScore() const;
     
+    /**
+     * @brief Find all dame (neutral) points on the board
+     * 
+     * @return Vector of positions that are dame
+     */
+    std::vector<int> findDamePoints() const;
+    
+    /**
+     * @brief Check if all dame are filled (for Chinese rules)
+     * 
+     * @return true if all dame are filled, false otherwise
+     */
+    bool areAllDameFilled() const;
+    
+    /**
+     * @brief Check if the game has resulted in a repetitive cycle (Japanese rules)
+     * 
+     * @return true if triple ko or similar cycle detected
+     */
+    bool hasRepetitiveCycle() const;
+    
+    /**
+     * @brief Get the reason for no result (if applicable)
+     * 
+     * @return String describing the no-result reason, empty if not applicable
+     */
+    std::string getNoResultReason() const;
+    
 private:
     int board_size_;
     int current_player_;
     std::vector<int> board_;
     float komi_;
-    bool chinese_rules_;
+    bool chinese_rules_;  // For backward compatibility
+    RuleSet rule_set_;
     
     // Game state tracking
     int ko_point_;
@@ -231,6 +283,11 @@ private:
     core::ZobristHash zobrist_;
     mutable uint64_t hash_;
     mutable bool hash_dirty_;
+    
+    // Repetitive cycle detection for Japanese rules
+    mutable bool has_repetitive_cycle_;
+    mutable std::string no_result_reason_;
+    std::unordered_map<uint64_t, int> position_frequency_;  // Track how many times each position occurred
     
     // PERFORMANCE FIX: Cached tensor representations to avoid expensive recomputation
     mutable std::vector<std::vector<std::vector<float>>> cached_tensor_repr_;

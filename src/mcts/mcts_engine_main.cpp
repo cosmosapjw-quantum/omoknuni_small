@@ -2,11 +2,17 @@
 #include "mcts/mcts_node.h"
 #include "mcts/advanced_memory_pool.h"
 #include "mcts/aggressive_memory_manager.h"
+#include "nn/resnet_model.h"
 #include "utils/debug_monitor.h"
 #include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <random>
+
+#ifdef WITH_TORCH
+#include <torch/torch.h>
+#include <c10/cuda/CUDACachingAllocator.h>
+#endif
 
 namespace alphazero {
 namespace mcts {
@@ -28,11 +34,18 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
       use_advanced_memory_pool_(true),
       direct_inference_fn_(nullptr) {
     
-    // Create transposition table if enabled
+    // Create transposition table if enabled (always use PHMap)
     if (use_transposition_table_) {
         size_t tt_size_mb = settings.transposition_table_size_mb > 0 ? 
                            settings.transposition_table_size_mb : 128;
-        transposition_table_ = std::make_unique<TranspositionTable>(tt_size_mb);
+        
+        // Always use high-performance PHMap implementation
+        PHMapTranspositionTable::Config config;
+        config.size_mb = tt_size_mb;
+        config.num_shards = 0;  // Auto-determine
+        config.enable_compression = true;
+        config.enable_stats = true;
+        transposition_table_ = std::make_unique<PHMapTranspositionTable>(config);
     }
     
     // Create node tracker for pending evaluations
@@ -66,6 +79,21 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
         });
     memory_pressure_monitor_->start();
     
+    // Initialize GPU memory pool (always enabled)
+    GPUMemoryPool::PoolConfig gpu_pool_config;
+    gpu_pool_config.initial_pool_size_mb = 1024;  // 1GB initial allocation
+    gpu_pool_config.max_pool_size_mb = 4096;      // 4GB max allocation
+    gpu_memory_pool_ = std::make_unique<GPUMemoryPool>(gpu_pool_config);
+    
+    // Initialize dynamic batch manager (always enabled)
+    DynamicBatchManager::Config batch_config;
+    batch_config.min_batch_size = 1;
+    batch_config.max_batch_size = settings.batch_size;
+    batch_config.max_wait_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        settings.batch_timeout).count();
+    batch_config.target_gpu_utilization_percent = 0.9;
+    dynamic_batch_manager_ = std::make_unique<DynamicBatchManager>(batch_config);
+    
     // Initialize aggressive memory manager
     auto& aggressive_memory_manager = AggressiveMemoryManager::getInstance();
     AggressiveMemoryManager::Config aggressive_config;
@@ -88,8 +116,10 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     
     aggressive_memory_manager.registerCleanupCallback("MCTSEngine_TranspositionTable",
         [this](AggressiveMemoryManager::PressureLevel level) {
-            if (transposition_table_ && level >= AggressiveMemoryManager::PressureLevel::CRITICAL) {
-                transposition_table_->clear();
+            if (level >= AggressiveMemoryManager::PressureLevel::CRITICAL) {
+                if (transposition_table_) {
+                    transposition_table_->clear();
+                }
             }
         }, 90);
     
@@ -100,10 +130,50 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
             }
         }, 80);
     
+    // CRITICAL FIX: Register GPU memory cleanup callback
+    aggressive_memory_manager.registerCleanupCallback("MCTSEngine_GPUMemory",
+        [this](AggressiveMemoryManager::PressureLevel level) {
+            if (level >= AggressiveMemoryManager::PressureLevel::WARNING) {
+                // Clean GPU memory pool
+                if (gpu_memory_pool_) {
+                    gpu_memory_pool_->trim(0.5f); // Keep only 50% of unused memory
+                }
+                
+                // Clean neural network tensor pools
+                if (neural_network_) {
+                    auto resnet = std::dynamic_pointer_cast<nn::ResNetModel>(neural_network_);
+                    if (resnet) {
+                        resnet->cleanupTensorPool();
+                    }
+                }
+                
+                // Force CUDA cache cleanup
+                #ifdef WITH_TORCH
+                if (torch::cuda::is_available()) {
+                    torch::cuda::synchronize();
+                    c10::cuda::CUDACachingAllocator::emptyCache();
+                }
+                #endif
+            }
+        }, 110); // Higher priority than other cleanups
+    
     // Validate neural network
     if (!neural_net) {
         std::cerr << "ERROR: Null neural network passed to MCTSEngine" << std::endl;
         throw std::invalid_argument("Neural network cannot be null");
+    }
+    
+    // Store neural network reference
+    neural_network_ = neural_net;
+    
+    // Pass GPU memory pool to neural network if it's a ResNetModel
+    if (gpu_memory_pool_) {
+        auto resnet = std::dynamic_pointer_cast<nn::ResNetModel>(neural_net);
+        if (resnet && gpu_memory_pool_) {
+            // Convert unique_ptr to shared_ptr with a no-op deleter since we still own it
+            auto shared_pool = std::shared_ptr<GPUMemoryPool>(gpu_memory_pool_.get(), [](GPUMemoryPool*){});
+            resnet->setGPUMemoryPool(shared_pool);
+        }
     }
     
     // Create direct inference function for serial mode
@@ -139,11 +209,18 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
     mem_pool_config.max_pool_size = 1000000; // Cap at 1 million objects
     memory_pool_ = std::make_unique<AdvancedMemoryPool>(mem_pool_config);
     
-    // Create transposition table if enabled
+    // Create transposition table if enabled (always use PHMap)
     if (use_transposition_table_) {
         size_t tt_size_mb = settings.transposition_table_size_mb > 0 ? 
                            settings.transposition_table_size_mb : 128;
-        transposition_table_ = std::make_unique<TranspositionTable>(tt_size_mb);
+        
+        // Always use high-performance PHMap implementation
+        PHMapTranspositionTable::Config config;
+        config.size_mb = tt_size_mb;
+        config.num_shards = 0;  // Auto-determine
+        config.enable_compression = true;
+        config.enable_stats = true;
+        transposition_table_ = std::make_unique<PHMapTranspositionTable>(config);
     }
     
     // Create node tracker for pending evaluations
@@ -207,7 +284,7 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
     // Clear the transposition table for new search
     if (use_transposition_table_ && transposition_table_) {
         transposition_table_->clear();
-        transposition_table_->resetStats();
+        // Stats are reset automatically when clearing
     }
 
     // Reset previous search state
@@ -392,7 +469,8 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
 
     // Add transposition table stats if enabled
     if (use_transposition_table_ && transposition_table_) {
-        last_stats_.tt_hit_rate = transposition_table_->hitRate();
+        auto tt_stats = transposition_table_->getStats();
+        last_stats_.tt_hit_rate = tt_stats.hit_rate;
         last_stats_.tt_size = transposition_table_->size();
     }
     
@@ -434,13 +512,13 @@ bool MCTSEngine::isUsingTranspositionTable() const {
 }
 
 void MCTSEngine::setTranspositionTableSize(size_t size_mb) {
-    // Configure the number of shards based on thread count
-    size_t num_shards = std::max(4u, std::thread::hardware_concurrency());
-    if (settings_.num_threads > 0) {
-        num_shards = std::max(size_t(settings_.num_threads), num_shards);
-    }
-    
-    transposition_table_ = std::make_unique<TranspositionTable>(size_mb, num_shards);
+    // Always use PHMap transposition table
+    PHMapTranspositionTable::Config config;
+    config.size_mb = size_mb;
+    config.num_shards = 0;  // Auto-determine
+    config.enable_compression = true;
+    config.enable_stats = true;
+    transposition_table_ = std::make_unique<PHMapTranspositionTable>(config);
 }
 
 void MCTSEngine::clearTranspositionTable() {
@@ -451,9 +529,15 @@ void MCTSEngine::clearTranspositionTable() {
 
 float MCTSEngine::getTranspositionTableHitRate() const {
     if (transposition_table_) {
-        return transposition_table_->hitRate();
+        auto stats = transposition_table_->getStats();
+        return stats.hit_rate;
     }
     return 0.0f;
+}
+
+void MCTSEngine::setUsePHMapTransposition(bool use_phmap) {
+    // Always use PHMap, so this method is now a no-op
+    // Kept for API compatibility
 }
 
 // Settings and stats accessors

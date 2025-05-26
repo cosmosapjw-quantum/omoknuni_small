@@ -28,7 +28,8 @@ enum class GameResult {
     ONGOING,
     WIN_PLAYER1,
     WIN_PLAYER2,
-    DRAW
+    DRAW,
+    NO_RESULT  // For Japanese rules: triple ko, quadruple ko, eternal life
 };
 
 /**

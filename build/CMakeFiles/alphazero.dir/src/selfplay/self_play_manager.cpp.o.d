@@ -382,91 +382,13 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
  /usr/include/parallel_hashmap/phmap_base.h \
  /usr/include/c++/13/shared_mutex \
+ /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
  /usr/include/x86_64-linux-gnu/sys/resource.h \
  /usr/include/x86_64-linux-gnu/bits/resource.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h \
- /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/utils/advanced_memory_monitor.h \
- /usr/include/c++/13/fstream \
- /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
- /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
- /usr/include/c++/13/bits/fstream.tcc \
- /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
- /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
- /usr/include/c++/13/bits/stl_map.h \
- /usr/include/c++/13/bits/stl_multimap.h \
- /home/cosmos/omoknuni_small/include/games/chess/chess_state.h \
- /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
- /home/cosmos/omoknuni_small/include/games/chess/chess_types.h \
- /home/cosmos/omoknuni_small/include/games/go/go_state.h \
- /usr/include/c++/13/unordered_set \
- /usr/include/c++/13/bits/unordered_set.h \
- /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
- /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
- /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
- /home/cosmos/omoknuni_small/include/core/tensor_pool.h \
- /usr/include/c++/13/filesystem /usr/include/c++/13/bits/fs_fwd.h \
- /usr/include/c++/13/bits/fs_path.h /usr/include/c++/13/codecvt \
- /usr/include/c++/13/bits/fs_dir.h /usr/include/c++/13/bits/fs_ops.h \
- /usr/include/nlohmann/json.hpp /usr/include/nlohmann/adl_serializer.hpp \
- /usr/include/nlohmann/detail/abi_macros.hpp \
- /usr/include/nlohmann/detail/conversions/from_json.hpp \
- /usr/include/c++/13/forward_list /usr/include/c++/13/bits/forward_list.h \
- /usr/include/c++/13/bits/forward_list.tcc /usr/include/c++/13/valarray \
- /usr/include/c++/13/bits/valarray_array.h \
- /usr/include/c++/13/bits/valarray_array.tcc \
- /usr/include/c++/13/bits/valarray_before.h \
- /usr/include/c++/13/bits/slice_array.h \
- /usr/include/c++/13/bits/valarray_after.h \
- /usr/include/c++/13/bits/gslice.h \
- /usr/include/c++/13/bits/gslice_array.h \
- /usr/include/c++/13/bits/mask_array.h \
- /usr/include/c++/13/bits/indirect_array.h \
- /usr/include/nlohmann/detail/exceptions.hpp \
- /usr/include/nlohmann/detail/value_t.hpp \
- /usr/include/nlohmann/detail/macro_scope.hpp \
- /usr/include/nlohmann/detail/meta/detected.hpp \
- /usr/include/nlohmann/detail/meta/void_t.hpp \
- /usr/include/nlohmann/thirdparty/hedley/hedley.hpp \
- /usr/include/c++/13/version \
- /usr/include/nlohmann/detail/string_escape.hpp \
- /usr/include/nlohmann/detail/input/position_t.hpp \
- /usr/include/nlohmann/detail/meta/cpp_future.hpp \
- /usr/include/nlohmann/detail/meta/type_traits.hpp \
- /usr/include/nlohmann/detail/iterators/iterator_traits.hpp \
- /usr/include/nlohmann/detail/meta/call_std/begin.hpp \
- /usr/include/nlohmann/detail/meta/call_std/end.hpp \
- /usr/include/nlohmann/json_fwd.hpp \
- /usr/include/nlohmann/detail/string_concat.hpp \
- /usr/include/nlohmann/detail/meta/identity_tag.hpp \
- /usr/include/nlohmann/detail/meta/std_fs.hpp \
- /usr/include/nlohmann/detail/conversions/to_json.hpp \
- /usr/include/nlohmann/detail/iterators/iteration_proxy.hpp \
- /usr/include/nlohmann/byte_container_with_subtype.hpp \
- /usr/include/nlohmann/detail/hash.hpp \
- /usr/include/nlohmann/detail/input/binary_reader.hpp \
- /usr/include/nlohmann/detail/input/input_adapters.hpp \
- /usr/include/nlohmann/detail/input/json_sax.hpp \
- /usr/include/nlohmann/detail/input/lexer.hpp \
- /usr/include/nlohmann/detail/meta/is_sax.hpp \
- /usr/include/nlohmann/detail/input/parser.hpp \
- /usr/include/nlohmann/detail/iterators/internal_iterator.hpp \
- /usr/include/nlohmann/detail/iterators/primitive_iterator.hpp \
- /usr/include/nlohmann/detail/iterators/iter_impl.hpp \
- /usr/include/nlohmann/detail/iterators/json_reverse_iterator.hpp \
- /usr/include/nlohmann/detail/json_custom_base_class.hpp \
- /usr/include/nlohmann/detail/json_pointer.hpp \
- /usr/include/nlohmann/detail/json_ref.hpp \
- /usr/include/nlohmann/detail/output/binary_writer.hpp \
- /usr/include/nlohmann/detail/output/output_adapters.hpp \
- /usr/include/nlohmann/detail/output/serializer.hpp \
- /usr/include/nlohmann/detail/conversions/to_chars.hpp \
- /usr/include/nlohmann/ordered_map.hpp /usr/include/c++/13/any \
- /usr/include/nlohmann/detail/macro_unscope.hpp \
- /usr/include/nlohmann/thirdparty/hedley/hedley_undef.hpp \
- /home/cosmos/omoknuni_small/include/core/game_export.h \
+ /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h \
@@ -1020,6 +942,8 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/edge.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/hash.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/forward_grad.h \
+ /usr/include/c++/13/unordered_set \
+ /usr/include/c++/13/bits/unordered_set.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/NamedTensorUtils.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/NamedTensor.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/TensorNames.h \
@@ -1057,7 +981,10 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/util/FunctionRef.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Logging.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/logging_is_not_google_glog.h \
- /usr/include/c++/13/set /usr/include/c++/13/bits/stl_set.h \
+ /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
+ /usr/include/c++/13/bits/stl_map.h \
+ /usr/include/c++/13/bits/stl_multimap.h /usr/include/c++/13/set \
+ /usr/include/c++/13/bits/stl_set.h \
  /usr/include/c++/13/bits/stl_multiset.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/WrapDimUtilsMulti.h \
  /usr/include/c++/13/bitset \
@@ -5159,19 +5086,103 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
+ /usr/local/cuda-12.8/include/cuda_runtime.h \
+ /usr/local/cuda-12.8/include/crt/host_config.h \
+ /usr/local/cuda-12.8/include/builtin_types.h \
+ /usr/local/cuda-12.8/include/device_types.h \
+ /usr/local/cuda-12.8/include/crt/host_defines.h \
+ /usr/local/cuda-12.8/include/driver_types.h \
+ /usr/local/cuda-12.8/include/vector_types.h \
+ /usr/local/cuda-12.8/include/surface_types.h \
+ /usr/local/cuda-12.8/include/texture_types.h \
+ /usr/local/cuda-12.8/include/library_types.h \
+ /usr/local/cuda-12.8/include/channel_descriptor.h \
+ /usr/local/cuda-12.8/include/cuda_runtime_api.h \
+ /usr/local/cuda-12.8/include/cuda_device_runtime_api.h \
+ /usr/local/cuda-12.8/include/driver_functions.h \
+ /usr/local/cuda-12.8/include/vector_functions.h \
+ /usr/local/cuda-12.8/include/vector_functions.hpp \
+ /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h \
+ /home/cosmos/omoknuni_small/include/nn/neural_network.h \
+ /home/cosmos/omoknuni_small/include/utils/advanced_memory_monitor.h \
+ /usr/include/c++/13/fstream \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
+ /usr/include/c++/13/bits/fstream.tcc \
+ /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
+ /home/cosmos/omoknuni_small/include/games/chess/chess_state.h \
+ /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
+ /home/cosmos/omoknuni_small/include/games/chess/chess_types.h \
+ /home/cosmos/omoknuni_small/include/games/go/go_state.h \
+ /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
+ /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
+ /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
+ /home/cosmos/omoknuni_small/include/core/tensor_pool.h \
+ /usr/include/c++/13/filesystem /usr/include/c++/13/bits/fs_fwd.h \
+ /usr/include/c++/13/bits/fs_path.h /usr/include/c++/13/codecvt \
+ /usr/include/c++/13/bits/fs_dir.h /usr/include/c++/13/bits/fs_ops.h \
+ /usr/include/nlohmann/json.hpp /usr/include/nlohmann/adl_serializer.hpp \
+ /usr/include/nlohmann/detail/abi_macros.hpp \
+ /usr/include/nlohmann/detail/conversions/from_json.hpp \
+ /usr/include/c++/13/forward_list /usr/include/c++/13/bits/forward_list.h \
+ /usr/include/c++/13/bits/forward_list.tcc /usr/include/c++/13/valarray \
+ /usr/include/c++/13/bits/valarray_array.h \
+ /usr/include/c++/13/bits/valarray_array.tcc \
+ /usr/include/c++/13/bits/valarray_before.h \
+ /usr/include/c++/13/bits/slice_array.h \
+ /usr/include/c++/13/bits/valarray_after.h \
+ /usr/include/c++/13/bits/gslice.h \
+ /usr/include/c++/13/bits/gslice_array.h \
+ /usr/include/c++/13/bits/mask_array.h \
+ /usr/include/c++/13/bits/indirect_array.h \
+ /usr/include/nlohmann/detail/exceptions.hpp \
+ /usr/include/nlohmann/detail/value_t.hpp \
+ /usr/include/nlohmann/detail/macro_scope.hpp \
+ /usr/include/nlohmann/detail/meta/detected.hpp \
+ /usr/include/nlohmann/detail/meta/void_t.hpp \
+ /usr/include/nlohmann/thirdparty/hedley/hedley.hpp \
+ /usr/include/c++/13/version \
+ /usr/include/nlohmann/detail/string_escape.hpp \
+ /usr/include/nlohmann/detail/input/position_t.hpp \
+ /usr/include/nlohmann/detail/meta/cpp_future.hpp \
+ /usr/include/nlohmann/detail/meta/type_traits.hpp \
+ /usr/include/nlohmann/detail/iterators/iterator_traits.hpp \
+ /usr/include/nlohmann/detail/meta/call_std/begin.hpp \
+ /usr/include/nlohmann/detail/meta/call_std/end.hpp \
+ /usr/include/nlohmann/json_fwd.hpp \
+ /usr/include/nlohmann/detail/string_concat.hpp \
+ /usr/include/nlohmann/detail/meta/identity_tag.hpp \
+ /usr/include/nlohmann/detail/meta/std_fs.hpp \
+ /usr/include/nlohmann/detail/conversions/to_json.hpp \
+ /usr/include/nlohmann/detail/iterators/iteration_proxy.hpp \
+ /usr/include/nlohmann/byte_container_with_subtype.hpp \
+ /usr/include/nlohmann/detail/hash.hpp \
+ /usr/include/nlohmann/detail/input/binary_reader.hpp \
+ /usr/include/nlohmann/detail/input/input_adapters.hpp \
+ /usr/include/nlohmann/detail/input/json_sax.hpp \
+ /usr/include/nlohmann/detail/input/lexer.hpp \
+ /usr/include/nlohmann/detail/meta/is_sax.hpp \
+ /usr/include/nlohmann/detail/input/parser.hpp \
+ /usr/include/nlohmann/detail/iterators/internal_iterator.hpp \
+ /usr/include/nlohmann/detail/iterators/primitive_iterator.hpp \
+ /usr/include/nlohmann/detail/iterators/iter_impl.hpp \
+ /usr/include/nlohmann/detail/iterators/json_reverse_iterator.hpp \
+ /usr/include/nlohmann/detail/json_custom_base_class.hpp \
+ /usr/include/nlohmann/detail/json_pointer.hpp \
+ /usr/include/nlohmann/detail/json_ref.hpp \
+ /usr/include/nlohmann/detail/output/binary_writer.hpp \
+ /usr/include/nlohmann/detail/output/output_adapters.hpp \
+ /usr/include/nlohmann/detail/output/serializer.hpp \
+ /usr/include/nlohmann/detail/conversions/to_chars.hpp \
+ /usr/include/nlohmann/ordered_map.hpp /usr/include/c++/13/any \
+ /usr/include/nlohmann/detail/macro_unscope.hpp \
+ /usr/include/nlohmann/thirdparty/hedley/hedley_undef.hpp \
+ /home/cosmos/omoknuni_small/include/core/game_export.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDACachingAllocator.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/CachingDeviceAllocator.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAGraphsC10Utils.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAStream.h \
  /usr/local/cuda-12.8/include/cuda_runtime_api.h \
- /usr/local/cuda-12.8/include/crt/host_defines.h \
- /usr/local/cuda-12.8/include/builtin_types.h \
- /usr/local/cuda-12.8/include/device_types.h \
- /usr/local/cuda-12.8/include/driver_types.h \
- /usr/local/cuda-12.8/include/vector_types.h \
- /usr/local/cuda-12.8/include/surface_types.h \
- /usr/local/cuda-12.8/include/texture_types.h \
- /usr/local/cuda-12.8/include/cuda_device_runtime_api.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAFunctions.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/impl/GPUTrace.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAException.h \

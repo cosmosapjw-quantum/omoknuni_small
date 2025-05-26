@@ -76,6 +76,9 @@ public:
     // Utility
     static std::string formatBytes(size_t bytes);
     
+    // Shutdown - stop monitoring thread before program exit
+    void shutdown();
+    
 public:
     ~AggressiveMemoryManager();
     

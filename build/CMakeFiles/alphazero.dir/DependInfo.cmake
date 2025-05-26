@@ -8,8 +8,6 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/cosmos/omoknuni_small/src/cli/alphazero_cli_pipeline.cpp" "CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o.d"
-  "/home/cosmos/omoknuni_small/src/cli/alphazero_pipeline.cpp" "CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/cli/cli_manager.cpp" "CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/core/game_export.cpp" "CMakeFiles/alphazero.dir/src/core/game_export.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/core/game_export.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/core/igamestate.cpp" "CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o.d"
@@ -35,6 +33,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/src/mcts/mcts_engine_memory.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/mcts_engine_memory_pressure.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/mcts_engine_methods.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/mcts/mcts_engine_optimization_stubs.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/mcts_engine_parallel_batch.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/mcts_engine_search.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/mcts_engine_simple_batch.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.o.d"
@@ -50,12 +49,12 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/cosmos/omoknuni_small/src/mcts/mcts_object_pool.cpp" "CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/multi_instance_nn_manager.cpp" "CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/node_tracker.cpp" "CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/mcts/phmap_transposition_table.cpp" "CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/mcts/transposition_table.cpp" "CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/nn/ddw_randwire_resnet.cpp" "CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/nn/gpu_optimizer.cpp" "CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/nn/neural_network_factory.cpp" "CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o.d"
-  "/home/cosmos/omoknuni_small/src/nn/optimized_resnet_model.cpp" "CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.o.d"
-  "/home/cosmos/omoknuni_small/src/nn/resnet_model_performance.cpp" "CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o.d"
+  "/home/cosmos/omoknuni_small/src/nn/resnet_model.cpp" "CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/selfplay/optimized_self_play_manager.cpp" "CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/selfplay/self_play_manager.cpp" "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o.d"
   "/home/cosmos/omoknuni_small/src/selfplay/self_play_manager_parallel.cpp" "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o" "gcc" "CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o.d"

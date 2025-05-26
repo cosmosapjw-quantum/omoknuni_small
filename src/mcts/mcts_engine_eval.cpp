@@ -186,9 +186,11 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
                     settings_.progressive_widening_k);
         
         // Store in transposition table if enabled
-        if (use_transposition_table_ && transposition_table_) {
+        if (use_transposition_table_) {
             try {
-                transposition_table_->store(leaf_state_hash, std::weak_ptr<MCTSNode>(leaf), path.size());
+                if (transposition_table_) {
+                    transposition_table_->store(leaf_state_hash, leaf, path.size());
+                }
             } catch (const std::exception& e) {
                 std::cerr << "Transposition table store failed: " << e.what() << std::endl;
             }

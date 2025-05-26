@@ -9,13 +9,20 @@ namespace mcts {
 
 // Helper method to handle transposition table lookups
 bool MCTSEngine::handleTranspositionMatch(std::shared_ptr<MCTSNode>& selected_child, std::shared_ptr<MCTSNode>& parent) {
-    if (!use_transposition_table_ || !transposition_table_ || !selected_child || selected_child->isTerminal()) {
+    if (!use_transposition_table_ || !selected_child || selected_child->isTerminal()) {
+        return false;
+    }
+    
+    // Check if transposition table exists
+    if (!transposition_table_) {
         return false;
     }
     
     try {
         uint64_t hash = selected_child->getState().getHash();
-        std::shared_ptr<MCTSNode> transposition_entry = transposition_table_->get(hash);
+        std::shared_ptr<MCTSNode> transposition_entry;
+        
+        transposition_entry = transposition_table_->lookup(hash);
 
         if (!transposition_entry || transposition_entry == selected_child) {
             return false;

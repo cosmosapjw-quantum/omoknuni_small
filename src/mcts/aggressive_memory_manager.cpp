@@ -47,11 +47,16 @@ AggressiveMemoryManager::AggressiveMemoryManager()
     
 }
 
-AggressiveMemoryManager::~AggressiveMemoryManager() {
+void AggressiveMemoryManager::shutdown() {
     shutdown_ = true;
     if (monitor_thread_.joinable()) {
         monitor_thread_.join();
     }
+}
+
+AggressiveMemoryManager::~AggressiveMemoryManager() {
+    // Ensure shutdown was called
+    shutdown();
 }
 
 void AggressiveMemoryManager::trackAllocation(const std::string& category, size_t bytes, 

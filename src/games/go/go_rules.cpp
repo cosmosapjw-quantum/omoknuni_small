@@ -364,9 +364,11 @@ std::pair<float, float> GoRules::calculateScores(
     }
     
     if (!chinese_rules_) {
-        // For Japanese rules, add prisoners (captured stones + dead stones)
-        int black_prisoners = captured_stones[1];
-        int white_prisoners = captured_stones[2];
+        // For Japanese/Korean rules, add prisoners (captured stones + dead stones)
+        // captured_stones[1] = stones captured BY black (white prisoners)
+        // captured_stones[2] = stones captured BY white (black prisoners)
+        int white_prisoners = captured_stones[1];  // Stones captured by black
+        int black_prisoners = captured_stones[2];  // Stones captured by white
         
         // Count dead stones as prisoners
         for (int pos : dead_stones) {

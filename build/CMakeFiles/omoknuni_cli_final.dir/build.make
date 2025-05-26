@@ -102,11 +102,11 @@ bin/Release/omoknuni_cli_final: /opt/libtorch-2.7.0-cu128/lib/libc10.so
 bin/Release/omoknuni_cli_final: /opt/libtorch-2.7.0-cu128/lib/libkineto.a
 bin/Release/omoknuni_cli_final: /usr/local/cuda/lib64/libnvrtc.so
 bin/Release/omoknuni_cli_final: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
+bin/Release/omoknuni_cli_final: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0
 bin/Release/omoknuni_cli_final: /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
 bin/Release/omoknuni_cli_final: /opt/libtorch-2.7.0-cu128/lib/libc10.so
 bin/Release/omoknuni_cli_final: /usr/local/cuda/lib64/libnvToolsExt.so
 bin/Release/omoknuni_cli_final: /usr/lib/gcc/x86_64-linux-gnu/13/libgomp.so
-bin/Release/omoknuni_cli_final: /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0
 bin/Release/omoknuni_cli_final: /usr/local/cuda/lib64/libcudart.so
 bin/Release/omoknuni_cli_final: /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
 bin/Release/omoknuni_cli_final: lib/Release/libmimalloc.a

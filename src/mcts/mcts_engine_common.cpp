@@ -22,7 +22,8 @@ void MCTSEngine::countTreeStatistics() {
 
     // Add transposition table stats if enabled
     if (use_transposition_table_ && transposition_table_) {
-        last_stats_.tt_hit_rate = transposition_table_->hitRate();
+        auto tt_stats = transposition_table_->getStats();
+        last_stats_.tt_hit_rate = tt_stats.hit_rate;
         last_stats_.tt_size = transposition_table_->size();
     }
 }

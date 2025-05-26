@@ -270,21 +270,23 @@ torch::Tensor GPUMemoryPool::tensorFromMemory(
     torch::ScalarType dtype,
     int device_id
 ) {
-    // Create tensor options
+    // CRITICAL FIX: Don't use torch::from_blob for GPU memory as it doesn't manage lifecycle
+    // Instead, create a proper tensor and copy data
+    
     auto options = torch::TensorOptions()
         .dtype(dtype)
         .device(torch::kCUDA, device_id);
     
-    // Calculate strides
-    std::vector<int64_t> strides(shape.size());
-    int64_t stride = 1;
-    for (int i = shape.size() - 1; i >= 0; --i) {
-        strides[i] = stride;
-        stride *= shape[i];
-    }
-
-    // Create tensor from raw memory
-    return torch::from_blob(data, shape, strides, options);
+    // Create a properly managed tensor
+    torch::Tensor tensor = torch::empty(shape, options);
+    
+    // Calculate total bytes
+    size_t total_bytes = tensor.numel() * tensor.element_size();
+    
+    // Copy data to the tensor (this creates a managed copy)
+    cudaMemcpy(tensor.data_ptr(), data, total_bytes, cudaMemcpyDeviceToDevice);
+    
+    return tensor;
 }
 
 void GPUMemoryPool::asyncCopyToDevice(

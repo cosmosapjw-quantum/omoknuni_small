@@ -41,15 +41,24 @@ void MCTSEngine::cleanupTree() {
     // Reset root node statistics but keep it for potential reuse
     root_ = nullptr;
     
-    // CRITICAL FIX: Compact node pool to release unused memory
-    if (node_pool_ && node_pool_->shouldCompact()) {
+    // CRITICAL FIX: Always compact node pool to release unused memory
+    if (node_pool_) {
         node_pool_->compact();
     }
     
-    // Force GPU memory cleanup
-#ifdef TORCH_CUDA_AVAILABLE
+    // Force GPU memory cleanup - enhanced version
+#ifdef WITH_TORCH
     if (torch::cuda::is_available()) {
+        // Empty all GPU caches
         c10::cuda::CUDACachingAllocator::emptyCache();
+        
+        // Force synchronization to ensure cleanup completes
+        torch::cuda::synchronize();
+        
+        // Additional cleanup for tensor pools
+        if (gpu_memory_pool_) {
+            gpu_memory_pool_->trim(0.5f);  // Keep only 50% of allocated memory
+        }
     }
 #endif
     
@@ -102,22 +111,51 @@ void MCTSEngine::resetForNewSearch() {
         // but we should ensure no allocations are marked as in use
     }
     
-    // CRITICAL FIX: Also compact node pool during reset
-    if (node_pool_ && node_pool_->shouldCompact()) {
+    // CRITICAL FIX: Always compact node pool during reset
+    if (node_pool_) {
         node_pool_->compact();
     }
     
-    // Additional GPU memory cleanup
-#ifdef TORCH_CUDA_AVAILABLE
+    // Additional GPU memory cleanup - enhanced version
+#ifdef WITH_TORCH
     if (torch::cuda::is_available()) {
+        // Empty all GPU caches
         c10::cuda::CUDACachingAllocator::emptyCache();
+        
+        // Force synchronization
+        torch::cuda::synchronize();
+        
+        // Additional cleanup for tensor caches
+        if (torch::cuda::is_available()) {
+            torch::cuda::synchronize();
+        }
         
         // Get GPU memory stats if available
         try {
-            size_t gpu_allocated = c10::cuda::CUDACachingAllocator::currentMemoryAllocated(0);
-            size_t gpu_reserved = c10::cuda::CUDACachingAllocator::currentMemoryCached(0);
+            // PyTorch 2.0+ changed the API
+            size_t gpu_allocated = 0;
+            size_t gpu_reserved = 0;
+            try {
+                auto stats = c10::cuda::CUDACachingAllocator::getDeviceStats(0);
+                gpu_allocated = stats.allocated_bytes[0].current;
+                gpu_reserved = stats.reserved_bytes[0].current;
+            } catch (...) {
+                // Fallback for older versions or errors
+                gpu_allocated = 0;
+                gpu_reserved = 0;
+            }
             SPDLOG_DEBUG("MCTSEngine: GPU memory - allocated: {:.2f}MB, reserved: {:.2f}MB",
                          gpu_allocated / (1024.0 * 1024.0), gpu_reserved / (1024.0 * 1024.0));
+            
+            // If GPU memory usage is high, force more aggressive cleanup
+            const size_t GPU_MEMORY_THRESHOLD_MB = 4000;  // 4GB threshold
+            if (gpu_reserved > GPU_MEMORY_THRESHOLD_MB * 1024 * 1024) {
+                SPDLOG_INFO("MCTSEngine: High GPU memory usage detected, forcing aggressive cleanup");
+                c10::cuda::CUDACachingAllocator::emptyCache();
+                if (gpu_memory_pool_) {
+                    gpu_memory_pool_->trim(0.3f);  // Keep only 30% during high usage
+                }
+            }
         } catch (...) {
             // Ignore errors getting GPU stats
         }

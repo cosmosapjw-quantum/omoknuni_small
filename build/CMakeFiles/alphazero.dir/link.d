@@ -25,10 +25,9 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o \
-  CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o \
+  CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o \
-  CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_methods.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o \
@@ -57,10 +56,10 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o \
-  CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o \
-  CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/unified_parallel_manager.cpp.o \
@@ -172,13 +171,11 @@ CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o:
 
-CMakeFiles/alphazero.dir/src/nn/resnet_model_performance.cpp.o:
+CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o:
-
-CMakeFiles/alphazero.dir/src/nn/optimized_resnet_model.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o:
 
@@ -236,13 +233,13 @@ CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o:
 
+CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o:
+
 CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.o:
 
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.o:
+
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o:
-
-CMakeFiles/alphazero.dir/src/cli/alphazero_pipeline.cpp.o:
-
-CMakeFiles/alphazero.dir/src/cli/alphazero_cli_pipeline.cpp.o:
 
 CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o:
 

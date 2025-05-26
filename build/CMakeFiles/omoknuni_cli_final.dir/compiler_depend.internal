@@ -40,18 +40,22 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o
  /home/cosmos/omoknuni_small/include/games/go/go_state.h
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h
  /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h
+ /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h
+ /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_node_pool.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_object_pool.h
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
+ /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h
  /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h
+ /home/cosmos/omoknuni_small/include/utils/advanced_memory_monitor.h
  /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h
  /home/cosmos/omoknuni_small/include/utils/logger.h
  /home/cosmos/omoknuni_small/include/utils/memory_allocator.h
@@ -5226,6 +5230,22 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o
  /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h
  /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h
+ /usr/local/cuda-12.8/include/builtin_types.h
+ /usr/local/cuda-12.8/include/channel_descriptor.h
+ /usr/local/cuda-12.8/include/crt/host_config.h
+ /usr/local/cuda-12.8/include/crt/host_defines.h
+ /usr/local/cuda-12.8/include/cuda_device_runtime_api.h
+ /usr/local/cuda-12.8/include/cuda_runtime.h
+ /usr/local/cuda-12.8/include/cuda_runtime_api.h
+ /usr/local/cuda-12.8/include/device_types.h
+ /usr/local/cuda-12.8/include/driver_functions.h
+ /usr/local/cuda-12.8/include/driver_types.h
+ /usr/local/cuda-12.8/include/library_types.h
+ /usr/local/cuda-12.8/include/surface_types.h
+ /usr/local/cuda-12.8/include/texture_types.h
+ /usr/local/cuda-12.8/include/vector_functions.h
+ /usr/local/cuda-12.8/include/vector_functions.hpp
+ /usr/local/cuda-12.8/include/vector_types.h
 
 bin/Release/omoknuni_cli_final
  /lib/x86_64-linux-gnu/libc.so.6
@@ -5235,17 +5255,20 @@ bin/Release/omoknuni_cli_final
  /lib/x86_64-linux-gnu/libpthread.so.0
  /lib/x86_64-linux-gnu/librt.so.1
  /lib64/ld-linux-x86-64.so.2
+ /opt/libtorch-2.7.0-cu128/lib/libc10.so
+ /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
  /opt/libtorch-2.7.0-cu128/lib/libcublas-f6c022dc.so.12
  /opt/libtorch-2.7.0-cu128/lib/libcublasLt-4ef47ce6.so.12
  /opt/libtorch-2.7.0-cu128/lib/libcudart-218eec4c.so.12
- /opt/libtorch-2.7.0-cu128/lib/libgomp-98b21ff3.so.1
- /opt/libtorch-2.7.0-cu128/lib/libc10.so
- /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so
  /opt/libtorch-2.7.0-cu128/lib/libcudnn.so.9
+ /opt/libtorch-2.7.0-cu128/lib/libgomp-98b21ff3.so.1
  /opt/libtorch-2.7.0-cu128/lib/libkineto.a
  /opt/libtorch-2.7.0-cu128/lib/libtorch.so
  /opt/libtorch-2.7.0-cu128/lib/libtorch_cpu.so
  /opt/libtorch-2.7.0-cu128/lib/libtorch_cuda.so
+ /usr/lib/gcc/x86_64-linux-gnu/11/libgcc.a
+ /usr/lib/gcc/x86_64-linux-gnu/11/libgcc_s.so
+ /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so
  /usr/lib/x86_64-linux-gnu/Scrt1.o
  /usr/lib/x86_64-linux-gnu/crti.o
  /usr/lib/x86_64-linux-gnu/crtn.o
@@ -5258,8 +5281,6 @@ bin/Release/omoknuni_cli_final
  /usr/lib/gcc/x86_64-linux-gnu/13/crtendS.o
  /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadbegin.o
  /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadend.o
- /usr/lib/gcc/x86_64-linux-gnu/13/libgcc.a
- /usr/lib/gcc/x86_64-linux-gnu/13/libgcc_s.so
  /usr/lib/gcc/x86_64-linux-gnu/13/libgomp.so
  /usr/lib/gcc/x86_64-linux-gnu/13/libstdc++.so
  /usr/lib/x86_64-linux-gnu/libc_nonshared.a
