@@ -5,7 +5,7 @@
 # Game settings
 game_type: gomoku
 board_size: 9
-input_channels: 17  # Gomoku enhanced representation with history
+input_channels: 19  # Gomoku enhanced representation with history and attack/defense planes
 
 # Network type selection
 network_type: ddw_randwire  # Use DDW-RandWire-ResNet instead of standard ResNet

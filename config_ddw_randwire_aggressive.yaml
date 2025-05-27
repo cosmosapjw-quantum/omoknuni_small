@@ -5,7 +5,7 @@
 # Game settings
 game_type: gomoku
 board_size: 9  # Changed to 9 to match optimized config
-input_channels: 17  # Gomoku enhanced representation with history
+input_channels: 19  # Gomoku enhanced representation with history and attack/defense planes
 
 # Network configuration
 network_type: ddw_randwire

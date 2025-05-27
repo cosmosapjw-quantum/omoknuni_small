@@ -1,4 +1,5 @@
 #include "utils/advanced_memory_monitor.h"
+#include "utils/progress_bar.h"
 #include <sys/sysinfo.h>
 #include <unistd.h>
 #include <fstream>
@@ -33,7 +34,10 @@ void AdvancedMemoryMonitor::startMonitoring(const std::string& log_file) {
         log_file_ << "timestamp_ms,total_memory_mb,used_memory_mb,free_memory_mb,gpu_memory_mb,gpu_free_mb,cpu_usage_percent,gpu_usage_percent,context" << std::endl;
     }
     
-    std::cout << "[MEMORY_MONITOR] Started advanced memory monitoring with log: " << log_file << std::endl;
+    auto& progress_manager = utils::SelfPlayProgressManager::getInstance();
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        std::cout << "[MEMORY_MONITOR] Started advanced memory monitoring with log: " << log_file << std::endl;
+    }
 }
 
 void AdvancedMemoryMonitor::stopMonitoring() {
@@ -55,7 +59,10 @@ void AdvancedMemoryMonitor::stopMonitoring() {
         log_file_.close();
     }
     
-    std::cout << "[MEMORY_MONITOR] Stopped monitoring" << std::endl;
+    auto& progress_manager = utils::SelfPlayProgressManager::getInstance();
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        std::cout << "[MEMORY_MONITOR] Stopped monitoring" << std::endl;
+    }
 }
 
 void AdvancedMemoryMonitor::captureSnapshot(const std::string& context) {
@@ -94,7 +101,10 @@ void AdvancedMemoryMonitor::logEvent(const std::string& event) {
     auto now = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
     
-    std::cout << "[MEMORY_MONITOR][+" << elapsed << "ms] " << event << std::endl;
+    auto& progress_manager = utils::SelfPlayProgressManager::getInstance();
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        std::cout << "[MEMORY_MONITOR][+" << elapsed << "ms] " << event << std::endl;
+    }
     
     if (log_file_.is_open()) {
         log_file_ << elapsed << ",,,,,,,\"EVENT: " << event << "\"" << std::endl;

@@ -86,7 +86,15 @@ void EnhancedMCTSEngine::evaluateBatchWithPool(PooledBatch& batch) {
     
     // Get input tensor dimensions from first state
     auto first_state = batch.nodes[0]->getState().clone();
-    auto tensor_repr = first_state->getTensorRepresentation();
+    
+    // Get tensor representation - try enhanced first
+    std::vector<std::vector<std::vector<float>>> tensor_repr;
+    try {
+        tensor_repr = first_state->getEnhancedTensorRepresentation();
+    } catch (...) {
+        // Fallback to basic representation
+        tensor_repr = first_state->getTensorRepresentation();
+    }
     
     int channels = tensor_repr.size();
     int height = tensor_repr[0].size();

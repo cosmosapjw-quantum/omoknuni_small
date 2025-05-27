@@ -5118,6 +5118,7 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
  /home/cosmos/omoknuni_small/include/utils/shutdown_manager.h \
  /home/cosmos/omoknuni_small/include/core/tensor_pool.h \
+ /home/cosmos/omoknuni_small/include/utils/progress_bar.h \
  /usr/include/c++/13/filesystem /usr/include/c++/13/bits/fs_fwd.h \
  /usr/include/c++/13/bits/fs_path.h /usr/include/c++/13/codecvt \
  /usr/include/c++/13/bits/fs_dir.h /usr/include/c++/13/bits/fs_ops.h \

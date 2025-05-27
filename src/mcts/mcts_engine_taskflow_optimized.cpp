@@ -3,6 +3,7 @@
 #include "mcts/phmap_transposition_table.h"
 #include "utils/gamestate_pool.h"
 #include "utils/shutdown_manager.h"
+#include "utils/progress_bar.h"
 #include <atomic>
 #include <chrono>
 #include <iostream>
@@ -465,8 +466,10 @@ void MCTSEngine::executeTaskflowSearch(MCTSNode* root, int num_simulations) {
                     gpu_util = std::min(100.0f, inference_duty_cycle * 100.0f);
                 }
                 
-                // Log performance and memory status
-                if (std::chrono::duration_cast<std::chrono::seconds>(now - last_report).count() >= 2) {
+                // Log performance and memory status only if verbose
+                auto& progress_manager = alphazero::utils::SelfPlayProgressManager::getInstance();
+                if (progress_manager.isVerboseLoggingEnabled() && 
+                    std::chrono::duration_cast<std::chrono::seconds>(now - last_report).count() >= 2) {
                     std::cout << "[TASKFLOW] Sims: " << sims << "/" << num_simulations 
                               << " | Throughput: " << std::fixed << std::setprecision(1) << throughput << " sims/s"
                               << " | Avg batch: " << std::fixed << std::setprecision(1) << avg_batch
@@ -522,11 +525,15 @@ void MCTSEngine::executeTaskflowSearch(MCTSNode* root, int num_simulations) {
     float final_throughput = duration.count() > 0 ? 
         1000.0f * num_simulations / duration.count() : 0;
     
-    std::cout << "[TASKFLOW] Search completed in " << duration.count() << "ms"
-              << " | Throughput: " << std::fixed << std::setprecision(1) << final_throughput << " sims/s"
-              << " | Final memory: " << std::fixed << std::setprecision(1) 
-              << memory_manager.getCurrentMemoryUsageGB() << "GB"
-              << std::endl;
+    // Only print final stats if verbose logging is enabled
+    auto& progress_manager = alphazero::utils::SelfPlayProgressManager::getInstance();
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        std::cout << "[TASKFLOW] Search completed in " << duration.count() << "ms"
+                  << " | Throughput: " << std::fixed << std::setprecision(1) << final_throughput << " sims/s"
+                  << " | Final memory: " << std::fixed << std::setprecision(1) 
+                  << memory_manager.getCurrentMemoryUsageGB() << "GB"
+                  << std::endl;
+    }
 }
 
 } // namespace mcts

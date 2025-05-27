@@ -1,6 +1,7 @@
 #include "mcts/mcts_engine.h"
 #include "utils/advanced_memory_monitor.h"
 #include "mcts/aggressive_memory_manager.h"
+#include "utils/progress_bar.h"
 
 #ifdef WITH_TORCH
 #include <torch/torch.h>
@@ -611,14 +612,14 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
         
         // Force termination after reasonable time limit
         if (elapsed_time.count() > 30) { // 30 seconds maximum
-            std::cout << "[EMERGENCY_STOP] Search exceeded 30 seconds, forcing termination" << std::endl;
+            // Emergency stop after 30 seconds
             active_simulations_.store(0, std::memory_order_release);
             break;
         }
         
         // Force termination after too many iterations without progress
         if (main_loop_iterations > 1000) {
-            std::cout << "[EMERGENCY_STOP] Too many iterations (" << main_loop_iterations << "), forcing termination" << std::endl;
+            // Emergency stop after too many iterations
             active_simulations_.store(0, std::memory_order_release);
             break;
         }
@@ -876,10 +877,7 @@ void MCTSEngine::executeParallelSearch(const std::vector<std::shared_ptr<MCTSNod
                 pending_evaluations.fetch_sub(1, std::memory_order_relaxed);
                 total_nn_calls.fetch_add(1, std::memory_order_relaxed);
                 
-                if (thread_id == 0 && sim % 10 == 0) {  // Log from thread 0 every 10 sims
-                    std::cout << "[THREAD_" << thread_id << "] NN call " << total_nn_calls.load() 
-                              << " took " << nn_duration.count() << "μs" << std::endl;
-                }
+                // Remove verbose thread logging
             }
             
             // Backpropagate result through the path
@@ -919,7 +917,11 @@ void MCTSEngine::executeParallelSearch(const std::vector<std::shared_ptr<MCTSNod
 
 // PERFORMANCE FIX: Implement tree reuse between moves for efficiency
 mcts::SearchResult MCTSEngine::searchWithTreeReuse(const core::IGameState& state, int last_action) {
-    std::cout << "🌲 Starting search with tree reuse (last_action: " << last_action << ")" << std::endl;
+    // Only log if verbose logging is enabled
+    auto& progress_manager = utils::SelfPlayProgressManager::getInstance();
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        std::cout << "🌲 Starting search with tree reuse (last_action: " << last_action << ")" << std::endl;
+    }
     
     try {
         // Try to reuse existing tree by transitioning to the new state
@@ -927,7 +929,9 @@ mcts::SearchResult MCTSEngine::searchWithTreeReuse(const core::IGameState& state
             // Look for a child node that matches the last action
             for (auto& child : root_->getChildren()) {
                 if (child && child->getAction() == last_action) {
-                    std::cout << "🌲 Found matching child node, reusing tree structure" << std::endl;
+                    if (progress_manager.isVerboseLoggingEnabled()) {
+                        std::cout << "🌲 Found matching child node, reusing tree structure" << std::endl;
+                    }
                     
                     // CRITICAL: Clean up siblings to prevent memory accumulation
                     auto old_root = root_;

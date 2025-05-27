@@ -75,8 +75,7 @@ std::shared_ptr<MCTSNode> MCTSEngine::createRootNode(const core::IGameState& sta
     // Create a new root node with the cloned state using the factory method
     auto root = MCTSNode::create(std::move(state_clone));
     
-    std::cout << "Created root node for MCTS search with game type: " 
-              << static_cast<int>(root->getState().getGameType()) << std::endl;
+    // Verbose logging removed - root node created
     
     return root;
 }

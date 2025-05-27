@@ -25979,3 +25979,29 @@ frame #40: <unknown function> + 0x129c3c (0x7ff6de36dc3c in /lib/x86_64-linux-gn
 [2025-05-27 07:57:41.180] [system] [error] [2771] [mcts_engine_memory_pressure.cpp:66] Memory pressure EMERGENCY: Stopping search
 [2025-05-27 07:57:41.185] [system] [error] [4415] [mcts_engine_memory_pressure.cpp:66] Memory pressure EMERGENCY: Stopping search
 [2025-05-27 07:57:41.237] [system] [error] [3061] [mcts_engine_memory_pressure.cpp:66] Memory pressure EMERGENCY: Stopping search
+[2025-05-27 08:04:08.307] [system] [info] [7181] [:] Logging system initialized. Log directory: logs
+[2025-05-27 08:04:21.409] [system] [warning] [7314] [mcts_engine_memory_pressure.cpp:18] Memory pressure WARNING: Starting preventive cleanup
+[2025-05-27 08:04:21.517] [system] [warning] [7645] [mcts_engine_memory_pressure.cpp:18] Memory pressure WARNING: Starting preventive cleanup
+[2025-05-27 08:04:21.530] [system] [warning] [8267] [mcts_engine_memory_pressure.cpp:18] Memory pressure WARNING: Starting preventive cleanup
+[2025-05-27 08:04:21.531] [system] [warning] [7240] [mcts_engine_memory_pressure.cpp:18] Memory pressure WARNING: Starting preventive cleanup
+[2025-05-27 08:04:23.146] [system] [warning] [8878] [mcts_engine_memory_pressure.cpp:18] Memory pressure WARNING: Starting preventive cleanup
+[2025-05-27 08:04:27.539] [system] [error] [7240] [mcts_engine_memory_pressure.cpp:38] Memory pressure CRITICAL: Aggressive cleanup initiated
+[2025-05-27 08:04:27.543] [system] [error] [8267] [mcts_engine_memory_pressure.cpp:38] Memory pressure CRITICAL: Aggressive cleanup initiated
+[2025-05-27 08:04:27.554] [system] [error] [8878] [mcts_engine_memory_pressure.cpp:38] Memory pressure CRITICAL: Aggressive cleanup initiated
+[2025-05-27 08:04:27.620] [system] [error] [7314] [mcts_engine_memory_pressure.cpp:38] Memory pressure CRITICAL: Aggressive cleanup initiated
+[2025-05-27 08:04:27.727] [system] [error] [7645] [mcts_engine_memory_pressure.cpp:38] Memory pressure CRITICAL: Aggressive cleanup initiated
+[2025-05-27 08:04:27.966] [system] [error] [9478] [mcts_engine_memory_pressure.cpp:38] Memory pressure CRITICAL: Aggressive cleanup initiated
+[2025-05-27 08:04:31.543] [system] [error] [7645] [mcts_engine_memory_pressure.cpp:66] Memory pressure EMERGENCY: Stopping search
+[2025-05-27 08:04:31.558] [system] [error] [7240] [mcts_engine_memory_pressure.cpp:66] Memory pressure EMERGENCY: Stopping search
+[2025-05-27 08:04:31.560] [system] [error] [8267] [mcts_engine_memory_pressure.cpp:66] Memory pressure EMERGENCY: Stopping search
+[2025-05-27 08:04:31.578] [system] [error] [8878] [mcts_engine_memory_pressure.cpp:66] Memory pressure EMERGENCY: Stopping search
+[2025-05-27 11:52:04.984] [system] [info] [17001] [:] Logging system initialized. Log directory: logs
+[2025-05-27 11:52:04.986] [system] [error] [17017] [omoknuni_cli_final.cpp:324] Failed to load config file: bad file: --config
+[2025-05-27 11:52:04.992] [system] [info] [17001] [omoknuni_cli_final.cpp:770] Starting final cleanup...
+[2025-05-27 12:55:50.643] [system] [info] [4878] [:] Logging system initialized. Log directory: logs
+[2025-05-27 12:55:50.645] [system] [error] [4895] [omoknuni_cli_final.cpp:317] Failed to load config file: bad file: config_repvgg_fast.yaml
+[2025-05-27 12:55:50.647] [system] [info] [4878] [omoknuni_cli_final.cpp:725] Starting final cleanup...
+[2025-05-27 12:56:26.662] [system] [info] [5054] [:] Logging system initialized. Log directory: logs
+[2025-05-27 13:16:50.147] [system] [info] [5059] [omoknuni_cli_final.cpp:654] Starting cleanup sequence...
+[2025-05-27 13:16:50.533] [system] [info] [5059] [omoknuni_cli_final.cpp:676] Cleanup sequence completed
+[2025-05-27 13:16:50.535] [system] [info] [5054] [omoknuni_cli_final.cpp:725] Starting final cleanup...

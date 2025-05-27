@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <unordered_set>
 
 #ifdef BUILD_PYTHON_BINDINGS
 #include <pybind11/pybind11.h>
@@ -12,11 +13,29 @@ namespace py = pybind11;
 
 #include "utils/hash_specializations.h"
 
-AttackDefenseModule::AttackDefenseModule(int board_size) 
-    : board_size_(board_size) {
+namespace alphazero {
+
+// ========== Factory Function ==========
+std::unique_ptr<AttackDefenseModule> createAttackDefenseModule(
+    core::GameType game_type, int board_size) {
+    switch (game_type) {
+        case core::GameType::GOMOKU:
+            return std::make_unique<GomokuAttackDefenseModule>(board_size);
+        case core::GameType::CHESS:
+            return std::make_unique<ChessAttackDefenseModule>();
+        case core::GameType::GO:
+            return std::make_unique<GoAttackDefenseModule>(board_size);
+        default:
+            throw std::runtime_error("Unsupported game type for attack/defense module");
+    }
 }
 
-std::pair<std::vector<float>, std::vector<float>> AttackDefenseModule::compute_bonuses(
+// ========== GomokuAttackDefenseModule Implementation ==========
+GomokuAttackDefenseModule::GomokuAttackDefenseModule(int board_size) 
+    : AttackDefenseModule(board_size) {
+}
+
+std::pair<std::vector<float>, std::vector<float>> GomokuAttackDefenseModule::compute_bonuses(
     const std::vector<std::vector<std::vector<int>>>& board_batch,
     const std::vector<int>& chosen_moves,
     const std::vector<int>& player_batch) {
@@ -27,7 +46,59 @@ std::pair<std::vector<float>, std::vector<float>> AttackDefenseModule::compute_b
     return {attack, defense};
 }
 
-std::vector<float> AttackDefenseModule::compute_attack_bonus(
+std::pair<std::vector<std::vector<std::vector<float>>>, 
+          std::vector<std::vector<std::vector<float>>>> 
+GomokuAttackDefenseModule::compute_planes(const std::vector<std::unique_ptr<core::IGameState>>& states) {
+    const size_t batch_size = states.size();
+    
+    // Initialize attack and defense planes
+    std::vector<std::vector<std::vector<float>>> attack_planes(
+        batch_size, std::vector<std::vector<float>>(
+            board_size_, std::vector<float>(board_size_, 0.0f)));
+    
+    std::vector<std::vector<std::vector<float>>> defense_planes(
+        batch_size, std::vector<std::vector<float>>(
+            board_size_, std::vector<float>(board_size_, 0.0f)));
+    
+    // For each state in the batch
+    for (size_t b = 0; b < batch_size; ++b) {
+        auto legal_moves = states[b]->getLegalMoves();
+        std::vector<std::vector<std::vector<int>>> single_board_batch(1);
+        std::vector<int> single_player_batch = {states[b]->getCurrentPlayer()};
+        
+        // Get current board representation
+        auto board_tensor = states[b]->getTensorRepresentation();
+        single_board_batch[0].resize(board_size_, std::vector<int>(board_size_, 0));
+        
+        // Convert tensor representation to board
+        for (int i = 0; i < board_size_; ++i) {
+            for (int j = 0; j < board_size_; ++j) {
+                if (board_tensor[0][i][j] > 0.5f) {
+                    single_board_batch[0][i][j] = states[b]->getCurrentPlayer();
+                } else if (board_tensor[1][i][j] > 0.5f) {
+                    single_board_batch[0][i][j] = 3 - states[b]->getCurrentPlayer();
+                }
+            }
+        }
+        
+        // Calculate attack/defense score for each legal move
+        for (int move : legal_moves) {
+            std::vector<int> single_move = {move};
+            auto [attack_scores, defense_scores] = compute_bonuses(
+                single_board_batch, single_move, single_player_batch);
+            
+            int row = move / board_size_;
+            int col = move % board_size_;
+            
+            attack_planes[b][row][col] = attack_scores[0];
+            defense_planes[b][row][col] = defense_scores[0];
+        }
+    }
+    
+    return {attack_planes, defense_planes};
+}
+
+std::vector<float> GomokuAttackDefenseModule::compute_attack_bonus(
     const std::vector<std::vector<std::vector<int>>>& board_batch, 
     const std::vector<int>& chosen_moves,
     const std::vector<int>& player_batch) {
@@ -70,7 +141,7 @@ std::vector<float> AttackDefenseModule::compute_attack_bonus(
     return result;
 }
 
-std::vector<float> AttackDefenseModule::compute_defense_bonus(
+std::vector<float> GomokuAttackDefenseModule::compute_defense_bonus(
     const std::vector<std::vector<std::vector<int>>>& board_batch, 
     const std::vector<int>& chosen_moves,
     const std::vector<int>& player_batch) {
@@ -119,7 +190,7 @@ std::vector<float> AttackDefenseModule::compute_defense_bonus(
     return result;
 }
 
-std::vector<float> AttackDefenseModule::count_threats_for_color(
+std::vector<float> GomokuAttackDefenseModule::count_threats_for_color(
     const std::vector<std::vector<std::vector<int>>>& boards,
     const std::vector<int>& opponent_ids) {
     
@@ -139,7 +210,7 @@ std::vector<float> AttackDefenseModule::count_threats_for_color(
 }
 
 // Create a mask where 1 represents the player's stones
-std::vector<std::vector<std::vector<float>>> AttackDefenseModule::create_mask(
+std::vector<std::vector<std::vector<float>>> GomokuAttackDefenseModule::create_mask(
     const std::vector<std::vector<std::vector<int>>>& boards,
     const std::vector<int>& player_ids) {
     
@@ -165,7 +236,7 @@ std::vector<std::vector<std::vector<float>>> AttackDefenseModule::create_mask(
 }
 
 // Create a mask where 1 represents empty cells
-std::vector<std::vector<std::vector<float>>> AttackDefenseModule::create_empty_mask(
+std::vector<std::vector<std::vector<float>>> GomokuAttackDefenseModule::create_empty_mask(
     const std::vector<std::vector<std::vector<int>>>& boards) {
     
     const size_t B = boards.size();
@@ -190,7 +261,7 @@ std::vector<std::vector<std::vector<float>>> AttackDefenseModule::create_empty_m
 }
 
 // Transpose a mask (swap height and width dimensions)
-std::vector<std::vector<std::vector<float>>> AttackDefenseModule::transpose(
+std::vector<std::vector<std::vector<float>>> GomokuAttackDefenseModule::transpose(
     const std::vector<std::vector<std::vector<float>>>& mask) {
     
     const size_t B = mask.size();
@@ -217,7 +288,7 @@ std::vector<std::vector<std::vector<float>>> AttackDefenseModule::transpose(
     return transposed;
 }
 
-std::vector<float> AttackDefenseModule::count_open_threats_horiz_vert(
+std::vector<float> GomokuAttackDefenseModule::count_open_threats_horiz_vert(
     const std::vector<std::vector<std::vector<int>>>& boards,
     const std::vector<int>& opponent_ids,
     int window_length,
@@ -247,7 +318,7 @@ std::vector<float> AttackDefenseModule::count_open_threats_horiz_vert(
     return result;
 }
 
-std::vector<float> AttackDefenseModule::count_1d_patterns(
+std::vector<float> GomokuAttackDefenseModule::count_1d_patterns(
     const std::vector<std::vector<std::vector<float>>>& opp_mask,
     const std::vector<std::vector<std::vector<float>>>& empty_mask,
     int window_length,
@@ -308,7 +379,7 @@ std::vector<float> AttackDefenseModule::count_1d_patterns(
     return result;
 }
 
-std::vector<float> AttackDefenseModule::count_open_threats_diagonals(
+std::vector<float> GomokuAttackDefenseModule::count_open_threats_diagonals(
     const std::vector<std::vector<std::vector<int>>>& boards,
     const std::vector<int>& opponent_ids,
     int window_length,
@@ -403,13 +474,410 @@ std::vector<float> AttackDefenseModule::count_open_threats_diagonals(
     return result;
 }
 
+// ========== ChessAttackDefenseModule Implementation ==========
+ChessAttackDefenseModule::ChessAttackDefenseModule() 
+    : AttackDefenseModule(8) {  // Chess board is always 8x8
+}
+
+float ChessAttackDefenseModule::getPieceValue(int piece_type) const {
+    // Assuming piece encoding: 1=pawn, 2=knight, 3=bishop, 4=rook, 5=queen, 6=king
+    switch (std::abs(piece_type)) {
+        case 1: return PAWN_VALUE;
+        case 2: return KNIGHT_VALUE;
+        case 3: return BISHOP_VALUE;
+        case 4: return ROOK_VALUE;
+        case 5: return QUEEN_VALUE;
+        case 6: return KING_VALUE;
+        default: return 0.0f;
+    }
+}
+
+std::vector<std::pair<int,int>> ChessAttackDefenseModule::getAttackedSquares(
+    const std::vector<std::vector<int>>& board, 
+    int from_row, int from_col, int piece_type) const {
+    
+    std::vector<std::pair<int,int>> attacked_squares;
+    
+    // Simplified attack calculation - would need full chess move generation in practice
+    // This is a placeholder that should be replaced with proper chess logic
+    
+    return attacked_squares;
+}
+
+std::pair<std::vector<float>, std::vector<float>> ChessAttackDefenseModule::compute_bonuses(
+    const std::vector<std::vector<std::vector<int>>>& board_batch,
+    const std::vector<int>& chosen_moves,
+    const std::vector<int>& player_batch) {
+    
+    const size_t B = board_batch.size();
+    std::vector<float> attack_bonuses(B, 0.0f);
+    std::vector<float> defense_bonuses(B, 0.0f);
+    
+    // For each board in the batch
+    for (size_t b = 0; b < B; ++b) {
+        int move = chosen_moves[b];
+        int to_row = move / 8;
+        int to_col = move % 8;
+        int player = player_batch[b];
+        
+        // Count newly attacked enemy pieces
+        float attack_value = 0.0f;
+        float defense_value = 0.0f;
+        
+        // This is a simplified implementation
+        // In practice, you would need full chess move generation
+        // to properly calculate attacks and defenses
+        
+        // Check all adjacent squares for simple demonstration
+        for (int dr = -1; dr <= 1; ++dr) {
+            for (int dc = -1; dc <= 1; ++dc) {
+                if (dr == 0 && dc == 0) continue;
+                
+                int r = to_row + dr;
+                int c = to_col + dc;
+                
+                if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+                    int piece = board_batch[b][r][c];
+                    
+                    // If it's an enemy piece
+                    if (piece != 0 && ((piece > 0) != (player == 1))) {
+                        attack_value += getPieceValue(piece);
+                    }
+                    // If it's a friendly piece
+                    else if (piece != 0 && ((piece > 0) == (player == 1))) {
+                        defense_value += getPieceValue(piece);
+                    }
+                }
+            }
+        }
+        
+        attack_bonuses[b] = attack_value;
+        defense_bonuses[b] = defense_value;
+    }
+    
+    return {attack_bonuses, defense_bonuses};
+}
+
+std::pair<std::vector<std::vector<std::vector<float>>>, 
+          std::vector<std::vector<std::vector<float>>>> 
+ChessAttackDefenseModule::compute_planes(const std::vector<std::unique_ptr<core::IGameState>>& states) {
+    const size_t batch_size = states.size();
+    
+    // Initialize attack and defense planes
+    std::vector<std::vector<std::vector<float>>> attack_planes(
+        batch_size, std::vector<std::vector<float>>(
+            8, std::vector<float>(8, 0.0f)));
+    
+    std::vector<std::vector<std::vector<float>>> defense_planes(
+        batch_size, std::vector<std::vector<float>>(
+            8, std::vector<float>(8, 0.0f)));
+    
+    // Simplified implementation - in practice would need full chess logic
+    // For now, just return zero planes
+    
+    return {attack_planes, defense_planes};
+}
+
+// ========== GoAttackDefenseModule Implementation ==========
+GoAttackDefenseModule::GoAttackDefenseModule(int board_size) 
+    : AttackDefenseModule(board_size) {
+}
+
+std::vector<GoAttackDefenseModule::Group> GoAttackDefenseModule::findGroups(
+    const std::vector<std::vector<int>>& board) const {
+    
+    std::vector<Group> groups;
+    std::vector<std::vector<bool>> visited(board_size_, std::vector<bool>(board_size_, false));
+    
+    // Find all groups using flood fill
+    for (int i = 0; i < board_size_; ++i) {
+        for (int j = 0; j < board_size_; ++j) {
+            if (board[i][j] != 0 && !visited[i][j]) {
+                Group group;
+                group.player = board[i][j];
+                
+                // Flood fill to find all stones in this group
+                std::vector<std::pair<int,int>> stack = {{i, j}};
+                while (!stack.empty()) {
+                    auto [r, c] = stack.back();
+                    stack.pop_back();
+                    
+                    if (r < 0 || r >= board_size_ || c < 0 || c >= board_size_) continue;
+                    if (visited[r][c] || board[r][c] != group.player) continue;
+                    
+                    visited[r][c] = true;
+                    group.stones.push_back({r, c});
+                    
+                    // Add adjacent stones
+                    stack.push_back({r-1, c});
+                    stack.push_back({r+1, c});
+                    stack.push_back({r, c-1});
+                    stack.push_back({r, c+1});
+                }
+                
+                // Count liberties for this group
+                group.liberties = countLiberties(board, group.stones);
+                groups.push_back(group);
+            }
+        }
+    }
+    
+    return groups;
+}
+
+int GoAttackDefenseModule::countLiberties(
+    const std::vector<std::vector<int>>& board, 
+    const std::vector<std::pair<int,int>>& group) const {
+    
+    std::unordered_set<int> liberties;
+    
+    for (auto [r, c] : group) {
+        // Check all four adjacent squares
+        const std::pair<int,int> adj[] = {{r-1,c}, {r+1,c}, {r,c-1}, {r,c+1}};
+        for (auto [ar, ac] : adj) {
+            if (ar >= 0 && ar < board_size_ && ac >= 0 && ac < board_size_ && board[ar][ac] == 0) {
+                liberties.insert(ar * board_size_ + ac);
+            }
+        }
+    }
+    
+    return liberties.size();
+}
+
+bool GoAttackDefenseModule::wouldCapture(
+    const std::vector<std::vector<int>>& board, 
+    int row, int col, int player) const {
+    
+    // Check if placing a stone would capture any opponent groups
+    const int opponent = 3 - player;
+    
+    // Check all four adjacent positions
+    const std::pair<int,int> adj[] = {{row-1,col}, {row+1,col}, {row,col-1}, {row,col+1}};
+    for (auto [r, c] : adj) {
+        if (r >= 0 && r < board_size_ && c >= 0 && c < board_size_ && board[r][c] == opponent) {
+            // Find the group this stone belongs to
+            std::vector<std::pair<int,int>> group;
+            std::vector<std::vector<bool>> visited(board_size_, std::vector<bool>(board_size_, false));
+            
+            // Simple flood fill to find group
+            std::vector<std::pair<int,int>> stack = {{r, c}};
+            while (!stack.empty()) {
+                auto [gr, gc] = stack.back();
+                stack.pop_back();
+                
+                if (gr < 0 || gr >= board_size_ || gc < 0 || gc >= board_size_) continue;
+                if (visited[gr][gc] || board[gr][gc] != opponent) continue;
+                
+                visited[gr][gc] = true;
+                group.push_back({gr, gc});
+                
+                stack.push_back({gr-1, gc});
+                stack.push_back({gr+1, gc});
+                stack.push_back({gr, gc-1});
+                stack.push_back({gr, gc+1});
+            }
+            
+            // Check if this group would have 0 liberties after our move
+            int liberties = 0;
+            for (auto [gr, gc] : group) {
+                const std::pair<int,int> group_adj[] = {{gr-1,gc}, {gr+1,gc}, {gr,gc-1}, {gr,gc+1}};
+                for (auto [ar, ac] : group_adj) {
+                    if (ar >= 0 && ar < board_size_ && ac >= 0 && ac < board_size_ && 
+                        board[ar][ac] == 0 && !(ar == row && ac == col)) {
+                        liberties++;
+                        break;
+                    }
+                }
+                if (liberties > 0) break;
+            }
+            
+            if (liberties == 0) return true;
+        }
+    }
+    
+    return false;
+}
+
+bool GoAttackDefenseModule::createsAtari(
+    const std::vector<std::vector<int>>& board, 
+    int row, int col, int player) const {
+    
+    // Check if placing a stone puts any opponent group in atari (1 liberty)
+    const int opponent = 3 - player;
+    
+    // Make a copy and place the stone
+    auto board_copy = board;
+    board_copy[row][col] = player;
+    
+    // Find all groups and check for atari
+    auto groups = findGroups(board_copy);
+    for (const auto& group : groups) {
+        if (group.player == opponent && group.liberties == 1) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+float GoAttackDefenseModule::evaluateEyePotential(
+    const std::vector<std::vector<int>>& board, 
+    int row, int col, int player) const {
+    
+    // Simple heuristic for eye potential
+    // Check if surrounded by friendly stones
+    float eye_score = 0.0f;
+    int friendly_count = 0;
+    int total_count = 0;
+    
+    // Check all 8 surrounding squares
+    for (int dr = -1; dr <= 1; ++dr) {
+        for (int dc = -1; dc <= 1; ++dc) {
+            if (dr == 0 && dc == 0) continue;
+            
+            int r = row + dr;
+            int c = col + dc;
+            
+            if (r >= 0 && r < board_size_ && c >= 0 && c < board_size_) {
+                total_count++;
+                if (board[r][c] == player) {
+                    friendly_count++;
+                }
+            }
+        }
+    }
+    
+    if (total_count > 0) {
+        eye_score = static_cast<float>(friendly_count) / total_count;
+    }
+    
+    return eye_score;
+}
+
+std::pair<std::vector<float>, std::vector<float>> GoAttackDefenseModule::compute_bonuses(
+    const std::vector<std::vector<std::vector<int>>>& board_batch,
+    const std::vector<int>& chosen_moves,
+    const std::vector<int>& player_batch) {
+    
+    const size_t B = board_batch.size();
+    std::vector<float> attack_bonuses(B, 0.0f);
+    std::vector<float> defense_bonuses(B, 0.0f);
+    
+    // For each board in the batch
+    for (size_t b = 0; b < B; ++b) {
+        int move = chosen_moves[b];
+        int row = move / board_size_;
+        int col = move % board_size_;
+        int player = player_batch[b];
+        
+        const auto& board = board_batch[b];
+        
+        // Calculate attack score
+        float attack_score = 0.0f;
+        
+        // Check for captures
+        if (wouldCapture(board, row, col, player)) {
+            attack_score += CAPTURE_WEIGHT * 5.0f; // Assume 5 stones captured on average
+        }
+        
+        // Check for atari creation
+        if (createsAtari(board, row, col, player)) {
+            attack_score += ATARI_WEIGHT * 3.0f;
+        }
+        
+        // Liberty pressure (simplified)
+        attack_score += LIBERTY_WEIGHT * 2.0f;
+        
+        // Eye destruction potential
+        float eye_potential = evaluateEyePotential(board, row, col, 3 - player);
+        attack_score += EYE_WEIGHT * eye_potential * 5.0f;
+        
+        // Calculate defense score
+        float defense_score = 0.0f;
+        
+        // Save from capture (simplified)
+        defense_score += CAPTURE_WEIGHT * 2.0f;
+        
+        // Escape from atari
+        defense_score += ATARI_WEIGHT * 1.0f;
+        
+        // Liberty gain
+        defense_score += LIBERTY_WEIGHT * 3.0f;
+        
+        // Eye creation
+        float own_eye_potential = evaluateEyePotential(board, row, col, player);
+        defense_score += EYE_WEIGHT * own_eye_potential * 5.0f;
+        
+        attack_bonuses[b] = attack_score;
+        defense_bonuses[b] = defense_score;
+    }
+    
+    return {attack_bonuses, defense_bonuses};
+}
+
+std::pair<std::vector<std::vector<std::vector<float>>>, 
+          std::vector<std::vector<std::vector<float>>>> 
+GoAttackDefenseModule::compute_planes(const std::vector<std::unique_ptr<core::IGameState>>& states) {
+    const size_t batch_size = states.size();
+    
+    // Initialize attack and defense planes
+    std::vector<std::vector<std::vector<float>>> attack_planes(
+        batch_size, std::vector<std::vector<float>>(
+            board_size_, std::vector<float>(board_size_, 0.0f)));
+    
+    std::vector<std::vector<std::vector<float>>> defense_planes(
+        batch_size, std::vector<std::vector<float>>(
+            board_size_, std::vector<float>(board_size_, 0.0f)));
+    
+    // For each state in the batch
+    for (size_t b = 0; b < batch_size; ++b) {
+        auto legal_moves = states[b]->getLegalMoves();
+        std::vector<std::vector<std::vector<int>>> single_board_batch(1);
+        std::vector<int> single_player_batch = {states[b]->getCurrentPlayer()};
+        
+        // Get current board representation
+        auto board_tensor = states[b]->getTensorRepresentation();
+        single_board_batch[0].resize(board_size_, std::vector<int>(board_size_, 0));
+        
+        // Convert tensor representation to board
+        for (int i = 0; i < board_size_; ++i) {
+            for (int j = 0; j < board_size_; ++j) {
+                if (board_tensor[0][i][j] > 0.5f) {
+                    single_board_batch[0][i][j] = states[b]->getCurrentPlayer();
+                } else if (board_tensor[1][i][j] > 0.5f) {
+                    single_board_batch[0][i][j] = 3 - states[b]->getCurrentPlayer();
+                }
+            }
+        }
+        
+        // Calculate attack/defense score for each legal move
+        for (int move : legal_moves) {
+            std::vector<int> single_move = {move};
+            auto [attack_scores, defense_scores] = compute_bonuses(
+                single_board_batch, single_move, single_player_batch);
+            
+            int row = move / board_size_;
+            int col = move % board_size_;
+            
+            attack_planes[b][row][col] = attack_scores[0];
+            defense_planes[b][row][col] = defense_scores[0];
+        }
+    }
+    
+    return {attack_planes, defense_planes};
+}
+
+} // namespace alphazero
+
 #ifdef BUILD_PYTHON_BINDINGS
 PYBIND11_MODULE(attack_defense, m) {
-    m.doc() = "Attack and Defense calculation module for Gomoku/Omok";
+    m.doc() = "Attack and Defense calculation module for board games";
     
-    py::class_<AttackDefenseModule>(m, "AttackDefenseModule")
+    py::class_<alphazero::AttackDefenseModule>(m, "AttackDefenseModule");
+    
+    py::class_<alphazero::GomokuAttackDefenseModule, alphazero::AttackDefenseModule>(m, "GomokuAttackDefenseModule")
         .def(py::init<int>(), py::arg("board_size"))
-        .def("__call__", [](AttackDefenseModule& self, 
+        .def("__call__", [](alphazero::GomokuAttackDefenseModule& self, 
                            py::array_t<float> board_np, 
                            py::array_t<int64_t> moves_np,
                            py::array_t<int64_t> player_np) {

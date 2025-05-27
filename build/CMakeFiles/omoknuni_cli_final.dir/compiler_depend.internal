@@ -60,6 +60,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o
  /home/cosmos/omoknuni_small/include/utils/logger.h
  /home/cosmos/omoknuni_small/include/utils/memory_allocator.h
  /home/cosmos/omoknuni_small/include/utils/profiler.h
+ /home/cosmos/omoknuni_small/include/utils/progress_bar.h
  /home/cosmos/omoknuni_small/include/utils/shutdown_manager.h
  /home/cosmos/omoknuni_small/include/utils/thread_local_allocator.h
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h

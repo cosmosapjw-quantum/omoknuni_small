@@ -232,10 +232,18 @@ void GPUOptimizer::stateToTensor(const core::IGameState& state, torch::Tensor& o
     
     // Example implementation for board games
     std::string game_type = core::gameTypeToString(state.getGameType());
-    if (game_type == "GOMOKU" || game_type == "GO") {
+    if (game_type == "GOMOKU" || game_type == "GO" || game_type == "CHESS") {
         // Get tensor representation from the state
         try {
-            auto tensor_data = state.getTensorRepresentation();
+            // Use enhanced representation if channels > 3
+            std::vector<std::vector<std::vector<float>>> tensor_data;
+            if (channels > 3) {
+                // Use enhanced representation for more complex neural networks
+                tensor_data = state.getEnhancedTensorRepresentation();
+            } else {
+                // Use basic representation for simple networks
+                tensor_data = state.getTensorRepresentation();
+            }
             
             // Convert vector data to torch tensor
             torch::Tensor state_tensor = torch::zeros({static_cast<long>(channels), 

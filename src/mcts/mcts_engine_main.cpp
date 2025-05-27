@@ -65,12 +65,12 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     node_pool_config.max_pool_size = std::min(size_t(1000000), size_t(settings.num_simulations * 50));
     node_pool_ = std::make_unique<MCTSNodePool>(node_pool_config);
     
-    // Initialize memory pressure monitor with aggressive thresholds
+    // Initialize memory pressure monitor with thresholds appropriate for 64GB RAM
     MemoryPressureMonitor::Config mem_monitor_config;
-    mem_monitor_config.max_memory_bytes = 16ULL * 1024 * 1024 * 1024; // 16GB limit
-    mem_monitor_config.warning_threshold = 0.50; // 50% warning (8GB)
-    mem_monitor_config.critical_threshold = 0.75; // 75% critical (12GB)
-    mem_monitor_config.check_interval = std::chrono::milliseconds(200); // Check every 200ms
+    mem_monitor_config.max_memory_bytes = 60ULL * 1024 * 1024 * 1024; // 60GB limit
+    mem_monitor_config.warning_threshold = 0.67; // 67% warning (40GB)
+    mem_monitor_config.critical_threshold = 0.80; // 80% critical (48GB)
+    mem_monitor_config.check_interval = std::chrono::milliseconds(500); // Check every 500ms
     
     memory_pressure_monitor_ = std::make_unique<MemoryPressureMonitor>(mem_monitor_config);
     memory_pressure_monitor_->setCleanupCallback(
@@ -92,12 +92,12 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     batch_config.target_gpu_utilization_percent = 0.9;
     dynamic_batch_manager_ = std::make_unique<DynamicBatchManager>(batch_config);
     
-    // Initialize aggressive memory manager with MUCH lower thresholds
+    // Initialize aggressive memory manager with appropriate thresholds for 64GB RAM
     auto& aggressive_memory_manager = AggressiveMemoryManager::getInstance();
     AggressiveMemoryManager::Config aggressive_config;
-    aggressive_config.warning_threshold_gb = 8.0;   // Warning at 8GB
-    aggressive_config.critical_threshold_gb = 12.0; // Critical at 12GB
-    aggressive_config.emergency_threshold_gb = 16.0; // Emergency at 16GB
+    aggressive_config.warning_threshold_gb = 40.0;   // Warning at 40GB (62.5% of 64GB)
+    aggressive_config.critical_threshold_gb = 48.0; // Critical at 48GB (75% of 64GB)
+    aggressive_config.emergency_threshold_gb = 56.0; // Emergency at 56GB (87.5% of 64GB)
     aggressive_memory_manager.setConfig(aggressive_config);
     
     // Register cleanup callbacks

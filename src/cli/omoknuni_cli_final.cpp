@@ -23,6 +23,7 @@
 #include "mcts/aggressive_memory_manager.h"
 #include "nn/neural_network_factory.h"
 #include "selfplay/self_play_manager.h"
+#include "utils/progress_bar.h"
 #include "games/gomoku/gomoku_state.h"
 #include "games/chess/chess_state.h"
 #include "games/go/go_state.h"
@@ -305,9 +306,22 @@ private:
 int runSelfPlay(const std::vector<std::string>& args) {
     
     if (args.size() < 1) {
-        LOG_SYSTEM_ERROR("Usage: omoknuni_cli_final self-play <config.yaml>");
+        LOG_SYSTEM_ERROR("Usage: omoknuni_cli_final self-play <config.yaml> [--verbose]");
         return 1;
     }
+    
+    // Check for verbose flag
+    bool verbose = false;
+    for (const auto& arg : args) {
+        if (arg == "--verbose" || arg == "-v") {
+            verbose = true;
+            break;
+        }
+    }
+    
+    // Enable verbose logging if requested
+    auto& progress_manager = utils::SelfPlayProgressManager::getInstance();
+    progress_manager.setVerboseLogging(verbose);
     
     // Load configuration
     YAML::Node config;
@@ -336,6 +350,7 @@ int runSelfPlay(const std::vector<std::string>& args) {
     
     // DDW-RandWire-ResNet configuration
     nn::DDWRandWireResNetConfig ddw_config;
+    
     if (network_type == "ddw_randwire") {
         ddw_config.input_channels = input_channels;
         ddw_config.output_size = board_size * board_size;

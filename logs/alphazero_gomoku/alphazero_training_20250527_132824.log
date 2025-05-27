@@ -1,0 +1,105 @@
+[2025-05-27 13:28:25.289] [system] [info] [20982] Logging system initialized. Log directory: logs
+[2025-05-27 13:28:28.466] [mcts] [info] [21099] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
+[MEMORY_MONITOR] Started advanced memory monitoring with log: resource_monitor.log
+[MEMORY_MONITOR][+0ms] Starting self-play game generation
+Self-play [>                                                 ] 0/1 (0.0%)          =============================================================
+SelfPlayManager::generateGame - Starting MCTS search for game 20250527_132828_0, move 0
+MCTS CONFIG:
+  - num_simulations: 400
+  - batch_size: 128
+  - use_root_parallelization: false
+  - num_root_workers: 1
+  - temperature: 1
+Created root node for MCTS search with game type: 3
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          [2025-05-27 13:28:28.971] [mcts] [info] [21100] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          [MEMORY_MONITOR][+559ms] Starting self-play game generation
+Self-play [>                                                 ] 0/1 (0.0%)          
+Self-play [>                                                 ] 0/1 (0.0%)          =============================================================
+SelfPlayManager::generateGame - Starting MCTS search for game 20250527_132829_0, move 0
+MCTS CONFIG:
+  - num_simulations: 400
+  - batch_size: 128
+  - use_root_parallelization: false
+  - num_root_workers: 1
+  - temperature: 1
+Created root node for MCTS search with game type: 3
+Self-play [>                                                 ] 0/1 (0.0%)          [2025-05-27 13:28:29.479] [mcts] [info] [21101] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          [MEMORY_MONITOR][+1137ms] Starting self-play game generation
+Self-play [>                                                 ] 0/1 (0.0%)          
+=============================================================
+SelfPlayManager::generateGame - Starting MCTS search for game 20250527_132829_0, move 0
+MCTS CONFIG:
+  - num_simulations: 400
+  - batch_size: 128
+  - use_root_parallelization: false
+  - num_root_workers: 1
+  - temperature: 1
+Self-play [>                                                 ] 0/1 (0.0%)          Created root node for MCTS search with game type: 3
+[2025-05-27 13:28:29.995] [mcts] [info] [21102] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          SelfPlayManager::generateGame - Completed MCTS search for game 20250527_132828_0, move 0 in 1553ms
+=============================================================
+=============================================================
+SelfPlayManager::generateGame - Starting MCTS search for game 20250527_132828_0, move 1
+MCTS CONFIG:
+  - num_simulations: 400
+  - batch_size: 128
+  - use_root_parallelization: false
+  - num_root_workers: 1
+  - temperature: 1
+Created root node for MCTS search with game type: 3
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          [MEMORY_MONITOR][+1792ms] Starting self-play game generation
+Self-play [>                                                 ] 0/1 (0.0%)          
+Self-play [>                                                 ] 0/1 (0.0%)          =============================================================
+SelfPlayManager::generateGame - Starting MCTS search for game 20250527_132830_0, move 0
+MCTS CONFIG:
+  - num_simulations: 400
+  - batch_size: 128
+  - use_root_parallelization: false
+  - num_root_workers: 1
+  - temperature: 1
+Created root node for MCTS search with game type: 3
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          SelfPlayManager::generateGame - Completed MCTS search for game 20250527_132829_0, move 0 in 1592ms
+=============================================================
+=============================================================
+SelfPlayManager::generateGame - Starting MCTS search for game 20250527_132829_0, move 1
+MCTS CONFIG:
+  - num_simulations: 400
+  - batch_size: 128
+  - use_root_parallelization: false
+  - num_root_workers: 1
+  - temperature: 1
+Created root node for MCTS search with game type: 3
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          SelfPlayManager::generateGame - Completed MCTS search for game 20250527_132829_0, move 0 in 1509ms
+=============================================================
+=============================================================
+SelfPlayManager::generateGame - Starting MCTS search for game 20250527_132829_0, move 1
+MCTS CONFIG:
+  - num_simulations: 400
+  - batch_size: 128
+  - use_root_parallelization: false
+  - num_root_workers: 1
+  - temperature: 1
+Created root node for MCTS search with game type: 3
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          SelfPlayManager::generateGame - Completed MCTS search for game 20250527_132830_0, move 0 in 1153ms
+=============================================================
+=============================================================
+SelfPlayManager::generateGame - Starting MCTS search for game 20250527_132830_0, move 1
+MCTS CONFIG:
+  - num_simulations: 400
+  - batch_size: 128
+  - use_root_parallelization: false
+  - num_root_workers: 1
+  - temperature: 1
+Created root node for MCTS search with game type: 3
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          SelfPlayManager::generateGame - Completed MCTS search for game 20250527_132828_0, move 1 in 2132ms
+=============================================================
+=============================================================
+SelfPlayManager::generateGame - Starting MCTS search for game 20250527_132828_0, move 2
+MCTS CONFIG:
+  - num_simulations: 400
+  - batch_size: 128
+  - use_root_parallelization: false
+  - num_root_workers: 1
+  - temperature: 1
+Created root node for MCTS search with game type: 3
+Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          Self-play [>                                                 ] 0/1 (0.0%)          

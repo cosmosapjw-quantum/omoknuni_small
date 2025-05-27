@@ -1,6 +1,7 @@
 // src/mcts/phmap_transposition_table.cpp
 #include "mcts/phmap_transposition_table.h"
 #include "utils/logger.h"
+#include "utils/progress_bar.h"
 #include <algorithm>
 #include <vector>
 
@@ -24,8 +25,11 @@ PHMapTranspositionTable::PHMapTranspositionTable(const Config& config)
     // Reserve capacity to avoid rehashing
     entries_.reserve(max_entries_);
     
-    LOG_MCTS_INFO("PHMap Transposition Table initialized: {} MB, {} max entries, {} shards",
-                  config.size_mb, max_entries_, entries_.subcnt());
+    auto& progress_manager = alphazero::utils::SelfPlayProgressManager::getInstance();
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        LOG_MCTS_INFO("PHMap Transposition Table initialized: {} MB, {} max entries, {} shards",
+                      config.size_mb, max_entries_, entries_.subcnt());
+    }
 }
 
 PHMapTranspositionTable::~PHMapTranspositionTable() {

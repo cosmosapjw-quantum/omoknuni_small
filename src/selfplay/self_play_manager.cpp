@@ -10,6 +10,7 @@
 #include "utils/memory_tracker.h"
 #include "utils/shutdown_manager.h"
 #include "core/tensor_pool.h"
+#include "utils/progress_bar.h"
 #include <vector>
 #include <string>
 #include <memory>
@@ -239,7 +240,12 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     std::string timestamp_base = getCurrentTimestamp();
     
     // CRITICAL FIX: Run multiple games in parallel for better CPU/GPU utilization
-    std::cout << "Generating " << num_games << " games in parallel for optimal CPU/GPU utilization..." << std::endl;
+    auto& progress_manager = utils::SelfPlayProgressManager::getInstance();
+    progress_manager.startGames(num_games);
+    
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        std::cout << "Generating " << num_games << " games in parallel for optimal CPU/GPU utilization..." << std::endl;
+    }
     
     mcts::MCTSEngine& engine = *engines_[0];  // Primary engine
     
@@ -288,11 +294,8 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
                         games.push_back(std::move(game_data));
                         games_completed.fetch_add(1);
                         
-                        // Progress tracking
-                        if (games_completed % 10 == 0) {
-                            std::cout << "Progress: " << games_completed << "/" << num_games 
-                                      << " games completed" << std::endl;
-                        }
+                        // Progress tracking handled by progress bar
+                        // Old verbose logging removed
                     }
                 } catch (const std::exception& e) {
                     std::cerr << "Error in worker " << worker_id << " generating game " 
@@ -319,36 +322,41 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
         thread.join();
     }
     
-    std::cout << "Successfully generated " << games.size() << " games" << std::endl;
+    // Complete progress bar
+    progress_manager.finish();
+    
+    std::cout << "\nSuccessfully generated " << games.size() << " games" << std::endl;
     
     // Final memory monitoring
     monitor.captureSnapshot("generate_games_complete");
     monitor.logEvent("Self-play game generation completed");
     
-    // Print comprehensive performance summary
-    std::cout << "\n🎯 FINAL PERFORMANCE SUMMARY:" << std::endl;
-    std::cout << "========================================" << std::endl;
-    
-    // Memory statistics
-    std::cout << "[MEMORY] Statistics:" << std::endl;
-    std::cout << "  - Average memory usage: " << std::fixed << std::setprecision(1) 
-              << monitor.getAverageMemoryUsage() * 100.0 << "%" << std::endl;
-    std::cout << "  - Average GPU usage: " << std::fixed << std::setprecision(1) 
-              << monitor.getAverageGPUUsage() << "%" << std::endl;
-    std::cout << "  - Memory pressure detected: " << (monitor.isMemoryPressureHigh() ? "YES" : "NO") << std::endl;
-    std::cout << "  - GPU pressure detected: " << (monitor.isGPUMemoryPressureHigh() ? "YES" : "NO") << std::endl;
-    
-    // Engine performance summary
-    if (!engines_.empty()) {
-        // UnifiedInferenceServer was removed in simplification
+    // Print comprehensive performance summary only if verbose
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        std::cout << "\n🎯 FINAL PERFORMANCE SUMMARY:" << std::endl;
+        std::cout << "========================================" << std::endl;
+        
+        // Memory statistics
+        std::cout << "[MEMORY] Statistics:" << std::endl;
+        std::cout << "  - Average memory usage: " << std::fixed << std::setprecision(1) 
+                  << monitor.getAverageMemoryUsage() * 100.0 << "%" << std::endl;
+        std::cout << "  - Average GPU usage: " << std::fixed << std::setprecision(1) 
+                  << monitor.getAverageGPUUsage() << "%" << std::endl;
+        std::cout << "  - Memory pressure detected: " << (monitor.isMemoryPressureHigh() ? "YES" : "NO") << std::endl;
+        std::cout << "  - GPU pressure detected: " << (monitor.isGPUMemoryPressureHigh() ? "YES" : "NO") << std::endl;
+        
+        // Engine performance summary
+        if (!engines_.empty()) {
+            // UnifiedInferenceServer was removed in simplification
+        }
+        
+        std::cout << "[THREADING] Configuration Used:" << std::endl;
+        std::cout << "  - MCTS threads per game: " << settings_.mcts_settings.num_threads << std::endl;
+        std::cout << "  - Game parallelization: Sequential (optimized for GPU utilization)" << std::endl;
+        std::cout << "  - Expected GPU batch efficiency: HIGH with " << settings_.mcts_settings.num_threads << " concurrent threads" << std::endl;
+        
+        std::cout << "========================================" << std::endl;
     }
-    
-    std::cout << "[THREADING] Configuration Used:" << std::endl;
-    std::cout << "  - MCTS threads per game: " << settings_.mcts_settings.num_threads << std::endl;
-    std::cout << "  - Game parallelization: Sequential (optimized for GPU utilization)" << std::endl;
-    std::cout << "  - Expected GPU batch efficiency: HIGH with " << settings_.mcts_settings.num_threads << " concurrent threads" << std::endl;
-    
-    std::cout << "========================================" << std::endl;
     
     // Stop monitoring (only if we started it)
     // Don't stop monitoring - let the singleton destructor handle it
@@ -399,9 +407,12 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
     data.winner = 0;  // Default to draw
     data.game_id = game_id;
 
-    // Log game creation once
-    int thread_id = omp_get_thread_num();
-    std::cout << "Game " << game_id << ": Started (thread " << thread_id << ")" << std::endl;
+    // Log game creation only if verbose logging is enabled
+    auto& progress_manager = utils::SelfPlayProgressManager::getInstance();
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        int thread_id = omp_get_thread_num();
+        std::cout << "Game " << game_id << ": Started (thread " << thread_id << ")" << std::endl;
+    }
     
     // Calculate max moves if not specified
     int max_moves = settings_.max_moves;
@@ -421,20 +432,22 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
         std::cerr << "  Legal moves: " << legal_moves.size() << std::endl;
         std::cerr << "  Current player: " << game->getCurrentPlayer() << std::endl;
     } else {
-        std::cout << "Game " << game_id << ": Initial state has " << legal_moves.size() << " legal moves" << std::endl;
-        // For Gomoku, let's check what the legal moves are
-        if (game_type == core::GameType::GOMOKU && legal_moves.size() < 10) {
-            std::cout << "  Legal moves: ";
-            for (int move : legal_moves) {
-                std::cout << move << " ";
+        if (progress_manager.isVerboseLoggingEnabled()) {
+            std::cout << "Game " << game_id << ": Initial state has " << legal_moves.size() << " legal moves" << std::endl;
+            // For Gomoku, let's check what the legal moves are
+            if (game_type == core::GameType::GOMOKU && legal_moves.size() < 10) {
+                std::cout << "  Legal moves: ";
+                for (int move : legal_moves) {
+                    std::cout << move << " ";
+                }
+                std::cout << std::endl;
+                
+                // Check board size and center position
+                int board_size = dynamic_cast<games::gomoku::GomokuState*>(game.get())->getBoardSize();
+                int center = (board_size * board_size) / 2;
+                std::cout << "  Board size: " << board_size << "x" << board_size 
+                         << ", Center position: " << center << std::endl;
             }
-            std::cout << std::endl;
-            
-            // Check board size and center position
-            int board_size = dynamic_cast<games::gomoku::GomokuState*>(game.get())->getBoardSize();
-            int center = (board_size * board_size) / 2;
-            std::cout << "  Board size: " << board_size << "x" << board_size 
-                     << ", Center position: " << center << std::endl;
         }
     }
     
@@ -509,22 +522,9 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                     }
                 }
                 
-                std::cout << "=============================================================" << std::endl;
-                std::cout << "SelfPlayManager::generateGame - Starting MCTS search for game " << game_id 
-                         << ", move " << move_count << std::endl;
-                
-                // Log key configuration for debugging
-                auto engine_settings = engine.getSettings();
-                std::cout << "MCTS CONFIG:"
-                         << "\n  - num_simulations: " << engine_settings.num_simulations
-                         << "\n  - batch_size: " << engine_settings.batch_size
-                         << "\n  - use_root_parallelization: " << (engine_settings.use_root_parallelization ? "true" : "false")
-                         << "\n  - num_root_workers: " << engine_settings.num_root_workers
-                         << "\n  - temperature: " << engine_settings.temperature
-                         << std::endl;
+                // Verbose logging removed - starting MCTS search
                 
                 // Begin search
-                auto search_start_time = std::chrono::steady_clock::now();
                 
                 // UnifiedInferenceServer was removed in simplification
                 
@@ -537,15 +537,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                     result = engine.searchWithTreeReuse(*game, last_action);
                 }
                 
-                auto search_end_time = std::chrono::steady_clock::now();
-                auto search_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    search_end_time - search_start_time).count();
-                
-                // UnifiedInferenceServer was removed in simplification
-                
-                std::cout << "SelfPlayManager::generateGame - Completed MCTS search for game " << game_id 
-                         << ", move " << move_count << " in " << search_duration << "ms" << std::endl;
-                std::cout << "=============================================================" << std::endl;
+                // Verbose logging removed - completed MCTS search
                 
                 // Check for shutdown after search
                 if (utils::isShutdownRequested()) {
@@ -582,8 +574,10 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 
                 // Log every 10th move to reduce verbosity
                 if (move_count % 10 == 0) {
-                    std::cout << "Game " << game_id << ": Move " << move_count 
-                             << " completed (action: " << result.action << ")" << std::endl;
+                    if (progress_manager.isVerboseLoggingEnabled()) {
+                        std::cout << "Game " << game_id << ": Move " << move_count 
+                                 << " completed (action: " << result.action << ")" << std::endl;
+                    }
                     // alphazero::utils::trackMemory("After search - Game " + game_id + ", Move " + std::to_string(move_count));
                     
                     // Periodic memory cleanup
@@ -663,10 +657,16 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
     data.total_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
         end_time - start_time).count();
     
-    // Log completion
-    // std::cout << "Game " << game_id << ": Completed with "
-             // << data.moves.size() << " moves in "
-             // << (data.total_time_ms / 1000.0) << " seconds" << std::endl;
+    // Update progress bar with game completion
+    float final_outcome = (data.winner == 1) ? 1.0f : (data.winner == 2) ? -1.0f : 0.0f;
+    progress_manager.completeGame(game_id, data.moves.size(), final_outcome);
+    
+    // Log completion only if verbose
+    if (progress_manager.isVerboseLoggingEnabled()) {
+        std::cout << "Game " << game_id << ": Completed with "
+                 << data.moves.size() << " moves in "
+                 << (data.total_time_ms / 1000.0) << " seconds" << std::endl;
+    }
     
     // FIX: Clean up MCTS tree after game ends to prevent memory accumulation
     engine.cleanupTree();

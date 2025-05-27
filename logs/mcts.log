@@ -18,3 +18,7 @@
 [2025-05-27 06:54:10.236] [mcts] [info] [30648] [phmap_transposition_table.cpp:27] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
 [2025-05-27 06:54:14.063] [mcts] [info] [30649] [phmap_transposition_table.cpp:27] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
 [2025-05-27 06:54:25.003] [mcts] [info] [30650] [phmap_transposition_table.cpp:27] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
+[2025-05-27 12:56:29.809] [mcts] [info] [5082] [phmap_transposition_table.cpp:27] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
+[2025-05-27 12:56:30.332] [mcts] [info] [5083] [phmap_transposition_table.cpp:27] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
+[2025-05-27 12:56:30.837] [mcts] [info] [5084] [phmap_transposition_table.cpp:27] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards
+[2025-05-27 12:56:31.419] [mcts] [info] [5085] [phmap_transposition_table.cpp:27] PHMap Transposition Table initialized: 128 MB, 1342177 max entries, 16 shards

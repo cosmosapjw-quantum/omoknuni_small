@@ -4,7 +4,7 @@
 # Game settings
 game_type: gomoku
 board_size: 9
-input_channels: 17  # Gomoku enhanced representation
+input_channels: 19  # Gomoku enhanced representation with attack/defense planes
 
 # Network type
 network_type: ddw_randwire

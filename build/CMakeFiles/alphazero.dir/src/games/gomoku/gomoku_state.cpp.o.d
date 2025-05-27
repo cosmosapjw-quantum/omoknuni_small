@@ -264,4 +264,5 @@ CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_state.cpp.o: \
  /usr/include/c++/13/bits/std_thread.h \
  /usr/include/c++/13/bits/this_thread_sleep.h /usr/include/c++/13/deque \
  /usr/include/c++/13/bits/stl_deque.h /usr/include/c++/13/bits/deque.tcc \
+ /home/cosmos/omoknuni_small/include/utils/attack_defense_module.h \
  /usr/include/c++/13/iostream

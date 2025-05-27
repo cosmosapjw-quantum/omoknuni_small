@@ -118,10 +118,13 @@ std::shared_ptr<ResNetModel> NeuralNetworkFactory::loadResNet(
     }
 
     // Create a model with the correct dimensions
-    // For Gomoku games, ensure we're using 17 channels for the enhanced representation
+    // For Gomoku games, ensure we're using 19 channels for the enhanced representation (with attack/defense planes)
     if (input_channels == 3 && policy_size == board_size * board_size) {
-        // This is likely a Gomoku model, which should use 17 channels
-        input_channels = 17;
+        // This is likely a Gomoku model, which should use 19 channels (17 + 2 attack/defense)
+        input_channels = 19;
+    } else if (input_channels == 17 && policy_size == board_size * board_size) {
+        // Upgrade old 17-channel models to 19 channels
+        input_channels = 19;
     }
     
     // Log the actual model path being used

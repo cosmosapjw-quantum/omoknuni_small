@@ -4,6 +4,7 @@
 #include "core/illegal_move_exception.h" // For core::IllegalMoveException
 #include "core/tensor_pool.h"            // For GlobalTensorPool optimization
 #include "mcts/aggressive_memory_manager.h" // For memory tracking
+#include "utils/attack_defense_module.h"  // For attack/defense planes
 #include <stdexcept> // For std::invalid_argument, std::out_of_range
 #include <iostream>  // For debugging (optional, remove in production)
 #include <numeric>   // For std::accumulate, std::gcd
@@ -207,7 +208,7 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
     
     try {
         const int num_history_pairs = 8; 
-        const int num_feature_planes = 2 * num_history_pairs + 1; 
+        const int num_feature_planes = 2 * num_history_pairs + 1 + 2; // 19 channels (17 + 2 for attack/defense)
         
         // Create fresh tensor without pooling to avoid memory retention
         auto tensor = std::vector<std::vector<std::vector<float>>>(
@@ -233,7 +234,7 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
             auto coords = action_to_coords_pair(current_player_moves_in_history[i]);
             int r = coords.first;
             int c = coords.second;
-            if (r >= 0 && r < board_size_ && c >= 0 && c < board_size_ && (i*2) < num_feature_planes) {
+            if (r >= 0 && r < board_size_ && c >= 0 && c < board_size_ && (i*2) < 16) {
                 tensor[i*2][r][c] = 1.0f;
             }
         }
@@ -242,15 +243,38 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
             auto coords = action_to_coords_pair(opponent_player_moves_in_history[i]);
             int r = coords.first;
             int c = coords.second;
-            if (r >= 0 && r < board_size_ && c >= 0 && c < board_size_ && (i*2 + 1) < num_feature_planes) {
+            if (r >= 0 && r < board_size_ && c >= 0 && c < board_size_ && (i*2 + 1) < 16) {
                 tensor[i*2 + 1][r][c] = 1.0f;
             }
         }
 
+        // Color plane at channel 16
         float color_plane_val = (current_player_ == BLACK) ? 1.0f : 0.0f;
         for (int r = 0; r < board_size_; ++r) {
             for (int c = 0; c < board_size_; ++c) {
-                tensor[num_feature_planes - 1][r][c] = color_plane_val;
+                tensor[16][r][c] = color_plane_val;
+            }
+        }
+        
+        // Add attack and defense planes (channels 17 and 18)
+        // Create attack/defense module and compute planes
+        auto attack_defense_module = std::make_unique<alphazero::GomokuAttackDefenseModule>(board_size_);
+        std::vector<std::unique_ptr<core::IGameState>> states_batch;
+        states_batch.push_back(this->clone());
+        
+        auto [attack_planes, defense_planes] = attack_defense_module->compute_planes(states_batch);
+        
+        // Copy attack plane to channel 17
+        for (int r = 0; r < board_size_; ++r) {
+            for (int c = 0; c < board_size_; ++c) {
+                tensor[17][r][c] = attack_planes[0][r][c];
+            }
+        }
+        
+        // Copy defense plane to channel 18
+        for (int r = 0; r < board_size_; ++r) {
+            for (int c = 0; c < board_size_; ++c) {
+                tensor[18][r][c] = defense_planes[0][r][c];
             }
         }
         
@@ -258,9 +282,9 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
     } catch (const std::exception& e) {
         std::cerr << "Exception in getEnhancedTensorRepresentation: " << e.what() << std::endl;
         
-        // Return a default tensor with the correct dimensions (17 channels)
+        // Return a default tensor with the correct dimensions (19 channels)
         const int num_history_pairs = 8;
-        const int num_feature_planes = 2 * num_history_pairs + 1; // 17 channels
+        const int num_feature_planes = 2 * num_history_pairs + 1 + 2; // 19 channels
         
         return std::vector<std::vector<std::vector<float>>>(
             num_feature_planes, 
@@ -272,9 +296,9 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
     } catch (...) {
         std::cerr << "Unknown exception in getEnhancedTensorRepresentation" << std::endl;
         
-        // Return a default tensor with the correct dimensions (17 channels)
+        // Return a default tensor with the correct dimensions (19 channels)
         const int num_history_pairs = 8;
-        const int num_feature_planes = 2 * num_history_pairs + 1; // 17 channels
+        const int num_feature_planes = 2 * num_history_pairs + 1 + 2; // 19 channels
         
         return std::vector<std::vector<std::vector<float>>>(
             num_feature_planes, 

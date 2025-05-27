@@ -3,7 +3,7 @@ game_type: gomoku
 board_size: 15
 
 # Neural network configuration
-input_channels: 17
+input_channels: 19
 num_res_blocks: 4
 num_filters: 32
 model_path: models/model.pt
