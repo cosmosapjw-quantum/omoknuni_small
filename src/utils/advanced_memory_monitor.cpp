@@ -120,7 +120,7 @@ bool AdvancedMemoryMonitor::isMemoryPressureHigh() const {
     
     const auto& latest = snapshots_.back();
     double usage_ratio = static_cast<double>(latest.used_memory_mb) / latest.total_memory_mb;
-    return usage_ratio > 0.85; // High pressure if >85% used
+    return usage_ratio > 0.95; // High pressure if >95% used (was too aggressive at 85%)
 }
 
 bool AdvancedMemoryMonitor::isGPUMemoryPressureHigh() const {

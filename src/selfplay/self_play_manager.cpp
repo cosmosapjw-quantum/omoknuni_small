@@ -214,9 +214,6 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         
         // CRITICAL: Initialize SharedInferenceQueue for proper batching
         if (!mcts::GlobalInferenceQueue::isInitialized()) {
-            std::cout << "[DEBUG] Initializing SharedInferenceQueue with batch_size=" 
-                      << optimized_settings.batch_size << ", timeout=" 
-                      << optimized_settings.batch_timeout.count() << "ms" << std::endl;
             mcts::GlobalInferenceQueue::initialize(
                 neural_net_, 
                 optimized_settings.batch_size,
@@ -770,7 +767,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                         std::cout << "[MEMORY_WARNING] High memory pressure detected after move " << move_count << std::endl;
                         
                         // Emergency game termination if memory is critically high
-                        if (monitor.getAverageMemoryUsage() > 0.90) { // >90% memory usage
+                        if (monitor.getAverageMemoryUsage() > 0.97) { // >97% memory usage (truly emergency)
                             std::cout << "[MEMORY_EMERGENCY] Terminating game " << game_id 
                                      << " at move " << move_count << " due to critical memory pressure" << std::endl;
                             break; // Exit move loop

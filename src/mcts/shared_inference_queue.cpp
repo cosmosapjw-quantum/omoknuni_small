@@ -34,8 +34,6 @@ void SharedInferenceQueue::start() {
     if (!running_) {
         running_ = true;
         processing_thread_ = std::thread(&SharedInferenceQueue::processingLoop, this);
-        std::cout << "SharedInferenceQueue: Started with max_batch_size=" << max_batch_size_ 
-                  << ", timeout=" << batch_timeout_ms_ << "ms" << std::endl;
     }
 }
 
@@ -140,14 +138,14 @@ void SharedInferenceQueue::processingLoop() {
                 should_process = true;  // Timeout reached - but we have a longer timeout (5ms)
             }
             
-            // OPTIMIZED: Dynamic minimum batch size based on time elapsed
-            // Start with high requirement but reduce as time passes
-            int min_batch_requirement = max_batch_size_ * 3 / 4;  // 75% = 96 states for 128 batch
+            // AGGRESSIVE BATCHING: Much higher requirements for better GPU utilization
+            int min_batch_requirement = max_batch_size_;  // Aim for full batch (128)
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - batch_start_time).count();
             
-            // Reduce requirement as time passes to avoid stalls
-            if (elapsed > 3) min_batch_requirement = max_batch_size_ / 2;  // 50% after 3ms
-            if (elapsed > 5) min_batch_requirement = max_batch_size_ / 4;  // 25% after 5ms
+            // Only reduce requirement after significant waiting
+            if (elapsed > 8) min_batch_requirement = max_batch_size_ * 7 / 8;  // 87.5% after 8ms  
+            if (elapsed > 12) min_batch_requirement = max_batch_size_ * 3 / 4;  // 75% after 12ms
+            if (elapsed > 16) min_batch_requirement = max_batch_size_ / 2;  // 50% after 16ms
             
             if (should_process && total_states < min_batch_requirement && now < timeout_time) {
                 should_process = false;  // Wait for better batch utilization
@@ -201,13 +199,6 @@ void SharedInferenceQueue::processBatch(std::vector<InferenceRequest>& batch) {
         }
     }
     
-    // DEBUG: Log batch info every 10th batch
-    if (debug_batch_count % 10 == 0) {
-        std::cout << "[SharedInferenceQueue] Batch #" << debug_batch_count 
-                  << ": requests=" << batch.size() 
-                  << ", total_states=" << total_states 
-                  << ", max_batch=" << max_batch_size_ << std::endl;
-    }
     
     try {
         // Special handling for Gomoku with GPU attack/defense
@@ -282,20 +273,6 @@ void SharedInferenceQueue::processBatch(std::vector<InferenceRequest>& batch) {
         double time_efficiency = std::min(1.0, static_cast<double>(duration_ms) / batch_timeout_ms_);
         stats_.gpu_utilization = batch_fullness * time_efficiency * 100.0;  // Percentage
         
-        // Log batch processing
-        if (debug_batch_count % 10 == 0 || total_states != max_batch_size_) {
-            std::cout << "[DEBUG SharedInferenceQueue] Batch " << debug_batch_count 
-                      << ": processed " << total_states << " states"
-                      << " (target: " << max_batch_size_ << ") in " 
-                      << duration_ms << "ms" << std::endl;
-        }
-        
-        if (stats_.total_batches % 100 == 0) {
-            std::cout << "SharedInferenceQueue: Processed batch " << stats_.total_batches
-                      << " with " << total_states << " states in " << duration_ms << "ms"
-                      << " (avg batch size: " << stats_.average_batch_size 
-                      << ", GPU util estimate: " << stats_.gpu_utilization << "%)" << std::endl;
-        }
         
     } catch (const std::exception& e) {
         std::cerr << "SharedInferenceQueue: Error processing batch: " << e.what() << std::endl;

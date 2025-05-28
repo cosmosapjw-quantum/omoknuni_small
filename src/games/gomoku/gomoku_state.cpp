@@ -870,42 +870,15 @@ void GomokuState::refresh_winner_cache() const {
 }
 
 bool GomokuState::is_stalemate() const {
-    // Fast atomic checks
+    // Fast path: If there's a winner, it's not stalemate
     int current_winner = cached_winner_.load(std::memory_order_acquire);
-    bool winner_dirty = winner_check_dirty_.load(std::memory_order_acquire);
-    
-    if (current_winner != NO_PLAYER && !winner_dirty) {
+    if (current_winner != NO_PLAYER) {
         return false; 
     }
 
+    // Stalemate only occurs when board is completely full with no winner
     int total_stones = count_total_stones();
-    if (total_stones >= getActionSpaceSize()) {
-        return true; 
-    }
-    
-    // MCTS OPTIMIZATION: For early game (≤8 moves), compute on-demand without caching
-    // This avoids the expensive mutex contention for 99% of MCTS cases
-    if (total_stones <= 8) {
-        // Early game positions are extremely unlikely to be stalemate in Gomoku
-        // Do a quick check for any legal move instead of full enumeration
-        for (int action = 0; action < getActionSpaceSize(); ++action) {
-            if (!is_occupied(action)) {
-                return false; 
-            }
-        }
-        return true;
-    }
-    
-    // For mid/late game, use thread-safe cache
-    std::lock_guard<std::mutex> lock(cache_mutex_);
-    
-    if (valid_moves_dirty_.load(std::memory_order_acquire)) {
-        refresh_valid_moves_cache_internal(); 
-    }
-    
-    current_winner = cached_winner_.load(std::memory_order_acquire);
-    bool result = cached_valid_moves_.empty() && (current_winner == NO_PLAYER);
-    return result;
+    return (total_stones >= getActionSpaceSize());
 }
 
 
