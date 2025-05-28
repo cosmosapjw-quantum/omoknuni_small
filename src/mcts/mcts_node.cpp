@@ -1,7 +1,12 @@
 // src/mcts/mcts_node.cpp
 #include "mcts/mcts_node.h"
 #include "mcts/mcts_object_pool.h"
-#include "mcts/aggressive_memory_manager.h"
+// #include "mcts/aggressive_memory_manager.h" // Removed
+
+// Define empty macros for removed memory tracking
+#define TRACK_MEMORY_ALLOC(tag, size) ((void)0)
+#define TRACK_MEMORY_FREE(tag, size) ((void)0)
+
 #include <cmath>
 #include <random>
 #include <limits>
@@ -148,64 +153,54 @@ std::shared_ptr<MCTSNode> MCTSNode::selectChild(float exploration_factor, bool u
         all_pending = false; // Now that we've cleared the flags, children are available
     }
     
-    // For many children, use OpenMP parallelization
-    if (num_children > 32) {
-        std::vector<float> scores(num_children);
-        std::vector<bool> skip_child(num_children, false);
+    // OPTIMIZED: Simple sequential loop without OpenMP overhead
+    // OpenMP adds significant overhead for this simple calculation
+    for (size_t i = 0; i < num_children; ++i) {
+        auto& child = children_[i];
         
-        #pragma omp parallel for schedule(static)
-        for (size_t i = 0; i < num_children; ++i) {
-            auto& child = children_[i];
-            
-            // Skip children with pending evaluations to prevent deadlock
-            if (child->isBeingEvaluated() || child->hasPendingEvaluation()) {
-                skip_child[i] = true;
-                scores[i] = -std::numeric_limits<float>::infinity();
-                continue;
-            }
-            
-            // Get stats (thread-safe reads)
-            int child_visits = child->visit_count_.load(std::memory_order_relaxed);
-            int virtual_losses = child->virtual_loss_count_.load(std::memory_order_acquire);
-            float child_value = child->value_sum_.load(std::memory_order_relaxed);
-            
-            // Apply virtual loss penalty
-            int effective_visits = child_visits + virtual_losses;
-            float effective_value = child_value - virtual_losses;
-            
-            // Calculate exploitation value using RAVE if enabled
-            float exploitation;
-            if (use_rave) {
-                exploitation = child->getCombinedValue(rave_constant);
-            } else {
-                exploitation = effective_visits > 0 ? 
-                    effective_value / effective_visits : 0.0f;
-            }
-            
-            float exploration = child->prior_probability_ * exploration_param / 
-                (1 + effective_visits);
-            
-            scores[i] = exploitation + exploration;
+        // Skip children with pending evaluations
+        if (child->hasPendingEvaluation()) {
+            continue;
         }
         
-        // Find best child sequentially
-        for (size_t i = 0; i < num_children; ++i) {
-            if (skip_child[i]) continue;
-            
-            if (scores[i] > best_score) {
-                best_score = scores[i];
-                best_child = children_[i];
-            }
+        // Get stats with minimal memory ordering
+        int child_visits = child->visit_count_.load(std::memory_order_relaxed);
+        float child_value = child->value_sum_.load(std::memory_order_relaxed);
+        
+        // Simplified virtual loss - just use the atomic counter directly
+        int virtual_losses = child->virtual_loss_count_.load(std::memory_order_relaxed);
+        
+        // Apply virtual loss penalty inline
+        int effective_visits = child_visits + virtual_losses;
+        float effective_value = child_value - virtual_losses;
+        
+        // Calculate UCB score inline (faster than function calls)
+        float exploitation = effective_visits > 0 ? 
+            effective_value / effective_visits : 0.0f;
+        
+        float exploration = child->prior_probability_ * exploration_param / 
+            (1.0f + effective_visits);
+        
+        float score = exploitation + exploration;
+        
+        // Update best inline
+        if (score > best_score) {
+            best_score = score;
+            best_child = child;
+            all_pending = false;
         }
         
-        // If all children are pending, select one with lowest visit count as fallback
-        if (!best_child && all_pending && valid_children > 0) {
-            auto least_visited = std::min_element(children_.begin(), children_.end(),
-                [](const std::shared_ptr<MCTSNode>& a, const std::shared_ptr<MCTSNode>& b) {
-                    return a->visit_count_.load() < b->visit_count_.load();
-                });
-            if (least_visited != children_.end()) {
-                best_child = *least_visited;
+        valid_children++;
+    }
+    
+    // Fallback: select least visited if all are pending
+    if (!best_child && valid_children > 0) {
+        int min_visits = std::numeric_limits<int>::max();
+        for (auto& child : children_) {
+            int visits = child->visit_count_.load(std::memory_order_relaxed);
+            if (visits < min_visits) {
+                min_visits = visits;
+                best_child = child;
             }
         }
     } else {

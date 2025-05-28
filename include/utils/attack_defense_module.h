@@ -5,13 +5,18 @@
 #include <vector>
 #include <memory>
 
+#include "core/export_macros.h"
 #include "utils/hash_specializations.h"
 #include "core/igamestate.h"
+
+#ifdef WITH_TORCH
+#include <torch/torch.h>
+#endif
 
 namespace alphazero {
 
 // Base class for attack/defense calculation
-class AttackDefenseModule {
+class ALPHAZERO_API AttackDefenseModule {
 public:
     AttackDefenseModule(int board_size) : board_size_(board_size) {}
     virtual ~AttackDefenseModule() = default;
@@ -32,7 +37,7 @@ protected:
 };
 
 // Gomoku-specific implementation
-class GomokuAttackDefenseModule : public AttackDefenseModule {
+class ALPHAZERO_API GomokuAttackDefenseModule : public AttackDefenseModule {
 public:
     GomokuAttackDefenseModule(int board_size);
     
@@ -92,7 +97,7 @@ private:
 };
 
 // Chess-specific implementation
-class ChessAttackDefenseModule : public AttackDefenseModule {
+class ALPHAZERO_API ChessAttackDefenseModule : public AttackDefenseModule {
 public:
     ChessAttackDefenseModule();
     
@@ -121,7 +126,7 @@ private:
 };
 
 // Go-specific implementation  
-class GoAttackDefenseModule : public AttackDefenseModule {
+class ALPHAZERO_API GoAttackDefenseModule : public AttackDefenseModule {
 public:
     GoAttackDefenseModule(int board_size);
     
@@ -159,7 +164,39 @@ private:
 };
 
 // Factory function to create appropriate module based on game type
-std::unique_ptr<AttackDefenseModule> createAttackDefenseModule(
+ALPHAZERO_API std::unique_ptr<AttackDefenseModule> createAttackDefenseModule(
     core::GameType game_type, int board_size);
 
+} // namespace alphazero
+
+// Forward declarations for GPU functions
+namespace alphazero {
+namespace games {
+namespace gomoku { class GomokuState; }
+namespace chess { class ChessState; }
+namespace go { class GoState; }
+}
+
+namespace utils {
+
+#ifdef WITH_TORCH
+// GPU-accelerated attack/defense computation functions
+class ALPHAZERO_API AttackDefenseModule {
+public:
+    // Check if GPU is available
+    static bool isGPUAvailable();
+    
+    // GPU versions only - CPU versions use the existing compute_planes methods
+    static torch::Tensor computeGomokuAttackDefenseGPU(
+        const std::vector<const games::gomoku::GomokuState*>& states);
+    
+    static torch::Tensor computeChessAttackDefenseGPU(
+        const std::vector<const games::chess::ChessState*>& states);
+    
+    static torch::Tensor computeGoAttackDefenseGPU(
+        const std::vector<const games::go::GoState*>& states);
+};
+#endif
+
+} // namespace utils
 } // namespace alphazero

@@ -17,6 +17,11 @@
 #include <atomic>    // For lock-free thread safety
 #include <mutex>     // For cache protection
 
+// Forward declarations for GPU support
+//namespace alphazero {
+//    class GomokuGPUAttackDefense;
+//}
+
 namespace alphazero {
 namespace games {
 namespace gomoku {
@@ -164,6 +169,24 @@ private:
 
     // Rule-specific helpers
     bool is_pro_long_opening_move_valid(int action, int total_stones_on_board) const;
+
+    // GPU acceleration support
+public:
+    // Static methods for GPU initialization
+    static void initializeGPU(int board_size);
+    static void cleanupGPU();
+    static void setGPUEnabled(bool enabled);
+    static bool isGPUEnabled();
+    
+    // Batch computation support for multiple MCTS engines
+    static std::vector<std::vector<std::vector<std::vector<float>>>> 
+        computeEnhancedTensorBatch(const std::vector<const GomokuState*>& states);
+    
+private:
+    // Static GPU resources shared across all instances
+    //static std::unique_ptr<GomokuGPUAttackDefense> gpu_module_;
+    static std::atomic<bool> gpu_enabled_;
+    static std::mutex gpu_mutex_;
 };
 
 } // namespace gomoku

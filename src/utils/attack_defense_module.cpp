@@ -3,6 +3,11 @@
 #include <algorithm>
 #include <cmath>
 #include <unordered_set>
+#include <queue>
+
+#ifdef WITH_TORCH
+#include <torch/torch.h>
+#endif
 
 #ifdef BUILD_PYTHON_BINDINGS
 #include <pybind11/pybind11.h>
@@ -11,7 +16,14 @@
 namespace py = pybind11;
 #endif
 
+#ifdef WITH_TORCH
+#include <torch/torch.h>
+#endif
+
 #include "utils/hash_specializations.h"
+#include "games/gomoku/gomoku_state.h"
+#include "games/chess/chess_state.h"
+#include "games/go/go_state.h"
 
 namespace alphazero {
 
@@ -868,6 +880,24 @@ GoAttackDefenseModule::compute_planes(const std::vector<std::unique_ptr<core::IG
 }
 
 } // namespace alphazero
+
+namespace alphazero {
+namespace utils {
+
+#ifdef WITH_TORCH
+// Check if GPU is available
+bool AttackDefenseModule::isGPUAvailable() {
+    return torch::cuda::is_available();
+}
+#endif
+
+} // namespace utils
+} // namespace alphazero
+
+// Note: GPU implementations are in separate files:
+// - gpu_attack_defense_gomoku.cpp
+// - gpu_attack_defense_chess.cpp  
+// - gpu_attack_defense_go.cpp
 
 #ifdef BUILD_PYTHON_BINDINGS
 PYBIND11_MODULE(attack_defense, m) {

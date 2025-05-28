@@ -3,6 +3,7 @@
 #include "games/chess/chess_rules.h"
 #include "games/chess/chess960.h"
 #include "core/tensor_pool.h"            // For GlobalTensorPool optimization
+#include "utils/attack_defense_module.h"  // For GPU attack/defense computation
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -10,6 +11,10 @@
 #include <cctype>
 #include <array>
 #include <cmath>
+
+#ifdef WITH_TORCH
+#include <torch/torch.h>
+#endif
 
 namespace alphazero {
 namespace games {
@@ -805,6 +810,9 @@ std::vector<std::vector<std::vector<float>>> ChessState::getEnhancedTensorRepres
         }
         tensor.push_back(repetitionPlane);
         
+        // 19-20: Attack and Defense planes (GPU-accelerated if available)
+        computeAttackDefensePlanes(tensor);
+        
         // PERFORMANCE FIX: Cache the computed enhanced tensor
         cached_enhanced_tensor_repr_ = tensor;
         enhanced_tensor_cache_dirty_.store(false, std::memory_order_relaxed);
@@ -814,8 +822,8 @@ std::vector<std::vector<std::vector<float>>> ChessState::getEnhancedTensorRepres
         std::cerr << "Exception in ChessState::getEnhancedTensorRepresentation: " << e.what() << std::endl;
         
         // Return a default tensor with the correct dimensions
-        // Chess enhanced tensor has 19 planes (12 piece planes + 7 additional planes)
-        const int num_planes = 19;
+        // Chess enhanced tensor has 21 planes (12 piece planes + 9 additional planes including attack/defense)
+        const int num_planes = 21;
         const int boardSize = 8;
         
         return std::vector<std::vector<std::vector<float>>>(
@@ -829,7 +837,7 @@ std::vector<std::vector<std::vector<float>>> ChessState::getEnhancedTensorRepres
         std::cerr << "Unknown exception in ChessState::getEnhancedTensorRepresentation" << std::endl;
         
         // Return a default tensor with the correct dimensions
-        const int num_planes = 19;
+        const int num_planes = 21;
         const int boardSize = 8;
         
         return std::vector<std::vector<std::vector<float>>>(
@@ -1706,6 +1714,154 @@ std::optional<ChessMove> ChessState::fromSAN(const std::string& sanStr) const {
     }
 
     return std::nullopt;
+}
+
+// Attack/Defense plane computation
+void ChessState::computeAttackDefensePlanes(std::vector<std::vector<std::vector<float>>>& tensor) const {
+    const int boardSize = 8;
+    
+    // Initialize attack and defense planes
+    std::vector<std::vector<float>> attackPlane(boardSize, std::vector<float>(boardSize, 0.0f));
+    std::vector<std::vector<float>> defensePlane(boardSize, std::vector<float>(boardSize, 0.0f));
+    
+#ifdef WITH_TORCH
+    // Try GPU-accelerated computation if available
+    if (torch::cuda::is_available()) {
+        try {
+            // Create a batch with just this state
+            std::vector<const ChessState*> states = {this};
+            
+            // Call GPU batch computation
+            auto gpu_result = alphazero::utils::AttackDefenseModule::computeChessAttackDefenseGPU(states);
+            
+            if (gpu_result.size(0) > 0) {
+                // Extract attack and defense tensors
+                auto attack_tensor = gpu_result[0][0];
+                auto defense_tensor = gpu_result[0][1];
+                
+                // Convert torch tensors to std::vector
+                auto attack_accessor = attack_tensor.template accessor<float, 2>();
+                auto defense_accessor = defense_tensor.template accessor<float, 2>();
+                
+                for (int i = 0; i < boardSize; ++i) {
+                    for (int j = 0; j < boardSize; ++j) {
+                        attackPlane[i][j] = attack_accessor[i][j];
+                        defensePlane[i][j] = defense_accessor[i][j];
+                    }
+                }
+                
+                tensor.push_back(attackPlane);
+                tensor.push_back(defensePlane);
+                return;
+            }
+        } catch (const std::exception& e) {
+            // Fall back to CPU computation
+            std::cerr << "GPU attack/defense computation failed: " << e.what() << std::endl;
+        }
+    }
+#endif
+    
+    // CPU fallback: simplified attack/defense calculation
+    auto legal_moves = generateLegalMoves();
+    
+    for (const auto& move : legal_moves) {
+        int to_rank = getRank(move.to_square);
+        int to_file = getFile(move.to_square);
+        
+        // Simple heuristic: count attacked enemy pieces and defended friendly pieces
+        float attack_value = 0.0f;
+        float defense_value = 0.0f;
+        
+        // Check all adjacent squares
+        for (int dr = -1; dr <= 1; ++dr) {
+            for (int dc = -1; dc <= 1; ++dc) {
+                if (dr == 0 && dc == 0) continue;
+                
+                int r = to_rank + dr;
+                int c = to_file + dc;
+                
+                if (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+                    Piece piece = getPiece(getSquare(r, c));
+                    
+                    if (!piece.is_empty()) {
+                        float piece_value = 0.0f;
+                        switch (piece.type) {
+                            case PieceType::PAWN:   piece_value = 1.0f; break;
+                            case PieceType::KNIGHT: piece_value = 3.0f; break;
+                            case PieceType::BISHOP: piece_value = 3.0f; break;
+                            case PieceType::ROOK:   piece_value = 5.0f; break;
+                            case PieceType::QUEEN:  piece_value = 9.0f; break;
+                            case PieceType::KING:   piece_value = 100.0f; break;
+                            default: break;
+                        }
+                        
+                        if (piece.color != current_player_) {
+                            attack_value += piece_value;
+                        } else {
+                            defense_value += piece_value;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Normalize values
+        attackPlane[to_rank][to_file] = std::min(1.0f, attack_value / 10.0f);
+        defensePlane[to_rank][to_file] = std::min(1.0f, defense_value / 10.0f);
+    }
+    
+    tensor.push_back(attackPlane);
+    tensor.push_back(defensePlane);
+}
+
+// Static batch computation for multiple states (GPU-accelerated)
+std::vector<std::vector<std::vector<std::vector<float>>>> 
+ChessState::computeBatchEnhancedTensorRepresentations(const std::vector<const ChessState*>& states) {
+    std::vector<std::vector<std::vector<std::vector<float>>>> results;
+    results.reserve(states.size());
+    
+#ifdef WITH_TORCH
+    // Try GPU batch computation for attack/defense planes
+    if (torch::cuda::is_available() && states.size() > 1) {
+        try {
+            auto gpu_results = alphazero::utils::AttackDefenseModule::computeChessAttackDefenseGPU(states);
+            
+            // Process each state with GPU results
+            for (size_t i = 0; i < states.size(); ++i) {
+                auto tensor = states[i]->getEnhancedTensorRepresentation();
+                
+                // Replace the last two planes with GPU-computed attack/defense
+                if (i < gpu_results.size(0)) {
+                    auto attack_tensor = gpu_results[i][0];
+                    auto defense_tensor = gpu_results[i][1];
+                    
+                    auto attack_accessor = attack_tensor.template accessor<float, 2>();
+                    auto defense_accessor = defense_tensor.template accessor<float, 2>();
+                    
+                    // Update attack/defense planes
+                    for (int r = 0; r < 8; ++r) {
+                        for (int c = 0; c < 8; ++c) {
+                            tensor[tensor.size() - 2][r][c] = attack_accessor[r][c];
+                            tensor[tensor.size() - 1][r][c] = defense_accessor[r][c];
+                        }
+                    }
+                }
+                
+                results.push_back(tensor);
+            }
+            return results;
+        } catch (const std::exception& e) {
+            // Fall back to CPU computation
+            std::cerr << "Batch GPU computation failed: " << e.what() << std::endl;
+        }
+    }
+#endif
+    
+    // CPU fallback
+    for (const auto* state : states) {
+        results.push_back(state->getEnhancedTensorRepresentation());
+    }
+    return results;
 }
 
 } // namespace chess

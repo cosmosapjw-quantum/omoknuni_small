@@ -5005,8 +5005,53 @@ CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o: \
  /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
  /usr/include/spdlog/details/thread_pool.h \
  /usr/include/spdlog/details/mpmc_blocking_q.h \
+ /home/cosmos/omoknuni_small/include/nn/gpu_optimizer.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/script.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/InferenceMode.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/runtime/custom_operator.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/serialization/import.h \
+ /opt/libtorch-2.7.0-cu128/include/caffe2/serialize/inline_container.h \
+ /usr/include/c++/13/fstream \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
+ /usr/include/c++/13/bits/fstream.tcc \
+ /opt/libtorch-2.7.0-cu128/include/caffe2/serialize/istream_adapter.h \
+ /opt/libtorch-2.7.0-cu128/include/caffe2/serialize/read_adapter_interface.h \
+ /opt/libtorch-2.7.0-cu128/include/caffe2/serialize/versions.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/serialization/pickle.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/serialization/pickler.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/util/FbcodeMaps.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/serialization/unpickler.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/script_type_parser.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/resolver.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/sugared_value.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/error_report.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/tree.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/lexer.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/parser_constants.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/strtod.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/schema_matching.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/versioned_symbols.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/tree_views.h \
  /home/cosmos/omoknuni_small/include/utils/memory_tracker.h \
- /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h \
+ /home/cosmos/omoknuni_small/include/utils/attack_defense_module.h \
+ /home/cosmos/omoknuni_small/include/utils/hash_specializations.h \
+ /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
+ /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \
+ /usr/include/c++/13/random /usr/include/c++/13/bits/random.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
+ /usr/include/c++/13/stdlib.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
+ /usr/include/c++/13/bits/random.tcc \
+ /home/cosmos/omoknuni_small/include/games/chess/chess_state.h \
+ /home/cosmos/omoknuni_small/include/games/chess/chess_types.h \
+ /home/cosmos/omoknuni_small/include/games/go/go_state.h \
+ /home/cosmos/omoknuni_small/include/games/go/go_rules.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/cuda/CUDAContext.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/cuda/CUDAContextLight.h \
  /usr/local/cuda-12.8/include/cuda_runtime_api.h \
@@ -5036,7 +5081,7 @@ CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAMacros.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/impl/cuda_cmake_macros.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAMiscFunctions.h \
- /usr/local/cuda-12.8/include/cuda.h /usr/include/c++/13/stdlib.h \
+ /usr/local/cuda-12.8/include/cuda.h \
  /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAStream.h \
  /opt/libtorch-2.7.0-cu128/include/ATen/cuda/Exceptions.h \
  /usr/local/cuda-12.8/include/cusolver_common.h \
@@ -5061,7 +5106,6 @@ CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/lzcntintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/lwpintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/movdirintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitxintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/pconfigintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/popcntintrin.h \
@@ -5084,11 +5128,6 @@ CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/xtestintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/hresetintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/immintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/smmintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/wmmintrin.h \

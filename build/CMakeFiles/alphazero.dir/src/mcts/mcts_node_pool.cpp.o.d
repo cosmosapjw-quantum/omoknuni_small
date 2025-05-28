@@ -367,8 +367,4 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o: \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/tracy/TracyC.h \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/client/TracyCallstack.h \
  /home/cosmos/omoknuni_small/build/_deps/tracy-src/public/common/TracyApi.h \
- /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h \
- /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
- /usr/include/c++/13/bits/stl_map.h \
- /usr/include/c++/13/bits/stl_multimap.h \
  /home/cosmos/omoknuni_small/include/utils/debug_logger.h

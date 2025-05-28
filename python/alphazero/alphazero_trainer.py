@@ -13,6 +13,7 @@ import multiprocessing
 import argparse
 from datetime import datetime
 from typing import Dict, List, Tuple, Any, Optional, Union, Callable
+import json
 
 # Add necessary paths
 sys.path.append(str(Path(__file__).parent.parent.parent / "build"))
@@ -270,6 +271,7 @@ class AlphaZeroTrainer:
         os.makedirs(self.config['model_dir'], exist_ok=True)
         os.makedirs(self.config['data_dir'], exist_ok=True)
         os.makedirs(self.config['log_dir'], exist_ok=True)
+        os.makedirs(self.config.get('checkpoint_dir', 'checkpoints'), exist_ok=True)
         
         # Determine device
         self.device = torch.device('cuda' if torch.cuda.is_available() and self.config['use_gpu'] else 'cpu')
@@ -340,7 +342,13 @@ class AlphaZeroTrainer:
             "arena_num_threads": 4,
             "arena_num_simulations": 400,
             "arena_temperature": 0.1,
-            "arena_win_rate_threshold": 0.55
+            "arena_win_rate_threshold": 0.55,
+            
+            # Checkpoint settings
+            "checkpoint_dir": "checkpoints",
+            "checkpoint_interval": 5,  # Save checkpoint every N iterations
+            "keep_checkpoint_max": 10,  # Maximum number of checkpoints to keep
+            "resume_from_checkpoint": True  # Whether to resume from latest checkpoint
         }
         
     def _create_neural_network(self):
@@ -622,16 +630,127 @@ class AlphaZeroTrainer:
             f.write(f"{iteration},{datetime.now().strftime('%Y%m%d_%H%M%S')},"
                    f"{num_games},{train_loss:.6f},{elapsed_time:.2f}\n")
     
+    def _save_checkpoint(self, iteration, emergency=False):
+        """Save a checkpoint of the current state."""
+        checkpoint_dir = self.config.get('checkpoint_dir', 'checkpoints')
+        
+        # Create checkpoint data
+        checkpoint = {
+            'iteration': iteration,
+            'timestamp': datetime.now().isoformat(),
+            'experiment_name': self.config.get('experiment_name', 'alphazero'),
+            'total_games': iteration * self.config['self_play_num_games'],
+            'config': self.config,
+            'emergency': emergency
+        }
+        
+        # Save model
+        model_path = os.path.join(checkpoint_dir, f'model_iter_{iteration}.pt')
+        self.model.save(model_path)
+        checkpoint['model_path'] = model_path
+        
+        # Save checkpoint metadata
+        checkpoint_path = os.path.join(checkpoint_dir, f'checkpoint_iter_{iteration}.json')
+        with open(checkpoint_path, 'w') as f:
+            json.dump(checkpoint, f, indent=2)
+        
+        logger.info(f"{'Emergency ' if emergency else ''}Checkpoint saved at iteration {iteration}")
+        
+        # Clean up old checkpoints
+        self._cleanup_old_checkpoints(iteration)
+        
+    def _cleanup_old_checkpoints(self, current_iteration):
+        """Remove old checkpoints exceeding the maximum limit."""
+        checkpoint_dir = self.config.get('checkpoint_dir', 'checkpoints')
+        max_checkpoints = self.config.get('keep_checkpoint_max', 10)
+        
+        # List all checkpoint files
+        checkpoint_files = sorted([f for f in os.listdir(checkpoint_dir) 
+                                 if f.startswith('checkpoint_iter_') and f.endswith('.json')])
+        
+        # Keep only the most recent max_checkpoints
+        if len(checkpoint_files) > max_checkpoints:
+            for old_checkpoint in checkpoint_files[:-max_checkpoints]:
+                # Extract iteration number
+                iter_num = int(old_checkpoint.replace('checkpoint_iter_', '').replace('.json', ''))
+                
+                # Remove checkpoint and model files
+                os.remove(os.path.join(checkpoint_dir, old_checkpoint))
+                model_file = os.path.join(checkpoint_dir, f'model_iter_{iter_num}.pt')
+                if os.path.exists(model_file):
+                    os.remove(model_file)
+                
+                logger.info(f"Removed old checkpoint from iteration {iter_num}")
+    
+    def _find_latest_checkpoint(self):
+        """Find the latest checkpoint if it exists."""
+        checkpoint_dir = self.config.get('checkpoint_dir', 'checkpoints')
+        
+        if not os.path.exists(checkpoint_dir):
+            return None
+            
+        # List all checkpoint files
+        checkpoint_files = [f for f in os.listdir(checkpoint_dir) 
+                          if f.startswith('checkpoint_iter_') and f.endswith('.json')]
+        
+        if not checkpoint_files:
+            return None
+            
+        # Sort by iteration number and get the latest
+        checkpoint_files.sort(key=lambda x: int(x.replace('checkpoint_iter_', '').replace('.json', '')))
+        latest_checkpoint = checkpoint_files[-1]
+        
+        # Load checkpoint data
+        checkpoint_path = os.path.join(checkpoint_dir, latest_checkpoint)
+        with open(checkpoint_path, 'r') as f:
+            checkpoint_data = json.load(f)
+            
+        return checkpoint_data
+    
+    def _load_checkpoint(self, checkpoint_data):
+        """Load model and state from checkpoint."""
+        model_path = checkpoint_data['model_path']
+        iteration = checkpoint_data['iteration']
+        
+        if os.path.exists(model_path):
+            logger.info(f"Loading model from checkpoint: {model_path}")
+            self.model = AlphaZeroNetwork.load(model_path, self.device)
+            # Re-initialize the pipeline with the loaded model
+            self.pipeline.initialize_with_model(self.model.predict)
+            return iteration
+        else:
+            logger.error(f"Model file not found: {model_path}")
+            return 0
+    
     def run(self):
         """Run the complete AlphaZero pipeline for all iterations."""
         num_iterations = self.config['num_iterations']
-        logger.info(f"Starting AlphaZero pipeline with {num_iterations} iterations")
+        start_iteration = 0
         
-        for i in range(num_iterations):
+        # Check if we should resume from checkpoint
+        if self.config.get('resume_from_checkpoint', True):
+            checkpoint_data = self._find_latest_checkpoint()
+            if checkpoint_data:
+                start_iteration = self._load_checkpoint(checkpoint_data)
+                logger.info(f"Resuming from iteration {start_iteration}")
+            else:
+                logger.info("No checkpoint found, starting from iteration 0")
+        
+        logger.info(f"Starting AlphaZero pipeline from iteration {start_iteration} to {num_iterations}")
+        
+        for i in range(start_iteration, num_iterations):
             try:
                 self.run_iteration(i)
+                
+                # Save checkpoint if needed
+                checkpoint_interval = self.config.get('checkpoint_interval', 5)
+                if (i + 1) % checkpoint_interval == 0 or i == num_iterations - 1:
+                    self._save_checkpoint(i + 1)
+                    
             except Exception as e:
                 logger.error(f"Error in iteration {i}: {e}")
+                # Save emergency checkpoint
+                self._save_checkpoint(i, emergency=True)
                 raise
         
         logger.info("AlphaZero pipeline completed successfully")
@@ -642,14 +761,25 @@ def main():
     parser = argparse.ArgumentParser(description="AlphaZero Training Pipeline")
     parser.add_argument("--config", type=str, help="Path to YAML configuration file")
     parser.add_argument("--iterations", type=int, default=None, help="Number of iterations to run")
+    parser.add_argument("--resume", action="store_true", help="Resume from latest checkpoint")
+    parser.add_argument("--no-resume", dest="resume", action="store_false", help="Start fresh, ignore checkpoints")
+    parser.set_defaults(resume=None)
+    parser.add_argument("--checkpoint-dir", type=str, default=None, help="Override checkpoint directory")
     args = parser.parse_args()
     
     # Create trainer
     trainer = AlphaZeroTrainer(config_path=args.config)
     
-    # Override iterations if specified
+    # Override settings from command line
     if args.iterations is not None:
         trainer.config['num_iterations'] = args.iterations
+    
+    if args.resume is not None:
+        trainer.config['resume_from_checkpoint'] = args.resume
+        
+    if args.checkpoint_dir is not None:
+        trainer.config['checkpoint_dir'] = args.checkpoint_dir
+        os.makedirs(args.checkpoint_dir, exist_ok=True)
     
     # Run pipeline
     trainer.run()

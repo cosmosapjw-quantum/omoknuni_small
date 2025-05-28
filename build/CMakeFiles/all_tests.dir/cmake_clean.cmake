@@ -38,6 +38,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o.d"
   "CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o"
   "CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o.d"
+  "CMakeFiles/all_tests.dir/tests/utils/gpu_attack_defense_test.cpp.o"
+  "CMakeFiles/all_tests.dir/tests/utils/gpu_attack_defense_test.cpp.o.d"
   "bin/Release/all_tests"
   "bin/Release/all_tests.pdb"
 )

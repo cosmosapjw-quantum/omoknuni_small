@@ -3,21 +3,22 @@
 
 # Game settings
 game_type: gomoku
-board_size: 9
+board_size: 15
+input_channels: 19  # For Gomoku with attack/defense planes
 
 # MCTS settings optimized for memory efficiency and CPU utilization
 mcts:
-  num_simulations: 800
-  num_threads: 12  # 12 threads distributed across parallel games
+  num_simulations: 200  # Balanced for CPU/GPU efficiency
+  num_threads: 8  # Reduced to prevent CPU saturation
   exploration_constant: 1.0
   temperature: 1.0
   dirichlet_alpha: 0.25
   dirichlet_epsilon: 0.25
-  virtual_loss: 3.0
+  virtual_loss: 1.0  # Reduced to minimize contention
   
-  # Batch settings optimized for RTX 3060 Ti
-  batch_size: 256  # Larger batch for better GPU utilization
-  batch_timeout_ms: 2  # Very short timeout for responsiveness
+  # Batch settings optimized for RTX 3060 Ti with 4864 CUDA cores
+  batch_size: 128  # Larger batch size for RTX 3060 Ti
+  batch_timeout_ms: 20  # Increased to reduce CPU overhead per batch
   
   # Memory optimization features
   use_transposition_table: true
@@ -51,13 +52,13 @@ neural_network:
 # Self-play settings
 self_play:
   num_games: 100
-  max_game_length: 200
+  max_game_length: 0
   save_games: true
   save_directory: data/self_play_games
   random_seed: 42
   
   # Parallel game generation for CPU utilization
-  parallel_games: 8  # Run 8 games concurrently
+  parallel_games: 6  # Balanced to avoid CPU saturation while maintaining good batching
   
   # Memory safety
   clear_pools_every_n_games: 10

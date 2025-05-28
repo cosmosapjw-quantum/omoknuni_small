@@ -1,0 +1,43 @@
+# Minimal configuration for testing
+game_type: gomoku
+board_size: 15
+
+# Minimal MCTS settings
+mcts:
+  num_simulations: 50  # Very low for testing
+  num_threads: 1      # Single thread for simplicity
+  exploration_constant: 1.0
+  temperature: 1.0
+  dirichlet_alpha: 0.25
+  dirichlet_epsilon: 0.25
+  virtual_loss: 3.0
+  
+  # Small batch settings
+  batch_size: 8
+  batch_timeout_ms: 100
+  
+  # Disable features
+  use_transposition_table: false
+  use_progressive_widening: false
+
+# Simple neural network
+neural_network:
+  model_type: resnet
+  num_filters: 32
+  num_res_blocks: 5
+  value_head_hidden_size: 128
+  use_batch_norm: false
+
+# Minimal self-play
+self_play:
+  num_games: 1
+  max_game_length: 200
+  save_games: true
+  save_directory: data/self_play_games
+  parallel_games: 1
+
+# Debug settings
+debug:
+  enable_memory_tracking: true
+  enable_performance_profiling: true
+  log_interval_seconds: 1

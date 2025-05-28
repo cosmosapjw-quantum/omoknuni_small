@@ -47,7 +47,7 @@ private:
     };
     
     // Worker function for generating a single game
-    GameRecord generateSingleGame(const WorkerTask& task);
+    GameRecord generateSingleGame(const WorkerTask& task, mcts::MCTSEngine* engine);
     
     // Worker thread function
     void workerThread(std::shared_ptr<nn::NeuralNetwork> neural_net);

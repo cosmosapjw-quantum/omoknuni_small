@@ -182,13 +182,8 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /usr/include/c++/13/bits/chrono.h /usr/include/c++/13/ratio \
  /usr/include/c++/13/cstdint /usr/include/c++/13/limits \
  /usr/include/c++/13/ctime /usr/include/c++/13/bits/parse_numbers.h \
- /usr/include/c++/13/future /usr/include/c++/13/mutex \
- /usr/include/c++/13/bits/std_mutex.h \
- /usr/include/c++/13/bits/unique_lock.h \
- /usr/include/c++/13/condition_variable \
- /usr/include/c++/13/bits/atomic_futex.h /usr/include/c++/13/atomic \
- /usr/include/c++/13/bits/std_function.h /usr/include/c++/13/chrono \
- /usr/include/c++/13/csignal /usr/include/signal.h \
+ /usr/include/c++/13/chrono /usr/include/c++/13/csignal \
+ /usr/include/signal.h \
  /usr/include/x86_64-linux-gnu/bits/signum-generic.h \
  /usr/include/x86_64-linux-gnu/bits/signum-arch.h \
  /usr/include/x86_64-linux-gnu/bits/types/sig_atomic_t.h \
@@ -219,12 +214,10 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
  /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
- /usr/include/c++/13/queue /usr/include/c++/13/deque \
- /usr/include/c++/13/bits/stl_deque.h /usr/include/c++/13/bits/deque.tcc \
- /usr/include/c++/13/vector /usr/include/c++/13/bits/stl_vector.h \
- /usr/include/c++/13/bits/stl_bvector.h \
- /usr/include/c++/13/bits/vector.tcc /usr/include/c++/13/bits/stl_heap.h \
- /usr/include/c++/13/bits/stl_queue.h /usr/include/yaml-cpp/yaml.h \
+ /usr/include/c++/13/atomic /usr/include/c++/13/mutex \
+ /usr/include/c++/13/bits/std_mutex.h \
+ /usr/include/c++/13/bits/unique_lock.h \
+ /usr/include/c++/13/condition_variable /usr/include/yaml-cpp/yaml.h \
  /usr/include/yaml-cpp/parser.h /usr/include/yaml-cpp/dll.h \
  /usr/include/yaml-cpp/emitter.h /usr/include/c++/13/cmath \
  /usr/include/math.h /usr/include/x86_64-linux-gnu/bits/math-vector.h \
@@ -249,8 +242,11 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /usr/include/c++/13/tr1/poly_laguerre.tcc \
  /usr/include/c++/13/tr1/riemann_zeta.tcc /usr/include/c++/13/sstream \
  /usr/include/c++/13/bits/sstream.tcc /usr/include/yaml-cpp/binary.h \
- /usr/include/yaml-cpp/emitterdef.h /usr/include/yaml-cpp/emittermanip.h \
- /usr/include/yaml-cpp/null.h /usr/include/yaml-cpp/ostream_wrapper.h \
+ /usr/include/c++/13/vector /usr/include/c++/13/bits/stl_vector.h \
+ /usr/include/c++/13/bits/stl_bvector.h \
+ /usr/include/c++/13/bits/vector.tcc /usr/include/yaml-cpp/emitterdef.h \
+ /usr/include/yaml-cpp/emittermanip.h /usr/include/yaml-cpp/null.h \
+ /usr/include/yaml-cpp/ostream_wrapper.h \
  /usr/include/yaml-cpp/emitterstyle.h /usr/include/yaml-cpp/stlemitter.h \
  /usr/include/c++/13/list /usr/include/c++/13/bits/stl_list.h \
  /usr/include/c++/13/bits/list.tcc /usr/include/c++/13/set \
@@ -285,6 +281,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /usr/include/c++/13/valarray /usr/include/c++/13/algorithm \
  /usr/include/c++/13/bits/stl_algo.h \
  /usr/include/c++/13/bits/algorithmfwd.h \
+ /usr/include/c++/13/bits/stl_heap.h \
  /usr/include/c++/13/bits/uniform_int_dist.h \
  /usr/include/c++/13/pstl/glue_algorithm_defs.h \
  /usr/include/c++/13/bits/valarray_array.h \
@@ -311,7 +308,8 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /usr/include/c++/13/fstream \
  /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
- /usr/include/c++/13/bits/fstream.tcc \
+ /usr/include/c++/13/bits/fstream.tcc /usr/include/c++/13/deque \
+ /usr/include/c++/13/bits/stl_deque.h /usr/include/c++/13/bits/deque.tcc \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/all.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/autograd.h \
@@ -328,7 +326,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/ATen/core/TensorBody.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/Device.h \
  /opt/libtorch-2.7.0-cu128/include/c10/core/DeviceType.h \
- /usr/include/c++/13/functional \
+ /usr/include/c++/13/functional /usr/include/c++/13/bits/std_function.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Exception.h \
  /opt/libtorch-2.7.0-cu128/include/c10/macros/Macros.h \
  /usr/include/c++/13/cassert /usr/include/assert.h \
@@ -378,6 +376,101 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_fnuz_cvt.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e5m2.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Half.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/immintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/x86gprintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/ia32intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/adxintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/bmiintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/bmi2intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/cetintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/cldemoteintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/clflushoptintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/clwbintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/clzerointrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/cmpccxaddintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/enqcmdintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/fxsrintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/lzcntintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/lwpintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/movdirintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitxintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/pconfigintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/popcntintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/pkuintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/prfchiintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/raointintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/rdseedintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/rtmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/serializeintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/sgxintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/tbmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/tsxldtrkintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/uintrintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/waitpkgintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/wbnoinvdintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xsavecintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveoptintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xsavesintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xtestintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/hresetintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
+ /usr/include/c++/13/stdlib.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/smmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/wmmintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avxintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avxvnniintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avxifmaintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avxvnniint8intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx2intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512erintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512pfintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512cdintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bwintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512dqintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlbwintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vldqintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512ifmaintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512ifmavlintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmiintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmivlintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx5124fmapsintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx5124vnniwintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vpopcntdqintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmi2intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vbmi2vlintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vnniintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vnnivlintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vpopcntdqvlintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bitalgintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vp2intersectintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vp2intersectvlintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16vlintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/shaintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/fmaintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/f16cintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/gfniintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/vaesintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/vpclmulqdqintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bf16vlintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bf16intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/avxneconvertintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/amxtileintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/amxint8intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/amxbf16intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/amxcomplexintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/prfchwintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/keylockerintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/amxfp16intrin.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Half-inl.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e5m2-inl.h \
  /opt/libtorch-2.7.0-cu128/include/c10/util/Float8_e5m2fnuz.h \
@@ -4839,6 +4932,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/detail/TensorDataContainer.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/detail/data_shuttle.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/detail/queue.h \
+ /usr/include/c++/13/queue /usr/include/c++/13/bits/stl_queue.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/detail/sequencers.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/iterator.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/data/samplers/random.h \
@@ -5021,20 +5115,41 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDACachingAllocator.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/core/CachingDeviceAllocator.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAGraphsC10Utils.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAStream.h \
+ /usr/local/cuda-12.8/include/cuda_runtime_api.h \
+ /usr/local/cuda-12.8/include/crt/host_defines.h \
+ /usr/local/cuda-12.8/include/builtin_types.h \
+ /usr/local/cuda-12.8/include/device_types.h \
+ /usr/local/cuda-12.8/include/driver_types.h \
+ /usr/local/cuda-12.8/include/vector_types.h \
+ /usr/local/cuda-12.8/include/surface_types.h \
+ /usr/local/cuda-12.8/include/texture_types.h \
+ /usr/local/cuda-12.8/include/cuda_device_runtime_api.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAFunctions.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/core/impl/GPUTrace.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAException.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDADeviceAssertionHost.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAMacros.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/impl/cuda_cmake_macros.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/cuda/CUDAMiscFunctions.h \
+ /usr/local/cuda-12.8/include/cuda.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/util/ApproximateClock.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/x86intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/mm3dnow.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/fma4intrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/ammintrin.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/xopintrin.h \
  /home/cosmos/omoknuni_small/include/cli/cli_manager.h \
  /home/cosmos/omoknuni_small/include/core/export_macros.h \
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h \
  /usr/include/c++/13/random /usr/include/c++/13/bits/random.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/opt_random.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
- /usr/include/c++/13/stdlib.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h \
  /usr/include/c++/13/bits/random.tcc \
  /home/cosmos/omoknuni_small/include/mcts/mcts_node.h \
+ /usr/include/c++/13/future /usr/include/c++/13/bits/atomic_futex.h \
  /home/cosmos/omoknuni_small/include/core/igamestate.h \
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h \
@@ -5111,7 +5226,6 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /usr/include/parallel_hashmap/phmap_utils.h \
  /usr/include/parallel_hashmap/phmap_bits.h /usr/include/byteswap.h \
  /usr/include/parallel_hashmap/phmap_config.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h \
  /usr/include/parallel_hashmap/phmap_base.h \
  /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
@@ -5122,23 +5236,13 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h \
  /usr/local/cuda-12.8/include/cuda_runtime.h \
  /usr/local/cuda-12.8/include/crt/host_config.h \
- /usr/local/cuda-12.8/include/builtin_types.h \
- /usr/local/cuda-12.8/include/device_types.h \
- /usr/local/cuda-12.8/include/crt/host_defines.h \
- /usr/local/cuda-12.8/include/driver_types.h \
- /usr/local/cuda-12.8/include/vector_types.h \
- /usr/local/cuda-12.8/include/surface_types.h \
- /usr/local/cuda-12.8/include/texture_types.h \
  /usr/local/cuda-12.8/include/library_types.h \
  /usr/local/cuda-12.8/include/channel_descriptor.h \
  /usr/local/cuda-12.8/include/cuda_runtime_api.h \
- /usr/local/cuda-12.8/include/cuda_device_runtime_api.h \
  /usr/local/cuda-12.8/include/driver_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.hpp \
- /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \

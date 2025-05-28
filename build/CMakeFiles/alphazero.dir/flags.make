@@ -8,3 +8,5 @@ CXX_INCLUDES = -I/home/cosmos/omoknuni_small/include -I/home/cosmos/omoknuni_sma
 
 CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -std=gnu++17 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wextra -mavx2 -O3 -Wno-unknown-pragmas -Wno-unused-parameter -Wno-sign-compare -fopenmp -D_GLIBCXX_USE_CXX11_ABI=1
 
+# Custom flags: CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.o_FLAGS = -O3 -march=native -fopenmp
+

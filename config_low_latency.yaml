@@ -1,0 +1,115 @@
+# Low Latency Configuration - Target: <100ms per move
+# Optimized for Ryzen 9 5900X (24 threads) + RTX 3060 Ti (8GB VRAM)
+
+# General settings
+experiment_name: low_latency_gomoku
+checkpoint_dir: checkpoints/low_latency_gomoku
+log_dir: logs/low_latency_gomoku
+
+# Game settings
+game_type: gomoku
+board_size: 15
+input_channels: 19  # With attack/defense planes
+
+# MCTS settings optimized for low latency
+mcts:
+  num_simulations: 200  # Reduced for faster moves
+  num_threads: 12  # High parallelism for tree traversal
+  exploration_constant: 1.41  # Standard UCB constant
+  
+  # Temperature for move selection
+  temperature_moves: 0
+  temperature_start: 0.1
+  temperature_end: 0.1
+  
+  # Disable exploration noise for speed
+  dirichlet_alpha: 0.0
+  dirichlet_epsilon: 0.0
+  
+  # Virtual loss for parallel MCTS
+  virtual_loss: 3.0
+  
+  # Batch settings - Optimized for low latency
+  batch_size: 128  # Optimal GPU batch size
+  batch_timeout_ms: 3  # Very short timeout
+  min_batch_size: 64  # Lower minimum to avoid stalls
+  max_pending_evaluations: 256
+  
+  # Parallel leaf collection
+  parallel_collection_threads: 16  # Maximum parallelism
+  collection_batch_size: 8  # Very small batches for speed
+  
+  # Memory features
+  use_transposition_table: false  # Disable for speed
+  transposition_table_size_mb: 0
+  
+  # Progressive widening
+  use_progressive_widening: false  # Disable for speed
+  progressive_widening_c: 0.5
+  progressive_widening_k: 5.0
+
+# Neural network - lightweight for fast inference
+neural_network:
+  network_type: resnet
+  
+  # Minimal ResNet for <5ms inference
+  num_filters: 64  # Minimal filters
+  num_res_blocks: 6  # Minimal blocks
+  
+  # Common settings
+  value_head_hidden_size: 128  # Minimal head
+  use_batch_norm: false  # Disable for inference speed
+  dropout_rate: 0.0  # No dropout for speed
+
+# Self-play settings
+self_play:
+  max_game_length: 225
+  resignation_threshold: -0.99
+  resignation_move_threshold: 10
+  
+  # Parallel settings
+  games_per_worker: 1
+  parallel_self_play_workers: 8  # Use multiple workers
+  
+  # Memory management
+  clear_pools_every_n_games: 100
+  force_gpu_cleanup_every_n_games: 1000
+
+# Memory management
+memory:
+  # System memory (64GB total)
+  warning_threshold_gb: 40.0
+  critical_threshold_gb: 50.0
+  emergency_threshold_gb: 60.0
+  
+  # Pool settings
+  node_pool_initial_size: 50000  # Smaller pool for speed
+  node_pool_max_size: 500000
+  game_state_pool_size: 1000
+  tensor_pool_size: 1024
+  
+  # GPU memory (8GB total)
+  gpu_memory_fraction: 0.8
+  gpu_pool_initial_mb: 2048
+  gpu_pool_max_mb: 6144
+  empty_cuda_cache_on_pressure: false  # Avoid cleanup overhead
+  
+  # Cleanup settings
+  check_interval_ms: 5000  # Less frequent checks
+  cleanup_interval_ms: 60000
+
+# Resource limits
+resources:
+  # CPU settings
+  max_cpu_percent: 100  # Use all CPU
+  worker_cpu_affinity: true
+  
+  # GPU settings
+  gpu_utilization_target: 90
+
+# Monitoring
+monitoring:
+  log_level: warning  # Less logging overhead
+  enable_tensorboard: false
+  profile_enabled: false
+  enable_memory_tracking: false

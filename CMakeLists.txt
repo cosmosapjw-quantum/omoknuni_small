@@ -617,7 +617,7 @@ set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp src/core/
 set(CHESS_SOURCES     src/games/chess/chess_state.cpp src/games/chess/chess_rules.cpp src/games/chess/chess960.cpp)
 set(GO_SOURCES        src/games/go/go_state.cpp   src/games/go/go_rules.cpp)
 set(GOMOKU_SOURCES    src/games/gomoku/gomoku_state.cpp src/games/gomoku/gomoku_rules.cpp)
-set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp src/utils/resource_monitor.cpp src/utils/advanced_memory_monitor.cpp src/utils/thread_local_memory_manager.cpp src/utils/shutdown_manager.cpp)
+set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/gpu_attack_defense_gomoku.cpp src/utils/gpu_attack_defense_chess.cpp src/utils/gpu_attack_defense_go.cpp src/utils/attack_defense_gpu_manager.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp src/utils/resource_monitor.cpp src/utils/advanced_memory_monitor.cpp src/utils/thread_local_memory_manager.cpp src/utils/shutdown_manager.cpp src/utils/performance_profiler.cpp)
 
 # Conditionally define NN_SOURCES based on WITH_TORCH
 set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
@@ -627,6 +627,7 @@ if(WITH_TORCH)
         src/nn/resnet_model.cpp
         src/nn/neural_network_factory.cpp
         src/nn/gpu_optimizer.cpp
+        src/nn/batch_attack_defense_processor.cpp
     )
 endif()
 
@@ -638,7 +639,6 @@ set(MCTS_SOURCES
     src/mcts/mcts_node_pool.cpp
     src/mcts/evaluation_types.cpp
     src/mcts/mcts_object_pool.cpp
-    src/mcts/advanced_memory_pool.cpp
     src/mcts/mcts_engine_main.cpp
     src/mcts/mcts_engine_utils.cpp
     src/mcts/mcts_engine_tree.cpp
@@ -646,28 +646,21 @@ set(MCTS_SOURCES
     src/mcts/mcts_engine_common.cpp
     src/mcts/mcts_engine_search.cpp
     src/mcts/mcts_engine_simple_batch.cpp
+    src/mcts/mcts_engine_batch_tree_simple.cpp
     src/mcts/mcts_engine_methods.cpp
     src/mcts/mcts_engine_memory.cpp
-    src/mcts/mcts_engine_parallel_batch.cpp
     src/mcts/mcts_engine_memory_pressure.cpp
-    src/mcts/mcts_engine_true_parallel_search.cpp
-    src/mcts/mcts_engine_taskflow_optimized.cpp
-    src/mcts/aggressive_memory_manager.cpp
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
-    src/mcts/multi_instance_nn_manager.cpp
     src/mcts/gpu_memory_pool.cpp
-    src/mcts/dynamic_batch_manager.cpp
-    src/mcts/advanced_transposition_table.cpp
     src/mcts/phmap_transposition_table.cpp
-    src/mcts/enhanced_mcts_engine.cpp
-    src/mcts/mcts_engine_optimization_stubs.cpp
+    src/mcts/shared_inference_queue.cpp
 )
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp
     src/selfplay/self_play_manager_parallel.cpp
     src/selfplay/unified_parallel_manager.cpp
-    src/selfplay/optimized_self_play_manager.cpp
+    # src/selfplay/optimized_self_play_manager.cpp  # Temporarily disabled
 )
 set(TRAINING_SOURCES
     src/training/training_data_manager.cpp
@@ -675,6 +668,7 @@ set(TRAINING_SOURCES
     src/training/data_loader.cpp
 )
 set(EVALUATION_SOURCES
+    src/evaluation/arena.cpp
 )
 set(CLI_SOURCES 
     src/cli/cli_manager.cpp
@@ -697,6 +691,13 @@ set(ALL_SOURCES
 
 # ───────────────────────────── alphazero library target ───────────────────────
 add_library(alphazero ${ALL_SOURCES})
+
+# Force recompilation of MCTS engine for GPU optimization
+set_source_files_properties(
+    src/mcts/mcts_engine_simple_batch.cpp
+    src/cli/omoknuni_cli_final.cpp
+    PROPERTIES COMPILE_FLAGS "-O3 -march=native -fopenmp"
+)
 
 set_target_properties(alphazero PROPERTIES
     CXX_VISIBILITY_PRESET hidden
@@ -1265,6 +1266,7 @@ if(BUILD_TESTS)
     set(TRAINING_TEST_SOURCES tests/training/training_data_manager_test.cpp)
     set(INTEGRATION_TEST_SOURCES tests/integration/mcts_with_nn_test.cpp
                                tests/integration/games/self_play_games_test.cpp)
+    set(UTILS_TEST_SOURCES tests/utils/gpu_attack_defense_test.cpp)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/mcts/mcts_test.cpp")
         list(APPEND MCTS_TEST_SOURCES tests/mcts/mcts_test.cpp)
     endif()
@@ -1398,13 +1400,14 @@ if(BUILD_TESTS)
     make_test(selfplay_tests ${SELFPLAY_TEST_SOURCES})
     make_test(training_tests ${TRAINING_TEST_SOURCES})
     make_test(integration_tests ${INTEGRATION_TEST_SOURCES})
+    make_test(utils_tests   ${UTILS_TEST_SOURCES})
     make_test(all_tests     tests/all_tests_main.cpp
                              ${CORE_TEST_SOURCES} ${CHESS_TEST_SOURCES}
                              ${GO_TEST_SOURCES} ${GOMOKU_TEST_SOURCES}
                              ${MCTS_TEST_SOURCES} ${TRANSPOSITION_TEST_SOURCES}
                              ${CLI_TEST_SOURCES} ${NN_TEST_SOURCES}
                              ${SELFPLAY_TEST_SOURCES} ${TRAINING_TEST_SOURCES}
-                             ${INTEGRATION_TEST_SOURCES})
+                             ${INTEGRATION_TEST_SOURCES} ${UTILS_TEST_SOURCES})
     
     # Add benchmark executable (not a test, but a performance tool)
     if(WITH_TORCH)
@@ -1420,28 +1423,7 @@ if(BUILD_TESTS)
             INSTALL_RPATH_USE_LINK_PATH TRUE
         )
         
-        # Add DDW-RandWire-ResNet test executable
-        add_executable(test_ddw_randwire_resnet test_ddw_randwire_resnet.cpp)
-        target_link_libraries(test_ddw_randwire_resnet PRIVATE alphazero ${TORCH_LIBRARIES} pthread)
-        target_include_directories(test_ddw_randwire_resnet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-        if(WITH_CUDA)
-            target_compile_definitions(test_ddw_randwire_resnet PRIVATE WITH_CUDA)
-        endif()
-        # Set rpath for test
-        set_target_properties(test_ddw_randwire_resnet PROPERTIES
-            INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${Torch_LIB_DIR}"
-            BUILD_WITH_INSTALL_RPATH TRUE
-            INSTALL_RPATH_USE_LINK_PATH TRUE
-        )
-        
-        # Add minimal test
-        add_executable(test_ddw_minimal test_ddw_minimal.cpp)
-        target_link_libraries(test_ddw_minimal PRIVATE ${TORCH_LIBRARIES} pthread)
-        set_target_properties(test_ddw_minimal PROPERTIES
-            INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${Torch_LIB_DIR}"
-            BUILD_WITH_INSTALL_RPATH TRUE
-            INSTALL_RPATH_USE_LINK_PATH TRUE
-        )
+        # Test executables removed - moved to tests directory
     endif()
     
     # Accept shared library for GTest
@@ -1466,3 +1448,4 @@ install(TARGETS alphazero
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(DIRECTORY include/ DESTINATION include)
+

@@ -4957,6 +4957,33 @@ CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o: \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/version.h \
  /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/xpu.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/script.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/autograd/InferenceMode.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/runtime/custom_operator.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/serialization/import.h \
+ /opt/libtorch-2.7.0-cu128/include/caffe2/serialize/inline_container.h \
+ /usr/include/c++/13/fstream \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
+ /usr/include/c++/13/bits/fstream.tcc \
+ /opt/libtorch-2.7.0-cu128/include/caffe2/serialize/istream_adapter.h \
+ /opt/libtorch-2.7.0-cu128/include/caffe2/serialize/read_adapter_interface.h \
+ /opt/libtorch-2.7.0-cu128/include/caffe2/serialize/versions.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/serialization/pickle.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/serialization/pickler.h \
+ /opt/libtorch-2.7.0-cu128/include/c10/util/FbcodeMaps.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/serialization/unpickler.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/script_type_parser.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/resolver.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/sugared_value.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/error_report.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/tree.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/lexer.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/parser_constants.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/strtod.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/schema_matching.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/versioned_symbols.h \
+ /opt/libtorch-2.7.0-cu128/include/torch/csrc/jit/frontend/tree_views.h \
  /usr/local/cuda-12.8/include/cuda_runtime.h \
  /usr/local/cuda-12.8/include/crt/host_config.h \
  /usr/local/cuda-12.8/include/builtin_types.h \

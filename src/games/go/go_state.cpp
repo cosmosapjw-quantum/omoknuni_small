@@ -1,6 +1,7 @@
 // src/games/go/go_state.cpp
 #include "games/go/go_state.h"
 #include "core/tensor_pool.h"            // For GlobalTensorPool optimization
+#include "utils/attack_defense_module.h"  // For GPU attack/defense computation
 #include <iostream>
 #include <algorithm>
 #include <sstream>
@@ -693,6 +694,9 @@ std::vector<std::vector<std::vector<float>>> GoState::getEnhancedTensorRepresent
         tensor.push_back(distanceX);
         tensor.push_back(distanceY);
         
+        // 9-10: Attack and Defense planes (GPU-accelerated if available)
+        computeAttackDefensePlanes(tensor);
+        
         // PERFORMANCE FIX: Cache the computed enhanced tensor
         cached_enhanced_tensor_repr_ = tensor;
         enhanced_tensor_cache_dirty_.store(false, std::memory_order_relaxed);
@@ -702,8 +706,8 @@ std::vector<std::vector<std::vector<float>>> GoState::getEnhancedTensorRepresent
         std::cerr << "Exception in GoState::getEnhancedTensorRepresentation: " << e.what() << std::endl;
         
         // Return a default tensor with the correct dimensions
-        // Go enhanced tensor typically has 8 planes (3 basic planes + 5 additional feature planes)
-        const int num_planes = 8;
+        // Go enhanced tensor now has 10 planes (3 basic + 5 additional + 2 attack/defense)
+        const int num_planes = 10;
         
         return std::vector<std::vector<std::vector<float>>>(
             num_planes,
@@ -716,7 +720,7 @@ std::vector<std::vector<std::vector<float>>> GoState::getEnhancedTensorRepresent
         std::cerr << "Unknown exception in GoState::getEnhancedTensorRepresentation" << std::endl;
         
         // Return a default tensor with the correct dimensions
-        const int num_planes = 8;
+        const int num_planes = 10;
         
         return std::vector<std::vector<std::vector<float>>>(
             num_planes,
@@ -1307,6 +1311,240 @@ void GoState::updateHash() const {
     hash_ ^= zobrist_.getFeatureHash("komi", komi_int & 0xF);  // Use lower 4 bits
     
     hash_dirty_ = false;
+}
+
+// Attack/Defense plane computation
+void GoState::computeAttackDefensePlanes(std::vector<std::vector<std::vector<float>>>& tensor) const {
+    // Initialize attack and defense planes
+    std::vector<std::vector<float>> captureAttackPlane(board_size_, std::vector<float>(board_size_, 0.0f));
+    std::vector<std::vector<float>> libertyDefensePlane(board_size_, std::vector<float>(board_size_, 0.0f));
+    
+#ifdef WITH_TORCH
+    // Try GPU-accelerated computation if available
+    if (utils::AttackDefenseModule::isGPUAvailable()) {
+        try {
+            // Create a batch with just this state
+            std::vector<const GoState*> states = {this};
+            
+            // Call GPU batch computation
+            auto gpu_result = utils::AttackDefenseModule::computeGoAttackDefenseGPU(states);
+            
+            if (gpu_result.size(0) > 0) {
+                // Extract attack and defense tensors
+                auto capture_tensor = gpu_result[0][0];
+                auto defense_tensor = gpu_result[0][1];
+                
+                // Convert torch tensors to std::vector
+                auto capture_accessor = capture_tensor.accessor<float, 2>();
+                auto defense_accessor = defense_tensor.accessor<float, 2>();
+                
+                for (int i = 0; i < board_size_; ++i) {
+                    for (int j = 0; j < board_size_; ++j) {
+                        captureAttackPlane[i][j] = capture_accessor[i][j];
+                        libertyDefensePlane[i][j] = defense_accessor[i][j];
+                    }
+                }
+                
+                tensor.push_back(captureAttackPlane);
+                tensor.push_back(libertyDefensePlane);
+                return;
+            }
+        } catch (const std::exception& e) {
+            // Fall back to CPU computation
+            std::cerr << "GPU attack/defense computation failed: " << e.what() << std::endl;
+        }
+    }
+#endif
+    
+    // CPU fallback: compute capture potential and liberty-based defense
+    auto legal_moves = getLegalMoves();
+    
+    // Analyze each legal move
+    for (int move : legal_moves) {
+        if (move == -1) continue;  // Skip pass
+        
+        int y = move / board_size_;
+        int x = move % board_size_;
+        
+        // Calculate capture potential (attack)
+        float capture_score = 0.0f;
+        
+        // Check adjacent positions for potential captures
+        auto adjacents = getAdjacentPositions(move);
+        for (int adj : adjacents) {
+            int stone = getStone(adj);
+            if (stone != 0 && stone != current_player_) {
+                // Check if this enemy group can be captured
+                // Simple heuristic: groups with fewer liberties are more capturable
+                
+                // Find the group this stone belongs to
+                std::vector<int> group;
+                std::unordered_set<int> visited;
+                std::vector<int> stack = {adj};
+                
+                while (!stack.empty()) {
+                    int pos = stack.back();
+                    stack.pop_back();
+                    
+                    if (visited.count(pos) > 0) continue;
+                    visited.insert(pos);
+                    
+                    if (getStone(pos) == stone) {
+                        group.push_back(pos);
+                        auto adj_positions = getAdjacentPositions(pos);
+                        for (int p : adj_positions) {
+                            if (visited.count(p) == 0) {
+                                stack.push_back(p);
+                            }
+                        }
+                    }
+                }
+                
+                // Count liberties of this group
+                std::unordered_set<int> liberties;
+                for (int g : group) {
+                    auto adj_positions = getAdjacentPositions(g);
+                    for (int p : adj_positions) {
+                        if (getStone(p) == 0 && p != move) {
+                            liberties.insert(p);
+                        }
+                    }
+                }
+                
+                // If placing stone at 'move' would capture this group
+                if (liberties.size() == 0) {
+                    capture_score += group.size() * 1.0f;
+                } else if (liberties.size() == 1) {
+                    capture_score += group.size() * 0.5f;  // Atari
+                }
+            }
+        }
+        
+        // Calculate liberty defense score
+        float defense_score = 0.0f;
+        
+        // Check if this move connects to friendly groups and increases liberties
+        for (int adj : adjacents) {
+            int stone = getStone(adj);
+            if (stone == current_player_) {
+                // Count current liberties of the friendly group
+                std::vector<int> group;
+                std::unordered_set<int> visited;
+                std::vector<int> stack = {adj};
+                
+                while (!stack.empty()) {
+                    int pos = stack.back();
+                    stack.pop_back();
+                    
+                    if (visited.count(pos) > 0) continue;
+                    visited.insert(pos);
+                    
+                    if (getStone(pos) == stone) {
+                        group.push_back(pos);
+                        auto adj_positions = getAdjacentPositions(pos);
+                        for (int p : adj_positions) {
+                            if (visited.count(p) == 0) {
+                                stack.push_back(p);
+                            }
+                        }
+                    }
+                }
+                
+                // Count liberties before and after the move
+                std::unordered_set<int> liberties_before;
+                for (int g : group) {
+                    auto adj_positions = getAdjacentPositions(g);
+                    for (int p : adj_positions) {
+                        if (getStone(p) == 0) {
+                            liberties_before.insert(p);
+                        }
+                    }
+                }
+                
+                // If group has few liberties, this move helps defend it
+                if (liberties_before.size() <= 2) {
+                    defense_score += (3.0f - liberties_before.size()) * 0.5f;
+                }
+            }
+        }
+        
+        // Also check for eye-making potential (defensive)
+        int empty_adjacents = 0;
+        int friendly_adjacents = 0;
+        for (int adj : adjacents) {
+            if (getStone(adj) == 0) empty_adjacents++;
+            else if (getStone(adj) == current_player_) friendly_adjacents++;
+        }
+        
+        if (friendly_adjacents >= 2 && empty_adjacents <= 1) {
+            defense_score += 0.3f;  // Potential eye point
+        }
+        
+        // Normalize and assign scores
+        captureAttackPlane[y][x] = std::min(1.0f, capture_score / 5.0f);
+        libertyDefensePlane[y][x] = std::min(1.0f, defense_score);
+    }
+    
+    tensor.push_back(captureAttackPlane);
+    tensor.push_back(libertyDefensePlane);
+}
+
+// Static batch computation for multiple states (GPU-accelerated)
+std::vector<std::vector<std::vector<std::vector<float>>>> 
+GoState::computeBatchEnhancedTensorRepresentations(const std::vector<const GoState*>& states) {
+    std::vector<std::vector<std::vector<std::vector<float>>>> results;
+    results.reserve(states.size());
+    
+#ifdef WITH_TORCH
+    // Try GPU batch computation for attack/defense planes
+    if (utils::AttackDefenseModule::isGPUAvailable() && states.size() > 1) {
+        try {
+            auto gpu_results = utils::AttackDefenseModule::computeGoAttackDefenseGPU(states);
+            
+            // Process each state with GPU results
+            for (size_t i = 0; i < states.size(); ++i) {
+                auto tensor = states[i]->getEnhancedTensorRepresentation();
+                
+                // Add GPU-computed attack/defense planes
+                if (i < gpu_results.size(0)) {
+                    auto capture_tensor = gpu_results[i][0];
+                    auto defense_tensor = gpu_results[i][1];
+                    
+                    auto capture_accessor = capture_tensor.accessor<float, 2>();
+                    auto defense_accessor = defense_tensor.accessor<float, 2>();
+                    
+                    int board_size = states[i]->getBoardSize();
+                    
+                    // Add capture attack plane
+                    std::vector<std::vector<float>> capture_plane(board_size, std::vector<float>(board_size, 0.0f));
+                    std::vector<std::vector<float>> defense_plane(board_size, std::vector<float>(board_size, 0.0f));
+                    
+                    for (int r = 0; r < board_size; ++r) {
+                        for (int c = 0; c < board_size; ++c) {
+                            capture_plane[r][c] = capture_accessor[r][c];
+                            defense_plane[r][c] = defense_accessor[r][c];
+                        }
+                    }
+                    
+                    tensor.push_back(capture_plane);
+                    tensor.push_back(defense_plane);
+                }
+                
+                results.push_back(tensor);
+            }
+            return results;
+        } catch (const std::exception& e) {
+            // Fall back to CPU computation
+            std::cerr << "Batch GPU computation failed: " << e.what() << std::endl;
+        }
+    }
+#endif
+    
+    // CPU fallback
+    for (const auto* state : states) {
+        results.push_back(state->getEnhancedTensorRepresentation());
+    }
+    return results;
 }
 
 } // namespace go

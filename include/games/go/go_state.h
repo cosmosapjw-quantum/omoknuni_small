@@ -317,6 +317,13 @@ private:
     
     // Hash calculation
     void updateHash() const;
+    
+    // Attack/Defense plane computation
+    void computeAttackDefensePlanes(std::vector<std::vector<std::vector<float>>>& tensor) const;
+    
+    // Static batch computation for multiple states (GPU-accelerated)
+    static std::vector<std::vector<std::vector<std::vector<float>>>> 
+    computeBatchEnhancedTensorRepresentations(const std::vector<const GoState*>& states);
 };
 
 } // namespace go

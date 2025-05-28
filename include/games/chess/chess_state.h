@@ -389,6 +389,13 @@ private:
     void invalidateCache();
     void clearTensorCache() const;
     
+    // Attack/Defense plane computation
+    void computeAttackDefensePlanes(std::vector<std::vector<std::vector<float>>>& tensor) const;
+    
+    // Static batch computation for multiple states (GPU-accelerated)
+    static std::vector<std::vector<std::vector<std::vector<float>>>> 
+    computeBatchEnhancedTensorRepresentations(const std::vector<const ChessState*>& states);
+    
     // Update zobrist hash
     void updateHash() const;
     void updateHashIncrementally(int square, const Piece& old_piece, const Piece& new_piece);

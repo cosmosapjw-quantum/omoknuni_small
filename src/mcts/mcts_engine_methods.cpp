@@ -1,6 +1,6 @@
 #include "mcts/mcts_engine.h"
 #include "mcts/mcts_node.h"
-#include "mcts/advanced_memory_pool.h"
+// #include "mcts/advanced_memory_pool.h" // Removed
 #include "core/igamestate.h"
 #include "utils/debug_monitor.h"
 #include "utils/gamestate_pool.h"
@@ -40,11 +40,13 @@ std::shared_ptr<core::IGameState> MCTSEngine::cloneGameState(const core::IGameSt
         }
     }
     
-    // Use advanced memory pool if enabled
+    // Advanced memory pool removed
+    /*
     if (use_advanced_memory_pool_ && memory_pool_) {
         // Allocate state from our optimized memory pool
         return memory_pool_->allocateGameState(state);
     }
+    */
     
     // Fallback to standard clone
     return state.clone();

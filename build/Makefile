@@ -712,6 +712,19 @@ integration_tests/fast:
 .PHONY : integration_tests/fast
 
 #=============================================================================
+# Target rules for targets named utils_tests
+
+# Build rule for target.
+utils_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 utils_tests
+.PHONY : utils_tests
+
+# fast build rule for target.
+utils_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/utils_tests.dir/build.make CMakeFiles/utils_tests.dir/build
+.PHONY : utils_tests/fast
+
+#=============================================================================
 # Target rules for targets named all_tests
 
 # Build rule for target.
@@ -736,32 +749,6 @@ mcts_openmp_benchmark: cmake_check_build_system
 mcts_openmp_benchmark/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mcts_openmp_benchmark.dir/build.make CMakeFiles/mcts_openmp_benchmark.dir/build
 .PHONY : mcts_openmp_benchmark/fast
-
-#=============================================================================
-# Target rules for targets named test_ddw_randwire_resnet
-
-# Build rule for target.
-test_ddw_randwire_resnet: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_ddw_randwire_resnet
-.PHONY : test_ddw_randwire_resnet
-
-# fast build rule for target.
-test_ddw_randwire_resnet/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_randwire_resnet.dir/build.make CMakeFiles/test_ddw_randwire_resnet.dir/build
-.PHONY : test_ddw_randwire_resnet/fast
-
-#=============================================================================
-# Target rules for targets named test_ddw_minimal
-
-# Build rule for target.
-test_ddw_minimal: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_ddw_minimal
-.PHONY : test_ddw_minimal
-
-# fast build rule for target.
-test_ddw_minimal/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_minimal.dir/build.make CMakeFiles/test_ddw_minimal.dir/build
-.PHONY : test_ddw_minimal/fast
 
 #=============================================================================
 # Target rules for targets named mimalloc-static
@@ -959,6 +946,30 @@ src/core/tensor_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.s
 .PHONY : src/core/tensor_pool.cpp.s
 
+src/evaluation/arena.o: src/evaluation/arena.cpp.o
+.PHONY : src/evaluation/arena.o
+
+# target to build an object file
+src/evaluation/arena.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/evaluation/arena.cpp.o
+.PHONY : src/evaluation/arena.cpp.o
+
+src/evaluation/arena.i: src/evaluation/arena.cpp.i
+.PHONY : src/evaluation/arena.i
+
+# target to preprocess a source file
+src/evaluation/arena.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/evaluation/arena.cpp.i
+.PHONY : src/evaluation/arena.cpp.i
+
+src/evaluation/arena.s: src/evaluation/arena.cpp.s
+.PHONY : src/evaluation/arena.s
+
+# target to generate assembly for a file
+src/evaluation/arena.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/evaluation/arena.cpp.s
+.PHONY : src/evaluation/arena.cpp.s
+
 src/games/chess/chess960.o: src/games/chess/chess960.cpp.o
 .PHONY : src/games/chess/chess960.o
 
@@ -1127,126 +1138,6 @@ src/games/gomoku/gomoku_state.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_state.cpp.s
 .PHONY : src/games/gomoku/gomoku_state.cpp.s
 
-src/mcts/advanced_memory_pool.o: src/mcts/advanced_memory_pool.cpp.o
-.PHONY : src/mcts/advanced_memory_pool.o
-
-# target to build an object file
-src/mcts/advanced_memory_pool.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.o
-.PHONY : src/mcts/advanced_memory_pool.cpp.o
-
-src/mcts/advanced_memory_pool.i: src/mcts/advanced_memory_pool.cpp.i
-.PHONY : src/mcts/advanced_memory_pool.i
-
-# target to preprocess a source file
-src/mcts/advanced_memory_pool.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.i
-.PHONY : src/mcts/advanced_memory_pool.cpp.i
-
-src/mcts/advanced_memory_pool.s: src/mcts/advanced_memory_pool.cpp.s
-.PHONY : src/mcts/advanced_memory_pool.s
-
-# target to generate assembly for a file
-src/mcts/advanced_memory_pool.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.s
-.PHONY : src/mcts/advanced_memory_pool.cpp.s
-
-src/mcts/advanced_transposition_table.o: src/mcts/advanced_transposition_table.cpp.o
-.PHONY : src/mcts/advanced_transposition_table.o
-
-# target to build an object file
-src/mcts/advanced_transposition_table.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o
-.PHONY : src/mcts/advanced_transposition_table.cpp.o
-
-src/mcts/advanced_transposition_table.i: src/mcts/advanced_transposition_table.cpp.i
-.PHONY : src/mcts/advanced_transposition_table.i
-
-# target to preprocess a source file
-src/mcts/advanced_transposition_table.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.i
-.PHONY : src/mcts/advanced_transposition_table.cpp.i
-
-src/mcts/advanced_transposition_table.s: src/mcts/advanced_transposition_table.cpp.s
-.PHONY : src/mcts/advanced_transposition_table.s
-
-# target to generate assembly for a file
-src/mcts/advanced_transposition_table.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.s
-.PHONY : src/mcts/advanced_transposition_table.cpp.s
-
-src/mcts/aggressive_memory_manager.o: src/mcts/aggressive_memory_manager.cpp.o
-.PHONY : src/mcts/aggressive_memory_manager.o
-
-# target to build an object file
-src/mcts/aggressive_memory_manager.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o
-.PHONY : src/mcts/aggressive_memory_manager.cpp.o
-
-src/mcts/aggressive_memory_manager.i: src/mcts/aggressive_memory_manager.cpp.i
-.PHONY : src/mcts/aggressive_memory_manager.i
-
-# target to preprocess a source file
-src/mcts/aggressive_memory_manager.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.i
-.PHONY : src/mcts/aggressive_memory_manager.cpp.i
-
-src/mcts/aggressive_memory_manager.s: src/mcts/aggressive_memory_manager.cpp.s
-.PHONY : src/mcts/aggressive_memory_manager.s
-
-# target to generate assembly for a file
-src/mcts/aggressive_memory_manager.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.s
-.PHONY : src/mcts/aggressive_memory_manager.cpp.s
-
-src/mcts/dynamic_batch_manager.o: src/mcts/dynamic_batch_manager.cpp.o
-.PHONY : src/mcts/dynamic_batch_manager.o
-
-# target to build an object file
-src/mcts/dynamic_batch_manager.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.o
-.PHONY : src/mcts/dynamic_batch_manager.cpp.o
-
-src/mcts/dynamic_batch_manager.i: src/mcts/dynamic_batch_manager.cpp.i
-.PHONY : src/mcts/dynamic_batch_manager.i
-
-# target to preprocess a source file
-src/mcts/dynamic_batch_manager.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.i
-.PHONY : src/mcts/dynamic_batch_manager.cpp.i
-
-src/mcts/dynamic_batch_manager.s: src/mcts/dynamic_batch_manager.cpp.s
-.PHONY : src/mcts/dynamic_batch_manager.s
-
-# target to generate assembly for a file
-src/mcts/dynamic_batch_manager.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.s
-.PHONY : src/mcts/dynamic_batch_manager.cpp.s
-
-src/mcts/enhanced_mcts_engine.o: src/mcts/enhanced_mcts_engine.cpp.o
-.PHONY : src/mcts/enhanced_mcts_engine.o
-
-# target to build an object file
-src/mcts/enhanced_mcts_engine.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.o
-.PHONY : src/mcts/enhanced_mcts_engine.cpp.o
-
-src/mcts/enhanced_mcts_engine.i: src/mcts/enhanced_mcts_engine.cpp.i
-.PHONY : src/mcts/enhanced_mcts_engine.i
-
-# target to preprocess a source file
-src/mcts/enhanced_mcts_engine.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.i
-.PHONY : src/mcts/enhanced_mcts_engine.cpp.i
-
-src/mcts/enhanced_mcts_engine.s: src/mcts/enhanced_mcts_engine.cpp.s
-.PHONY : src/mcts/enhanced_mcts_engine.s
-
-# target to generate assembly for a file
-src/mcts/enhanced_mcts_engine.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.s
-.PHONY : src/mcts/enhanced_mcts_engine.cpp.s
-
 src/mcts/evaluation_types.o: src/mcts/evaluation_types.cpp.o
 .PHONY : src/mcts/evaluation_types.o
 
@@ -1294,6 +1185,30 @@ src/mcts/gpu_memory_pool.s: src/mcts/gpu_memory_pool.cpp.s
 src/mcts/gpu_memory_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.s
 .PHONY : src/mcts/gpu_memory_pool.cpp.s
+
+src/mcts/mcts_engine_batch_tree_simple.o: src/mcts/mcts_engine_batch_tree_simple.cpp.o
+.PHONY : src/mcts/mcts_engine_batch_tree_simple.o
+
+# target to build an object file
+src/mcts/mcts_engine_batch_tree_simple.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_batch_tree_simple.cpp.o
+.PHONY : src/mcts/mcts_engine_batch_tree_simple.cpp.o
+
+src/mcts/mcts_engine_batch_tree_simple.i: src/mcts/mcts_engine_batch_tree_simple.cpp.i
+.PHONY : src/mcts/mcts_engine_batch_tree_simple.i
+
+# target to preprocess a source file
+src/mcts/mcts_engine_batch_tree_simple.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_batch_tree_simple.cpp.i
+.PHONY : src/mcts/mcts_engine_batch_tree_simple.cpp.i
+
+src/mcts/mcts_engine_batch_tree_simple.s: src/mcts/mcts_engine_batch_tree_simple.cpp.s
+.PHONY : src/mcts/mcts_engine_batch_tree_simple.s
+
+# target to generate assembly for a file
+src/mcts/mcts_engine_batch_tree_simple.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_batch_tree_simple.cpp.s
+.PHONY : src/mcts/mcts_engine_batch_tree_simple.cpp.s
 
 src/mcts/mcts_engine_common.o: src/mcts/mcts_engine_common.cpp.o
 .PHONY : src/mcts/mcts_engine_common.o
@@ -1439,54 +1354,6 @@ src/mcts/mcts_engine_methods.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.s
 .PHONY : src/mcts/mcts_engine_methods.cpp.s
 
-src/mcts/mcts_engine_optimization_stubs.o: src/mcts/mcts_engine_optimization_stubs.cpp.o
-.PHONY : src/mcts/mcts_engine_optimization_stubs.o
-
-# target to build an object file
-src/mcts/mcts_engine_optimization_stubs.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.o
-.PHONY : src/mcts/mcts_engine_optimization_stubs.cpp.o
-
-src/mcts/mcts_engine_optimization_stubs.i: src/mcts/mcts_engine_optimization_stubs.cpp.i
-.PHONY : src/mcts/mcts_engine_optimization_stubs.i
-
-# target to preprocess a source file
-src/mcts/mcts_engine_optimization_stubs.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.i
-.PHONY : src/mcts/mcts_engine_optimization_stubs.cpp.i
-
-src/mcts/mcts_engine_optimization_stubs.s: src/mcts/mcts_engine_optimization_stubs.cpp.s
-.PHONY : src/mcts/mcts_engine_optimization_stubs.s
-
-# target to generate assembly for a file
-src/mcts/mcts_engine_optimization_stubs.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.s
-.PHONY : src/mcts/mcts_engine_optimization_stubs.cpp.s
-
-src/mcts/mcts_engine_parallel_batch.o: src/mcts/mcts_engine_parallel_batch.cpp.o
-.PHONY : src/mcts/mcts_engine_parallel_batch.o
-
-# target to build an object file
-src/mcts/mcts_engine_parallel_batch.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o
-.PHONY : src/mcts/mcts_engine_parallel_batch.cpp.o
-
-src/mcts/mcts_engine_parallel_batch.i: src/mcts/mcts_engine_parallel_batch.cpp.i
-.PHONY : src/mcts/mcts_engine_parallel_batch.i
-
-# target to preprocess a source file
-src/mcts/mcts_engine_parallel_batch.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.i
-.PHONY : src/mcts/mcts_engine_parallel_batch.cpp.i
-
-src/mcts/mcts_engine_parallel_batch.s: src/mcts/mcts_engine_parallel_batch.cpp.s
-.PHONY : src/mcts/mcts_engine_parallel_batch.s
-
-# target to generate assembly for a file
-src/mcts/mcts_engine_parallel_batch.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.s
-.PHONY : src/mcts/mcts_engine_parallel_batch.cpp.s
-
 src/mcts/mcts_engine_search.o: src/mcts/mcts_engine_search.cpp.o
 .PHONY : src/mcts/mcts_engine_search.o
 
@@ -1535,30 +1402,6 @@ src/mcts/mcts_engine_simple_batch.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.s
 .PHONY : src/mcts/mcts_engine_simple_batch.cpp.s
 
-src/mcts/mcts_engine_taskflow_optimized.o: src/mcts/mcts_engine_taskflow_optimized.cpp.o
-.PHONY : src/mcts/mcts_engine_taskflow_optimized.o
-
-# target to build an object file
-src/mcts/mcts_engine_taskflow_optimized.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.o
-.PHONY : src/mcts/mcts_engine_taskflow_optimized.cpp.o
-
-src/mcts/mcts_engine_taskflow_optimized.i: src/mcts/mcts_engine_taskflow_optimized.cpp.i
-.PHONY : src/mcts/mcts_engine_taskflow_optimized.i
-
-# target to preprocess a source file
-src/mcts/mcts_engine_taskflow_optimized.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.i
-.PHONY : src/mcts/mcts_engine_taskflow_optimized.cpp.i
-
-src/mcts/mcts_engine_taskflow_optimized.s: src/mcts/mcts_engine_taskflow_optimized.cpp.s
-.PHONY : src/mcts/mcts_engine_taskflow_optimized.s
-
-# target to generate assembly for a file
-src/mcts/mcts_engine_taskflow_optimized.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.s
-.PHONY : src/mcts/mcts_engine_taskflow_optimized.cpp.s
-
 src/mcts/mcts_engine_tree.o: src/mcts/mcts_engine_tree.cpp.o
 .PHONY : src/mcts/mcts_engine_tree.o
 
@@ -1582,30 +1425,6 @@ src/mcts/mcts_engine_tree.s: src/mcts/mcts_engine_tree.cpp.s
 src/mcts/mcts_engine_tree.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_tree.cpp.s
 .PHONY : src/mcts/mcts_engine_tree.cpp.s
-
-src/mcts/mcts_engine_true_parallel_search.o: src/mcts/mcts_engine_true_parallel_search.cpp.o
-.PHONY : src/mcts/mcts_engine_true_parallel_search.o
-
-# target to build an object file
-src/mcts/mcts_engine_true_parallel_search.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o
-.PHONY : src/mcts/mcts_engine_true_parallel_search.cpp.o
-
-src/mcts/mcts_engine_true_parallel_search.i: src/mcts/mcts_engine_true_parallel_search.cpp.i
-.PHONY : src/mcts/mcts_engine_true_parallel_search.i
-
-# target to preprocess a source file
-src/mcts/mcts_engine_true_parallel_search.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.i
-.PHONY : src/mcts/mcts_engine_true_parallel_search.cpp.i
-
-src/mcts/mcts_engine_true_parallel_search.s: src/mcts/mcts_engine_true_parallel_search.cpp.s
-.PHONY : src/mcts/mcts_engine_true_parallel_search.s
-
-# target to generate assembly for a file
-src/mcts/mcts_engine_true_parallel_search.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.s
-.PHONY : src/mcts/mcts_engine_true_parallel_search.cpp.s
 
 src/mcts/mcts_engine_utils.o: src/mcts/mcts_engine_utils.cpp.o
 .PHONY : src/mcts/mcts_engine_utils.o
@@ -1775,30 +1594,6 @@ src/mcts/mcts_object_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.s
 .PHONY : src/mcts/mcts_object_pool.cpp.s
 
-src/mcts/multi_instance_nn_manager.o: src/mcts/multi_instance_nn_manager.cpp.o
-.PHONY : src/mcts/multi_instance_nn_manager.o
-
-# target to build an object file
-src/mcts/multi_instance_nn_manager.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o
-.PHONY : src/mcts/multi_instance_nn_manager.cpp.o
-
-src/mcts/multi_instance_nn_manager.i: src/mcts/multi_instance_nn_manager.cpp.i
-.PHONY : src/mcts/multi_instance_nn_manager.i
-
-# target to preprocess a source file
-src/mcts/multi_instance_nn_manager.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.i
-.PHONY : src/mcts/multi_instance_nn_manager.cpp.i
-
-src/mcts/multi_instance_nn_manager.s: src/mcts/multi_instance_nn_manager.cpp.s
-.PHONY : src/mcts/multi_instance_nn_manager.s
-
-# target to generate assembly for a file
-src/mcts/multi_instance_nn_manager.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.s
-.PHONY : src/mcts/multi_instance_nn_manager.cpp.s
-
 src/mcts/node_tracker.o: src/mcts/node_tracker.cpp.o
 .PHONY : src/mcts/node_tracker.o
 
@@ -1847,6 +1642,30 @@ src/mcts/phmap_transposition_table.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.s
 .PHONY : src/mcts/phmap_transposition_table.cpp.s
 
+src/mcts/shared_inference_queue.o: src/mcts/shared_inference_queue.cpp.o
+.PHONY : src/mcts/shared_inference_queue.o
+
+# target to build an object file
+src/mcts/shared_inference_queue.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/shared_inference_queue.cpp.o
+.PHONY : src/mcts/shared_inference_queue.cpp.o
+
+src/mcts/shared_inference_queue.i: src/mcts/shared_inference_queue.cpp.i
+.PHONY : src/mcts/shared_inference_queue.i
+
+# target to preprocess a source file
+src/mcts/shared_inference_queue.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/shared_inference_queue.cpp.i
+.PHONY : src/mcts/shared_inference_queue.cpp.i
+
+src/mcts/shared_inference_queue.s: src/mcts/shared_inference_queue.cpp.s
+.PHONY : src/mcts/shared_inference_queue.s
+
+# target to generate assembly for a file
+src/mcts/shared_inference_queue.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/shared_inference_queue.cpp.s
+.PHONY : src/mcts/shared_inference_queue.cpp.s
+
 src/mcts/transposition_table.o: src/mcts/transposition_table.cpp.o
 .PHONY : src/mcts/transposition_table.o
 
@@ -1870,6 +1689,30 @@ src/mcts/transposition_table.s: src/mcts/transposition_table.cpp.s
 src/mcts/transposition_table.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.s
 .PHONY : src/mcts/transposition_table.cpp.s
+
+src/nn/batch_attack_defense_processor.o: src/nn/batch_attack_defense_processor.cpp.o
+.PHONY : src/nn/batch_attack_defense_processor.o
+
+# target to build an object file
+src/nn/batch_attack_defense_processor.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/batch_attack_defense_processor.cpp.o
+.PHONY : src/nn/batch_attack_defense_processor.cpp.o
+
+src/nn/batch_attack_defense_processor.i: src/nn/batch_attack_defense_processor.cpp.i
+.PHONY : src/nn/batch_attack_defense_processor.i
+
+# target to preprocess a source file
+src/nn/batch_attack_defense_processor.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/batch_attack_defense_processor.cpp.i
+.PHONY : src/nn/batch_attack_defense_processor.cpp.i
+
+src/nn/batch_attack_defense_processor.s: src/nn/batch_attack_defense_processor.cpp.s
+.PHONY : src/nn/batch_attack_defense_processor.s
+
+# target to generate assembly for a file
+src/nn/batch_attack_defense_processor.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/batch_attack_defense_processor.cpp.s
+.PHONY : src/nn/batch_attack_defense_processor.cpp.s
 
 src/nn/ddw_randwire_resnet.o: src/nn/ddw_randwire_resnet.cpp.o
 .PHONY : src/nn/ddw_randwire_resnet.o
@@ -1966,30 +1809,6 @@ src/nn/resnet_model.s: src/nn/resnet_model.cpp.s
 src/nn/resnet_model.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.s
 .PHONY : src/nn/resnet_model.cpp.s
-
-src/selfplay/optimized_self_play_manager.o: src/selfplay/optimized_self_play_manager.cpp.o
-.PHONY : src/selfplay/optimized_self_play_manager.o
-
-# target to build an object file
-src/selfplay/optimized_self_play_manager.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.o
-.PHONY : src/selfplay/optimized_self_play_manager.cpp.o
-
-src/selfplay/optimized_self_play_manager.i: src/selfplay/optimized_self_play_manager.cpp.i
-.PHONY : src/selfplay/optimized_self_play_manager.i
-
-# target to preprocess a source file
-src/selfplay/optimized_self_play_manager.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.i
-.PHONY : src/selfplay/optimized_self_play_manager.cpp.i
-
-src/selfplay/optimized_self_play_manager.s: src/selfplay/optimized_self_play_manager.cpp.s
-.PHONY : src/selfplay/optimized_self_play_manager.s
-
-# target to generate assembly for a file
-src/selfplay/optimized_self_play_manager.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.s
-.PHONY : src/selfplay/optimized_self_play_manager.cpp.s
 
 src/selfplay/self_play_manager.o: src/selfplay/self_play_manager.cpp.o
 .PHONY : src/selfplay/self_play_manager.o
@@ -2159,6 +1978,30 @@ src/utils/advanced_memory_monitor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.s
 .PHONY : src/utils/advanced_memory_monitor.cpp.s
 
+src/utils/attack_defense_gpu_manager.o: src/utils/attack_defense_gpu_manager.cpp.o
+.PHONY : src/utils/attack_defense_gpu_manager.o
+
+# target to build an object file
+src/utils/attack_defense_gpu_manager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/attack_defense_gpu_manager.cpp.o
+.PHONY : src/utils/attack_defense_gpu_manager.cpp.o
+
+src/utils/attack_defense_gpu_manager.i: src/utils/attack_defense_gpu_manager.cpp.i
+.PHONY : src/utils/attack_defense_gpu_manager.i
+
+# target to preprocess a source file
+src/utils/attack_defense_gpu_manager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/attack_defense_gpu_manager.cpp.i
+.PHONY : src/utils/attack_defense_gpu_manager.cpp.i
+
+src/utils/attack_defense_gpu_manager.s: src/utils/attack_defense_gpu_manager.cpp.s
+.PHONY : src/utils/attack_defense_gpu_manager.s
+
+# target to generate assembly for a file
+src/utils/attack_defense_gpu_manager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/attack_defense_gpu_manager.cpp.s
+.PHONY : src/utils/attack_defense_gpu_manager.cpp.s
+
 src/utils/attack_defense_module.o: src/utils/attack_defense_module.cpp.o
 .PHONY : src/utils/attack_defense_module.o
 
@@ -2230,6 +2073,78 @@ src/utils/gamestate_pool.s: src/utils/gamestate_pool.cpp.s
 src/utils/gamestate_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gamestate_pool.cpp.s
 .PHONY : src/utils/gamestate_pool.cpp.s
+
+src/utils/gpu_attack_defense_chess.o: src/utils/gpu_attack_defense_chess.cpp.o
+.PHONY : src/utils/gpu_attack_defense_chess.o
+
+# target to build an object file
+src/utils/gpu_attack_defense_chess.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_chess.cpp.o
+.PHONY : src/utils/gpu_attack_defense_chess.cpp.o
+
+src/utils/gpu_attack_defense_chess.i: src/utils/gpu_attack_defense_chess.cpp.i
+.PHONY : src/utils/gpu_attack_defense_chess.i
+
+# target to preprocess a source file
+src/utils/gpu_attack_defense_chess.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_chess.cpp.i
+.PHONY : src/utils/gpu_attack_defense_chess.cpp.i
+
+src/utils/gpu_attack_defense_chess.s: src/utils/gpu_attack_defense_chess.cpp.s
+.PHONY : src/utils/gpu_attack_defense_chess.s
+
+# target to generate assembly for a file
+src/utils/gpu_attack_defense_chess.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_chess.cpp.s
+.PHONY : src/utils/gpu_attack_defense_chess.cpp.s
+
+src/utils/gpu_attack_defense_go.o: src/utils/gpu_attack_defense_go.cpp.o
+.PHONY : src/utils/gpu_attack_defense_go.o
+
+# target to build an object file
+src/utils/gpu_attack_defense_go.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_go.cpp.o
+.PHONY : src/utils/gpu_attack_defense_go.cpp.o
+
+src/utils/gpu_attack_defense_go.i: src/utils/gpu_attack_defense_go.cpp.i
+.PHONY : src/utils/gpu_attack_defense_go.i
+
+# target to preprocess a source file
+src/utils/gpu_attack_defense_go.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_go.cpp.i
+.PHONY : src/utils/gpu_attack_defense_go.cpp.i
+
+src/utils/gpu_attack_defense_go.s: src/utils/gpu_attack_defense_go.cpp.s
+.PHONY : src/utils/gpu_attack_defense_go.s
+
+# target to generate assembly for a file
+src/utils/gpu_attack_defense_go.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_go.cpp.s
+.PHONY : src/utils/gpu_attack_defense_go.cpp.s
+
+src/utils/gpu_attack_defense_gomoku.o: src/utils/gpu_attack_defense_gomoku.cpp.o
+.PHONY : src/utils/gpu_attack_defense_gomoku.o
+
+# target to build an object file
+src/utils/gpu_attack_defense_gomoku.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_gomoku.cpp.o
+.PHONY : src/utils/gpu_attack_defense_gomoku.cpp.o
+
+src/utils/gpu_attack_defense_gomoku.i: src/utils/gpu_attack_defense_gomoku.cpp.i
+.PHONY : src/utils/gpu_attack_defense_gomoku.i
+
+# target to preprocess a source file
+src/utils/gpu_attack_defense_gomoku.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_gomoku.cpp.i
+.PHONY : src/utils/gpu_attack_defense_gomoku.cpp.i
+
+src/utils/gpu_attack_defense_gomoku.s: src/utils/gpu_attack_defense_gomoku.cpp.s
+.PHONY : src/utils/gpu_attack_defense_gomoku.s
+
+# target to generate assembly for a file
+src/utils/gpu_attack_defense_gomoku.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_gomoku.cpp.s
+.PHONY : src/utils/gpu_attack_defense_gomoku.cpp.s
 
 src/utils/gpu_memory_manager.o: src/utils/gpu_memory_manager.cpp.o
 .PHONY : src/utils/gpu_memory_manager.o
@@ -2327,6 +2242,30 @@ src/utils/memory_tracker.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.s
 .PHONY : src/utils/memory_tracker.cpp.s
 
+src/utils/performance_profiler.o: src/utils/performance_profiler.cpp.o
+.PHONY : src/utils/performance_profiler.o
+
+# target to build an object file
+src/utils/performance_profiler.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/performance_profiler.cpp.o
+.PHONY : src/utils/performance_profiler.cpp.o
+
+src/utils/performance_profiler.i: src/utils/performance_profiler.cpp.i
+.PHONY : src/utils/performance_profiler.i
+
+# target to preprocess a source file
+src/utils/performance_profiler.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/performance_profiler.cpp.i
+.PHONY : src/utils/performance_profiler.cpp.i
+
+src/utils/performance_profiler.s: src/utils/performance_profiler.cpp.s
+.PHONY : src/utils/performance_profiler.s
+
+# target to generate assembly for a file
+src/utils/performance_profiler.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/performance_profiler.cpp.s
+.PHONY : src/utils/performance_profiler.cpp.s
+
 src/utils/resource_monitor.o: src/utils/resource_monitor.cpp.o
 .PHONY : src/utils/resource_monitor.o
 
@@ -2422,54 +2361,6 @@ src/utils/zobrist_hash.s: src/utils/zobrist_hash.cpp.s
 src/utils/zobrist_hash.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.s
 .PHONY : src/utils/zobrist_hash.cpp.s
-
-test_ddw_minimal.o: test_ddw_minimal.cpp.o
-.PHONY : test_ddw_minimal.o
-
-# target to build an object file
-test_ddw_minimal.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_minimal.dir/build.make CMakeFiles/test_ddw_minimal.dir/test_ddw_minimal.cpp.o
-.PHONY : test_ddw_minimal.cpp.o
-
-test_ddw_minimal.i: test_ddw_minimal.cpp.i
-.PHONY : test_ddw_minimal.i
-
-# target to preprocess a source file
-test_ddw_minimal.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_minimal.dir/build.make CMakeFiles/test_ddw_minimal.dir/test_ddw_minimal.cpp.i
-.PHONY : test_ddw_minimal.cpp.i
-
-test_ddw_minimal.s: test_ddw_minimal.cpp.s
-.PHONY : test_ddw_minimal.s
-
-# target to generate assembly for a file
-test_ddw_minimal.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_minimal.dir/build.make CMakeFiles/test_ddw_minimal.dir/test_ddw_minimal.cpp.s
-.PHONY : test_ddw_minimal.cpp.s
-
-test_ddw_randwire_resnet.o: test_ddw_randwire_resnet.cpp.o
-.PHONY : test_ddw_randwire_resnet.o
-
-# target to build an object file
-test_ddw_randwire_resnet.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_randwire_resnet.dir/build.make CMakeFiles/test_ddw_randwire_resnet.dir/test_ddw_randwire_resnet.cpp.o
-.PHONY : test_ddw_randwire_resnet.cpp.o
-
-test_ddw_randwire_resnet.i: test_ddw_randwire_resnet.cpp.i
-.PHONY : test_ddw_randwire_resnet.i
-
-# target to preprocess a source file
-test_ddw_randwire_resnet.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_randwire_resnet.dir/build.make CMakeFiles/test_ddw_randwire_resnet.dir/test_ddw_randwire_resnet.cpp.i
-.PHONY : test_ddw_randwire_resnet.cpp.i
-
-test_ddw_randwire_resnet.s: test_ddw_randwire_resnet.cpp.s
-.PHONY : test_ddw_randwire_resnet.s
-
-# target to generate assembly for a file
-test_ddw_randwire_resnet.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_ddw_randwire_resnet.dir/build.make CMakeFiles/test_ddw_randwire_resnet.dir/test_ddw_randwire_resnet.cpp.s
-.PHONY : test_ddw_randwire_resnet.cpp.s
 
 tests/all_tests_main.o: tests/all_tests_main.cpp.o
 .PHONY : tests/all_tests_main.o
@@ -3026,6 +2917,33 @@ tests/training/training_data_manager_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.s
 .PHONY : tests/training/training_data_manager_test.cpp.s
 
+tests/utils/gpu_attack_defense_test.o: tests/utils/gpu_attack_defense_test.cpp.o
+.PHONY : tests/utils/gpu_attack_defense_test.o
+
+# target to build an object file
+tests/utils/gpu_attack_defense_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/utils_tests.dir/build.make CMakeFiles/utils_tests.dir/tests/utils/gpu_attack_defense_test.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/utils/gpu_attack_defense_test.cpp.o
+.PHONY : tests/utils/gpu_attack_defense_test.cpp.o
+
+tests/utils/gpu_attack_defense_test.i: tests/utils/gpu_attack_defense_test.cpp.i
+.PHONY : tests/utils/gpu_attack_defense_test.i
+
+# target to preprocess a source file
+tests/utils/gpu_attack_defense_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/utils_tests.dir/build.make CMakeFiles/utils_tests.dir/tests/utils/gpu_attack_defense_test.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/utils/gpu_attack_defense_test.cpp.i
+.PHONY : tests/utils/gpu_attack_defense_test.cpp.i
+
+tests/utils/gpu_attack_defense_test.s: tests/utils/gpu_attack_defense_test.cpp.s
+.PHONY : tests/utils/gpu_attack_defense_test.s
+
+# target to generate assembly for a file
+tests/utils/gpu_attack_defense_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/utils_tests.dir/build.make CMakeFiles/utils_tests.dir/tests/utils/gpu_attack_defense_test.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/all_tests.dir/build.make CMakeFiles/all_tests.dir/tests/utils/gpu_attack_defense_test.cpp.s
+.PHONY : tests/utils/gpu_attack_defense_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -3085,10 +3003,9 @@ help:
 	@echo "... nn_tests"
 	@echo "... omoknuni_cli_final"
 	@echo "... selfplay_tests"
-	@echo "... test_ddw_minimal"
-	@echo "... test_ddw_randwire_resnet"
 	@echo "... training_tests"
 	@echo "... transposition_tests"
+	@echo "... utils_tests"
 	@echo "... src/cli/cli_manager.o"
 	@echo "... src/cli/cli_manager.i"
 	@echo "... src/cli/cli_manager.s"
@@ -3107,6 +3024,9 @@ help:
 	@echo "... src/core/tensor_pool.o"
 	@echo "... src/core/tensor_pool.i"
 	@echo "... src/core/tensor_pool.s"
+	@echo "... src/evaluation/arena.o"
+	@echo "... src/evaluation/arena.i"
+	@echo "... src/evaluation/arena.s"
 	@echo "... src/games/chess/chess960.o"
 	@echo "... src/games/chess/chess960.i"
 	@echo "... src/games/chess/chess960.s"
@@ -3128,27 +3048,15 @@ help:
 	@echo "... src/games/gomoku/gomoku_state.o"
 	@echo "... src/games/gomoku/gomoku_state.i"
 	@echo "... src/games/gomoku/gomoku_state.s"
-	@echo "... src/mcts/advanced_memory_pool.o"
-	@echo "... src/mcts/advanced_memory_pool.i"
-	@echo "... src/mcts/advanced_memory_pool.s"
-	@echo "... src/mcts/advanced_transposition_table.o"
-	@echo "... src/mcts/advanced_transposition_table.i"
-	@echo "... src/mcts/advanced_transposition_table.s"
-	@echo "... src/mcts/aggressive_memory_manager.o"
-	@echo "... src/mcts/aggressive_memory_manager.i"
-	@echo "... src/mcts/aggressive_memory_manager.s"
-	@echo "... src/mcts/dynamic_batch_manager.o"
-	@echo "... src/mcts/dynamic_batch_manager.i"
-	@echo "... src/mcts/dynamic_batch_manager.s"
-	@echo "... src/mcts/enhanced_mcts_engine.o"
-	@echo "... src/mcts/enhanced_mcts_engine.i"
-	@echo "... src/mcts/enhanced_mcts_engine.s"
 	@echo "... src/mcts/evaluation_types.o"
 	@echo "... src/mcts/evaluation_types.i"
 	@echo "... src/mcts/evaluation_types.s"
 	@echo "... src/mcts/gpu_memory_pool.o"
 	@echo "... src/mcts/gpu_memory_pool.i"
 	@echo "... src/mcts/gpu_memory_pool.s"
+	@echo "... src/mcts/mcts_engine_batch_tree_simple.o"
+	@echo "... src/mcts/mcts_engine_batch_tree_simple.i"
+	@echo "... src/mcts/mcts_engine_batch_tree_simple.s"
 	@echo "... src/mcts/mcts_engine_common.o"
 	@echo "... src/mcts/mcts_engine_common.i"
 	@echo "... src/mcts/mcts_engine_common.s"
@@ -3167,27 +3075,15 @@ help:
 	@echo "... src/mcts/mcts_engine_methods.o"
 	@echo "... src/mcts/mcts_engine_methods.i"
 	@echo "... src/mcts/mcts_engine_methods.s"
-	@echo "... src/mcts/mcts_engine_optimization_stubs.o"
-	@echo "... src/mcts/mcts_engine_optimization_stubs.i"
-	@echo "... src/mcts/mcts_engine_optimization_stubs.s"
-	@echo "... src/mcts/mcts_engine_parallel_batch.o"
-	@echo "... src/mcts/mcts_engine_parallel_batch.i"
-	@echo "... src/mcts/mcts_engine_parallel_batch.s"
 	@echo "... src/mcts/mcts_engine_search.o"
 	@echo "... src/mcts/mcts_engine_search.i"
 	@echo "... src/mcts/mcts_engine_search.s"
 	@echo "... src/mcts/mcts_engine_simple_batch.o"
 	@echo "... src/mcts/mcts_engine_simple_batch.i"
 	@echo "... src/mcts/mcts_engine_simple_batch.s"
-	@echo "... src/mcts/mcts_engine_taskflow_optimized.o"
-	@echo "... src/mcts/mcts_engine_taskflow_optimized.i"
-	@echo "... src/mcts/mcts_engine_taskflow_optimized.s"
 	@echo "... src/mcts/mcts_engine_tree.o"
 	@echo "... src/mcts/mcts_engine_tree.i"
 	@echo "... src/mcts/mcts_engine_tree.s"
-	@echo "... src/mcts/mcts_engine_true_parallel_search.o"
-	@echo "... src/mcts/mcts_engine_true_parallel_search.i"
-	@echo "... src/mcts/mcts_engine_true_parallel_search.s"
 	@echo "... src/mcts/mcts_engine_utils.o"
 	@echo "... src/mcts/mcts_engine_utils.i"
 	@echo "... src/mcts/mcts_engine_utils.s"
@@ -3209,18 +3105,21 @@ help:
 	@echo "... src/mcts/mcts_object_pool.o"
 	@echo "... src/mcts/mcts_object_pool.i"
 	@echo "... src/mcts/mcts_object_pool.s"
-	@echo "... src/mcts/multi_instance_nn_manager.o"
-	@echo "... src/mcts/multi_instance_nn_manager.i"
-	@echo "... src/mcts/multi_instance_nn_manager.s"
 	@echo "... src/mcts/node_tracker.o"
 	@echo "... src/mcts/node_tracker.i"
 	@echo "... src/mcts/node_tracker.s"
 	@echo "... src/mcts/phmap_transposition_table.o"
 	@echo "... src/mcts/phmap_transposition_table.i"
 	@echo "... src/mcts/phmap_transposition_table.s"
+	@echo "... src/mcts/shared_inference_queue.o"
+	@echo "... src/mcts/shared_inference_queue.i"
+	@echo "... src/mcts/shared_inference_queue.s"
 	@echo "... src/mcts/transposition_table.o"
 	@echo "... src/mcts/transposition_table.i"
 	@echo "... src/mcts/transposition_table.s"
+	@echo "... src/nn/batch_attack_defense_processor.o"
+	@echo "... src/nn/batch_attack_defense_processor.i"
+	@echo "... src/nn/batch_attack_defense_processor.s"
 	@echo "... src/nn/ddw_randwire_resnet.o"
 	@echo "... src/nn/ddw_randwire_resnet.i"
 	@echo "... src/nn/ddw_randwire_resnet.s"
@@ -3233,9 +3132,6 @@ help:
 	@echo "... src/nn/resnet_model.o"
 	@echo "... src/nn/resnet_model.i"
 	@echo "... src/nn/resnet_model.s"
-	@echo "... src/selfplay/optimized_self_play_manager.o"
-	@echo "... src/selfplay/optimized_self_play_manager.i"
-	@echo "... src/selfplay/optimized_self_play_manager.s"
 	@echo "... src/selfplay/self_play_manager.o"
 	@echo "... src/selfplay/self_play_manager.i"
 	@echo "... src/selfplay/self_play_manager.s"
@@ -3257,6 +3153,9 @@ help:
 	@echo "... src/utils/advanced_memory_monitor.o"
 	@echo "... src/utils/advanced_memory_monitor.i"
 	@echo "... src/utils/advanced_memory_monitor.s"
+	@echo "... src/utils/attack_defense_gpu_manager.o"
+	@echo "... src/utils/attack_defense_gpu_manager.i"
+	@echo "... src/utils/attack_defense_gpu_manager.s"
 	@echo "... src/utils/attack_defense_module.o"
 	@echo "... src/utils/attack_defense_module.i"
 	@echo "... src/utils/attack_defense_module.s"
@@ -3266,6 +3165,15 @@ help:
 	@echo "... src/utils/gamestate_pool.o"
 	@echo "... src/utils/gamestate_pool.i"
 	@echo "... src/utils/gamestate_pool.s"
+	@echo "... src/utils/gpu_attack_defense_chess.o"
+	@echo "... src/utils/gpu_attack_defense_chess.i"
+	@echo "... src/utils/gpu_attack_defense_chess.s"
+	@echo "... src/utils/gpu_attack_defense_go.o"
+	@echo "... src/utils/gpu_attack_defense_go.i"
+	@echo "... src/utils/gpu_attack_defense_go.s"
+	@echo "... src/utils/gpu_attack_defense_gomoku.o"
+	@echo "... src/utils/gpu_attack_defense_gomoku.i"
+	@echo "... src/utils/gpu_attack_defense_gomoku.s"
 	@echo "... src/utils/gpu_memory_manager.o"
 	@echo "... src/utils/gpu_memory_manager.i"
 	@echo "... src/utils/gpu_memory_manager.s"
@@ -3278,6 +3186,9 @@ help:
 	@echo "... src/utils/memory_tracker.o"
 	@echo "... src/utils/memory_tracker.i"
 	@echo "... src/utils/memory_tracker.s"
+	@echo "... src/utils/performance_profiler.o"
+	@echo "... src/utils/performance_profiler.i"
+	@echo "... src/utils/performance_profiler.s"
 	@echo "... src/utils/resource_monitor.o"
 	@echo "... src/utils/resource_monitor.i"
 	@echo "... src/utils/resource_monitor.s"
@@ -3290,12 +3201,6 @@ help:
 	@echo "... src/utils/zobrist_hash.o"
 	@echo "... src/utils/zobrist_hash.i"
 	@echo "... src/utils/zobrist_hash.s"
-	@echo "... test_ddw_minimal.o"
-	@echo "... test_ddw_minimal.i"
-	@echo "... test_ddw_minimal.s"
-	@echo "... test_ddw_randwire_resnet.o"
-	@echo "... test_ddw_randwire_resnet.i"
-	@echo "... test_ddw_randwire_resnet.s"
 	@echo "... tests/all_tests_main.o"
 	@echo "... tests/all_tests_main.i"
 	@echo "... tests/all_tests_main.s"
@@ -3359,6 +3264,9 @@ help:
 	@echo "... tests/training/training_data_manager_test.o"
 	@echo "... tests/training/training_data_manager_test.i"
 	@echo "... tests/training/training_data_manager_test.s"
+	@echo "... tests/utils/gpu_attack_defense_test.o"
+	@echo "... tests/utils/gpu_attack_defense_test.i"
+	@echo "... tests/utils/gpu_attack_defense_test.s"
 .PHONY : help
 
 

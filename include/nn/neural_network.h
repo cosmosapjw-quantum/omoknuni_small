@@ -74,6 +74,50 @@ public:
     }
     
     /**
+     * @brief Check if model is deterministic (no randomness during inference)
+     * 
+     * @return true if model has fixed computation graph
+     */
+    virtual bool isDeterministic() const {
+        return true; // Most models are deterministic by default
+    }
+    
+    /**
+     * @brief Enable GPU optimization features
+     * 
+     * @param enable_cuda_graphs Use CUDA graphs for deterministic models
+     * @param enable_persistent_kernels Keep data on GPU between operations
+     * @param enable_torch_script Convert to TorchScript for optimization
+     * @param cuda_stream_priority Priority for CUDA stream (-1 for default)
+     */
+    virtual void enableGPUOptimizations(
+        bool enable_cuda_graphs = true,
+        bool enable_persistent_kernels = true, 
+        bool enable_torch_script = true,
+        int cuda_stream_priority = -1
+    ) {
+        // Default implementation does nothing
+    }
+    
+    /**
+     * @brief Get current GPU optimization status
+     */
+    struct GPUOptimizationStatus {
+        bool cuda_graphs_enabled = false;
+        bool cuda_graphs_supported = false;
+        bool persistent_kernels_enabled = false;
+        bool torch_script_enabled = false;
+        bool model_is_deterministic = true;
+        int cuda_stream_priority = -1;
+        size_t allocated_memory_mb = 0;
+        size_t reserved_memory_mb = 0;
+    };
+    
+    virtual GPUOptimizationStatus getGPUOptimizationStatus() const {
+        return GPUOptimizationStatus();
+    }
+    
+    /**
      * @brief Save the model to a file
      * 
      * @param path File path

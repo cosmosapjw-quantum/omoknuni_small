@@ -58,6 +58,11 @@ public:
     // Aliases for compatibility with updated code
     void applyVirtualLoss(int amount) { addVirtualLoss(amount); }
     void revertVirtualLoss(int amount) { removeVirtualLoss(amount); }
+    
+    // Fast methods for ultra-low latency (minimal locking, inlined operations)
+    std::shared_ptr<MCTSNode> selectChildFast(float exploration_constant) const;
+    void expandFast();  // Minimal expansion without progressive widening
+    void updateFast(float value);  // Lock-free update
 
     // Backpropagation
     void update(float value);

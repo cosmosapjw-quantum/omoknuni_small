@@ -5101,9 +5101,7 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o: \
  /usr/local/cuda-12.8/include/driver_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.hpp \
- /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/mcts/aggressive_memory_manager.h \
  /home/cosmos/omoknuni_small/include/utils/debug_monitor.h \
  /usr/include/c++/13/fstream \
  /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \

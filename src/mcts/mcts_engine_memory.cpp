@@ -1,6 +1,6 @@
 #include "mcts/mcts_engine.h"
 #include "mcts/mcts_node.h"
-#include "mcts/advanced_memory_pool.h"
+// #include "mcts/advanced_memory_pool.h" // Removed
 #include "utils/debug_monitor.h"
 #include "utils/gpu_memory_manager.h"
 #include "utils/logger.h"
@@ -98,18 +98,19 @@ void MCTSEngine::resetForNewSearch() {
     // Clear statistics
     last_stats_ = MCTSStats();
     
-    // Clear memory pools if they exist
+    // Memory pool removed
+    /*
     if (memory_pool_) {
         // Get current pool stats before clearing
         auto pool_stats = memory_pool_->getStats();
         SPDLOG_DEBUG("MCTSEngine: Memory pool stats - nodes in use: {}, nodes available: {}, "
                      "states in use: {}, states available: {}",
                      pool_stats.nodes_in_use, pool_stats.nodes_available,
-                     pool_stats.states_in_use, pool_stats.states_available);
+                     pool_stats.states_in_use, pool_stats.states_available);*/
         
         // Note: We don't clear the pool itself as memory may be reused
         // but we should ensure no allocations are marked as in use
-    }
+    //}
     
     // CRITICAL FIX: Always compact node pool during reset
     if (node_pool_) {

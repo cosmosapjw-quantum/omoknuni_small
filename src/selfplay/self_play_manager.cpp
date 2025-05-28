@@ -11,6 +11,8 @@
 #include "utils/shutdown_manager.h"
 #include "core/tensor_pool.h"
 #include "utils/progress_bar.h"
+#include "utils/profiler.h"  // Use Tracy profiler that exists
+#include "mcts/shared_inference_queue.h"
 #include <vector>
 #include <string>
 #include <memory>
@@ -32,6 +34,100 @@ namespace alphazero {
 namespace selfplay {
 
 using json = nlohmann::json;
+
+// Performance statistics structure
+struct PerformanceStats {
+    std::atomic<int64_t> total_games{0};
+    std::atomic<int64_t> total_moves{0};
+    std::atomic<int64_t> total_mcts_searches{0};
+    std::atomic<int64_t> total_nn_inferences{0};
+    std::atomic<int64_t> total_batch_collections{0};
+    
+    // Timing statistics (in microseconds)
+    std::atomic<int64_t> total_game_time_us{0};
+    std::atomic<int64_t> total_mcts_time_us{0};
+    std::atomic<int64_t> total_nn_time_us{0};
+    std::atomic<int64_t> total_move_time_us{0};
+    
+    // Batch statistics
+    std::atomic<int64_t> total_batch_size{0};
+    std::atomic<int> batch_count{0};
+    
+    // Thread-safe getters
+    double getAvgGameTimeMs() const {
+        int64_t games = total_games.load();
+        return games > 0 ? (total_game_time_us.load() / 1000.0) / games : 0.0;
+    }
+    
+    double getAvgMoveTimeMs() const {
+        int64_t moves = total_moves.load();
+        return moves > 0 ? (total_move_time_us.load() / 1000.0) / moves : 0.0;
+    }
+    
+    double getAvgMCTSTimeMs() const {
+        int64_t searches = total_mcts_searches.load();
+        return searches > 0 ? (total_mcts_time_us.load() / 1000.0) / searches : 0.0;
+    }
+    
+    double getAvgNNTimeMs() const {
+        int64_t inferences = total_nn_inferences.load();
+        return inferences > 0 ? (total_nn_time_us.load() / 1000.0) / inferences : 0.0;
+    }
+    
+    double getAvgBatchSize() const {
+        int count = batch_count.load();
+        return count > 0 ? static_cast<double>(total_batch_size.load()) / count : 0.0;
+    }
+    
+    void reset() {
+        total_games = 0;
+        total_moves = 0;
+        total_mcts_searches = 0;
+        total_nn_inferences = 0;
+        total_batch_collections = 0;
+        total_game_time_us = 0;
+        total_mcts_time_us = 0;
+        total_nn_time_us = 0;
+        total_move_time_us = 0;
+        total_batch_size = 0;
+        batch_count = 0;
+    }
+    
+    void printSummary() const {
+        std::cout << "\n=== PERFORMANCE STATISTICS ===" << std::endl;
+        std::cout << std::fixed << std::setprecision(2);
+        
+        std::cout << "[GAMES]" << std::endl;
+        std::cout << "  Total games: " << total_games.load() << std::endl;
+        std::cout << "  Total moves: " << total_moves.load() << std::endl;
+        std::cout << "  Avg moves/game: " << (total_games > 0 ? static_cast<double>(total_moves.load()) / total_games.load() : 0) << std::endl;
+        std::cout << "  Avg game time: " << getAvgGameTimeMs() << " ms" << std::endl;
+        
+        std::cout << "  Total searches: " << total_mcts_searches.load() << std::endl;
+        std::cout << "  Avg search time: " << getAvgMCTSTimeMs() << " ms" << std::endl;
+        std::cout << "  Avg move time: " << getAvgMoveTimeMs() << " ms" << std::endl;
+        
+        std::cout << "\n[NEURAL NETWORK]" << std::endl;
+        std::cout << "  Total inferences: " << total_nn_inferences.load() << std::endl;
+        std::cout << "  Total batches: " << batch_count.load() << std::endl;
+        std::cout << "  Avg batch size: " << getAvgBatchSize() << std::endl;
+        std::cout << "  Avg inference time: " << getAvgNNTimeMs() << " ms" << std::endl;
+        
+        // Calculate throughput
+        double total_time_s = total_game_time_us.load() / 1000000.0;
+        if (total_time_s > 0) {
+            std::cout << "\n[THROUGHPUT]" << std::endl;
+            std::cout << "  Games/second: " << total_games.load() / total_time_s << std::endl;
+            std::cout << "  Moves/second: " << total_moves.load() / total_time_s << std::endl;
+            std::cout << "  MCTS searches/second: " << total_mcts_searches.load() / total_time_s << std::endl;
+        }
+        
+        std::cout << "==============================\n" << std::endl;
+    }
+};
+
+// Global performance stats instance
+static PerformanceStats g_perf_stats;
 
 // Helper function to create a readable timestamp
 std::string getCurrentTimestamp() {
@@ -101,8 +197,9 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         
         // PERFORMANCE OPTIMIZATION: Use settings from config, applying sensible caps if needed.
         // Respect user's config for num_threads, num_simulations, batch_size, and batch_timeout.
-        // Apply a reasonable upper cap for threads based on hardware if not specified or too high.
-        if (optimized_settings.num_threads <= 0 || optimized_settings.num_threads > static_cast<int>(std::thread::hardware_concurrency())) {
+        // Apply a reasonable upper cap for threads based on hardware if too high
+        // CRITICAL FIX: Respect num_threads = 0 for serial mode
+        if (optimized_settings.num_threads > static_cast<int>(std::thread::hardware_concurrency())) {
             optimized_settings.num_threads = std::max(1, static_cast<int>(std::thread::hardware_concurrency() / 2));
         }
         
@@ -115,6 +212,17 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         // Respect batch_timeout from config - user has increased it for memory safety.
         // optimized_settings.batch_timeout = std::chrono::milliseconds(50);
         
+        // CRITICAL: Initialize SharedInferenceQueue for proper batching
+        if (!mcts::GlobalInferenceQueue::isInitialized()) {
+            std::cout << "[DEBUG] Initializing SharedInferenceQueue with batch_size=" 
+                      << optimized_settings.batch_size << ", timeout=" 
+                      << optimized_settings.batch_timeout.count() << "ms" << std::endl;
+            mcts::GlobalInferenceQueue::initialize(
+                neural_net_, 
+                optimized_settings.batch_size,
+                optimized_settings.batch_timeout.count()
+            );
+        }
         
         // Create engine directly with neural network to get the optimized UnifiedInferenceServer + BurstCoordinator architecture
         auto single_engine = std::make_unique<mcts::MCTSEngine>(neural_net_, optimized_settings);
@@ -179,7 +287,12 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
         // Don't throw - warm-up is optional
     }
     
-    
+    // PERFORMANCE FIX: Remove synchronization after warmup - let GPU run async
+    #ifdef WITH_TORCH
+    if (torch::cuda::is_available()) {
+        LOG_SYSTEM_INFO("GPU warmup completed");
+    }
+    #endif
 }
 
 SelfPlayManager::~SelfPlayManager() {
@@ -189,24 +302,19 @@ SelfPlayManager::~SelfPlayManager() {
     game_counter_ = 0;
     
     // Force GPU memory cleanup before engines are destroyed
-    if (neural_net_) {
-        neural_net_.reset();
-    }
-    
-    // Clean up the MCTS engines
-    for (auto& engine_ptr : engines_) { // Use a different variable name to avoid conflict if engine_ was a member
-        try {
-            if (engine_ptr) engine_ptr.reset();
-        } catch (const std::exception& e) {
-            std::cerr << "Warning: Exception during engine cleanup: " << e.what() << std::endl;
-        }
-    }
+    // Don't reset neural_net_ here - it's a shared_ptr that might be used elsewhere
+    // Just clear our engines which will release their references
     engines_.clear();
 }
 
 std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager::generateGames(core::GameType game_type,
                                                     int num_games,
                                                     int board_size) {
+    PROFILE_SCOPE("SelfPlayManager::generateGames");
+    
+    // Reset performance stats at the start of generation
+    g_perf_stats.reset();
+    
     // Start advanced memory monitoring (only for the main thread)
     auto& monitor = utils::AdvancedMemoryMonitor::getInstance();
     static std::atomic<bool> monitor_started(false);
@@ -241,6 +349,7 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     
     // CRITICAL FIX: Run multiple games in parallel for better CPU/GPU utilization
     auto& progress_manager = utils::SelfPlayProgressManager::getInstance();
+    // Start progress bar (will be skipped if global progress is active)
     progress_manager.startGames(num_games);
     
     if (progress_manager.isVerboseLoggingEnabled()) {
@@ -249,7 +358,7 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     
     mcts::MCTSEngine& engine = *engines_[0];  // Primary engine
     
-    const int parallel_games = std::min(8, num_games);  // Run up to 8 games concurrently
+    const int parallel_games = std::min(settings_.num_parallel_games > 0 ? settings_.num_parallel_games : 12, num_games);  // Use configured parallel workers
     std::atomic<int> games_started(0);
     std::atomic<int> games_completed(0);
     std::mutex games_mutex;
@@ -257,14 +366,34 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
     // Create additional engines for parallel games
     std::vector<std::unique_ptr<mcts::MCTSEngine>> parallel_engines;
     for (int i = 1; i < parallel_games; i++) {
-        // Each parallel game gets a portion of the threads
+        // Each parallel game gets optimized thread allocation
         auto parallel_settings = settings_.mcts_settings;
-        parallel_settings.num_threads = std::max(1, settings_.mcts_settings.num_threads / parallel_games);
+        // Keep original thread count for each engine - system scheduler will handle
+        // parallel_settings.num_threads = settings_.mcts_settings.num_threads;
         
         if (neural_net_) {
             parallel_engines.push_back(std::make_unique<mcts::MCTSEngine>(neural_net_, parallel_settings));
         }
     }
+    
+    // Performance stats display thread
+    std::atomic<bool> stats_thread_running(true);
+    std::thread stats_thread([&]() {
+        while (stats_thread_running.load() && !utils::isShutdownRequested()) {
+            std::this_thread::sleep_for(std::chrono::seconds(10));  // Display stats every 10 seconds
+            
+            if (g_perf_stats.total_games.load() > 0) {
+                g_perf_stats.printSummary();
+                
+                // Also print current progress
+                int completed = games_completed.load();
+                std::cout << "Progress: " << completed << "/" << num_games 
+                          << " games completed (" 
+                          << std::fixed << std::setprecision(1) 
+                          << (100.0 * completed / num_games) << "%)" << std::endl;
+            }
+        }
+    });
     
     // Worker threads for parallel game generation
     std::vector<std::thread> game_threads;
@@ -302,17 +431,44 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
                               << game_idx << ": " << e.what() << std::endl;
                 }
                 
-                // CRITICAL FIX: More aggressive cleanup to prevent VRAM accumulation
-                // Clean after EVERY game instead of every 20 games
-                utils::GameStatePoolManager::getInstance().clearAllPools();
-                #ifdef WITH_TORCH
-                if (torch::cuda::is_available()) {
+                // OPTIMIZATION: Less aggressive cleanup for 8GB VRAM
+                // Only clean every 10 games to reduce overhead
+                if (games_completed.load() % 10 == 0) {
+                    utils::GameStatePoolManager::getInstance().clearAllPools();
+                    
+                    // Skip GPU sync on shutdown to avoid hanging
+                    #ifdef WITH_TORCH
+                    if (torch::cuda::is_available() && !utils::isShutdownRequested()) {
                     try {
-                        torch::cuda::synchronize();
-                        c10::cuda::CUDACachingAllocator::emptyCache();
+                        // Use a separate thread with timeout for GPU operations
+                        std::atomic<bool> gpu_cleanup_done(false);
+                        std::thread gpu_cleanup([&gpu_cleanup_done]() {
+                            try {
+                                // Skip synchronize for performance
+                                c10::cuda::CUDACachingAllocator::emptyCache();
+                                gpu_cleanup_done.store(true);
+                            } catch (...) {}
+                        });
+                        
+                        // Wait max 100ms for GPU cleanup
+                        auto start = std::chrono::steady_clock::now();
+                        while (!gpu_cleanup_done.load() && 
+                               !utils::isShutdownRequested() &&
+                               std::chrono::steady_clock::now() - start < std::chrono::milliseconds(100)) {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        }
+                        
+                        if (gpu_cleanup.joinable()) {
+                            if (gpu_cleanup_done.load()) {
+                                gpu_cleanup.join();
+                            } else {
+                                gpu_cleanup.detach();
+                            }
+                        }
                     } catch (...) {}
+                    }
+                    #endif
                 }
-                #endif
             }
         });
     }
@@ -322,10 +478,23 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
         thread.join();
     }
     
-    // Complete progress bar
-    progress_manager.finish();
+    // Stop stats thread
+    stats_thread_running = false;
+    stats_thread.join();
     
-    std::cout << "\nSuccessfully generated " << games.size() << " games" << std::endl;
+    // Complete progress bar (only affects local progress bars)
+    if (!progress_manager.isGlobalProgressActive()) {
+        progress_manager.finish();
+    }
+    
+    // Only print success message if not using global progress (to avoid spam from workers)
+    if (!progress_manager.isGlobalProgressActive()) {
+        std::cout << "\nSuccessfully generated " << games.size() << " games" << std::endl;
+    }
+    
+    // Print final performance statistics
+    std::cout << "\n🎯 FINAL PERFORMANCE REPORT:" << std::endl;
+    g_perf_stats.printSummary();
     
     // Final memory monitoring
     monitor.captureSnapshot("generate_games_complete");
@@ -367,6 +536,9 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
 
 alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame(mcts::MCTSEngine& engine, core::GameType game_type, int board_size,
                                       const std::string& game_id) {
+    PROFILE_SCOPE("SelfPlayManager::generateGame");
+    
+    auto game_start_time = std::chrono::high_resolution_clock::now();
     
     // Verify engine exists (engine is now passed by reference)
     // No need to check engines_.empty() here as a valid reference is expected
@@ -474,6 +646,8 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
             // Run search with timeout detection and robust error handling to prevent stalling
             mcts::SearchResult result;
             
+            auto move_start_time = std::chrono::high_resolution_clock::now();
+            
             // Don't start evaluator here - it will be configured with external queues in the search method
             
             
@@ -505,6 +679,8 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
             
             // Start the search directly - NO std::async
             try {
+                PROFILE_SCOPE("MCTS_Search");
+                auto mcts_start_time = std::chrono::high_resolution_clock::now();
                 
                 // Track memory every 10 moves
                 if (move_count % 10 == 0) {
@@ -529,12 +705,38 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 // UnifiedInferenceServer was removed in simplification
                 
                 // PERFORMANCE FIX: Use tree reuse for efficiency (except first move)
+                
                 if (move_count == 0) {
                     result = engine.search(*game);
                 } else {
                     // Use tree reuse with the last action played
                     int last_action = (data.moves.empty()) ? -1 : data.moves.back();
                     result = engine.searchWithTreeReuse(*game, last_action);
+                }
+                // Search completed
+                
+                // Track MCTS performance
+                auto mcts_end_time = std::chrono::high_resolution_clock::now();
+                auto mcts_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                    mcts_end_time - mcts_start_time).count();
+                g_perf_stats.total_mcts_time_us.fetch_add(mcts_duration_us);
+                g_perf_stats.total_mcts_searches.fetch_add(1);
+                
+                // CRITICAL FIX: Track neural network statistics from MCTS search
+                auto search_stats = result.stats;
+                if (search_stats.total_evaluations > 0) {
+                    g_perf_stats.total_nn_inferences.fetch_add(search_stats.total_evaluations);
+                }
+                if (search_stats.total_batches_processed > 0) {
+                    g_perf_stats.batch_count.fetch_add(search_stats.total_batches_processed);
+                    g_perf_stats.total_batch_size.fetch_add(
+                        static_cast<int64_t>(search_stats.avg_batch_size * search_stats.total_batches_processed)
+                    );
+                }
+                if (search_stats.avg_batch_latency.count() > 0) {
+                    g_perf_stats.total_nn_time_us.fetch_add(
+                        search_stats.avg_batch_latency.count() * 1000 * search_stats.total_batches_processed
+                    );
                 }
                 
                 // Verbose logging removed - completed MCTS search
@@ -545,13 +747,17 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                     break;
                 }
                 
-                // AGGRESSIVE memory cleanup after every move to prevent stacking
-                utils::GameStatePoolManager::getInstance().clearAllPools();
-                if (torch::cuda::is_available()) {
-                    try {
-                        torch::cuda::synchronize();
-                        c10::cuda::CUDACachingAllocator::emptyCache();
-                    } catch (...) {}
+                // CRITICAL FIX: Remove aggressive cleanup after every move - only clean up periodically
+                if (move_count % 20 == 0) {
+                    utils::GameStatePoolManager::getInstance().clearAllPools();
+                    #ifdef WITH_TORCH
+                    if (torch::cuda::is_available() && move_count % 50 == 0) {
+                        // Only clear CUDA cache every 50 moves
+                        try {
+                            c10::cuda::CUDACachingAllocator::emptyCache();
+                        } catch (...) {}
+                    }
+                    #endif
                 }
                 
                 // Capture memory snapshot after search
@@ -580,14 +786,7 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                     }
                     // alphazero::utils::trackMemory("After search - Game " + game_id + ", Move " + std::to_string(move_count));
                     
-                    // Periodic memory cleanup
-                    utils::GameStatePoolManager::getInstance().clearAllPools();
-                    if (torch::cuda::is_available()) {
-                        try {
-                            torch::cuda::synchronize();
-                            c10::cuda::CUDACachingAllocator::emptyCache();
-                        } catch (...) {}
-                    }
+                    // Already doing periodic cleanup above, skip duplicate cleanup
                 }
             } catch (const std::exception& e) {
                 std::cerr << "SelfPlayManager::generateGame - Exception during direct search: " << e.what() << std::endl;
@@ -620,6 +819,14 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
             // Make move
             game->makeMove(result.action);
             move_count++;
+            
+            // Track move performance
+            auto move_end_time = std::chrono::high_resolution_clock::now();
+            auto move_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                move_end_time - move_start_time).count();
+            g_perf_stats.total_move_time_us.fetch_add(move_duration_us);
+            g_perf_stats.total_moves.fetch_add(1);
+            
             // std::cout << "Game " << game_id << ": Move " << move_count << " made. Checking if terminal..." << std::endl;
 
             // Print progress for moves multiple of 10
@@ -667,6 +874,13 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                  << data.moves.size() << " moves in "
                  << (data.total_time_ms / 1000.0) << " seconds" << std::endl;
     }
+    
+    // Track game completion
+    auto game_end_time = std::chrono::high_resolution_clock::now();
+    auto game_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+        game_end_time - game_start_time).count();
+    g_perf_stats.total_game_time_us.fetch_add(game_duration_us);
+    g_perf_stats.total_games.fetch_add(1);
     
     // FIX: Clean up MCTS tree after game ends to prevent memory accumulation
     engine.cleanupTree();

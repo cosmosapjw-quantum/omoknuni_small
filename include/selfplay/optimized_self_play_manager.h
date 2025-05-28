@@ -1,7 +1,7 @@
 #pragma once
 
 #include "selfplay/self_play_manager.h"
-#include "mcts/multi_instance_nn_manager.h"
+// #include "mcts/multi_instance_nn_manager.h" // Removed
 #include "mcts/mcts_engine.h"
 #include <thread>
 #include <future>

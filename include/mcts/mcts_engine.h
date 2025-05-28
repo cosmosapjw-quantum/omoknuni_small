@@ -17,8 +17,8 @@
 #include "mcts/node_tracker.h"
 #include "mcts/memory_pressure_monitor.h"
 #include "mcts/gpu_memory_pool.h"
-#include "mcts/dynamic_batch_manager.h"
 // Removed complex components for simplified implementation
+// #include "mcts/dynamic_batch_manager.h"
 // #include "mcts/unified_inference_server.h"
 // #include "mcts/burst_coordinator.h"
 #include "core/igamestate.h"
@@ -29,7 +29,7 @@
 namespace alphazero {
 namespace mcts {
 
-class AdvancedMemoryPool; // Forward declaration
+// Removed forward declarations for unused components
 
 // Standardized batch parameters to ensure consistent batch handling across components
 struct ALPHAZERO_API BatchParameters {
@@ -118,12 +118,21 @@ struct ALPHAZERO_API MCTSSettings {
     
     // Method to synchronize batch parameters from legacy settings
     void syncBatchParametersFromLegacy() {
-        batch_params.optimal_batch_size = batch_size;
-        batch_params.minimum_viable_batch_size = std::max(static_cast<size_t>(batch_size * 0.75), static_cast<size_t>(64));
-        batch_params.minimum_fallback_batch_size = std::max(static_cast<size_t>(batch_size * 0.3), static_cast<size_t>(16));
-        batch_params.max_collection_batch_size = max_collection_batch_size;
+        // Only update if not already set
+        if (batch_params.optimal_batch_size == 0) {
+            batch_params.optimal_batch_size = batch_size;
+        }
+        if (batch_params.minimum_viable_batch_size == 0) {
+            batch_params.minimum_viable_batch_size = std::max(static_cast<size_t>(batch_size * 0.5), static_cast<size_t>(512));
+        }
+        if (batch_params.minimum_fallback_batch_size == 0) {
+            batch_params.minimum_fallback_batch_size = std::max(static_cast<size_t>(batch_size * 0.25), static_cast<size_t>(256));
+        }
+        if (batch_params.max_collection_batch_size == 0) {
+            batch_params.max_collection_batch_size = max_collection_batch_size;
+        }
         batch_params.max_wait_time = batch_timeout;
-        batch_params.additional_wait_time = std::chrono::milliseconds(10);
+        batch_params.additional_wait_time = std::chrono::milliseconds(20);
     }
     
     // Method to update legacy settings from batch parameters for backward compatibility
@@ -408,18 +417,31 @@ private:
     // NEW: Burst-mode optimized search with unified memory management
     void executeOptimizedSearchV2(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
     
-    // Taskflow-based leaf parallelization for high throughput
-    void executeTaskflowSearch(MCTSNode* root, int num_simulations);
-    bool processBatchWithEvaluator(const std::vector<PendingEvaluation>& batch);
     
     // CRITICAL FIX: Simplified direct batching without complex layers
     void executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
     
-    // PROPER PARALLELIZATION: True tree parallelization with lock-free batch collection
-    void executeParallelBatchedSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots);
     
-    // TRUE LEAF PARALLELIZATION: Continuous collection with centralized batching
-    void executeTrueParallelSearch(MCTSNode* root, std::unique_ptr<core::IGameState> root_state);
+    
+    // BATCH TREE SELECTION: Process multiple paths simultaneously
+    struct BatchItem {
+        MCTSNode* current_node;
+        std::unique_ptr<core::IGameState> state;
+        std::vector<MCTSNode*> path;
+        int depth;
+        bool is_leaf;
+    };
+    
+    void batchTraverseToLeaves(
+        const std::vector<MCTSNode*>& roots,
+        const std::vector<std::unique_ptr<core::IGameState>>& initial_states,
+        std::vector<BatchItem>& leaf_items,
+        int batch_size);
+    
+    void executeBatchedTreeSearch(MCTSNode* root, std::unique_ptr<core::IGameState> root_state);
+    
+    // ULTRA-FAST BATCH: Pipelined batch collection with prefetching for <100ms moves
+    void executeUltraFastBatchSearch(MCTSNode* root, std::unique_ptr<core::IGameState> root_state);
     
     // Performance mode for optimization configuration
     enum class PerformanceMode {
@@ -450,7 +472,7 @@ private:
     
     // Specific optimizations
     void optimizeInferenceServerConfiguration();
-    void optimizeBurstCoordinatorConfiguration();
+    // Removed unused optimization methods
     void enableTranspositionTableOptimizations();
     
     // Specific performance profiles
@@ -637,9 +659,9 @@ public:
     // Removed mutex destruction flags - no longer needed with lock-free approach
     std::function<void()> external_queue_notify_fn_; 
     
-    // New optimized memory management
-    std::unique_ptr<AdvancedMemoryPool> memory_pool_;
-    std::atomic<bool> use_advanced_memory_pool_{true};
+    // Memory pool removed - using simpler memory management
+    // std::unique_ptr<AdvancedMemoryPool> memory_pool_;
+    std::atomic<bool> use_advanced_memory_pool_{false};
     
     // Flag to enable memory pool for GameState cloning
     bool game_state_pool_enabled_;
@@ -678,8 +700,8 @@ public:
     // GPU memory pool for efficient tensor management
     std::unique_ptr<GPUMemoryPool> gpu_memory_pool_;
     
-    // Dynamic batch manager for adaptive batching
-    std::unique_ptr<DynamicBatchManager> dynamic_batch_manager_;
+    // Dynamic batch manager removed
+    // std::unique_ptr<DynamicBatchManager> dynamic_batch_manager_;
     
     // Advanced components for optimized parallelization (commented out for simplification)
     // std::unique_ptr<UnifiedInferenceServer> inference_server_;

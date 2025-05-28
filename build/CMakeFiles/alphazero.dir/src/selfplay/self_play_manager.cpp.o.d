@@ -5101,7 +5101,6 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /usr/local/cuda-12.8/include/driver_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.hpp \
- /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
  /home/cosmos/omoknuni_small/include/utils/advanced_memory_monitor.h \
  /usr/include/c++/13/fstream \
@@ -5119,6 +5118,7 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o: \
  /home/cosmos/omoknuni_small/include/utils/shutdown_manager.h \
  /home/cosmos/omoknuni_small/include/core/tensor_pool.h \
  /home/cosmos/omoknuni_small/include/utils/progress_bar.h \
+ /home/cosmos/omoknuni_small/include/mcts/shared_inference_queue.h \
  /usr/include/c++/13/filesystem /usr/include/c++/13/bits/fs_fwd.h \
  /usr/include/c++/13/bits/fs_path.h /usr/include/c++/13/codecvt \
  /usr/include/c++/13/bits/fs_dir.h /usr/include/c++/13/bits/fs_ops.h \

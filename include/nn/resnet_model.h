@@ -107,6 +107,18 @@ public:
         gpu_memory_pool_ = pool;
     }
     
+    // GPU optimization support
+    bool isDeterministic() const override { return true; }  // ResNet is deterministic
+    
+    void enableGPUOptimizations(
+        bool enable_cuda_graphs = true,
+        bool enable_persistent_kernels = true, 
+        bool enable_torch_script = true,
+        int cuda_stream_priority = -1
+    ) override;
+    
+    GPUOptimizationStatus getGPUOptimizationStatus() const override;
+    
 private:
     int64_t input_channels_;
     int64_t board_size_;
@@ -150,6 +162,11 @@ private:
     
     // GPU memory pool for efficient tensor allocation
     std::shared_ptr<mcts::GPUMemoryPool> gpu_memory_pool_;
+    
+    // GPU optimization state
+    mutable GPUOptimizationStatus gpu_opt_status_;
+    std::shared_ptr<torch::jit::Module> torch_script_model_;
+    bool use_torch_script_ = false;
 };
 
 } // namespace nn

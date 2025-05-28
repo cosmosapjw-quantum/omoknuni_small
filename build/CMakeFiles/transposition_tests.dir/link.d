@@ -63,7 +63,6 @@ bin/Release/transposition_tests: \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtendS.o \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/crtn.o \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadend.o \
-  /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0 \
   /opt/libtorch-2.7.0-cu128/lib/libc10.so \
   /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so \
   /usr/local/cuda/lib64/libcudart.so \
@@ -209,8 +208,6 @@ lib/Release/libTracyClient.so.0.11.0:
 /usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/crtn.o:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadend.o:
-
-/usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0:
 
 /opt/libtorch-2.7.0-cu128/lib/libc10.so:
 

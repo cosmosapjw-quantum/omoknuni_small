@@ -1,7 +1,7 @@
 #include "mcts/mcts_engine.h"
 #include "mcts/mcts_node.h"
-#include "mcts/advanced_memory_pool.h"
-#include "mcts/aggressive_memory_manager.h"
+// #include "mcts/advanced_memory_pool.h" // Removed
+// #include "mcts/aggressive_memory_manager.h" // Removed
 #include "nn/resnet_model.h"
 #include "utils/debug_monitor.h"
 #include <algorithm>
@@ -51,12 +51,7 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     // Create node tracker for pending evaluations
     node_tracker_ = std::make_unique<NodeTracker>();
     
-    // Initialize advanced memory pool for optimized memory management
-    AdvancedMemoryPoolConfig mem_pool_config;
-    mem_pool_config.initial_size = 10000;  // Start with 10,000 pre-allocated objects
-    mem_pool_config.growth_factor = 1.5;   // Grow by 50% when needed
-    mem_pool_config.max_pool_size = 1000000; // Cap at 1 million objects
-    memory_pool_ = std::make_unique<AdvancedMemoryPool>(mem_pool_config);
+    // Advanced memory pool removed - using simpler memory management
     
     // Initialize node pool for efficient MCTS node allocation
     MCTSNodePool::Config node_pool_config;
@@ -83,7 +78,8 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
     // The neural network manages its own GPU memory more efficiently
     // gpu_memory_pool_ = nullptr;
     
-    // Initialize dynamic batch manager (always enabled)
+    // Dynamic batch manager removed - using simpler batching
+    /*
     DynamicBatchManager::Config batch_config;
     batch_config.min_batch_size = 1;
     batch_config.max_batch_size = settings.batch_size;
@@ -91,8 +87,10 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
         settings.batch_timeout).count();
     batch_config.target_gpu_utilization_percent = 0.9;
     dynamic_batch_manager_ = std::make_unique<DynamicBatchManager>(batch_config);
+    */
     
-    // Initialize aggressive memory manager with appropriate thresholds for 64GB RAM
+    // Aggressive memory manager removed - using simpler memory management
+    /*
     auto& aggressive_memory_manager = AggressiveMemoryManager::getInstance();
     AggressiveMemoryManager::Config aggressive_config;
     aggressive_config.warning_threshold_gb = 40.0;   // Warning at 40GB (62.5% of 64GB)
@@ -154,6 +152,7 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
                 #endif
             }
         }, 110); // Higher priority than other cleanups
+    */
     
     // Validate neural network
     if (!neural_net) {
@@ -192,12 +191,7 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
       use_advanced_memory_pool_(true),
       direct_inference_fn_(inference_fn) {
     
-    // Initialize advanced memory pool for optimized memory management
-    AdvancedMemoryPoolConfig mem_pool_config;
-    mem_pool_config.initial_size = 10000;  // Start with 10,000 pre-allocated objects
-    mem_pool_config.growth_factor = 1.5;   // Grow by 50% when needed
-    mem_pool_config.max_pool_size = 1000000; // Cap at 1 million objects
-    memory_pool_ = std::make_unique<AdvancedMemoryPool>(mem_pool_config);
+    // Advanced memory pool removed - using simpler memory management
     
     // Create transposition table if enabled (always use PHMap)
     if (use_transposition_table_) {
@@ -253,6 +247,8 @@ bool MCTSEngine::ensureEvaluatorStarted() {
 
 // Main search method
 SearchResult MCTSEngine::search(const core::IGameState& state) {
+    // Search started
+    
     auto start_time = std::chrono::steady_clock::now();
 
     // Validate the state
@@ -333,7 +329,9 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
     
     // Run the search with enhanced error handling
     try {
+        // Running search
         runSearch(state);
+        // Search completed
     } catch (const std::exception& e) {
         std::cerr << "CRITICAL ERROR: MCTSEngine::search - Exception during runSearch: " << e.what() << std::endl;
         safelyStopEvaluator();
@@ -450,10 +448,15 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
 
     // Update statistics
     last_stats_.search_time = search_time;
-    // Serial mode: set basic statistics
-    last_stats_.avg_batch_size = settings_.batch_size; // Using configured batch size
-    last_stats_.avg_batch_latency = std::chrono::milliseconds(1);
-    last_stats_.total_evaluations = settings_.num_simulations; // Approximate
+    // CRITICAL FIX: Don't overwrite statistics that were tracked during search
+    // Only set defaults if they weren't tracked
+    if (last_stats_.total_evaluations == 0) {
+        // Fallback only if no evaluations were tracked
+        last_stats_.total_evaluations = settings_.num_simulations;
+    }
+    if (last_stats_.avg_batch_size == 0.0f && last_stats_.total_batches_processed > 0) {
+        last_stats_.avg_batch_size = static_cast<float>(last_stats_.total_evaluations) / last_stats_.total_batches_processed;
+    }
     
     if (last_stats_.search_time.count() > 0) {
         last_stats_.nodes_per_second = 1000.0f * last_stats_.total_nodes / 

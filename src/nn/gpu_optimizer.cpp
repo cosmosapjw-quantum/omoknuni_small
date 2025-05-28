@@ -20,8 +20,14 @@ GPUOptimizer::GPUOptimizer(const Config& config) : config_(config) {
         preallocateTensors(config_.max_batch_size);
     }
     
+    if (config_.enable_persistent_kernels) {
+        setupPersistentKernels();
+    }
+    
     LOG_SYSTEM_INFO("GPU Optimizer initialized with {} streams, max batch {}", 
                    config_.num_streams, config_.max_batch_size);
+    LOG_SYSTEM_INFO("GPU Optimizations: CUDA Graphs={}, Persistent Kernels={}, TorchScript={}", 
+                   config_.enable_cuda_graphs, config_.enable_persistent_kernels, config_.enable_torch_script);
 }
 
 GPUOptimizer::~GPUOptimizer() {
@@ -366,7 +372,294 @@ GPUOptimizer::BufferPair& GPUOptimizer::getNextBufferPair(size_t batch_size) {
     return tensor_cache_->buffer_pairs[0];
 }
 
+void GPUOptimizer::setupPersistentKernels() {
+    if (!torch::cuda::is_available()) return;
+    
+    // Enable persistent L2 cache for better data locality
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+    
+    if (prop.persistingL2CacheMaxSize > 0) {
+        // Set L2 cache persistence for frequently accessed data
+        size_t persistL2Size = prop.persistingL2CacheMaxSize;
+        cudaDeviceSetLimit(cudaLimitPersistingL2CacheSize, persistL2Size);
+        
+        LOG_SYSTEM_INFO("Enabled persistent L2 cache: {} MB", 
+                       persistL2Size / (1024 * 1024));
+    }
+    
+    // Enable tensor core usage for supported operations
+    if (config_.enable_tensor_cores && prop.major >= 7) {
+        at::globalContext().setAllowTF32CuBLAS(true);
+        at::globalContext().setAllowTF32CuDNN(true);
+        LOG_SYSTEM_INFO("Enabled TensorCore acceleration for compute capability {}.{}", 
+                       prop.major, prop.minor);
+    }
+}
+
+bool GPUOptimizer::captureCudaGraph(
+    const std::string& graph_id,
+    std::function<torch::Tensor()> forward_fn,
+    const torch::Tensor& example_input
+) {
+    if (!config_.enable_cuda_graphs || !torch::cuda::is_available()) {
+        return false;
+    }
+    
+    std::lock_guard<std::mutex> lock(cuda_graph_mutex_);
+    
+    // Check if graph already exists
+    auto it = cuda_graphs_.find(graph_id);
+    if (it != cuda_graphs_.end() && it->second.is_valid) {
+        return true;
+    }
+    
+    // Create new graph handle
+    CudaGraphHandle& handle = cuda_graphs_[graph_id];
+    handle.input_shape = example_input.sizes().vec();
+    
+    // Warmup phase
+    if (handle.warmup_count < config_.cuda_graph_warmup_steps) {
+        handle.warmup_count++;
+        LOG_SYSTEM_DEBUG("CUDA Graph warmup {}/{} for {}", 
+                        handle.warmup_count, config_.cuda_graph_warmup_steps, graph_id);
+        return false;
+    }
+    
+    // Capture the graph
+    cudaStream_t capture_stream = getCurrentStream();
+    
+    // Begin capture
+    cudaStreamBeginCapture(capture_stream, cudaStreamCaptureModeGlobal);
+    
+    try {
+        // Execute the forward function
+        torch::NoGradGuard no_grad;
+        auto output = forward_fn();
+        
+        // Ensure all operations are captured
+        cudaStreamSynchronize(capture_stream);
+        
+        // End capture
+        cudaStreamEndCapture(capture_stream, &handle.graph);
+        
+        // Create executable graph
+        cudaGraphInstantiate(&handle.exec, handle.graph, nullptr, nullptr, 0);
+        
+        handle.is_valid = true;
+        LOG_SYSTEM_INFO("Successfully captured CUDA graph for {}", graph_id);
+        
+        return true;
+    } catch (const std::exception& e) {
+        LOG_SYSTEM_ERROR("Failed to capture CUDA graph for {}: {}", graph_id, e.what());
+        cudaStreamEndCapture(capture_stream, &handle.graph);
+        return false;
+    }
+}
+
+torch::Tensor GPUOptimizer::executeCudaGraph(
+    const std::string& graph_id,
+    const torch::Tensor& input
+) {
+    std::lock_guard<std::mutex> lock(cuda_graph_mutex_);
+    
+    auto it = cuda_graphs_.find(graph_id);
+    if (it == cuda_graphs_.end() || !it->second.is_valid) {
+        cuda_graph_misses_.fetch_add(1);
+        throw std::runtime_error("CUDA graph not found: " + graph_id);
+    }
+    
+    // Verify input shape matches
+    auto& handle = it->second;
+    if (input.sizes().vec() != handle.input_shape) {
+        cuda_graph_misses_.fetch_add(1);
+        throw std::runtime_error("Input shape mismatch for CUDA graph");
+    }
+    
+    // Execute the graph
+    cudaGraphLaunch(handle.exec, getCurrentStream());
+    cuda_graph_hits_.fetch_add(1);
+    
+    // Return placeholder - actual output handling would need to be implemented
+    return input;
+}
+
+bool GPUOptimizer::isCudaGraphAvailable(const std::string& graph_id) const {
+    std::lock_guard<std::mutex> lock(cuda_graph_mutex_);
+    auto it = cuda_graphs_.find(graph_id);
+    return it != cuda_graphs_.end() && it->second.is_valid;
+}
+
+torch::jit::Module GPUOptimizer::optimizeWithTorchScript(
+    torch::nn::Module& model,
+    const std::vector<int64_t>& example_input_shape,
+    bool optimize_for_inference
+) {
+    if (!config_.enable_torch_script) {
+        // Return empty module when disabled
+        return torch::jit::Module();
+    }
+    
+    // IMPORTANT: torch::jit::trace is NOT available in C++/libtorch
+    // Models must be traced/scripted in Python and then loaded in C++
+    // This function is kept for API compatibility but returns empty module
+    
+    LOG_SYSTEM_WARN("Direct TorchScript conversion is not available in libtorch C++. "
+                    "Models must be traced/scripted in Python first, then loaded via torch::jit::load()");
+    
+    // For future implementation:
+    // 1. Pre-trace models in Python using torch.jit.trace or torch.jit.script
+    // 2. Save them as .pt files
+    // 3. Load them here using torch::jit::load("model.pt")
+    // 4. Apply optimizations like torch::jit::optimize_for_inference
+    
+    return torch::jit::Module();
+}
+
+torch::jit::Module GPUOptimizer::loadTorchScriptModel(
+    const std::string& model_path,
+    bool optimize_for_inference,
+    torch::Device device
+) {
+    try {
+        // Load the traced/scripted model
+        torch::jit::Module model = torch::jit::load(model_path);
+        
+        // Move to specified device
+        model.to(device);
+        
+        // Set to eval mode
+        model.eval();
+        
+        if (optimize_for_inference && torch::jit::optimize_for_inference) {
+            // Apply inference optimizations
+            model = torch::jit::optimize_for_inference(model);
+            LOG_SYSTEM_INFO("Applied TorchScript inference optimizations to model from: {}", model_path);
+        }
+        
+        // Cache the model
+        {
+            std::lock_guard<std::mutex> lock(torch_script_mutex_);
+            torch_script_models_[model_path] = model;
+        }
+        
+        LOG_SYSTEM_INFO("Successfully loaded TorchScript model from: {}", model_path);
+        return model;
+        
+    } catch (const c10::Error& e) {
+        LOG_SYSTEM_ERROR("Failed to load TorchScript model from {}: {}", model_path, e.what());
+        throw std::runtime_error("Failed to load TorchScript model: " + std::string(e.what()));
+    }
+}
+
+std::unique_ptr<GPUOptimizer::DynamicBatchAccumulator> 
+GPUOptimizer::createBatchAccumulator(int optimal_size, int max_size) {
+    return std::make_unique<DynamicBatchAccumulator>(this, optimal_size, max_size);
+}
+
+// DynamicBatchAccumulator implementation
+GPUOptimizer::DynamicBatchAccumulator::DynamicBatchAccumulator(
+    GPUOptimizer* optimizer, int optimal_size, int max_size
+) : optimizer_(optimizer), optimal_size_(optimal_size), max_size_(max_size),
+    current_target_size_(optimal_size) {
+    pending_inputs_.reserve(max_size);
+    request_ids_.reserve(max_size);
+}
+
+void GPUOptimizer::DynamicBatchAccumulator::addInput(
+    torch::Tensor input, size_t request_id
+) {
+    if (pending_inputs_.empty()) {
+        first_input_time_ = std::chrono::steady_clock::now();
+    }
+    
+    pending_inputs_.push_back(input);
+    request_ids_.push_back(request_id);
+}
+
+bool GPUOptimizer::DynamicBatchAccumulator::shouldProcess() const {
+    if (pending_inputs_.empty()) {
+        return false;
+    }
+    
+    // Process if we've reached target size
+    if (pending_inputs_.size() >= current_target_size_) {
+        return true;
+    }
+    
+    // Process if max size reached
+    if (pending_inputs_.size() >= max_size_) {
+        return true;
+    }
+    
+    // Process if timeout reached
+    auto elapsed = std::chrono::steady_clock::now() - first_input_time_;
+    if (elapsed >= MAX_WAIT_TIME) {
+        return true;
+    }
+    
+    return false;
+}
+
+std::pair<torch::Tensor, std::vector<size_t>> 
+GPUOptimizer::DynamicBatchAccumulator::extractBatch() {
+    if (pending_inputs_.empty()) {
+        return {torch::Tensor(), std::vector<size_t>()};
+    }
+    
+    // Stack inputs into batch
+    torch::Tensor batch = torch::stack(pending_inputs_);
+    std::vector<size_t> ids = request_ids_;
+    
+    reset();
+    
+    return {batch, ids};
+}
+
+void GPUOptimizer::DynamicBatchAccumulator::reset() {
+    pending_inputs_.clear();
+    request_ids_.clear();
+}
+
+void GPUOptimizer::DynamicBatchAccumulator::updateOptimalSize(
+    int queue_depth, float gpu_utilization
+) {
+    // Adaptive sizing based on queue pressure
+    if (queue_depth > 1000) {
+        // High pressure - increase batch size
+        current_target_size_ = std::min(max_size_, optimal_size_ * 2);
+    } else if (queue_depth > 500) {
+        // Moderate pressure
+        current_target_size_ = std::min(max_size_, (optimal_size_ * 3) / 2);
+    } else if (queue_depth < 100) {
+        // Low pressure - prioritize latency
+        current_target_size_ = std::max(optimal_size_ / 2, 16);
+    } else {
+        // Normal operation
+        current_target_size_ = optimal_size_;
+    }
+    
+    // Adjust based on GPU utilization
+    if (gpu_utilization < 50.0f) {
+        // GPU underutilized - increase batch size
+        current_target_size_ = std::min(max_size_, (current_target_size_ * 3) / 2);
+    } else if (gpu_utilization > 90.0f) {
+        // GPU saturated - reduce batch size
+        current_target_size_ = std::max(16, (current_target_size_ * 2) / 3);
+    }
+}
+
 void GPUOptimizer::cleanupResources() {
+    // Clean up CUDA graphs
+    {
+        std::lock_guard<std::mutex> lock(cuda_graph_mutex_);
+        for (auto& [id, handle] : cuda_graphs_) {
+            if (handle.graph) cudaGraphDestroy(handle.graph);
+            if (handle.exec) cudaGraphExecDestroy(handle.exec);
+        }
+        cuda_graphs_.clear();
+    }
+    
     // Destroy CUDA streams
     for (auto stream : cuda_streams_) {
         cudaStreamDestroy(stream);

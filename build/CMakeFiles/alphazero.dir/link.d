@@ -15,6 +15,10 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_rules.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_gomoku.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_chess.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_go.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/attack_defense_gpu_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/gamestate_pool.cpp.o \
@@ -25,10 +29,12 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/performance_profiler.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o \
   CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o \
+  CMakeFiles/alphazero.dir/src/nn/batch_attack_defense_processor.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_methods.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pending_eval.cpp.o \
@@ -36,7 +42,6 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_node_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_tree.cpp.o \
@@ -44,30 +49,23 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_common.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_batch_tree_simple.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/shared_inference_queue.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/unified_parallel_manager.cpp.o \
-  CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/training/dataset.cpp.o \
   CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o \
+  CMakeFiles/alphazero.dir/src/evaluation/arena.cpp.o \
   /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0 \
   /opt/libtorch-2.7.0-cu128/lib/libtorch.so \
   /opt/libtorch-2.7.0-cu128/lib/libc10.so \
@@ -152,6 +150,14 @@ CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o:
 
+CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_gomoku.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_chess.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_go.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/attack_defense_gpu_manager.cpp.o:
+
 CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o:
@@ -172,6 +178,8 @@ CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/shutdown_manager.cpp.o:
 
+CMakeFiles/alphazero.dir/src/utils/performance_profiler.cpp.o:
+
 CMakeFiles/alphazero.dir/src/nn/ddw_randwire_resnet.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o:
@@ -179,6 +187,8 @@ CMakeFiles/alphazero.dir/src/nn/resnet_model.cpp.o:
 CMakeFiles/alphazero.dir/src/nn/neural_network_factory.cpp.o:
 
 CMakeFiles/alphazero.dir/src/nn/gpu_optimizer.cpp.o:
+
+CMakeFiles/alphazero.dir/src/nn/batch_attack_defense_processor.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_node.cpp.o:
 
@@ -194,8 +204,6 @@ CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_object_pool.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/advanced_memory_pool.cpp.o:
-
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_main.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_utils.cpp.o:
@@ -210,37 +218,23 @@ CMakeFiles/alphazero.dir/src/mcts/mcts_engine_search.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_simple_batch.cpp.o:
 
+CMakeFiles/alphazero.dir/src/mcts/mcts_engine_batch_tree_simple.cpp.o:
+
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_methods.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/mcts_engine_parallel_batch.cpp.o:
-
 CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/mcts_engine_true_parallel_search.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/mcts_engine_taskflow_optimized.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/aggressive_memory_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/multi_instance_nn_manager.cpp.o:
-
 CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/dynamic_batch_manager.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/advanced_transposition_table.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/enhanced_mcts_engine.cpp.o:
-
-CMakeFiles/alphazero.dir/src/mcts/mcts_engine_optimization_stubs.cpp.o:
+CMakeFiles/alphazero.dir/src/mcts/shared_inference_queue.cpp.o:
 
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o:
 
@@ -250,13 +244,13 @@ CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o:
 
 CMakeFiles/alphazero.dir/src/selfplay/unified_parallel_manager.cpp.o:
 
-CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.o:
-
 CMakeFiles/alphazero.dir/src/training/training_data_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/training/dataset.cpp.o:
 
 CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o:
+
+CMakeFiles/alphazero.dir/src/evaluation/arena.cpp.o:
 
 /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0:
 

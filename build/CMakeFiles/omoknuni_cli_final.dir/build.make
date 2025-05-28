@@ -76,15 +76,15 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: CMakeFiles/o
 CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: /home/cosmos/omoknuni_small/src/cli/omoknuni_cli_final.cpp
 CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: CMakeFiles/omoknuni_cli_final.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/cosmos/omoknuni_small/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o -MF CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o.d -o CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o -c /home/cosmos/omoknuni_small/src/cli/omoknuni_cli_final.cpp
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -O3 -march=native -fopenmp -MD -MT CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o -MF CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o.d -o CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o -c /home/cosmos/omoknuni_small/src/cli/omoknuni_cli_final.cpp
 
 CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosmos/omoknuni_small/src/cli/omoknuni_cli_final.cpp > CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -O3 -march=native -fopenmp -E /home/cosmos/omoknuni_small/src/cli/omoknuni_cli_final.cpp > CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.i
 
 CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosmos/omoknuni_small/src/cli/omoknuni_cli_final.cpp -o CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -O3 -march=native -fopenmp -S /home/cosmos/omoknuni_small/src/cli/omoknuni_cli_final.cpp -o CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.s
 
 # Object files for target omoknuni_cli_final
 omoknuni_cli_final_OBJECTS = \

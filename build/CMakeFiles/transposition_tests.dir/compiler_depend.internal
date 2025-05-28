@@ -32,7 +32,6 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp
  /home/cosmos/omoknuni_small/include/core/igamestate.h
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h
- /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h
  /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h
@@ -5264,7 +5263,6 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_table_test.cpp.o
  /home/cosmos/omoknuni_small/include/core/igamestate.h
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h
- /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h
  /home/cosmos/omoknuni_small/include/mcts/evaluation_types.h
  /home/cosmos/omoknuni_small/include/mcts/gpu_memory_pool.h
  /home/cosmos/omoknuni_small/include/mcts/mcts_engine.h

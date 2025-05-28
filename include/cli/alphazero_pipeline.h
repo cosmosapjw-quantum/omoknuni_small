@@ -61,13 +61,13 @@ struct ALPHAZERO_API AlphaZeroPipelineConfig {
     int mcts_num_simulations = 800;
     int mcts_threads_per_engine = 8;
     
-    // Batch parameters
-    int mcts_batch_size = 64;  // Optimal target batch size
-    int mcts_min_viable_batch_size = 48;  // Minimum batch size threshold (~75% of optimal)
-    int mcts_min_fallback_batch_size = 20;  // Minimum acceptable batch size (~30% of optimal)
-    int mcts_max_collection_batch_size = 32; // Controls batch size for leaf collection
-    int mcts_batch_timeout_ms = 50;  // Increased for better batch formation
-    int mcts_additional_wait_ms = 10;  // Additional wait time after reaching viable size
+    // Batch parameters - AGGRESSIVE GPU OPTIMIZATION
+    int mcts_batch_size = 1024;  // Large batches for RTX 3060 Ti
+    int mcts_min_viable_batch_size = 512;  // Minimum batch size threshold (50% of optimal)
+    int mcts_min_fallback_batch_size = 256;  // Minimum acceptable batch size (25% of optimal)
+    int mcts_max_collection_batch_size = 128; // Collect many leaves at once
+    int mcts_batch_timeout_ms = 50;  // Longer timeout for larger batches
+    int mcts_additional_wait_ms = 20;  // More wait time for batch formation
     
     // Other MCTS parameters
     float mcts_exploration_constant = 1.5f;

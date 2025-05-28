@@ -22,6 +22,7 @@ bin/Release/all_tests: \
   CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o \
   CMakeFiles/all_tests.dir/tests/integration/mcts_with_nn_test.cpp.o \
   CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o \
+  CMakeFiles/all_tests.dir/tests/utils/gpu_attack_defense_test.cpp.o \
   lib/Release/libalphazero.so \
   /usr/lib/x86_64-linux-gnu/libgmock.a \
   /usr/lib/x86_64-linux-gnu/libgtest.a \
@@ -78,7 +79,6 @@ bin/Release/all_tests: \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtendS.o \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/crtn.o \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadend.o \
-  /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0 \
   /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so \
   /usr/local/cuda/lib64/libcudart.so \
   /usr/lib/x86_64-linux-gnu/libspdlog.so.1.12.0 \
@@ -140,6 +140,8 @@ CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o:
 CMakeFiles/all_tests.dir/tests/integration/mcts_with_nn_test.cpp.o:
 
 CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o:
+
+CMakeFiles/all_tests.dir/tests/utils/gpu_attack_defense_test.cpp.o:
 
 lib/Release/libalphazero.so:
 
@@ -252,8 +254,6 @@ lib/Release/libTracyClient.so.0.11.0:
 /usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/crtn.o:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadend.o:
-
-/usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0:
 
 /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so:
 

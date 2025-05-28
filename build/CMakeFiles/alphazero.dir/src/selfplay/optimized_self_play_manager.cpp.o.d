@@ -5102,7 +5102,5 @@ CMakeFiles/alphazero.dir/src/selfplay/optimized_self_play_manager.cpp.o: \
  /usr/local/cuda-12.8/include/driver_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.hpp \
- /home/cosmos/omoknuni_small/include/mcts/dynamic_batch_manager.h \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/mcts/multi_instance_nn_manager.h \
  /home/cosmos/omoknuni_small/include/core/game_export.h

@@ -38,10 +38,9 @@
 /home/cosmos/omoknuni_small/build/CMakeFiles/selfplay_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/training_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/integration_tests.dir
+/home/cosmos/omoknuni_small/build/CMakeFiles/utils_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/all_tests.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/mcts_openmp_benchmark.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/test_ddw_randwire_resnet.dir
-/home/cosmos/omoknuni_small/build/CMakeFiles/test_ddw_minimal.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/package.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/package_source.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/test.dir

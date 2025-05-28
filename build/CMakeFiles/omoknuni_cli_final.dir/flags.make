@@ -8,3 +8,5 @@ CXX_INCLUDES = -I/home/cosmos/omoknuni_small/include -I/home/cosmos/omoknuni_sma
 
 CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -fopenmp -O3 -DNDEBUG -std=gnu++17 -Wall -Wextra -mavx2 -O3 -fopenmp -D_GLIBCXX_USE_CXX11_ABI=1
 
+# Custom flags: CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o_FLAGS = -O3 -march=native -fopenmp
+

@@ -61,15 +61,14 @@ bin/Release/omoknuni_cli_final: \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/crtn.o \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadend.o \
   /opt/libtorch-2.7.0-cu128/lib/libc10.so \
-  /opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so \
   /usr/local/cuda/lib64/libcudart.so \
   lib/Release/libTracyClient.so.0.11.0 \
   /usr/lib/gcc/x86_64-linux-gnu/13/libgomp.so \
   /usr/local/lib/librapids_logger.so \
   /lib/x86_64-linux-gnu/libm.so.6 \
   /lib64/ld-linux-x86-64.so.2 \
-  /lib/x86_64-linux-gnu/librt.so.1 \
   /lib/x86_64-linux-gnu/libdl.so.2 \
+  /lib/x86_64-linux-gnu/librt.so.1 \
   /lib/x86_64-linux-gnu/libpthread.so.0 \
   /opt/libtorch-2.7.0-cu128/lib/libgomp-98b21ff3.so.1 \
   /opt/libtorch-2.7.0-cu128/lib/libcudart-218eec4c.so.12 \
@@ -201,8 +200,6 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /opt/libtorch-2.7.0-cu128/lib/libc10.so:
 
-/opt/libtorch-2.7.0-cu128/lib/libc10_cuda.so:
-
 /usr/local/cuda/lib64/libcudart.so:
 
 lib/Release/libTracyClient.so.0.11.0:
@@ -215,9 +212,9 @@ lib/Release/libTracyClient.so.0.11.0:
 
 /lib64/ld-linux-x86-64.so.2:
 
-/lib/x86_64-linux-gnu/librt.so.1:
-
 /lib/x86_64-linux-gnu/libdl.so.2:
+
+/lib/x86_64-linux-gnu/librt.so.1:
 
 /lib/x86_64-linux-gnu/libpthread.so.0:
 

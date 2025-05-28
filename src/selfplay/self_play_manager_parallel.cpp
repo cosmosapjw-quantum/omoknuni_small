@@ -145,7 +145,7 @@ void ParallelSelfPlayManager::workerThread(std::shared_ptr<nn::NeuralNetwork> ne
         
         // Generate game
         try {
-            auto game_record = generateSingleGame(task);
+            auto game_record = generateSingleGame(task, engine.get());
             
             // Store result
             {
@@ -178,7 +178,7 @@ void ParallelSelfPlayManager::workerThread(std::shared_ptr<nn::NeuralNetwork> ne
     }
 }
 
-GameRecord ParallelSelfPlayManager::generateSingleGame(const WorkerTask& task) {
+GameRecord ParallelSelfPlayManager::generateSingleGame(const WorkerTask& task, mcts::MCTSEngine* engine) {
     // Create game state based on type
     std::unique_ptr<core::IGameState> game_state;
     
@@ -192,8 +192,7 @@ GameRecord ParallelSelfPlayManager::generateSingleGame(const WorkerTask& task) {
         throw std::runtime_error("Unknown game type: " + task.game_type);
     }
     
-    // Create MCTS engine for this game
-    auto engine = std::make_unique<mcts::MCTSEngine>(neural_net_, settings_.mcts_settings);
+    // Use the provided engine instead of creating a new one
     
     GameRecord record;
     record.game_id = task.game_id;

@@ -2,12 +2,16 @@
 #define ALPHAZERO_GPU_OPTIMIZER_H
 
 #include <torch/torch.h>
+#include <torch/script.h>
 #include <cuda_runtime.h>
 #include <vector>
 #include <memory>
 #include <chrono>
 #include <atomic>
 #include <cmath>
+#include <unordered_map>
+#include <mutex>
+#include <functional>
 #include "core/igamestate.h"
 #include "core/export_macros.h"
 
@@ -23,6 +27,9 @@ namespace nn {
  * - CUDA stream management
  * - Double buffering
  * - Tensor batching optimization
+ * - CUDA graphs for deterministic models
+ * - Persistent kernels
+ * - TorchScript optimization
  */
 class ALPHAZERO_API GPUOptimizer {
 public:
@@ -38,6 +45,15 @@ public:
         size_t board_width;
         size_t num_channels;             // Board representation channels
         
+        // CUDA Graph settings
+        bool enable_cuda_graphs;         // Use CUDA graphs for deterministic models
+        int cuda_graph_warmup_steps;     // Warmup iterations before capturing
+        
+        // Optimization settings
+        bool enable_persistent_kernels;  // Keep data on GPU between ops
+        bool enable_torch_script;        // JIT compile models
+        bool enable_tensor_cores;        // Use tensor cores if available
+        
         // Constructor with default values
         Config() 
             : max_batch_size(256)
@@ -48,6 +64,11 @@ public:
             , board_height(15)
             , board_width(15)
             , num_channels(4)
+            , enable_cuda_graphs(true)
+            , cuda_graph_warmup_steps(10)
+            , enable_persistent_kernels(true)
+            , enable_torch_script(true)
+            , enable_tensor_cores(true)
         {}
     };
     
@@ -113,6 +134,9 @@ public:
     GPUOptimizer(const Config& config = Config());
     ~GPUOptimizer();
     
+    // Get current configuration
+    const Config& getConfig() const { return config_; }
+    
     // Convert game states to GPU tensors efficiently
     // Set synchronize=false to use asynchronous transfer with double-buffering
     torch::Tensor prepareStatesBatch(const std::vector<std::unique_ptr<core::IGameState>>& states, 
@@ -130,6 +154,72 @@ public:
     // Stream management
     cudaStream_t getCurrentStream();
     void synchronizeStreams();
+    
+    // CUDA Graph support
+    struct CudaGraphHandle {
+        cudaGraph_t graph = nullptr;
+        cudaGraphExec_t exec = nullptr;
+        std::vector<int64_t> input_shape;
+        bool is_valid = false;
+        int warmup_count = 0;
+    };
+    
+    // Create and execute CUDA graphs for fixed computation patterns
+    bool captureCudaGraph(
+        const std::string& graph_id,
+        std::function<torch::Tensor()> forward_fn,
+        const torch::Tensor& example_input
+    );
+    
+    torch::Tensor executeCudaGraph(
+        const std::string& graph_id,
+        const torch::Tensor& input
+    );
+    
+    bool isCudaGraphAvailable(const std::string& graph_id) const;
+    
+    // TorchScript optimization
+    torch::jit::Module optimizeWithTorchScript(
+        torch::nn::Module& model,
+        const std::vector<int64_t>& example_input_shape,
+        bool optimize_for_inference = true
+    );
+    
+    // Load pre-traced TorchScript model
+    torch::jit::Module loadTorchScriptModel(
+        const std::string& model_path,
+        bool optimize_for_inference = true,
+        torch::Device device = torch::kCUDA
+    );
+    
+    // Advanced batching with dynamic accumulation
+    class DynamicBatchAccumulator {
+    public:
+        DynamicBatchAccumulator(GPUOptimizer* optimizer, int optimal_size, int max_size);
+        
+        void addInput(torch::Tensor input, size_t request_id);
+        bool shouldProcess() const;
+        std::pair<torch::Tensor, std::vector<size_t>> extractBatch();
+        void reset();
+        
+        // Adaptive sizing based on queue pressure
+        void updateOptimalSize(int queue_depth, float gpu_utilization);
+        
+    private:
+        GPUOptimizer* optimizer_;
+        std::vector<torch::Tensor> pending_inputs_;
+        std::vector<size_t> request_ids_;
+        int optimal_size_;
+        int max_size_;
+        int current_target_size_;
+        std::chrono::steady_clock::time_point first_input_time_;
+        static constexpr auto MAX_WAIT_TIME = std::chrono::microseconds(2000); // 2ms max wait
+    };
+    
+    std::unique_ptr<DynamicBatchAccumulator> createBatchAccumulator(
+        int optimal_size = 64,
+        int max_size = 256
+    );
     
     // Memory statistics
     struct MemoryStats {
@@ -161,14 +251,25 @@ private:
     };
     std::unique_ptr<TensorCache> tensor_cache_;
     
+    // CUDA Graph cache
+    std::unordered_map<std::string, CudaGraphHandle> cuda_graphs_;
+    mutable std::mutex cuda_graph_mutex_;
+    
+    // TorchScript models cache
+    std::unordered_map<std::string, torch::jit::Module> torch_script_models_;
+    mutable std::mutex torch_script_mutex_;
+    
     // Statistics
     mutable std::atomic<size_t> transfer_count_{0};
     mutable std::atomic<size_t> total_transfer_time_us_{0};
+    mutable std::atomic<size_t> cuda_graph_hits_{0};
+    mutable std::atomic<size_t> cuda_graph_misses_{0};
     
     // Helper methods
     void initializeCUDAStreams();
     void allocatePinnedMemory();
     void cleanupResources();
+    void setupPersistentKernels();
     
     // Convert single state to tensor (CPU side)
     void stateToTensor(const core::IGameState& state, torch::Tensor& output, 

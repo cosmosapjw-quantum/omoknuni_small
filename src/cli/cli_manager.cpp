@@ -34,20 +34,8 @@ int CLIManager::executeCommand(const std::string& command,
     }
 
     try {
-        // Execute the command handler with a timeout
-        std::future<int> future_result = std::async(std::launch::async, [&]() {
-            return it->second(args);
-        });
-        
-        // Wait for result with timeout
-        std::future_status status = future_result.wait_for(std::chrono::seconds(30));
-        
-        if (status == std::future_status::timeout) {
-            std::cerr << "Command execution timed out" << std::endl;
-            return 1;
-        }
-        
-        return future_result.get();
+        // Execute the command handler directly without timeout
+        return it->second(args);
     }
     catch (const std::exception& e) {
         std::cerr << "Error executing command: " << e.what() << std::endl;

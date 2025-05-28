@@ -1,7 +1,8 @@
 #include "mcts/mcts_engine.h"
 #include "utils/advanced_memory_monitor.h"
-#include "mcts/aggressive_memory_manager.h"
+// #include "mcts/aggressive_memory_manager.h" // Using local implementation
 #include "utils/progress_bar.h"
+#include "utils/shutdown_manager.h"
 
 #ifdef WITH_TORCH
 #include <torch/torch.h>
@@ -26,7 +27,7 @@
 
 // 🚀 INTEGRATE LEGACY MEMORY MANAGEMENT COMPONENTS
 // #include "mcts/unified_memory_manager.h" - removed
-#include "mcts/advanced_memory_pool.h"
+// #include "mcts/advanced_memory_pool.h" - removed
 #include "utils/gpu_memory_manager.h"
 #include "core/tensor_pool.h"
 #include "utils/memory_tracker.h"
@@ -56,7 +57,7 @@ private:
     // UnifiedMemoryManager* unified_memory_manager_; // Removed in simplification
     utils::GPUMemoryManager* gpu_memory_manager_;
     core::GlobalTensorPool* tensor_pool_;
-    std::unique_ptr<AdvancedMemoryPool> advanced_memory_pool_;
+    // std::unique_ptr<AdvancedMemoryPool> // advanced_memory_pool_; // Removed
     bool legacy_components_initialized_;
     
     // 🚀 LEGACY MEMORY STATS TRACKING
@@ -168,12 +169,14 @@ public:
             // Initialize GlobalTensorPool
             tensor_pool_ = &core::GlobalTensorPool::getInstance();
             
-            // Initialize AdvancedMemoryPool
+            // Advanced memory pool removed
+            /*
             AdvancedMemoryPoolConfig config;
             config.initial_size = 50000;
             config.max_pool_size = 500000;
             config.enable_stats = true;
-            advanced_memory_pool_ = std::make_unique<AdvancedMemoryPool>(config);
+            // advanced_memory_pool_ = std::make_unique<AdvancedMemoryPool>(config);
+            */
             
             legacy_components_initialized_ = true;
             std::cout << "🚀 Legacy memory components initialized successfully" << std::endl;
@@ -250,7 +253,8 @@ public:
             }
         }
         
-        // 4. Advanced Memory Pool cleanup  
+        // 4. Advanced Memory Pool removed
+        /*
         if (advanced_memory_pool_) {
             try {
                 auto stats_before = advanced_memory_pool_->getStats();
@@ -270,6 +274,7 @@ public:
                 std::cout << "⚠️  Advanced Pool cleanup failed" << std::endl;
             }
         }
+        */
         
         // 5. UnifiedMemoryManager was removed in simplification
         
@@ -320,7 +325,8 @@ public:
             report << "  Tensors: " << last_tensor_pool_size_ << " objects\n";
             report << "  Unified: " << formatMemoryUsage(last_unified_usage_) << "\n";
             
-            // Advanced pool details
+            // Advanced pool removed
+            /*
             if (advanced_memory_pool_) {
                 try {
                     auto stats = advanced_memory_pool_->getStats();
@@ -328,6 +334,7 @@ public:
                     report << "  Pool peak usage: " << stats.peak_usage << "\n";
                 } catch (...) {}
             }
+            */
         }
         
         int pressure = memory_pressure_level_.load();
@@ -362,6 +369,11 @@ using AggressiveMemoryController = UnifiedAggressiveMemoryController;
 
 // Renamed from runSearch to better reflect its function
 void MCTSEngine::runSearch(const core::IGameState& state) {
+    // Check for shutdown before starting search
+    if (utils::isShutdownRequested()) {
+        return;
+    }
+    
     auto search_start = std::chrono::steady_clock::now();
     
     try {
@@ -391,15 +403,15 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         // Step 7: Execute the main search algorithm based on selected method
         auto exec_start = std::chrono::steady_clock::now();
         
-        // TASKFLOW ROUTING - Always use leaf parallelization with taskflow
-        
-        if (settings_.num_threads <= 0) {
-            // Serial mode
-            executeSimpleSerialSearch(search_roots);
-        } else {
-            // TASKFLOW PARALLELIZATION: High-performance leaf parallelization
-            if (!search_roots.empty() && search_roots[0]) {
-                executeTaskflowSearch(search_roots[0].get(), settings_.num_simulations);
+        // STREAMLINED SEARCH - Use only the best performing batch tree method
+        if (!search_roots.empty() && search_roots[0]) {
+            if (settings_.num_threads <= 1) {
+                // Serial mode for single thread
+                executeSimpleSerialSearch(search_roots);
+            } else {
+                // Batch tree search for multi-threaded
+                auto root_state = state.clone();
+                executeBatchedTreeSearch(search_roots[0].get(), std::move(root_state));
             }
         }
         
@@ -477,19 +489,46 @@ void MCTSEngine::resetSearchState() {
 
 // Simple serial search implementation that bypasses complex coordinators
 void MCTSEngine::executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots) {
+    
     if (search_roots.empty() || !search_roots[0]) {
+        std::cerr << "[ERROR] No search roots available" << std::endl;
         return;
     }
     
     std::shared_ptr<MCTSNode> root = search_roots[0];
+    
+    // CRITICAL FIX: Adaptive batch sizing for efficiency
+    int base_batch_size = settings_.batch_size;
+    std::vector<std::shared_ptr<MCTSNode>> batch_leaves;
+    std::vector<std::vector<std::shared_ptr<MCTSNode>>> batch_paths;
+    batch_leaves.reserve(base_batch_size);
+    batch_paths.reserve(base_batch_size);
     
     // Ensure root is expanded
     if (!root->isTerminal() && !root->isExpanded()) {
         expandNonTerminalLeaf(root);
     }
     
-    // Run simulations directly without complex batching
-    for (int sim = 0; sim < settings_.num_simulations; ++sim) {
+    // Run simulations with adaptive batching for efficiency
+    for (int sim = 0; sim < settings_.num_simulations && !utils::isShutdownRequested(); ) {
+        // Collect a batch of leaf nodes
+        batch_leaves.clear();
+        batch_paths.clear();
+        
+        // ADAPTIVE BATCH SIZE: Reduce batch size as we near completion
+        int remaining = settings_.num_simulations - sim;
+        int target_batch_size = base_batch_size;
+        if (remaining < base_batch_size / 4) {
+            target_batch_size = remaining;  // Final cleanup
+        } else if (remaining < base_batch_size / 2) {
+            target_batch_size = base_batch_size / 4;
+        } else if (remaining < base_batch_size) {
+            target_batch_size = base_batch_size / 2;
+        }
+        
+        int batch_start = sim;
+        // Collect exactly target_batch_size leaves
+        while (batch_leaves.size() < static_cast<size_t>(target_batch_size) && sim < settings_.num_simulations) {
         // Selection phase: traverse tree to find leaf
         std::shared_ptr<MCTSNode> leaf = root;
         std::vector<std::shared_ptr<MCTSNode>> path = {root};
@@ -532,35 +571,70 @@ void MCTSEngine::executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCT
                     break;
             }
         } else {
-            // Non-terminal node: use direct inference for serial mode
-            try {
-                std::vector<std::unique_ptr<core::IGameState>> states;
-                states.push_back(leaf->getState().clone());
-                
-                // Use direct inference function ONLY in serial mode (num_threads <= 0)
-                if (settings_.num_threads <= 0 && direct_inference_fn_) {
-                    auto results = direct_inference_fn_(states);
-                    if (!results.empty()) {
-                        value = results[0].value;
-                        // Set policy probabilities if leaf has children
-                        if (!leaf->getChildren().empty() && !results[0].policy.empty()) {
-                            leaf->setPriorProbabilities(results[0].policy);
-                        }
-                    }
-                } else {
-                    // No inference available - use neutral value
-                    value = 0.0f;
-                }
-            } catch (const std::exception& e) {
-                // Fallback to random value on error
-                value = 0.0f;
-            }
+            // Non-terminal leaf - add to batch
+            batch_leaves.push_back(leaf);
+            batch_paths.push_back(path);
         }
         
-        // Backpropagation phase: update all nodes in path
-        for (auto& node : path) {
-            node->update(value);
-            value = -value; // Flip value for opponent
+        sim++;
+        }
+        
+        // Process batch if we have any non-terminal leaves
+        if (!batch_leaves.empty()) {
+            try {
+                // Prepare states for batch inference
+                std::vector<std::unique_ptr<core::IGameState>> states;
+                states.reserve(batch_leaves.size());
+                for (auto& leaf : batch_leaves) {
+                    states.push_back(leaf->getState().clone());
+                }
+                
+                // Batch inference
+                if (direct_inference_fn_) {
+                    auto inference_start = std::chrono::steady_clock::now();
+                    auto results = direct_inference_fn_(states);
+                    auto inference_end = std::chrono::steady_clock::now();
+                    auto inference_ms = std::chrono::duration_cast<std::chrono::milliseconds>(inference_end - inference_start).count();
+                    
+                    // CRITICAL FIX: Track neural network statistics
+                    last_stats_.total_evaluations += batch_leaves.size();
+                    last_stats_.total_batches_processed += 1;
+                    last_stats_.avg_batch_size = (last_stats_.avg_batch_size * (last_stats_.total_batches_processed - 1) + batch_leaves.size()) / last_stats_.total_batches_processed;
+                    last_stats_.avg_batch_latency = std::chrono::milliseconds(
+                        (last_stats_.avg_batch_latency.count() * (last_stats_.total_batches_processed - 1) + inference_ms) / last_stats_.total_batches_processed
+                    );
+                    
+                    // Process results
+                    for (size_t i = 0; i < batch_leaves.size() && i < results.size(); ++i) {
+                        auto& leaf = batch_leaves[i];
+                        auto& path = batch_paths[i];
+                        float value = results[i].value;
+                        
+                        // Set policy probabilities if leaf has children
+                        if (!leaf->getChildren().empty() && !results[i].policy.empty()) {
+                            leaf->setPriorProbabilities(results[i].policy);
+                        }
+                        
+                        // Backpropagation
+                        for (auto& node : path) {
+                            node->update(value);
+                            value = -value; // Flip value for opponent
+                        }
+                    }
+                    
+                    // Clear states immediately to free memory
+                    states.clear();
+                    
+                    // CRITICAL FIX: Minimal CUDA cleanup for 8GB VRAM - only every 100 batches
+                    #ifdef WITH_TORCH
+                    if (torch::cuda::is_available() && last_stats_.total_batches_processed % 100 == 0) {
+                        c10::cuda::CUDACachingAllocator::emptyCache();
+                    }
+                    #endif
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "[ERROR] Batch inference failed: " << e.what() << std::endl;
+            }
         }
     }
 }
@@ -673,56 +747,64 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
             if (claimed) {
                 int leaves_found = 0;
                 
-                // BurstCoordinator was removed in simplification
-                if (false) {
+                // Direct batch evaluation without BurstCoordinator
+                // Collect leaf nodes for batch evaluation
+                std::vector<std::shared_ptr<MCTSNode>> batch_nodes;
+                std::vector<std::vector<std::shared_ptr<MCTSNode>>> batch_paths;
+                
+                // Try to collect a batch of leaf nodes
+                for (int i = 0; i < simulations_to_claim && batch_nodes.size() < settings_.batch_size; ++i) {
+                    // Select a search root
+                    auto& current_root = search_roots[i % search_roots.size()];
                     
-                    // Handle serial mode vs parallel mode differently
-                    std::vector<NetworkOutput> burst_results;
+                    // Select path to leaf
+                    std::vector<std::shared_ptr<MCTSNode>> path;
+                    auto leaf_result = selectLeafNode(current_root);
+                    path = leaf_result.second;
                     
-                    if (settings_.num_threads <= 0) {
-                        // Serial mode: single burst without async threads
-                        std::cout << "[SERIAL_SEARCH] Starting single burst for " << simulations_to_claim << " simulations" << std::endl;
-                        // burst_results = burst_coordinator_->startBurstCollection(simulations_to_claim, search_roots);
-                    } else {
-                        // THREADING FIX: Single burst instead of multiple concurrent bursts to prevent resource exhaustion
-                        std::cout << "[BURST_SEARCH] Starting single burst for " << simulations_to_claim << " simulations" << std::endl;
-                        // burst_results = burst_coordinator_->startBurstCollection(simulations_to_claim, search_roots);
-                    }
-                    
-                    std::cout << "[SEARCH] Completed burst collection with " << burst_results.size() << " total results" << std::endl;
-                    
-                    // CRITICAL FIX: More aggressive termination on empty bursts
-                    if (burst_results.empty()) {
-                        consecutive_empty_bursts++;
-                        std::cout << "[BURST_SEARCH] Empty burst #" << consecutive_empty_bursts 
-                                  << " - continuing search (threshold: " << MAX_CONSECUTIVE_EMPTY << ")" << std::endl;
+                    if (leaf_result.first && !path.empty()) {
+                        auto leaf_node = leaf_result.first;
                         
-                        if (consecutive_empty_bursts >= MAX_CONSECUTIVE_EMPTY) {
-                            std::cout << "[BURST_SEARCH] Max consecutive empty bursts reached - stopping search" << std::endl;
-                            active_simulations_.store(0, std::memory_order_release);
-                            break;
+                        // Skip terminal nodes
+                        if (!leaf_node->isTerminal()) {
+                            // Expand if needed
+                            if (!leaf_node->isExpanded()) {
+                                expandNonTerminalLeaf(leaf_node);
+                            }
+                            
+                            batch_nodes.push_back(leaf_node);
+                            batch_paths.push_back(path);
+                            leaves_found++;
                         }
-                        
-                        // CRITICAL FIX: Force termination if too many consecutive empty bursts in short time
-                        if (consecutive_empty_bursts >= 3 && elapsed_time.count() > 5) {
-                            std::cout << "[EMERGENCY_STOP] Too many empty bursts with significant time elapsed - forcing termination" << std::endl;
-                            active_simulations_.store(0, std::memory_order_release);
-                            break;
-                        }
-                    } else {
-                        consecutive_empty_bursts = 0; // Reset on successful burst
+                    }
+                }
+                
+                // Evaluate batch if we have nodes
+                if (!batch_nodes.empty()) {
+                    consecutive_empty_bursts = 0;
+                    
+                    // Prepare states for neural network
+                    std::vector<std::unique_ptr<core::IGameState>> states;
+                    for (auto& node : batch_nodes) {
+                        states.push_back(node->getState().clone());
                     }
                     
-                    // Process all results from burst evaluation
-                    for (size_t i = 0; i < burst_results.size(); ++i) {
-                        leaves_found++;
-                        // Results are already processed by the burst coordinator
-                        // The backpropagation is handled internally by inference server
+                    // Direct neural network evaluation
+                    auto results = neural_network_->inference(states);
+                    
+                    // Backpropagate results
+                    for (size_t i = 0; i < results.size() && i < batch_paths.size(); ++i) {
+                        backPropagate(batch_paths[i], results[i].value);
                     }
+                    
+                    total_leaves_generated_.fetch_add(leaves_found, std::memory_order_release);
                 } else {
-                    // No burst coordinator available - this should not happen in optimized build
-                    std::cerr << "ERROR: BurstCoordinator not available! This indicates a system configuration error." << std::endl;
-                    break;
+                    consecutive_empty_bursts++;
+                    if (consecutive_empty_bursts >= MAX_CONSECUTIVE_EMPTY) {
+                        std::cout << "[SEARCH] Max consecutive empty batches reached - stopping search" << std::endl;
+                        active_simulations_.store(0, std::memory_order_release);
+                        break;
+                    }
                 }
                 
                 // Update consecutive empty tries counter

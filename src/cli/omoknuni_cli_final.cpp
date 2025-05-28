@@ -2,13 +2,11 @@
 #include <iostream>
 #include <memory>
 #include <thread>
-#include <future>
 #include <chrono>
 #include <csignal>
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
-#include <queue>
 #include <yaml-cpp/yaml.h>
 #include <filesystem>
 #include <algorithm>
@@ -17,10 +15,10 @@
 #include <iomanip>
 #include <deque>
 #include <torch/torch.h>
+#include <c10/cuda/CUDACachingAllocator.h>
 
 #include "cli/cli_manager.h"
 #include "mcts/mcts_engine.h"
-#include "mcts/aggressive_memory_manager.h"
 #include "nn/neural_network_factory.h"
 #include "selfplay/self_play_manager.h"
 #include "utils/progress_bar.h"
@@ -33,6 +31,7 @@
 #include "core/game_export.h"
 
 using namespace alphazero;
+
 
 // Global mutex for GPU initialization
 std::mutex g_gpu_init_mutex;
@@ -63,10 +62,6 @@ namespace {
         }
     }
     
-    size_t getActiveThreadCount() {
-        std::lock_guard<std::mutex> lock(g_thread_registry_mutex);
-        return g_active_threads.size();
-    }
 }
 
 // Enhanced signal handler
@@ -82,17 +77,20 @@ void signalHandler(int signal) {
             
             // Start a watchdog thread for forced shutdown
             std::thread watchdog([]() {
-                std::this_thread::sleep_for(std::chrono::seconds(10));
+                // Wait for graceful shutdown
+                for (int i = 0; i < 50 && !g_force_exit.load(); ++i) { // 5 seconds total
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+                
                 if (!g_force_exit.load()) {
                     LOG_SYSTEM_ERROR("Graceful shutdown timeout. Force exiting...");
-                    std::cout << "\n*** Graceful shutdown timeout after 10 seconds. Force exiting... ***" << std::endl;
+                    std::cout << "\n*** Graceful shutdown timeout after 5 seconds. Force exiting... ***" << std::endl;
                     
-                    // Try to clean up GPU resources
-                    if (torch::cuda::is_available()) {
-                        torch::cuda::synchronize();
-                        // Note: empty_cache() not available in all PyTorch versions
-                    }
+                    // Don't try GPU cleanup on forced exit - it might hang
+                    std::cout.flush();
+                    std::cerr.flush();
                     
+                    // Use _Exit to bypass all cleanup
                     std::_Exit(1);
                 }
             });
@@ -259,26 +257,19 @@ public:
                 // Generate one game at a time for better debugging
                 int batch_size = 1;
                 
-                auto batch_start = std::chrono::steady_clock::now();
-                
                 try {
                     auto games = manager.generateGames(game_type_, batch_size, board_size_);
-                    auto batch_end = std::chrono::steady_clock::now();
                 
                 if (!games.empty()) {
                     // Add to collector
                     collector_->addGames(games);
                     games_generated += games.size();
-                    
-                    auto batch_time = std::chrono::duration_cast<std::chrono::seconds>(
-                        batch_end - batch_start).count();
                 }
                 } catch (const std::exception& e) {
                     LOG_SYSTEM_ERROR("Worker {} failed to generate game: {}", id_, e.what());
                     break;
                 }
             }
-            
             
         } catch (const std::exception& e) {
             LOG_SYSTEM_ERROR("Worker {} error: {}", id_, e.what());
@@ -342,7 +333,7 @@ int runSelfPlay(const std::vector<std::string>& args) {
     }
     
     // Neural network configuration
-    int input_channels = config["input_channels"].as<int>(17);
+    int input_channels = config["input_channels"].as<int>(19);  // Default to 19 for Gomoku with attack/defense planes
     int num_res_blocks = config["num_res_blocks"].as<int>(10);
     int num_filters = config["num_filters"].as<int>(64);
     std::string model_path = config["model_path"].as<std::string>("models/model.pt");
@@ -381,17 +372,41 @@ int runSelfPlay(const std::vector<std::string>& args) {
         ddw_config.randwire_config.use_dynamic_routing = ddw_config.use_dynamic_routing;
     }
     
-    // MCTS settings
+    // MCTS settings - with aggressive GPU optimization
     mcts::MCTSSettings mcts_settings;
-    mcts_settings.num_simulations = config["mcts_simulations"].as<int>(400);
-    mcts_settings.num_threads = config["mcts_threads_per_engine"].as<int>(1); // Per-engine threads
-    mcts_settings.batch_size = config["mcts_batch_size"].as<int>(128);
-    mcts_settings.batch_timeout = std::chrono::milliseconds(
-        config["mcts_batch_timeout_ms"].as<int>(5)
-    );
-    mcts_settings.exploration_constant = config["mcts_c_puct"].as<float>(1.4f);
-    mcts_settings.virtual_loss = config["mcts_virtual_loss"].as<int>(3);
-    mcts_settings.use_transposition_table = config["mcts_enable_transposition"].as<bool>(true);
+    
+    // Try to read from nested mcts section first, then fallback
+    auto mcts_config = config["mcts"];
+    if (mcts_config.IsDefined()) {
+        mcts_settings.num_simulations = mcts_config["num_simulations"].as<int>(200);
+        mcts_settings.num_threads = mcts_config["num_threads"].as<int>(4);
+        mcts_settings.batch_size = mcts_config["batch_size"].as<int>(1024);
+        mcts_settings.batch_timeout = std::chrono::milliseconds(
+            mcts_config["batch_timeout_ms"].as<int>(50)
+        );
+        mcts_settings.exploration_constant = mcts_config["exploration_constant"].as<float>(3.0f);
+        mcts_settings.virtual_loss = mcts_config["virtual_loss"].as<float>(3.0f);
+        mcts_settings.use_transposition_table = mcts_config["use_transposition_table"].as<bool>(true);
+        
+        // Read aggressive batch parameters
+        mcts_settings.batch_params.minimum_viable_batch_size = mcts_config["min_batch_size"].as<int>(512);
+        mcts_settings.batch_params.optimal_batch_size = mcts_config["batch_size"].as<int>(1024);
+        mcts_settings.max_concurrent_simulations = mcts_config["max_pending_evaluations"].as<int>(2048);
+    } else {
+        // Fallback to old format
+        mcts_settings.num_simulations = config["mcts_simulations"].as<int>(400);
+        mcts_settings.num_threads = config["mcts_threads_per_engine"].as<int>(4);
+        mcts_settings.batch_size = config["mcts_batch_size"].as<int>(128);
+        mcts_settings.batch_timeout = std::chrono::milliseconds(
+            config["mcts_batch_timeout_ms"].as<int>(5)
+        );
+        mcts_settings.exploration_constant = config["mcts_c_puct"].as<float>(1.4f);
+        mcts_settings.virtual_loss = config["mcts_virtual_loss"].as<int>(3);
+        mcts_settings.use_transposition_table = config["mcts_enable_transposition"].as<bool>(true);
+    }
+    
+    // Sync batch parameters
+    mcts_settings.syncBatchParametersFromLegacy();
     
     // Self-play settings
     selfplay::SelfPlaySettings sp_settings;
@@ -402,8 +417,24 @@ int runSelfPlay(const std::vector<std::string>& args) {
     sp_settings.low_temperature = 0.1f;
     
     // Parallel settings
-    int num_workers = config["num_parallel_workers"].as<int>(4);
-    int num_games = config["num_games"].as<int>(100);
+    // First try to read from self_play section for consistency
+    int num_workers = 4; // default
+    if (config["self_play"]["parallel_games"].IsDefined()) {
+        num_workers = config["self_play"]["parallel_games"].as<int>();
+    } else if (config["pipeline"]["parallel_self_play_workers"].IsDefined()) {
+        num_workers = config["pipeline"]["parallel_self_play_workers"].as<int>();
+    } else if (config["num_parallel_workers"].IsDefined()) {
+        num_workers = config["num_parallel_workers"].as<int>();
+    }
+    
+    int num_games = 100; // default
+    if (config["self_play"]["num_games"].IsDefined()) {
+        num_games = config["self_play"]["num_games"].as<int>();
+    } else if (config["pipeline"]["games_per_iteration"].IsDefined()) {
+        num_games = config["pipeline"]["games_per_iteration"].as<int>();
+    } else if (config["num_games"].IsDefined()) {
+        num_games = config["num_games"].as<int>();
+    }
     int save_interval = config["save_interval"].as<int>(10);
     std::string output_dir = config["output_dir"].as<std::string>("data/self_play_games");
     
@@ -419,13 +450,11 @@ int runSelfPlay(const std::vector<std::string>& args) {
         std::signal(SIGINT, signalHandler);
         std::signal(SIGTERM, signalHandler);
         
-        // Pre-initialize the AggressiveMemoryManager before any workers start
-        // This avoids contention when multiple threads try to get the singleton instance
-        auto& memory_manager = mcts::AggressiveMemoryManager::getInstance();
         
         // Pre-warm neural network to avoid initial contention
         {
             std::shared_ptr<nn::NeuralNetwork> warmup_network;
+            
             if (network_type == "ddw_randwire") {
                 warmup_network = nn::NeuralNetworkFactory::loadDDWRandWireResNet(
                     model_path, ddw_config
@@ -454,6 +483,12 @@ int runSelfPlay(const std::vector<std::string>& args) {
         // Create game collector
         auto collector = std::make_shared<GameCollector>();
         
+        // Initialize global progress bar for all workers
+        LOG_SYSTEM_INFO("Starting self-play with {} workers for {} total games", num_workers, num_games);
+        auto& progress_manager = alphazero::utils::SelfPlayProgressManager::getInstance();
+        progress_manager.reset(); // Clear any existing progress
+        progress_manager.startGlobalProgress(num_games);
+        
         // Progress tracking
         auto start_time = std::chrono::steady_clock::now();
         
@@ -475,7 +510,6 @@ int runSelfPlay(const std::vector<std::string>& args) {
         // Create and start worker threads
         std::vector<std::thread> worker_threads;
         std::vector<std::unique_ptr<SelfPlayWorker>> workers;
-        
         
         for (int i = 0; i < num_workers; ++i) {
             workers.push_back(std::make_unique<SelfPlayWorker>(
@@ -571,14 +605,6 @@ int runSelfPlay(const std::vector<std::string>& args) {
                     
                     total_saved += games.size();
                     
-                    // Progress update
-                    auto current_time = std::chrono::steady_clock::now();
-                    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-                        current_time - start_time).count();
-                    
-                    if (elapsed > 0) {
-                        float games_per_sec = static_cast<float>(total_saved) / elapsed;
-                    }
                 }
             }
             
@@ -667,24 +693,52 @@ int runSelfPlay(const std::vector<std::string>& args) {
         // Comprehensive cleanup sequence
         LOG_SYSTEM_INFO("Starting cleanup sequence...");
         
-        // 1. Stop the AggressiveMemoryManager monitoring thread
-        mcts::AggressiveMemoryManager::getInstance().shutdown();
+        // Finish the progress bar
+        progress_manager.finish();
         
-        // 2. Force collection of any pending games
+        // Force collection of any pending games
         collector.reset();
         
-        // 3. Synchronize and clear GPU resources
+        // Synchronize and clear GPU resources with timeout
         if (torch::cuda::is_available()) {
             try {
-                torch::cuda::synchronize();
-                // Note: empty_cache() not available in all PyTorch versions
-                // Manual cleanup would require lower-level CUDA API
+                // Use a separate thread with timeout for GPU sync
+                std::atomic<bool> sync_done(false);
+                std::thread gpu_sync([&sync_done]() {
+                    try {
+                        torch::cuda::synchronize();
+                        sync_done.store(true);
+                    } catch (...) {
+                        // Ignore errors during cleanup
+                    }
+                });
+                
+                // Wait maximum 2 seconds for GPU sync
+                auto start = std::chrono::steady_clock::now();
+                while (!sync_done.load() && 
+                       std::chrono::steady_clock::now() - start < std::chrono::seconds(2)) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                }
+                
+                if (gpu_sync.joinable()) {
+                    if (sync_done.load()) {
+                        gpu_sync.join();
+                    } else {
+                        LOG_SYSTEM_ERROR("GPU sync timeout, detaching thread");
+                        gpu_sync.detach();
+                    }
+                }
+                
+                // Empty cache if available
+                if (sync_done.load()) {
+                    c10::cuda::CUDACachingAllocator::emptyCache();
+                }
             } catch (const std::exception& e) {
                 LOG_SYSTEM_ERROR("GPU cleanup error: {}", e.what());
             }
         }
         
-        // 4. Give time for any remaining cleanup
+        // Give time for any remaining cleanup
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
         
         LOG_SYSTEM_INFO("Cleanup sequence completed");
@@ -709,6 +763,13 @@ int runEvaluation(const std::vector<std::string>&) {
 }
 
 int main(int argc, char* argv[]) {
+    // Register signal handlers FIRST before any other initialization
+    std::signal(SIGINT, signalHandler);
+    std::signal(SIGTERM, signalHandler);
+    
+    // Initialize shutdown manager
+    utils::initializeShutdownManager();
+    
     // Initialize logging with SYNCHRONOUS mode for thread safety
     utils::Logger::init("logs", 
                        spdlog::level::info,  // console level
@@ -753,25 +814,44 @@ int main(int argc, char* argv[]) {
                 // Force exit if threads won't stop
                 if (g_active_threads.size() > 0) {
                     std::cout << "\n*** Forcing exit due to stuck threads ***" << std::endl;
+                    std::cout.flush();
+                    std::cerr.flush();
                     
-                    // Try GPU cleanup one more time
-                    if (torch::cuda::is_available()) {
-                        torch::cuda::synchronize();
-                        // Note: empty_cache() not available in all PyTorch versions
-                    }
-                    
+                    // Don't try GPU cleanup on forced exit - it might hang
+                    // Just exit immediately
                     std::_Exit(result);
                 }
             }
         }
         
-        // Shutdown the AggressiveMemoryManager singleton
-        mcts::AggressiveMemoryManager::getInstance().shutdown();
         
-        // Final GPU cleanup
+        // Final GPU cleanup with timeout
         if (torch::cuda::is_available()) {
-            torch::cuda::synchronize();
-            // Note: empty_cache() not available in all PyTorch versions
+            std::atomic<bool> cleanup_done(false);
+            std::thread gpu_cleanup([&cleanup_done]() {
+                try {
+                    torch::cuda::synchronize();
+                    c10::cuda::CUDACachingAllocator::emptyCache();
+                    cleanup_done.store(true);
+                } catch (...) {
+                    // Ignore errors
+                }
+            });
+            
+            // Wait max 1 second for cleanup
+            auto start = std::chrono::steady_clock::now();
+            while (!cleanup_done.load() && 
+                   std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            }
+            
+            if (gpu_cleanup.joinable()) {
+                if (cleanup_done.load()) {
+                    gpu_cleanup.join();
+                } else {
+                    gpu_cleanup.detach();
+                }
+            }
         }
         
         // Give time for final cleanup

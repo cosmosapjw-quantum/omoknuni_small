@@ -3,8 +3,13 @@
 #include "games/gomoku/gomoku_rules.h"     // For rules_engine_
 #include "core/illegal_move_exception.h" // For core::IllegalMoveException
 #include "core/tensor_pool.h"            // For GlobalTensorPool optimization
-#include "mcts/aggressive_memory_manager.h" // For memory tracking
+// #include "mcts/aggressive_memory_manager.h" // Removed - not needed
 #include "utils/attack_defense_module.h"  // For attack/defense planes
+#include "utils/performance_profiler.h"  // For profiling
+#ifdef WITH_TORCH
+#include "utils/gpu_attack_defense_module.h"
+#include <torch/torch.h>
+#endif
 #include <stdexcept> // For std::invalid_argument, std::out_of_range
 #include <iostream>  // For debugging (optional, remove in production)
 #include <numeric>   // For std::accumulate, std::gcd
@@ -205,6 +210,7 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getTensorRepresentatio
 
 std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepresentation() const {
     // CRITICAL FIX: Don't cache tensors to prevent memory accumulation
+    PROFILE_SCOPE(utils::ProfileCategory::STATE_TENSOR);
     
     try {
         const int num_history_pairs = 8; 
@@ -257,25 +263,79 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
         }
         
         // Add attack and defense planes (channels 17 and 18)
-        // Create attack/defense module and compute planes
-        auto attack_defense_module = std::make_unique<alphazero::GomokuAttackDefenseModule>(board_size_);
-        std::vector<std::unique_ptr<core::IGameState>> states_batch;
-        states_batch.push_back(this->clone());
-        
-        auto [attack_planes, defense_planes] = attack_defense_module->compute_planes(states_batch);
-        
-        // Copy attack plane to channel 17
-        for (int r = 0; r < board_size_; ++r) {
-            for (int c = 0; c < board_size_; ++c) {
-                tensor[17][r][c] = attack_planes[0][r][c];
+        try {
+#ifdef WITH_TORCH
+            if (isGPUEnabled()) {
+                // Use GPU for single state by batching it
+                std::vector<const GomokuState*> single_batch = {this};
+                auto batch_result = computeEnhancedTensorBatch(single_batch);
+                if (!batch_result.empty()) {
+                    // Copy GPU-computed attack/defense planes
+                    for (int r = 0; r < board_size_; ++r) {
+                        for (int c = 0; c < board_size_; ++c) {
+                            tensor[17][r][c] = batch_result[0][17][r][c];
+                            tensor[18][r][c] = batch_result[0][18][r][c];
+                        }
+                    }
+                } else {
+                    throw std::runtime_error("GPU batch computation returned empty result");
+                }
+            } else
+#endif
+            {
+                // Use GPU batch computation if available
+                if (alphazero::utils::AttackDefenseModule::isGPUAvailable()) {
+                    std::vector<const GomokuState*> single_batch = {this};
+                    auto gpu_result = alphazero::utils::AttackDefenseModule::computeGomokuAttackDefenseGPU(single_batch);
+                    
+                    if (gpu_result.size(0) > 0) {
+                        // Extract attack/defense planes from GPU result
+                        auto attack_tensor = gpu_result[0][0];  // First batch, first channel (attack)
+                        auto defense_tensor = gpu_result[0][1]; // First batch, second channel (defense)
+                        
+                        // Copy to tensor representation
+                        for (int r = 0; r < board_size_; ++r) {
+                            for (int c = 0; c < board_size_; ++c) {
+                                tensor[17][r][c] = attack_tensor[r][c].item<float>();
+                                tensor[18][r][c] = defense_tensor[r][c].item<float>();
+                            }
+                        }
+                        return tensor;
+                    }
+                }
+                
+                // CPU fallback
+                auto attack_defense_module = std::make_unique<alphazero::GomokuAttackDefenseModule>(board_size_);
+                std::vector<std::unique_ptr<core::IGameState>> states_batch;
+                states_batch.push_back(this->clone());
+                
+                auto [attack_planes, defense_planes] = attack_defense_module->compute_planes(states_batch);
+                
+                // Verify the attack/defense planes have the correct size
+                if (!attack_planes.empty() && attack_planes[0].size() == board_size_ &&
+                    !attack_planes[0].empty() && attack_planes[0][0].size() == board_size_) {
+                    // Copy attack plane to channel 17
+                    for (int r = 0; r < board_size_; ++r) {
+                        for (int c = 0; c < board_size_; ++c) {
+                            tensor[17][r][c] = attack_planes[0][r][c];
+                        }
+                    }
+                }
+                
+                if (!defense_planes.empty() && defense_planes[0].size() == board_size_ &&
+                    !defense_planes[0].empty() && defense_planes[0][0].size() == board_size_) {
+                    // Copy defense plane to channel 18
+                    for (int r = 0; r < board_size_; ++r) {
+                        for (int c = 0; c < board_size_; ++c) {
+                            tensor[18][r][c] = defense_planes[0][r][c];
+                        }
+                    }
+                }
             }
-        }
-        
-        // Copy defense plane to channel 18
-        for (int r = 0; r < board_size_; ++r) {
-            for (int c = 0; c < board_size_; ++c) {
-                tensor[18][r][c] = defense_planes[0][r][c];
-            }
+        } catch (const std::exception& e) {
+            // If attack/defense computation fails, just leave those channels as zeros
+            std::cerr << "Warning: Failed to compute attack/defense planes: " << e.what() << std::endl;
+            // Channels 17 and 18 will remain as zeros
         }
         
         return tensor;
@@ -325,7 +385,7 @@ std::unique_ptr<core::IGameState> GomokuState::clone() const {
         size_t state_size = sizeof(GomokuState) + 
                            (2 * player_bitboards_[0].size() * sizeof(uint64_t)) +
                            (move_history_.size() * sizeof(int));
-        TRACK_MEMORY_ALLOC("GameStateClone", state_size);
+        // TRACK_MEMORY_ALLOC("GameStateClone", state_size); // Removed
         
         // Create a new instance with same parameters - don't do any validation yet
         auto clone_ptr = std::make_unique<GomokuState>(
@@ -401,7 +461,7 @@ std::unique_ptr<core::IGameState> GomokuState::clone() const {
         size_t state_size = sizeof(GomokuState) + 
                            (2 * player_bitboards_[0].size() * sizeof(uint64_t)) +
                            (move_history_.size() * sizeof(int));
-        TRACK_MEMORY_FREE("GameStateClone", state_size);
+        // TRACK_MEMORY_FREE("GameStateClone", state_size); // Removed
         throw;
     }
 }
@@ -1032,6 +1092,117 @@ bool GomokuState::is_pro_long_opening_move_valid(int action, int total_stones_on
     return true;
 }
 
+
+// Static member definitions for GPU support
+//std::unique_ptr<GomokuGPUAttackDefense> GomokuState::gpu_module_ = nullptr;
+std::atomic<bool> GomokuState::gpu_enabled_{false};
+std::mutex GomokuState::gpu_mutex_;
+
+void GomokuState::initializeGPU(int board_size) {
+#ifdef WITH_TORCH
+    std::lock_guard<std::mutex> lock(gpu_mutex_);
+    if (torch::cuda::is_available()) {
+        torch::Device device(torch::kCUDA);
+        // TODO: Create proper GPU module implementation
+        //gpu_module_ = std::make_unique<GomokuGPUAttackDefense>(board_size, device);
+        gpu_enabled_ = true;
+        std::cout << "GomokuState: GPU acceleration initialized for board size " << board_size << std::endl;
+    } else {
+        std::cout << "GomokuState: GPU not available, using CPU fallback" << std::endl;
+        gpu_enabled_ = false;
+    }
+#else
+    gpu_enabled_ = false;
+#endif
+}
+
+void GomokuState::cleanupGPU() {
+    std::lock_guard<std::mutex> lock(gpu_mutex_);
+    //gpu_module_.reset();
+    gpu_enabled_ = false;
+}
+
+void GomokuState::setGPUEnabled(bool enabled) {
+    gpu_enabled_ = enabled;
+}
+
+bool GomokuState::isGPUEnabled() {
+    return gpu_enabled_;
+}
+
+std::vector<std::vector<std::vector<std::vector<float>>>> 
+GomokuState::computeEnhancedTensorBatch(const std::vector<const GomokuState*>& states) {
+    if (states.empty()) {
+        return {};
+    }
+    
+#ifdef WITH_TORCH
+    if (isGPUEnabled()) {
+        std::lock_guard<std::mutex> lock(gpu_mutex_);
+        
+        // Convert states to board tensors
+        int batch_size = states.size();
+        int board_size = states[0]->board_size_;
+        auto board_tensor = torch::zeros({batch_size, board_size, board_size}, 
+                                        torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA));
+        
+        // Fill board tensor
+        for (int b = 0; b < batch_size; ++b) {
+            for (int r = 0; r < board_size; ++r) {
+                for (int c = 0; c < board_size; ++c) {
+                    int action = states[b]->coords_to_action(r, c);
+                    if (states[b]->is_bit_set(0, action)) {  // BLACK
+                        board_tensor[b][r][c] = BLACK;
+                    } else if (states[b]->is_bit_set(1, action)) {  // WHITE
+                        board_tensor[b][r][c] = WHITE;
+                    }
+                }
+            }
+        }
+        
+        // TODO: Compute attack/defense planes on GPU
+        // auto [attack_batch, defense_batch] = gpu_module_->compute_planes_gpu(
+        //     board_tensor, states[0]->current_player_);
+        
+        // For now, return empty results
+        return {};
+        
+        /* // TODO: Enable when GPU module is ready
+        // Convert results back to CPU and build full tensor representations
+        auto attack_cpu = attack_batch.cpu();
+        auto defense_cpu = defense_batch.cpu();
+        
+        std::vector<std::vector<std::vector<std::vector<float>>>> results;
+        results.reserve(batch_size);
+        
+        for (int b = 0; b < batch_size; ++b) {
+            // Get base tensor representation
+            auto tensor = states[b]->getEnhancedTensorRepresentation();
+            
+            // Replace attack/defense planes with GPU-computed ones
+            for (int r = 0; r < board_size; ++r) {
+                for (int c = 0; c < board_size; ++c) {
+                    tensor[17][r][c] = attack_cpu[b][r][c].item<float>();
+                    tensor[18][r][c] = defense_cpu[b][r][c].item<float>();
+                }
+            }
+            
+            results.push_back(std::move(tensor));
+        }
+        
+        return results;
+        */
+    }
+#endif
+    
+    // CPU fallback
+    std::vector<std::vector<std::vector<std::vector<float>>>> results;
+    results.reserve(states.size());
+    for (const auto* state : states) {
+        results.push_back(state->getEnhancedTensorRepresentation());
+    }
+    return results;
+}
 
 } // namespace gomoku
 } // namespace games

@@ -1,7 +1,17 @@
 // src/nn/resnet_model.cpp
 #include "nn/resnet_model.h"
+#include "nn/gpu_optimizer.h"
 #include "utils/memory_tracker.h"
-#include "mcts/aggressive_memory_manager.h"
+// #include "mcts/aggressive_memory_manager.h" // Removed
+
+// Define empty macros for removed memory tracking
+#define TRACK_MEMORY_ALLOC(tag, size) ((void)0)
+#define TRACK_MEMORY_FREE(tag, size) ((void)0)
+
+#include "utils/attack_defense_module.h"
+#include "games/gomoku/gomoku_state.h"
+#include "games/chess/chess_state.h"
+#include "games/go/go_state.h"
 #include <stdexcept>
 #include <ATen/cuda/CUDAContext.h>
 #include <c10/cuda/CUDACachingAllocator.h>
@@ -139,7 +149,7 @@ std::tuple<torch::Tensor, torch::Tensor> ResNetModel::forward(torch::Tensor x) {
         auto input_layer_start_time = std::chrono::high_resolution_clock::now();
         x = torch::relu(input_bn_(input_conv_(x)));
         auto input_layer_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - input_layer_start_time);
-        // std::cout << "[FWD] Input layer: " << input_layer_duration.count() << " us. Device: " << x.device() << std::endl;
+        // Input layer processed
         
         auto res_blocks_total_start_time = std::chrono::high_resolution_clock::now();
         int block_idx = 0;
@@ -159,7 +169,7 @@ std::tuple<torch::Tensor, torch::Tensor> ResNetModel::forward(torch::Tensor x) {
             block_idx++;
         }
         auto res_blocks_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - res_blocks_total_start_time);
-        // std::cout << "[FWD] All ResBlocks: " << res_blocks_total_duration.count() << " us. Device: " << x.device() << std::endl;
+        // All ResBlocks processed
         
         auto policy_head_total_start_time = std::chrono::high_resolution_clock::now();
         torch::Tensor policy_out = x; // Start with output from res_blocks
@@ -284,7 +294,7 @@ torch::Tensor ResNetModel::prepareInputTensor(
     
     // Track CPU tensor allocation
     size_t cpu_tensor_size = batch_tensor_cpu.numel() * batch_tensor_cpu.element_size();
-    TRACK_MEMORY_ALLOC("NNCPUTensor", cpu_tensor_size);
+    // // TRACK_MEMORY_ALLOC("NNCPUTensor", cpu_tensor_size); // Removed
     
     // CRITICAL FIX: Create RAII guard to ensure CPU tensor is tracked as freed
     struct CPUTensorGuard {
@@ -293,7 +303,7 @@ torch::Tensor ResNetModel::prepareInputTensor(
         CPUTensorGuard(size_t s) : size(s), active(true) {}
         ~CPUTensorGuard() {
             if (active) {
-                TRACK_MEMORY_FREE("NNCPUTensor", size);
+                // // TRACK_MEMORY_FREE("NNCPUTensor", size); // Removed
             }
         }
         void release() { active = false; }
@@ -302,36 +312,129 @@ torch::Tensor ResNetModel::prepareInputTensor(
     auto tensor_alloc_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
     // std::cout << "[PREP] CPU Tensor alloc: " << tensor_alloc_duration.count() << " us." << std::endl;
     
-    auto accessor = batch_tensor_cpu.accessor<float, 4>();
+    // PERFORMANCE FIX: Use raw pointer access instead of accessor for speed
+    float* data_ptr = batch_tensor_cpu.data_ptr<float>();
+    const int64_t state_stride = actual_data_channels * height * width;
+    const int64_t channel_stride = height * width;
 
+    // PERFORMANCE FIX: Batch GPU attack/defense computation BEFORE parallel loop
+    #ifdef WITH_TORCH
+    torch::Tensor attack_defense_batch;
+    bool use_gpu_attack_defense = false;
+    std::string game_type = "unknown";
+    
+    auto gpu_attack_defense_start = std::chrono::high_resolution_clock::now();
+    if (target_device.is_cuda() && alphazero::utils::AttackDefenseModule::isGPUAvailable()) {
+        try {
+            // Detect game type and prepare batch
+            if (board_size_ == 15 && input_channels_ == 19) {
+                // Gomoku
+                std::vector<const games::gomoku::GomokuState*> gomoku_states;
+                gomoku_states.reserve(states.size());
+                
+                bool all_gomoku = true;
+                for (const auto& state : states) {
+                    auto* gomoku_state = dynamic_cast<const games::gomoku::GomokuState*>(state.get());
+                    if (gomoku_state) {
+                        gomoku_states.push_back(gomoku_state);
+                    } else {
+                        all_gomoku = false;
+                        break;
+                    }
+                }
+                
+                if (all_gomoku) {
+                    game_type = "gomoku";
+                    attack_defense_batch = alphazero::utils::AttackDefenseModule::computeGomokuAttackDefenseGPU(gomoku_states);
+                    use_gpu_attack_defense = (attack_defense_batch.size(0) == static_cast<int64_t>(states.size()));
+                }
+            } else if (board_size_ == 8 && input_channels_ >= 17) {
+                // Chess
+                std::vector<const games::chess::ChessState*> chess_states;
+                chess_states.reserve(states.size());
+                
+                bool all_chess = true;
+                for (const auto& state : states) {
+                    auto* chess_state = dynamic_cast<const games::chess::ChessState*>(state.get());
+                    if (chess_state) {
+                        chess_states.push_back(chess_state);
+                    } else {
+                        all_chess = false;
+                        break;
+                    }
+                }
+                
+                if (all_chess) {
+                    game_type = "chess";
+                    attack_defense_batch = alphazero::utils::AttackDefenseModule::computeChessAttackDefenseGPU(chess_states);
+                    use_gpu_attack_defense = (attack_defense_batch.size(0) == static_cast<int64_t>(states.size()));
+                }
+            } else if (board_size_ == 19 && input_channels_ >= 17) {
+                // Go
+                std::vector<const games::go::GoState*> go_states;
+                go_states.reserve(states.size());
+                
+                bool all_go = true;
+                for (const auto& state : states) {
+                    auto* go_state = dynamic_cast<const games::go::GoState*>(state.get());
+                    if (go_state) {
+                        go_states.push_back(go_state);
+                    } else {
+                        all_go = false;
+                        break;
+                    }
+                }
+                
+                if (all_go) {
+                    game_type = "go";
+                    attack_defense_batch = alphazero::utils::AttackDefenseModule::computeGoAttackDefenseGPU(go_states);
+                    use_gpu_attack_defense = (attack_defense_batch.size(0) == static_cast<int64_t>(states.size()));
+                }
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "GPU attack/defense batch computation failed: " << e.what() << std::endl;
+            use_gpu_attack_defense = false;
+        }
+    }
+    
+    if (use_gpu_attack_defense) {
+        auto gpu_attack_defense_duration = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::high_resolution_clock::now() - gpu_attack_defense_start);
+        // GPU attack/defense completed successfully
+    }
+    #endif
+    
     auto data_retrieval_loop_start_time = std::chrono::high_resolution_clock::now();
     
     // Use OpenMP to parallelize tensor conversion across states
     #pragma omp parallel for schedule(dynamic)
     for (size_t i = 0; i < states.size(); ++i) {
         if (!states[i]) {
-            // std::cerr << "WARNING: Null state at index " << i << " in prepareInputTensor. Filling with zeros." << std::endl;
-            for(int64_t c = 0; c < actual_data_channels; ++c) 
-                for(int64_t h = 0; h < height; ++h) 
-                    for(int64_t w = 0; w < width; ++w) 
-                        accessor[i][c][h][w] = 0.0f;
+            // Zero out this state's data
+            std::memset(data_ptr + i * state_stride, 0, state_stride * sizeof(float));
             continue;
         }
         const auto& current_state_ptr = states[i];
         std::vector<std::vector<std::vector<float>>> tensor_data;
         try {
-            tensor_data = (input_channels_ == 3) ? 
-                current_state_ptr->getTensorRepresentation() : 
-                current_state_ptr->getEnhancedTensorRepresentation();
+            // For games with GPU attack/defense, get basic representation
+            if (use_gpu_attack_defense) {
+                // Get basic representation without attack/defense planes
+                tensor_data = current_state_ptr->getTensorRepresentation();
+                // Extend to include attack/defense channels (filled later from GPU batch)
+                tensor_data.resize(actual_data_channels, std::vector<std::vector<float>>(board_size_, std::vector<float>(board_size_, 0.0f)));
+            } else {
+                tensor_data = (input_channels_ == 3) ? 
+                    current_state_ptr->getTensorRepresentation() : 
+                    current_state_ptr->getEnhancedTensorRepresentation();
+            }
         } catch (const std::exception& e) {
             #pragma omp critical
             {
                 std::cerr << "ERROR: Exception getting tensor representation from state " << i << ": " << e.what() << ". Filling with zeros." << std::endl;
             }
-            for(int64_t c = 0; c < actual_data_channels; ++c) 
-                for(int64_t h = 0; h < height; ++h) 
-                    for(int64_t w = 0; w < width; ++w) 
-                        accessor[i][c][h][w] = 0.0f;
+            // Zero out this state's data
+            std::memset(data_ptr + i * state_stride, 0, state_stride * sizeof(float));
             continue;
         }
 
@@ -340,25 +443,57 @@ torch::Tensor ResNetModel::prepareInputTensor(
             (actual_data_channels > 0 && tensor_data[0].size() != static_cast<size_t>(height)) ||
             (actual_data_channels > 0 && height > 0 && tensor_data[0][0].size() != static_cast<size_t>(width))) {
             // std::cerr << "WARNING: Tensor dimension mismatch for state " << i << ". Filling with zeros." << std::endl;
-            for(int64_t c = 0; c < actual_data_channels; ++c) 
-                for(int64_t h = 0; h < height; ++h) 
-                    for(int64_t w = 0; w < width; ++w) 
-                        accessor[i][c][h][w] = 0.0f;
+            // Zero out this state's data
+            std::memset(data_ptr + i * state_stride, 0, state_stride * sizeof(float));
             continue;
         }
         
-        // PERFORMANCE FIX: Optimized tensor data copying with vectorized operations
-        for (int64_t c = 0; c < actual_data_channels; ++c) {
+        // PERFORMANCE FIX: Direct memory copy using raw pointers
+        float* state_ptr = data_ptr + i * state_stride;
+        
+        // Copy main tensor data
+        int64_t channels_to_copy = (use_gpu_attack_defense && game_type == "gomoku") ? 17 : 
+                                  (use_gpu_attack_defense && game_type == "chess") ? (actual_data_channels - 2) :
+                                  (use_gpu_attack_defense && game_type == "go") ? (actual_data_channels - 2) :
+                                  actual_data_channels;
+        
+        for (int64_t c = 0; c < channels_to_copy; ++c) {
+            float* channel_ptr = state_ptr + c * channel_stride;
             for (int64_t h = 0; h < height; ++h) {
-                // PERFORMANCE FIX: Use memcpy for efficient row copying
-                std::memcpy(&accessor[i][c][h][0], 
+                // Copy entire row at once
+                std::memcpy(channel_ptr + h * width, 
                            tensor_data[c][h].data(), 
                            width * sizeof(float));
             }
         }
+        
+        // Copy GPU attack/defense planes if available
+        #ifdef WITH_TORCH
+        if (use_gpu_attack_defense && attack_defense_batch.defined()) {
+            // Attack plane
+            auto attack_tensor = attack_defense_batch[i][0];
+            auto attack_accessor = attack_tensor.accessor<float, 2>();
+            float* attack_ptr = state_ptr + (actual_data_channels - 2) * channel_stride;
+            for (int64_t h = 0; h < height; ++h) {
+                for (int64_t w = 0; w < width; ++w) {
+                    attack_ptr[h * width + w] = attack_accessor[h][w];
+                }
+            }
+            
+            // Defense plane
+            auto defense_tensor = attack_defense_batch[i][1];
+            auto defense_accessor = defense_tensor.accessor<float, 2>();
+            float* defense_ptr = state_ptr + (actual_data_channels - 1) * channel_stride;
+            for (int64_t h = 0; h < height; ++h) {
+                for (int64_t w = 0; w < width; ++w) {
+                    defense_ptr[h * width + w] = defense_accessor[h][w];
+                }
+            }
+        }
+        #endif
     }
     auto data_retrieval_loop_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - data_retrieval_loop_start_time);
-    // std::cout << "[PREP] Data retrieval loop: " << data_retrieval_loop_duration.count() << " us for " << states.size() << " states." << std::endl;
+    // Data retrieval completed
 
     if (target_device == torch::kCPU) {
         auto prep_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
@@ -398,7 +533,7 @@ torch::Tensor ResNetModel::prepareInputTensor(
                 
                 // Track GPU tensor allocation
                 size_t gpu_tensor_size = gpu_tensor.numel() * gpu_tensor.element_size();
-                TRACK_MEMORY_ALLOC("NNGPUTensor", gpu_tensor_size);
+                // TRACK_MEMORY_ALLOC("NNGPUTensor", gpu_tensor_size);
                 
                 auto prep_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::high_resolution_clock::now() - tensor_alloc_start_time);
@@ -422,7 +557,7 @@ torch::Tensor ResNetModel::prepareInputTensor(
             
             // Track GPU tensor allocation
             size_t gpu_tensor_size = result_tensor.numel() * result_tensor.element_size();
-            TRACK_MEMORY_ALLOC("NNGPUTensor", gpu_tensor_size);
+            // TRACK_MEMORY_ALLOC("NNGPUTensor", gpu_tensor_size);
             
             auto to_device_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - to_device_start_time);
             // std::cout << "[PREP] Move to " << target_device << ": " << to_device_duration.count() << " us." << std::endl;
@@ -555,7 +690,7 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
     
     // Track memory periodically
     static std::atomic<size_t> inference_count{0};
-    static const size_t cleanup_interval = 10;  // CRITICAL FIX: Clean every 10 inferences to prevent accumulation
+    // static const size_t cleanup_interval = 10;  // CRITICAL FIX: Clean every 10 inferences to prevent accumulation
     
     size_t count = inference_count.fetch_add(1);
     if (count % 100 == 0) {
@@ -590,31 +725,40 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
         // PERFORMANCE FIX: GPU warmup and tensor pool initialization
         static bool gpu_warmed_up = false;
         if (!gpu_warmed_up && model_device.is_cuda()) {
-            // std::cout << "[NN_TRACE] Performing GPU warmup..." << std::endl;
+            // Performing GPU warmup
             auto warmup_start = std::chrono::high_resolution_clock::now();
             
-            // Create dummy tensor and run a small forward pass to warm up GPU
+            // CRITICAL FIX: Warm up with multiple batch sizes to pre-compile all CUDA kernels
             try {
-                auto dummy_input = torch::zeros({1, input_channels_, board_size_, board_size_}, 
-                                               torch::TensorOptions().dtype(torch::kFloat32).device(model_device));
+                // Warm up common batch sizes to avoid kernel compilation during inference
+                const std::vector<int> warmup_batch_sizes = {1, 8, 16, 32, 64};
                 
-                // Track GPU warmup tensor
-                size_t warmup_tensor_size = dummy_input.numel() * dummy_input.element_size();
-                TRACK_MEMORY_ALLOC("GPUWarmupTensor", warmup_tensor_size);
+                for (int batch_size : warmup_batch_sizes) {
+                    torch::Tensor dummy_input = torch::randn({batch_size, input_channels_, board_size_, board_size_}, 
+                                                   torch::TensorOptions().dtype(torch::kFloat32).device(model_device));
+                    
+                    torch::NoGradGuard no_grad_warmup;
+                    
+                    // Run forward pass to compile kernels
+                    auto warmup_iter_start = std::chrono::high_resolution_clock::now();
+                    auto [dummy_policy, dummy_value] = this->forward(dummy_input);
+                    
+                    // Sync on first and last to ensure compilation completes
+                    if (batch_size == 1 || batch_size == warmup_batch_sizes.back()) {
+                        torch::cuda::synchronize();
+                        auto warmup_iter_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            std::chrono::high_resolution_clock::now() - warmup_iter_start);
+                        // Warmup batch completed
+                    }
+                }
                 
-                torch::NoGradGuard no_grad_warmup;
-                auto [dummy_policy, dummy_value] = this->forward(dummy_input);
-                torch::cuda::synchronize();
                 gpu_warmed_up = true;
                 
-                // Free warmup tensor memory
-                TRACK_MEMORY_FREE("GPUWarmupTensor", warmup_tensor_size);
-                
                 auto warmup_end = std::chrono::high_resolution_clock::now();
-                auto warmup_duration = std::chrono::duration_cast<std::chrono::microseconds>(warmup_end - warmup_start);
-                // std::cout << "[NN_TRACE] GPU warmup completed in " << warmup_duration.count() << "μs" << std::endl;
+                auto warmup_duration = std::chrono::duration_cast<std::chrono::milliseconds>(warmup_end - warmup_start);
+                // GPU warmup completed
             } catch (const std::exception& e) {
-                // std::cerr << "[NN_TRACE] GPU warmup failed: " << e.what() << std::endl;
+                std::cerr << "GPU warmup failed: " << e.what() << std::endl;
             }
         }
         
@@ -698,8 +842,7 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
                         input_tensor = cpu_tensor.to(model_device, /*non_blocking=*/true);
                     }
                     
-                    // Ensure transfer completes before inference
-                    cudaStreamSynchronize(infer_stream);
+                    // PERFORMANCE FIX: Don't synchronize here - let transfer happen async
                 } else {
                     input_tensor = cpu_tensor;
                 }
@@ -712,7 +855,7 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
         }
         
         auto prepare_input_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - prepare_input_start_time);
-        // std::cout << "[INF] prepareInputTensor: " << prepare_input_duration.count() << " us. Input tensor device: " << input_tensor.device() << ", shape: " << input_tensor.sizes() << std::endl;
+        // Input tensor prepared
 
         if (!input_tensor.defined() || input_tensor.numel() == 0) {
             std::cerr << "[INF] prepareInputTensor returned invalid tensor." << std::endl;
@@ -724,29 +867,42 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
         //           << std::chrono::duration_cast<std::chrono::microseconds>(forward_start - total_start).count() 
         //           << "μs with input tensor shape: " << input_tensor.sizes() << ", device: " << input_tensor.device() << std::endl;
         auto forward_pass_start_time = std::chrono::high_resolution_clock::now();
-        auto [policy_batch, value_batch] = this->forward(input_tensor);
+        
+        torch::Tensor policy_batch, value_batch;
+        
+        // Use TorchScript model if available
+        if (use_torch_script_ && torch_script_model_) {
+            try {
+                torch::NoGradGuard no_grad;
+                auto outputs = torch_script_model_->forward({input_tensor}).toTuple();
+                policy_batch = outputs->elements()[0].toTensor();
+                value_batch = outputs->elements()[1].toTensor();
+            } catch (const std::exception& e) {
+                // Fallback to regular forward
+                std::cerr << "TorchScript forward failed, falling back to regular forward: " << e.what() << std::endl;
+                auto [p, v] = this->forward(input_tensor);
+                policy_batch = p;
+                value_batch = v;
+            }
+        } else {
+            auto [p, v] = this->forward(input_tensor);
+            policy_batch = p;
+            value_batch = v;
+        }
+        
         auto forward_end = std::chrono::high_resolution_clock::now();
         auto forward_pass_duration = std::chrono::duration_cast<std::chrono::microseconds>(forward_end - forward_pass_start_time);
         // std::cout << "[NN_TRACE] Forward pass completed in " << forward_pass_duration.count() << "μs" << std::endl;
-        // std::cout << "[INF] Forward pass: " << forward_pass_duration.count() << " us. PolicyDev: " << policy_batch.device() << ", ValDev: " << value_batch.device() << std::endl;
+        // Forward pass completed
 
         auto outputs_to_cpu_detach_start_time = std::chrono::high_resolution_clock::now();
         torch::Tensor policy_cpu = policy_batch.to(torch::kCPU, /*non_blocking=*/model_device.is_cuda()).detach();
         torch::Tensor value_cpu = value_batch.to(torch::kCPU, /*non_blocking=*/model_device.is_cuda()).detach();
         auto outputs_to_cpu_detach_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - outputs_to_cpu_detach_start_time);
-        // std::cout << "[INF] Outputs to CPU & detach: " << outputs_to_cpu_detach_duration.count() << " us." << std::endl;
+        // Outputs transferred to CPU
         
-        if (model_device.is_cuda()) {
-            auto cuda_sync_start_time = std::chrono::high_resolution_clock::now();
-            try {
-                at::cuda::CUDAStream stream = at::cuda::getCurrentCUDAStream(model_device.index());
-                stream.synchronize();
-            } catch (const c10::Error& e) {
-                std::cerr << "[INF] CUDA sync error: " << e.what() << std::endl;
-            }
-            auto cuda_sync_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - cuda_sync_start_time);
-            // std::cout << "[INF] CUDA sync: " << cuda_sync_duration.count() << " us." << std::endl;
-        }
+        // PERFORMANCE FIX: Remove synchronization after forward pass
+        // GPU operations will complete asynchronously while CPU processes results
 
         if (policy_cpu.size(0) != static_cast<int64_t>(states.size()) || value_cpu.size(0) != static_cast<int64_t>(states.size()) ||
             (policy_size_ > 0 && policy_cpu.size(1) != policy_size_) || value_cpu.size(1) != 1) { // check policy_size_ only if it's set
@@ -773,34 +929,23 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
         }
         
         auto inference_total_duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - inference_total_start_time);
-        // std::cout << "[INF] Exiting. Total time: " << inference_total_duration.count() << " us for " << states.size() << " states. Final policy_size: " << (final_outputs.empty() ? 0 : final_outputs[0].policy.size()) << std::endl;
+        // Inference completed successfully
         
-        // CRITICAL FIX: Aggressive cleanup after EVERY inference to prevent VRAM accumulation
-        // Clear tensor pool immediately
-        tensor_pool_.cleanup();
-        
-        // Force CUDA cache cleanup after every inference
-        if (torch::cuda::is_available()) {
-            torch::cuda::synchronize();
-            c10::cuda::CUDACachingAllocator::emptyCache();
-        }
-        
-        // Periodic aggressive cleanup (every 5 inferences instead of 10)
+        // PERFORMANCE FIX: Remove aggressive cleanup that was killing performance
+        // Only cleanup periodically to maintain memory efficiency without destroying throughput
         inference_count++;
-        if (inference_count % 5 == 0) {
-            // Force aggressive memory cleanup
+        if (inference_count % 100 == 0) {  // Much less frequent cleanup
+            // Cleanup tensor pool
+            tensor_pool_.cleanup();
+            
+            // Periodic memory cleanup removed
+            /*
             auto& mem_mgr = alphazero::mcts::AggressiveMemoryManager::getInstance();
             mem_mgr.forceCleanup(alphazero::mcts::AggressiveMemoryManager::PressureLevel::WARNING);
+            */
             
-            // Extra aggressive CUDA cleanup
+            // Only empty cache occasionally, not after every inference
             if (torch::cuda::is_available()) {
-                // Clear all CUDA caches on all devices
-                int device_count;
-                cudaGetDeviceCount(&device_count);
-                for (int i = 0; i < device_count; ++i) {
-                    cudaSetDevice(i);
-                    cudaDeviceSynchronize();
-                }
                 c10::cuda::CUDACachingAllocator::emptyCache();
             }
         }
@@ -810,9 +955,9 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
         if (input_tensor.defined()) {
             size_t tensor_size = input_tensor.numel() * input_tensor.element_size();
             if (input_tensor.is_cuda()) {
-                TRACK_MEMORY_FREE("NNGPUTensor", tensor_size);
+                // TRACK_MEMORY_FREE("NNGPUTensor", tensor_size);
             } else {
-                TRACK_MEMORY_FREE("NNCPUTensor", tensor_size);
+                // TRACK_MEMORY_FREE("NNCPUTensor", tensor_size);
             }
         }
         
@@ -831,28 +976,16 @@ std::vector<mcts::NetworkOutput> ResNetModel::inference(
 
     } catch (const c10::Error& e) {
         std::cerr << "[INF] PyTorch c10::Error: " << e.what() << std::endl;
-        // CRITICAL FIX: Clean up on exception
+        // Clean up on exception without synchronization
         tensor_pool_.cleanup();
-        if (torch::cuda::is_available()) {
-            torch::cuda::synchronize();
-            c10::cuda::CUDACachingAllocator::emptyCache();
-        }
     } catch (const std::exception& e) {
         std::cerr << "[INF] Std::exception: " << e.what() << std::endl;
-        // CRITICAL FIX: Clean up on exception
+        // Clean up on exception without synchronization
         tensor_pool_.cleanup();
-        if (torch::cuda::is_available()) {
-            torch::cuda::synchronize();
-            c10::cuda::CUDACachingAllocator::emptyCache();
-        }
     } catch (...) {
         std::cerr << "[INF] Unknown error." << std::endl;
-        // CRITICAL FIX: Clean up on exception
+        // Clean up on exception without synchronization
         tensor_pool_.cleanup();
-        if (torch::cuda::is_available()) {
-            torch::cuda::synchronize();
-            c10::cuda::CUDACachingAllocator::emptyCache();
-        }
     }
     auto inference_total_duration_exception = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - inference_total_start_time);
     // std::cout << "[INF] Exiting due to exception. Total time: " << inference_total_duration_exception.count() << " us." << std::endl;
@@ -915,6 +1048,63 @@ int64_t ResNetModel::getPolicySize() const {
 
 void ResNetModel::cleanupTensorPool() {
     tensor_pool_.cleanup();
+}
+
+void ResNetModel::enableGPUOptimizations(
+    bool enable_cuda_graphs,
+    bool enable_persistent_kernels, 
+    bool enable_torch_script,
+    int cuda_stream_priority
+) {
+    gpu_opt_status_.cuda_graphs_enabled = enable_cuda_graphs;
+    gpu_opt_status_.cuda_graphs_supported = enable_cuda_graphs && torch::cuda::is_available();
+    gpu_opt_status_.persistent_kernels_enabled = enable_persistent_kernels;
+    gpu_opt_status_.torch_script_enabled = enable_torch_script;
+    gpu_opt_status_.cuda_stream_priority = cuda_stream_priority;
+    
+    if (enable_torch_script && torch::cuda::is_available()) {
+        // Check if pre-traced model exists
+        std::string traced_model_path = "traced_resnet_" + std::to_string(board_size_) + ".pt";
+        
+        try {
+            // Try to load pre-traced model
+            auto& gpu_optimizer = nn::getGlobalGPUOptimizer();
+            torch_script_model_ = std::make_shared<torch::jit::Module>(
+                gpu_optimizer.loadTorchScriptModel(traced_model_path, true, torch::kCUDA)
+            );
+            use_torch_script_ = true;
+            
+            std::cout << "ResNet: Loaded pre-traced TorchScript model from " << traced_model_path << std::endl;
+        } catch (const std::exception& e) {
+            // Pre-traced model not found
+            std::cerr << "TorchScript model not found at " << traced_model_path 
+                      << ". Please trace the model in Python first using trace_model_for_cpp.py" << std::endl;
+            use_torch_script_ = false;
+            
+            // Note: Direct tracing in C++ is not supported
+            // Models must be traced in Python and saved, then loaded here
+        }
+    }
+    
+    // Update GPU memory stats
+    if (torch::cuda::is_available()) {
+        gpu_opt_status_.allocated_memory_mb = 
+            c10::cuda::CUDACachingAllocator::getDeviceStats(0).allocated_bytes[0].current / (1024 * 1024);
+        gpu_opt_status_.reserved_memory_mb = 
+            c10::cuda::CUDACachingAllocator::getDeviceStats(0).reserved_bytes[0].current / (1024 * 1024);
+    }
+}
+
+ResNetModel::GPUOptimizationStatus ResNetModel::getGPUOptimizationStatus() const {
+    // Update current memory usage
+    if (torch::cuda::is_available()) {
+        gpu_opt_status_.allocated_memory_mb = 
+            c10::cuda::CUDACachingAllocator::getDeviceStats(0).allocated_bytes[0].current / (1024 * 1024);
+        gpu_opt_status_.reserved_memory_mb = 
+            c10::cuda::CUDACachingAllocator::getDeviceStats(0).reserved_bytes[0].current / (1024 * 1024);
+    }
+    
+    return gpu_opt_status_;
 }
 
 void ResNetModel::TensorPool::cleanup() {

@@ -1,0 +1,43 @@
+# Simple serial configuration - use simple serial search
+game_type: gomoku
+board_size: 15
+
+# Serial MCTS settings
+mcts:
+  num_simulations: 100
+  num_threads: 0      # Force simple serial search (no threads)
+  exploration_constant: 1.0
+  temperature: 1.0
+  dirichlet_alpha: 0.25
+  dirichlet_epsilon: 0.25
+  virtual_loss: 3.0
+  
+  # Batch settings
+  batch_size: 16
+  batch_timeout_ms: 10
+  
+  # Enable optimizations
+  use_transposition_table: true
+  use_progressive_widening: false
+
+# Simple neural network
+neural_network:
+  model_type: resnet
+  num_filters: 32
+  num_res_blocks: 5
+  value_head_hidden_size: 128
+  use_batch_norm: false
+
+# Serial self-play
+self_play:
+  num_games: 10
+  max_game_length: 200
+  save_games: true
+  save_directory: data/self_play_games
+  parallel_games: 1  # Serial games
+
+# Debug settings
+debug:
+  enable_memory_tracking: false
+  enable_performance_profiling: false
+  log_interval_seconds: 10
