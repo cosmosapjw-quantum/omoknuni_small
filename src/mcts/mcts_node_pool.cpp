@@ -63,7 +63,7 @@ void MCTSNodePool::allocateBlock(size_t size) {
     
     // Only log large allocations
     if (size > 10000) {
-        LOG_SYSTEM_DEBUG("Allocated large block of {} nodes", size);
+        // LOG_SYSTEM_DEBUG("Allocated large block of {} nodes", size);
     }
 }
 
@@ -287,7 +287,7 @@ void MCTSNodePool::compact() {
     
     // Remove verbose logging - only log if significant compaction occurred
     if (nodes_to_release > 1000) {
-        LOG_SYSTEM_DEBUG("Node pool compacted: released {} nodes", nodes_to_release);
+        // LOG_SYSTEM_DEBUG("Node pool compacted: released {} nodes", nodes_to_release);
     }
 }
 

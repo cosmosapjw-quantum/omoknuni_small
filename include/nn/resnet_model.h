@@ -2,7 +2,10 @@
 #ifndef ALPHAZERO_NN_RESNET_MODEL_H
 #define ALPHAZERO_NN_RESNET_MODEL_H
 
+#ifdef WITH_TORCH
 #include <torch/torch.h>
+#endif
+
 #include "nn/neural_network.h"
 #include "core/export_macros.h"
 #include "mcts/gpu_memory_pool.h"
@@ -10,6 +13,7 @@
 namespace alphazero {
 namespace nn {
 
+#ifdef WITH_TORCH
 /**
  * @brief A residual block for the ResNet architecture
  */
@@ -94,10 +98,7 @@ public:
      */
     int64_t getPolicySize() const override;
     
-    /**
-     * @brief Clean up tensor pool to free memory
-     */
-    void cleanupTensorPool();
+    // Tensor pool cleanup method removed - no longer using tensor pools
     
     /**
      * @brief Set GPU memory pool for efficient tensor allocation
@@ -144,21 +145,7 @@ private:
     // Tensor preparation - overloaded signature with target device
     torch::Tensor prepareInputTensor(const std::vector<std::unique_ptr<core::IGameState>>& states, torch::Device target_device);
     
-    // Tensor pool for pre-allocated GPU tensors
-    struct TensorPool {
-        std::vector<torch::Tensor> cpu_tensors;
-        std::vector<torch::Tensor> gpu_tensors;
-        std::atomic<size_t> current_idx{0};
-        size_t pool_size{4};
-        bool initialized{false};
-        
-        void init(int64_t batch_size, int64_t channels, int64_t height, int64_t width, torch::Device device);
-        torch::Tensor getCPUTensor(size_t batch_size);
-        torch::Tensor getGPUTensor(size_t batch_size);
-        void cleanup();  // Add cleanup method
-    };
-    
-    TensorPool tensor_pool_;
+    // Tensor pool removed - direct allocation is used instead
     
     // GPU memory pool for efficient tensor allocation
     std::shared_ptr<mcts::GPUMemoryPool> gpu_memory_pool_;
@@ -168,6 +155,8 @@ private:
     std::shared_ptr<torch::jit::Module> torch_script_model_;
     bool use_torch_script_ = false;
 };
+
+#endif // WITH_TORCH
 
 } // namespace nn
 } // namespace alphazero

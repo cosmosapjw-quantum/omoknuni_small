@@ -6,6 +6,8 @@
 namespace alphazero {
 namespace training {
 
+#ifdef WITH_TORCH
+
 DataLoader::DataLoader(
     std::shared_ptr<Dataset> dataset,
     size_t batch_size,
@@ -260,6 +262,8 @@ Batch DataLoader::Iterator::operator*() {
 bool DataLoader::Iterator::operator!=(const Iterator& other) const {
     return index_ != other.index_;
 }
+
+#endif // WITH_TORCH
 
 } // namespace training
 } // namespace alphazero

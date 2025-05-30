@@ -8,6 +8,7 @@
 #include <chrono>
 #include <future>
 #include <thread>
+#include <iomanip>
 
 namespace alphazero {
 namespace cli {
@@ -15,6 +16,19 @@ namespace cli {
 CLIManager::CLIManager() {
     // Default program name, will be overridden in run()
     program_name_ = "omoknuni-cli";
+    
+    // Add built-in help command
+    addCommand("help", "Display help information", 
+              [this](const std::vector<std::string>& args) {
+                  if (!args.empty()) {
+                      // Command-specific help
+                      printHelp(args[0]);
+                  } else {
+                      // General help
+                      printHelp();
+                  }
+                  return 0;
+              });
 }
 
 void CLIManager::addCommand(const std::string& command, 

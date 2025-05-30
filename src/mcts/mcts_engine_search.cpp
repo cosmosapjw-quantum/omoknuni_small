@@ -29,7 +29,7 @@
 // #include "mcts/unified_memory_manager.h" - removed
 // #include "mcts/advanced_memory_pool.h" - removed
 #include "utils/gpu_memory_manager.h"
-#include "core/tensor_pool.h"
+// #include "core/tensor_pool.h" // Removed - no longer using tensor pools
 #include "utils/memory_tracker.h"
 
 // 🚀 LOCK-FREE BATCH ACCUMULATOR for maximum batching efficiency
@@ -56,13 +56,13 @@ private:
     // 🚀 LEGACY MEMORY COMPONENTS INTEGRATION
     // UnifiedMemoryManager* unified_memory_manager_; // Removed in simplification
     utils::GPUMemoryManager* gpu_memory_manager_;
-    core::GlobalTensorPool* tensor_pool_;
+    // core::GlobalTensorPool* tensor_pool_; // Removed
     // std::unique_ptr<AdvancedMemoryPool> // advanced_memory_pool_; // Removed
     bool legacy_components_initialized_;
     
     // 🚀 LEGACY MEMORY STATS TRACKING
     size_t last_gpu_allocated_ = 0;
-    size_t last_tensor_pool_size_ = 0;
+    // Tensor pool size tracking removed
     size_t last_unified_usage_ = 0;
     
 public:
@@ -107,14 +107,7 @@ public:
                     last_gpu_allocated_ = gpu_stats.allocated_bytes;
                 }
                 
-                // Tensor Pool stats
-                if (tensor_pool_) {
-                    size_t total_tensors, available_tensors;
-                    tensor_pool_->getStats(total_tensors, available_tensors);
-                    last_tensor_pool_size_ = total_tensors;
-                    // Estimate tensor memory (rough approximation)
-                    total_managed_memory += total_tensors * 1024; // 1KB per tensor estimate
-                }
+                // Tensor pool stats removed
                 
                 // UnifiedMemoryManager was removed in simplification
             } catch (...) {
@@ -145,7 +138,7 @@ public:
             std::cout << " | System: " << formatMemoryUsage(current_memory);
             if (legacy_components_initialized_) {
                 std::cout << " | GPU: " << formatMemoryUsage(last_gpu_allocated_)
-                          << " | Tensors: " << last_tensor_pool_size_
+                          // Tensor pool stats removed
                           << " | Unified: " << formatMemoryUsage(last_unified_usage_);
             }
             std::cout << std::endl;
@@ -166,8 +159,7 @@ public:
             gpu_memory_manager_ = &utils::GPUMemoryManager::getInstance();
             gpu_memory_manager_->initialize(2 * GB, 8 * GB); // 2GB initial, 8GB max
             
-            // Initialize GlobalTensorPool
-            tensor_pool_ = &core::GlobalTensorPool::getInstance();
+            // Tensor pool initialization removed
             
             // Advanced memory pool removed
             /*
@@ -235,23 +227,7 @@ public:
             }
         }
         
-        // 3. Tensor Pool cleanup
-        if (tensor_pool_) {
-            try {
-                size_t total, available;
-                tensor_pool_->getStats(total, available);
-                std::cout << "🔧 Clearing " << total << " tensors (" << available << " available) from pool" << std::endl;
-                
-                tensor_pool_->clear();
-                
-                tensor_pool_->getStats(total, available);
-                std::cout << "🔧 Tensor pool after cleanup: " << total << " tensors remaining" << std::endl;
-            } catch (const std::exception& e) {
-                std::cout << "⚠️  Tensor Pool cleanup error: " << e.what() << std::endl;
-            } catch (...) {
-                std::cout << "⚠️  Tensor Pool cleanup failed" << std::endl;
-            }
-        }
+        // 3. Tensor pool cleanup removed
         
         // 4. Advanced Memory Pool removed
         /*
@@ -310,7 +286,7 @@ public:
         // Update internal tracking
         current_memory_usage_.store(memory_after);
         last_gpu_allocated_ = 0;
-        last_tensor_pool_size_ = 0;
+        // Tensor pool references removed
         last_unified_usage_ = 0;
     }
     
@@ -322,7 +298,7 @@ public:
         
         if (legacy_components_initialized_) {
             report << "  GPU: " << formatMemoryUsage(last_gpu_allocated_) << "\n";
-            report << "  Tensors: " << last_tensor_pool_size_ << " objects\n";
+            // Tensor pool stats removed
             report << "  Unified: " << formatMemoryUsage(last_unified_usage_) << "\n";
             
             // Advanced pool removed
@@ -369,8 +345,11 @@ using AggressiveMemoryController = UnifiedAggressiveMemoryController;
 
 // Renamed from runSearch to better reflect its function
 void MCTSEngine::runSearch(const core::IGameState& state) {
+    // std::cout << "[MCTS_DEBUG] runSearch: Starting search execution" << std::endl;
+    
     // Check for shutdown before starting search
     if (utils::isShutdownRequested()) {
+        // std::cout << "[MCTS_DEBUG] runSearch: Shutdown requested, aborting search" << std::endl;
         return;
     }
     
@@ -380,17 +359,23 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         // Sequential steps to initialize and run the search
 
         // Step 1: Create the root node with the current state (always fresh for standard search)
+        // std::cout << "[MCTS_DEBUG] runSearch: Creating root node" << std::endl;
         root_ = createRootNode(state);
+        // std::cout << "[MCTS_DEBUG] runSearch: Root node created successfully, ptr: " << root_.get() << std::endl;
         
         // Step 2: Initialize game state pool if enabled
+        // std::cout << "[MCTS_DEBUG] runSearch: Initializing game state pool" << std::endl;
         initializeGameStatePool(state);
         
         // Step 3: Set up batch parameters for the evaluator
+        // std::cout << "[MCTS_DEBUG] runSearch: Setting up batch parameters" << std::endl;
         setupBatchParameters();
         
         // Step 4: Expand the root node to prepare for search
+        // std::cout << "[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=" << root_->isTerminal() << ")" << std::endl;
         if (!root_->isTerminal()) {
             expandNonTerminalLeaf(root_);
+            // std::cout << "[MCTS_DEBUG] runSearch: Root node expanded successfully" << std::endl;
         }
         
         // Step 5: Reset search statistics and prepare for new search
@@ -404,15 +389,24 @@ void MCTSEngine::runSearch(const core::IGameState& state) {
         auto exec_start = std::chrono::steady_clock::now();
         
         // STREAMLINED SEARCH - Use only the best performing batch tree method
+        // std::cout << "[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=" << settings_.num_threads << ")" << std::endl;
         if (!search_roots.empty() && search_roots[0]) {
             if (settings_.num_threads <= 1) {
                 // Serial mode for single thread
+                // std::cout << "[MCTS_DEBUG] runSearch: Executing simple serial search" << std::endl;
                 executeSimpleSerialSearch(search_roots);
+                // std::cout << "[MCTS_DEBUG] runSearch: Serial search completed" << std::endl;
             } else {
                 // Batch tree search for multi-threaded
+                // std::cout << "[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch" << std::endl;
+                // std::cout << "[MCTS_DEBUG] runSearch: Creating root_state clone" << std::endl;
                 auto root_state = state.clone();
+                // std::cout << "[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch" << std::endl;
                 executeBatchedTreeSearch(search_roots[0].get(), std::move(root_state));
+                // std::cout << "[MCTS_DEBUG] runSearch: Batched tree search completed" << std::endl;
             }
+        } else {
+            LOG_SYSTEM_ERROR("runSearch: No valid search roots available");
         }
         
         auto exec_end = std::chrono::steady_clock::now();
@@ -489,6 +483,7 @@ void MCTSEngine::resetSearchState() {
 
 // Simple serial search implementation that bypasses complex coordinators
 void MCTSEngine::executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCTSNode>>& search_roots) {
+    // std::cout << "[MCTS_DEBUG] executeSimpleSerialSearch: Starting" << std::endl;
     
     if (search_roots.empty() || !search_roots[0]) {
         std::cerr << "[ERROR] No search roots available" << std::endl;
@@ -496,6 +491,7 @@ void MCTSEngine::executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCT
     }
     
     std::shared_ptr<MCTSNode> root = search_roots[0];
+    // std::cout << "[MCTS_DEBUG] Using root ptr: " << root.get() << std::endl;
     
     // CRITICAL FIX: Adaptive batch sizing for efficiency
     int base_batch_size = settings_.batch_size;
@@ -506,8 +502,11 @@ void MCTSEngine::executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCT
     
     // Ensure root is expanded
     if (!root->isTerminal() && !root->isExpanded()) {
+        // std::cout << "[MCTS_DEBUG] Expanding root node" << std::endl;
         expandNonTerminalLeaf(root);
     }
+    
+    // std::cout << "[MCTS_DEBUG] Starting main simulation loop for " << settings_.num_simulations << " simulations" << std::endl;
     
     // Run simulations with adaptive batching for efficiency
     for (int sim = 0; sim < settings_.num_simulations && !utils::isShutdownRequested(); ) {
@@ -526,6 +525,8 @@ void MCTSEngine::executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCT
             target_batch_size = base_batch_size / 2;
         }
         
+        // std::cout << "[MCTS_DEBUG] Simulation " << sim << ", target batch size: " << target_batch_size << std::endl;
+        
         int batch_start = sim;
         // Collect exactly target_batch_size leaves
         while (batch_leaves.size() < static_cast<size_t>(target_batch_size) && sim < settings_.num_simulations) {
@@ -533,9 +534,34 @@ void MCTSEngine::executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCT
         std::shared_ptr<MCTSNode> leaf = root;
         std::vector<std::shared_ptr<MCTSNode>> path = {root};
         
+        // std::cout << "[MCTS_DEBUG] Starting tree traversal for simulation " << sim << std::endl;
+        
         while (!leaf->isTerminal() && leaf->isExpanded() && !leaf->getChildren().empty()) {
             std::shared_ptr<MCTSNode> selected = leaf->selectChild(settings_.exploration_constant);
-            if (!selected) break;
+            if (!selected) {
+                // std::cout << "[MCTS_DEBUG] No child selected, breaking" << std::endl;
+                break;
+            }
+            
+            // std::cout << "[MCTS_DEBUG] Selected child ptr: " << selected.get() 
+            //           << ", action: " << selected->getAction() << std::endl;
+            
+            // Check transposition table for the selected child
+            if (use_transposition_table_ && transposition_table_) {
+                uint64_t hash = selected->getState().getHash();
+                auto tt_node = transposition_table_->lookup(hash);
+                if (tt_node && tt_node != selected) {
+                    // std::cout << "[MCTS_DEBUG] Found TT node ptr: " << tt_node.get() 
+                    //           << ", visits: " << tt_node->getVisitCount() 
+                    //           << " vs selected visits: " << selected->getVisitCount() << std::endl;
+                    // Found a transposition - use the stored node if it has more visits
+                    if (tt_node->getVisitCount() > selected->getVisitCount()) {
+                        // std::cout << "[MCTS_DEBUG] Using TT node instead of selected" << std::endl;
+                        selected = tt_node;
+                    }
+                }
+            }
+            
             leaf = selected;
             path.push_back(leaf);
         }
@@ -543,6 +569,13 @@ void MCTSEngine::executeSimpleSerialSearch(const std::vector<std::shared_ptr<MCT
         // Expansion phase: expand leaf if not terminal
         if (!leaf->isTerminal() && !leaf->isExpanded()) {
             expandNonTerminalLeaf(leaf);
+            
+            // Store in transposition table if enabled
+            if (use_transposition_table_ && transposition_table_) {
+                uint64_t hash = leaf->getState().getHash();
+                transposition_table_->store(hash, leaf, path.size());
+            }
+            
             if (!leaf->getChildren().empty()) {
                 // Select first child as the new leaf
                 leaf = leaf->getChildren()[0];
@@ -724,9 +757,9 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
             // Start a new simulation by claiming nodes from the counter
             int old_sims = active_simulations_.load(std::memory_order_acquire);
             
-            if (old_sims <= 20 && total_leaves_generated_.load(std::memory_order_acquire) < 10) {
-                active_simulations_.fetch_add(50, std::memory_order_release);
-                old_sims = active_simulations_.load(std::memory_order_acquire);
+            // Don't add more simulations - let the counter decrease to 0
+            if (old_sims <= 0) {
+                break; // Exit if no simulations left
             }
             
             int simulations_to_claim = std::min(static_cast<int>(OPTIMAL_BATCH_SIZE * 0.9), old_sims);
@@ -736,12 +769,8 @@ void MCTSEngine::executeSerialSearch(const std::vector<std::shared_ptr<MCTSNode>
                 old_sims, old_sims - simulations_to_claim, std::memory_order_acq_rel);
             
             if (!claimed) {
-                if (active_simulations_.load(std::memory_order_acquire) <= 0 && 
-                    total_leaves_generated_.load(std::memory_order_acquire) < 10 &&
-                    std::chrono::steady_clock::now() - search_start_time < std::chrono::seconds(2)) {
-                    
-                    active_simulations_.store(20, std::memory_order_release);
-                }
+                // Try again in next iteration - don't add more simulations
+                continue;
             }
             
             if (claimed) {

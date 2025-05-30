@@ -1,0 +1,2 @@
+[2025-05-30 13:28:12.726] [system] [info] [8283] [:] Logging system initialized. Log directory: logs
+[2025-05-30 13:28:12.726] [system] [error] [8283] [mcts_engine_main.cpp:348] MCTSEngine::search - Exception during runSearch: Simulated inference error

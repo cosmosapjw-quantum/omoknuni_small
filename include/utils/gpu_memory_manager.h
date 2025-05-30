@@ -16,11 +16,14 @@
     #include <rmm/device_uvector.hpp>
 #endif
 
+#ifdef WITH_TORCH
 #include <cuda_runtime.h>
+#endif
 
 namespace alphazero {
 namespace utils {
 
+#ifdef WITH_TORCH
 /**
  * GPU Memory Manager using RAPIDS Memory Manager (RMM)
  * 
@@ -173,6 +176,67 @@ private:
     T* data_ = nullptr;
     size_t size_ = 0;
 };
+
+#else // !WITH_TORCH
+// Dummy classes when torch is not available
+class GPUMemoryManager {
+public:
+    static GPUMemoryManager& getInstance() {
+        static GPUMemoryManager instance;
+        return instance;
+    }
+    
+    void initialize(size_t = 1024 * 1024 * 1024, size_t = 8ULL * 1024 * 1024 * 1024) {}
+    void cleanup() {}
+    void* allocate(size_t, int = 0) { return nullptr; }
+    void deallocate(void*, size_t, int = 0) {}
+    size_t getPeakMemoryUsage() const { return 0; }
+    size_t getCurrentMemoryUsage() const { return 0; }
+    size_t getAvailableMemory() const { return 0; }
+    bool isInitialized() const { return false; }
+    void synchronize() {}
+    void setMemoryPressureCallback(std::function<void()>) {}
+    
+    // Additional methods needed by engine
+    struct Stats {
+        size_t allocated = 0;
+        size_t peak = 0;
+        size_t available = 0;
+        size_t allocated_bytes = 0;
+        size_t peak_allocated = 0;
+    };
+    Stats getStats() const { return {}; }
+    void reset() {}
+};
+
+template<typename T>
+class DeviceBuffer {
+public:
+    DeviceBuffer(size_t, int = 0) {}
+    ~DeviceBuffer() {}
+    DeviceBuffer(const DeviceBuffer&) = delete;
+    DeviceBuffer& operator=(const DeviceBuffer&) = delete;
+    DeviceBuffer(DeviceBuffer&&) = default;
+    DeviceBuffer& operator=(DeviceBuffer&&) = default;
+    T* get() { return nullptr; }
+    const T* get() const { return nullptr; }
+    size_t size() const { return 0; }
+    void copyFromHost(const T*, size_t) {}
+    void copyToHost(T*, size_t) const {}
+};
+
+template<typename T>
+class PinnedBuffer {
+public:
+    PinnedBuffer(size_t) {}
+    ~PinnedBuffer() {}
+    PinnedBuffer(const PinnedBuffer&) = delete;
+    PinnedBuffer& operator=(const PinnedBuffer&) = delete;
+    T* get() { return nullptr; }
+    const T* get() const { return nullptr; }
+    size_t size() const { return 0; }
+};
+#endif // WITH_TORCH
 
 } // namespace utils
 } // namespace alphazero

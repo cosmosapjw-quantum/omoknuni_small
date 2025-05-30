@@ -1,0 +1,5659 @@
+[2025-05-30 15:37:36.608] [system] [info] [5754] Logging system initialized. Log directory: logs
+
+Progress: 0/100 (0.0%)
+Progress: 1/100 (1.0%) - 0.02 games/s - Last: 20250530_153741_0 (29 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 109
+  Avg moves/game: 109.00
+  Avg game time: 49416.05 ms
+  Total searches: 109
+  Avg search time: 1802.92 ms
+  Avg move time: 1803.12 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 2.21
+  MCTS searches/second: 2.21
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 109
+  Avg moves/game: 109.00
+  Avg game time: 49416.05 ms
+  Total searches: 109
+  Avg search time: 1802.92 ms
+  Avg move time: 1803.12 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 2.21
+  MCTS searches/second: 2.21
+==============================
+
+Progress: 3/100 (3.0%) - 0.05 games/s - Last: 20250530_153740_0 (31 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 55286.78 ms
+  Total searches: 20
+  Avg search time: 1510.85 ms
+  Avg move time: 1511.08 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.18
+  MCTS searches/second: 0.18
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 55286.78 ms
+  Total searches: 20
+  Avg search time: 1510.85 ms
+  Avg move time: 1511.08 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.18
+  MCTS searches/second: 0.18
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 55286.78 ms
+  Total searches: 20
+  Avg search time: 1510.85 ms
+  Avg move time: 1511.08 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.18
+  MCTS searches/second: 0.18
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 3
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 3
+  Avg search time: 1012.57 ms
+  Avg move time: 1013.75 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 4/100 (4.0%) - 0.05 games/s - Last: 20250530_153740_0 (43 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 48
+  Avg moves/game: 48.00
+  Avg game time: 81117.72 ms
+  Total searches: 48
+  Avg search time: 1678.77 ms
+  Avg move time: 1678.83 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.59
+  MCTS searches/second: 0.59
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 66
+  Avg moves/game: 66.00
+  Avg game time: 81117.72 ms
+  Total searches: 66
+  Avg search time: 1596.17 ms
+  Avg move time: 1596.32 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.81
+  MCTS searches/second: 0.81
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 66
+  Avg moves/game: 66.00
+  Avg game time: 81117.72 ms
+  Total searches: 66
+  Avg search time: 1596.17 ms
+  Avg move time: 1596.32 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.81
+  MCTS searches/second: 0.81
+==============================
+
+Progress: 5/100 (5.0%) - 0.05 games/s - Last: 20250530_153831_0 (30 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 23
+  Avg moves/game: 23.00
+  Avg game time: 45077.95 ms
+  Total searches: 23
+  Avg search time: 1546.77 ms
+  Avg move time: 1546.94 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.51
+  MCTS searches/second: 0.51
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 24
+  Avg moves/game: 24.00
+  Avg game time: 45077.95 ms
+  Total searches: 24
+  Avg search time: 1543.08 ms
+  Avg move time: 1543.25 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.53
+  MCTS searches/second: 0.53
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 45077.95 ms
+  Total searches: 25
+  Avg search time: 1536.25 ms
+  Avg move time: 1536.42 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.55
+  MCTS searches/second: 0.55
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 45077.95 ms
+  Total searches: 25
+  Avg search time: 1536.25 ms
+  Avg move time: 1536.42 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.55
+  MCTS searches/second: 0.55
+==============================
+
+Progress: 6/100 (6.0%) - 0.05 games/s - Last: 20250530_153840_0 (34 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 48472.16 ms
+  Total searches: 21
+  Avg search time: 1662.38 ms
+  Avg move time: 1662.56 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.43
+  MCTS searches/second: 0.43
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 48472.16 ms
+  Total searches: 21
+  Avg search time: 1662.38 ms
+  Avg move time: 1662.56 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.43
+  MCTS searches/second: 0.43
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 48472.16 ms
+  Total searches: 21
+  Avg search time: 1662.38 ms
+  Avg move time: 1662.56 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.43
+  MCTS searches/second: 0.43
+==============================
+
+Progress: 7/100 (7.0%) - 0.05 games/s - Last: 20250530_153841_0 (41 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 47
+  Avg moves/game: 47.00
+  Avg game time: 65609.77 ms
+  Total searches: 47
+  Avg search time: 1643.42 ms
+  Avg move time: 1643.63 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.72
+  MCTS searches/second: 0.72
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 48
+  Avg moves/game: 48.00
+  Avg game time: 65609.77 ms
+  Total searches: 48
+  Avg search time: 1638.63 ms
+  Avg move time: 1638.83 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.73
+  MCTS searches/second: 0.73
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 49
+  Avg moves/game: 49.00
+  Avg game time: 65609.77 ms
+  Total searches: 49
+  Avg search time: 1632.49 ms
+  Avg move time: 1632.69 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.75
+  MCTS searches/second: 0.75
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 51
+  Avg moves/game: 51.00
+  Avg game time: 65609.77 ms
+  Total searches: 51
+  Avg search time: 1621.49 ms
+  Avg move time: 1621.70 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.78
+  MCTS searches/second: 0.78
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 51
+  Avg moves/game: 51.00
+  Avg game time: 65609.77 ms
+  Total searches: 51
+  Avg search time: 1621.49 ms
+  Avg move time: 1621.70 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.78
+  MCTS searches/second: 0.78
+==============================
+
+Progress: 8/100 (8.0%) - 0.05 games/s - Last: 20250530_153921_0 (33 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 64
+  Avg moves/game: 64.00
+  Avg game time: 51250.65 ms
+  Total searches: 64
+  Avg search time: 1635.41 ms
+  Avg move time: 1635.69 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.25
+  MCTS searches/second: 1.25
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 65
+  Avg moves/game: 32.50
+  Avg game time: 50586.35 ms
+  Total searches: 65
+  Avg search time: 1630.63 ms
+  Avg move time: 1630.91 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.64
+  MCTS searches/second: 0.64
+==============================
+
+Progress: 1/1 games completed (100.0%)
+Progress: 9/100 (9.0%) - 0.06 games/s - Last: 20250530_153930_0 (34 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 66
+  Avg moves/game: 33.00
+  Avg game time: 50586.35 ms
+  Total searches: 66
+  Avg search time: 1627.35 ms
+  Avg move time: 1627.63 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.65
+  MCTS searches/second: 0.65
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 66
+  Avg moves/game: 33.00
+  Avg game time: 50586.35 ms
+  Total searches: 66
+  Avg search time: 1627.35 ms
+  Avg move time: 1627.63 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.65
+  MCTS searches/second: 0.65
+==============================
+
+Progress: 10/100 (10.0%) - 0.06 games/s - Last: 20250530_153910_0 (39 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 18
+  Avg moves/game: 18.00
+  Avg game time: 73085.77 ms
+  Total searches: 18
+  Avg search time: 1141.16 ms
+  Avg move time: 1141.44 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.25
+  MCTS searches/second: 0.25
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 18
+  Avg moves/game: 18.00
+  Avg game time: 73085.77 ms
+  Total searches: 18
+  Avg search time: 1141.16 ms
+  Avg move time: 1141.44 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.25
+  MCTS searches/second: 0.25
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 1
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 1
+  Avg search time: 1130.61 ms
+  Avg move time: 1133.35 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 11/100 (11.0%) - 0.06 games/s - Last: 20250530_153951_0 (34 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 46
+  Avg moves/game: 46.00
+  Avg game time: 50678.48 ms
+  Total searches: 46
+  Avg search time: 1526.61 ms
+  Avg move time: 1526.93 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.91
+  MCTS searches/second: 0.91
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 47
+  Avg moves/game: 47.00
+  Avg game time: 50678.48 ms
+  Total searches: 47
+  Avg search time: 1527.55 ms
+  Avg move time: 1527.86 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.93
+  MCTS searches/second: 0.93
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 47
+  Avg moves/game: 47.00
+  Avg game time: 50678.48 ms
+  Total searches: 47
+  Avg search time: 1527.55 ms
+  Avg move time: 1527.86 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.93
+  MCTS searches/second: 0.93
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 50
+  Avg moves/game: 50.00
+  Avg game time: 50678.48 ms
+  Total searches: 50
+  Avg search time: 1515.75 ms
+  Avg move time: 1516.05 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.99
+  MCTS searches/second: 0.99
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 50
+  Avg moves/game: 50.00
+  Avg game time: 50678.48 ms
+  Total searches: 50
+  Avg search time: 1515.75 ms
+  Avg move time: 1516.05 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.99
+  MCTS searches/second: 0.99
+==============================
+
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 49309.85 ms
+  Total searches: 45
+  Avg search time: 1647.77 ms
+  Avg move time: 1647.93 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.91
+  MCTS searches/second: 0.91
+==============================
+
+Progress: 0/1 games completed (0.0%)
+Progress: 12/100 (12.0%) - 0.06 games/s - Last: 20250530_154021_0 (36 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 46
+  Avg moves/game: 46.00
+  Avg game time: 49309.85 ms
+  Total searches: 46
+  Avg search time: 1641.96 ms
+  Avg move time: 1642.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.93
+  MCTS searches/second: 0.93
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 46
+  Avg moves/game: 46.00
+  Avg game time: 49309.85 ms
+  Total searches: 46
+  Avg search time: 1641.96 ms
+  Avg move time: 1642.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.93
+  MCTS searches/second: 0.93
+==============================
+
+Progress: 13/100 (13.0%) - 0.06 games/s - Last: 20250530_154030_0 (29 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 43206.91 ms
+  Total searches: 21
+  Avg search time: 1385.33 ms
+  Avg move time: 1385.80 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.49
+  MCTS searches/second: 0.49
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 43206.91 ms
+  Total searches: 21
+  Avg search time: 1385.33 ms
+  Avg move time: 1385.80 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.49
+  MCTS searches/second: 0.49
+==============================
+
+Progress: 14/100 (14.0%) - 0.06 games/s - Last: 20250530_154030_0 (34 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 57057.84 ms
+  Total searches: 25
+  Avg search time: 1507.07 ms
+  Avg move time: 1507.26 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.44
+  MCTS searches/second: 0.44
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 26
+  Avg moves/game: 26.00
+  Avg game time: 57057.84 ms
+  Total searches: 26
+  Avg search time: 1499.29 ms
+  Avg move time: 1499.47 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.46
+  MCTS searches/second: 0.46
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 26
+  Avg moves/game: 26.00
+  Avg game time: 57057.84 ms
+  Total searches: 26
+  Avg search time: 1499.29 ms
+  Avg move time: 1499.47 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.46
+  MCTS searches/second: 0.46
+==============================
+
+Progress: 15/100 (15.0%) - 0.06 games/s - Last: 20250530_154051_0 (27 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 41893.90 ms
+  Total searches: 21
+  Avg search time: 1566.45 ms
+  Avg move time: 1567.05 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.50
+  MCTS searches/second: 0.50
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 41893.90 ms
+  Total searches: 21
+  Avg search time: 1566.45 ms
+  Avg move time: 1567.05 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.50
+  MCTS searches/second: 0.50
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 41893.90 ms
+  Total searches: 22
+  Avg search time: 1554.20 ms
+  Avg move time: 1554.78 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.53
+  MCTS searches/second: 0.53
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 24
+  Avg moves/game: 24.00
+  Avg game time: 41893.90 ms
+  Total searches: 24
+  Avg search time: 1559.41 ms
+  Avg move time: 1559.95 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.57
+  MCTS searches/second: 0.57
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 24
+  Avg moves/game: 24.00
+  Avg game time: 41893.90 ms
+  Total searches: 24
+  Avg search time: 1559.41 ms
+  Avg move time: 1559.95 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.57
+  MCTS searches/second: 0.57
+==============================
+
+Progress: 16/100 (16.0%) - 0.06 games/s - Last: 20250530_154111_0 (29 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 43
+  Avg moves/game: 43.00
+  Avg game time: 42685.11 ms
+  Total searches: 43
+  Avg search time: 1561.91 ms
+  Avg move time: 1562.06 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.01
+  MCTS searches/second: 1.01
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 44
+  Avg moves/game: 44.00
+  Avg game time: 42685.11 ms
+  Total searches: 44
+  Avg search time: 1550.28 ms
+  Avg move time: 1550.42 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.03
+  MCTS searches/second: 1.03
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 42685.11 ms
+  Total searches: 45
+  Avg search time: 1548.64 ms
+  Avg move time: 1548.78 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.05
+  MCTS searches/second: 1.05
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 42685.11 ms
+  Total searches: 45
+  Avg search time: 1548.64 ms
+  Avg move time: 1548.78 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.05
+  MCTS searches/second: 1.05
+==============================
+
+Progress: 17/100 (17.0%) - 0.06 games/s - Last: 20250530_154120_0 (40 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 46
+  Avg moves/game: 46.00
+  Avg game time: 59596.39 ms
+  Total searches: 46
+  Avg search time: 1627.47 ms
+  Avg move time: 1627.83 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.77
+  MCTS searches/second: 0.77
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 46
+  Avg moves/game: 46.00
+  Avg game time: 59596.39 ms
+  Total searches: 46
+  Avg search time: 1627.47 ms
+  Avg move time: 1627.83 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.77
+  MCTS searches/second: 0.77
+==============================
+
+Progress: 18/100 (18.0%) - 0.06 games/s - Last: 20250530_154130_0 (35 moves, outcome: 1.0)
+Progress: 19/100 (19.0%) - 0.06 games/s - Last: 20250530_154141_0 (34 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 47
+  Avg moves/game: 23.50
+  Avg game time: 58928.47 ms
+  Total searches: 47
+  Avg search time: 1540.72 ms
+  Avg move time: 1540.92 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.40
+  MCTS searches/second: 0.40
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 47
+  Avg moves/game: 23.50
+  Avg game time: 58928.47 ms
+  Total searches: 47
+  Avg search time: 1540.72 ms
+  Avg move time: 1540.92 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.40
+  MCTS searches/second: 0.40
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 47
+  Avg moves/game: 23.50
+  Avg game time: 58928.47 ms
+  Total searches: 47
+  Avg search time: 1540.72 ms
+  Avg move time: 1540.92 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.40
+  MCTS searches/second: 0.40
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 3
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 3
+  Avg search time: 1116.64 ms
+  Avg move time: 1118.08 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 20/100 (20.0%) - 0.07 games/s - Last: 20250530_154201_0 (31 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 19
+  Avg moves/game: 19.00
+  Avg game time: 44113.66 ms
+  Total searches: 19
+  Avg search time: 1514.26 ms
+  Avg move time: 1514.75 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.43
+  MCTS searches/second: 0.43
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 19
+  Avg moves/game: 19.00
+  Avg game time: 44113.66 ms
+  Total searches: 19
+  Avg search time: 1514.26 ms
+  Avg move time: 1514.75 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.43
+  MCTS searches/second: 0.43
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 44113.66 ms
+  Total searches: 21
+  Avg search time: 1493.74 ms
+  Avg move time: 1494.19 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.48
+  MCTS searches/second: 0.48
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 44113.66 ms
+  Total searches: 21
+  Avg search time: 1493.74 ms
+  Avg move time: 1494.19 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.48
+  MCTS searches/second: 0.48
+==============================
+
+Progress: 21/100 (21.0%) - 0.07 games/s - Last: 20250530_154220_0 (27 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 38475.91 ms
+  Total searches: 21
+  Avg search time: 1630.55 ms
+  Avg move time: 1630.62 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.55
+  MCTS searches/second: 0.55
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 38475.91 ms
+  Total searches: 21
+  Avg search time: 1630.55 ms
+  Avg move time: 1630.62 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.55
+  MCTS searches/second: 0.55
+==============================
+
+Progress: 22/100 (22.0%) - 0.06 games/s - Last: 20250530_154251_0 (23 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 70
+  Avg moves/game: 70.00
+  Avg game time: 33658.25 ms
+  Total searches: 70
+  Avg search time: 1628.41 ms
+  Avg move time: 1628.59 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 2.08
+  MCTS searches/second: 2.08
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 71
+  Avg moves/game: 35.50
+  Avg game time: 41821.30 ms
+  Total searches: 71
+  Avg search time: 1627.34 ms
+  Avg move time: 1627.52 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.85
+  MCTS searches/second: 0.85
+==============================
+
+Progress: 0/1 games completed (0.0%)
+Progress: 23/100 (23.0%) - 0.07 games/s - Last: 20250530_154240_0 (32 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 73
+  Avg moves/game: 36.50
+  Avg game time: 41821.30 ms
+  Total searches: 73
+  Avg search time: 1620.17 ms
+  Avg move time: 1620.35 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.87
+  MCTS searches/second: 0.87
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 73
+  Avg moves/game: 36.50
+  Avg game time: 41821.30 ms
+  Total searches: 73
+  Avg search time: 1620.17 ms
+  Avg move time: 1620.35 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.87
+  MCTS searches/second: 0.87
+==============================
+
+Progress: 24/100 (24.0%) - 0.07 games/s - Last: 20250530_154241_0 (32 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 18
+  Avg moves/game: 18.00
+  Avg game time: 57543.57 ms
+  Total searches: 18
+  Avg search time: 1366.52 ms
+  Avg move time: 1366.80 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.31
+  MCTS searches/second: 0.31
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 20
+  Avg moves/game: 20.00
+  Avg game time: 57543.57 ms
+  Total searches: 20
+  Avg search time: 1342.88 ms
+  Avg move time: 1343.13 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.35
+  MCTS searches/second: 0.35
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 20
+  Avg moves/game: 20.00
+  Avg game time: 57543.57 ms
+  Total searches: 20
+  Avg search time: 1342.88 ms
+  Avg move time: 1343.13 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.35
+  MCTS searches/second: 0.35
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 3
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 3
+  Avg search time: 1226.18 ms
+  Avg move time: 1227.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 25/100 (25.0%) - 0.07 games/s - Last: 20250530_154300_0 (40 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 43
+  Avg moves/game: 43.00
+  Avg game time: 59365.73 ms
+  Total searches: 43
+  Avg search time: 1675.08 ms
+  Avg move time: 1675.36 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.72
+  MCTS searches/second: 0.72
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 43
+  Avg moves/game: 43.00
+  Avg game time: 59365.73 ms
+  Total searches: 43
+  Avg search time: 1675.08 ms
+  Avg move time: 1675.36 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.72
+  MCTS searches/second: 0.72
+==============================
+
+Progress: 26/100 (26.0%) - 0.06 games/s - Last: 20250530_154331_0 (35 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 69
+  Avg moves/game: 69.00
+  Avg game time: 50763.44 ms
+  Total searches: 69
+  Avg search time: 1608.75 ms
+  Avg move time: 1609.08 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.36
+  MCTS searches/second: 1.36
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 70
+  Avg moves/game: 35.00
+  Avg game time: 40484.90 ms
+  Total searches: 70
+  Avg search time: 1605.51 ms
+  Avg move time: 1605.84 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.86
+  MCTS searches/second: 0.86
+==============================
+
+Progress: 0/1 games completed (0.0%)
+Progress: 27/100 (27.0%) - 0.07 games/s - Last: 20250530_154400_0 (20 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 72
+  Avg moves/game: 36.00
+  Avg game time: 40484.90 ms
+  Total searches: 72
+  Avg search time: 1595.16 ms
+  Avg move time: 1595.47 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.89
+  MCTS searches/second: 0.89
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 72
+  Avg moves/game: 36.00
+  Avg game time: 40484.90 ms
+  Total searches: 72
+  Avg search time: 1595.16 ms
+  Avg move time: 1595.47 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.89
+  MCTS searches/second: 0.89
+==============================
+
+Progress: 29/100 (29.0%) - 0.07 games/s - Last: 20250530_154340_0 (38 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 18
+  Avg moves/game: 9.00
+  Avg game time: 57131.84 ms
+  Total searches: 18
+  Avg search time: 1287.86 ms
+  Avg move time: 1288.05 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.16
+  MCTS searches/second: 0.16
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 18
+  Avg moves/game: 9.00
+  Avg game time: 57131.84 ms
+  Total searches: 18
+  Avg search time: 1287.86 ms
+  Avg move time: 1288.05 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.16
+  MCTS searches/second: 0.16
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 1
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 1
+  Avg search time: 913.79 ms
+  Avg move time: 913.80 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 3
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 3
+  Avg search time: 843.23 ms
+  Avg move time: 845.35 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 30/100 (30.0%) - 0.06 games/s - Last: 20250530_154431_0 (40 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 115
+  Avg moves/game: 115.00
+  Avg game time: 57825.29 ms
+  Total searches: 115
+  Avg search time: 1678.66 ms
+  Avg move time: 1678.75 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.99
+  MCTS searches/second: 1.99
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 115
+  Avg moves/game: 115.00
+  Avg game time: 57825.29 ms
+  Total searches: 115
+  Avg search time: 1678.66 ms
+  Avg move time: 1678.75 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.99
+  MCTS searches/second: 1.99
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 115
+  Avg moves/game: 115.00
+  Avg game time: 57825.29 ms
+  Total searches: 115
+  Avg search time: 1678.66 ms
+  Avg move time: 1678.75 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.99
+  MCTS searches/second: 1.99
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 115
+  Avg moves/game: 115.00
+  Avg game time: 57825.29 ms
+  Total searches: 115
+  Avg search time: 1678.66 ms
+  Avg move time: 1678.75 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.99
+  MCTS searches/second: 1.99
+==============================
+
+Progress: 31/100 (31.0%) - 0.06 games/s - Last: 20250530_154440_0 (36 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 57397.04 ms
+  Total searches: 22
+  Avg search time: 1577.54 ms
+  Avg move time: 1577.75 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.38
+  MCTS searches/second: 0.38
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 57397.04 ms
+  Total searches: 22
+  Avg search time: 1577.54 ms
+  Avg move time: 1577.75 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.38
+  MCTS searches/second: 0.38
+==============================
+
+Progress: 32/100 (32.0%) - 0.07 games/s - Last: 20250530_154441_0 (34 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 63506.74 ms
+  Total searches: 22
+  Avg search time: 1556.76 ms
+  Avg move time: 1556.96 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.35
+  MCTS searches/second: 0.35
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 63506.74 ms
+  Total searches: 25
+  Avg search time: 1524.05 ms
+  Avg move time: 1524.23 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.39
+  MCTS searches/second: 0.39
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 63506.74 ms
+  Total searches: 25
+  Avg search time: 1524.05 ms
+  Avg move time: 1524.23 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.39
+  MCTS searches/second: 0.39
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 27
+  Avg moves/game: 27.00
+  Avg game time: 63506.74 ms
+  Total searches: 27
+  Avg search time: 1521.67 ms
+  Avg move time: 1521.84 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.43
+  MCTS searches/second: 0.43
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 27
+  Avg moves/game: 27.00
+  Avg game time: 63506.74 ms
+  Total searches: 27
+  Avg search time: 1521.67 ms
+  Avg move time: 1521.84 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.43
+  MCTS searches/second: 0.43
+==============================
+
+Progress: 33/100 (33.0%) - 0.07 games/s - Last: 20250530_154440_0 (51 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 41
+  Avg moves/game: 41.00
+  Avg game time: 81896.69 ms
+  Total searches: 41
+  Avg search time: 1564.38 ms
+  Avg move time: 1564.52 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.50
+  MCTS searches/second: 0.50
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 44
+  Avg moves/game: 44.00
+  Avg game time: 81896.69 ms
+  Total searches: 44
+  Avg search time: 1544.20 ms
+  Avg move time: 1544.34 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.54
+  MCTS searches/second: 0.54
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 44
+  Avg moves/game: 44.00
+  Avg game time: 81896.69 ms
+  Total searches: 44
+  Avg search time: 1544.20 ms
+  Avg move time: 1544.34 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.54
+  MCTS searches/second: 0.54
+==============================
+
+Progress: 34/100 (34.0%) - 0.06 games/s - Last: 20250530_154531_0 (35 moves, outcome: 1.0)
+Progress: 35/100 (35.0%) - 0.07 games/s - Last: 20250530_154540_0 (34 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 45
+  Avg moves/game: 22.50
+  Avg game time: 50446.57 ms
+  Total searches: 45
+  Avg search time: 1567.31 ms
+  Avg move time: 1567.44 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.45
+  MCTS searches/second: 0.45
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 45
+  Avg moves/game: 22.50
+  Avg game time: 50446.57 ms
+  Total searches: 45
+  Avg search time: 1567.31 ms
+  Avg move time: 1567.44 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.45
+  MCTS searches/second: 0.45
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 0
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 0
+  Avg search time: 0.00 ms
+  Avg move time: 0.00 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 36/100 (36.0%) - 0.06 games/s - Last: 20250530_154631_0 (25 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 94
+  Avg moves/game: 94.00
+  Avg game time: 38318.36 ms
+  Total searches: 94
+  Avg search time: 1657.40 ms
+  Avg move time: 1657.55 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 2.45
+  MCTS searches/second: 2.45
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 95
+  Avg moves/game: 95.00
+  Avg game time: 38318.36 ms
+  Total searches: 95
+  Avg search time: 1655.61 ms
+  Avg move time: 1655.77 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 2.48
+  MCTS searches/second: 2.48
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 97
+  Avg moves/game: 97.00
+  Avg game time: 38318.36 ms
+  Total searches: 97
+  Avg search time: 1651.65 ms
+  Avg move time: 1651.82 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 2.53
+  MCTS searches/second: 2.53
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 97
+  Avg moves/game: 97.00
+  Avg game time: 38318.36 ms
+  Total searches: 97
+  Avg search time: 1651.65 ms
+  Avg move time: 1651.82 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 2.53
+  MCTS searches/second: 2.53
+==============================
+
+Progress: 37/100 (37.0%) - 0.06 games/s - Last: 20250530_154610_0 (55 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 69
+  Avg moves/game: 69.00
+  Avg game time: 86576.64 ms
+  Total searches: 69
+  Avg search time: 1641.08 ms
+  Avg move time: 1641.37 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.80
+  MCTS searches/second: 0.80
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 69
+  Avg moves/game: 69.00
+  Avg game time: 86576.64 ms
+  Total searches: 69
+  Avg search time: 1641.08 ms
+  Avg move time: 1641.37 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.80
+  MCTS searches/second: 0.80
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 69
+  Avg moves/game: 69.00
+  Avg game time: 86576.64 ms
+  Total searches: 69
+  Avg search time: 1641.08 ms
+  Avg move time: 1641.37 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.80
+  MCTS searches/second: 0.80
+==============================
+
+Progress: 38/100 (38.0%) - 0.06 games/s - Last: 20250530_154630_0 (49 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 73683.07 ms
+  Total searches: 22
+  Avg search time: 1428.14 ms
+  Avg move time: 1428.37 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.30
+  MCTS searches/second: 0.30
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 73683.07 ms
+  Total searches: 22
+  Avg search time: 1428.14 ms
+  Avg move time: 1428.37 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.30
+  MCTS searches/second: 0.30
+==============================
+
+Progress: 39/100 (39.0%) - 0.06 games/s - Last: 20250530_154711_0 (29 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 43814.63 ms
+  Total searches: 25
+  Avg search time: 1499.94 ms
+  Avg move time: 1500.29 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.57
+  MCTS searches/second: 0.57
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 43814.63 ms
+  Total searches: 25
+  Avg search time: 1499.94 ms
+  Avg move time: 1500.29 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.57
+  MCTS searches/second: 0.57
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 43814.63 ms
+  Total searches: 25
+  Avg search time: 1499.94 ms
+  Avg move time: 1500.29 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.57
+  MCTS searches/second: 0.57
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 43814.63 ms
+  Total searches: 25
+  Avg search time: 1499.94 ms
+  Avg move time: 1500.29 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.57
+  MCTS searches/second: 0.57
+==============================
+
+Progress: 40/100 (40.0%) - 0.06 games/s - Last: 20250530_154551_0 (80 moves, outcome: -1.0)
+Progress: 41/100 (41.0%) - 0.06 games/s - Last: 20250530_154750_0 (28 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 70
+  Avg moves/game: 35.00
+  Avg game time: 95089.02 ms
+  Total searches: 70
+  Avg search time: 1565.94 ms
+  Avg move time: 1566.07 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.37
+  MCTS searches/second: 0.37
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 70
+  Avg moves/game: 35.00
+  Avg game time: 95089.02 ms
+  Total searches: 70
+  Avg search time: 1565.94 ms
+  Avg move time: 1566.07 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.37
+  MCTS searches/second: 0.37
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 4
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 4
+  Avg search time: 1135.97 ms
+  Avg move time: 1136.71 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 42/100 (42.0%) - 0.06 games/s - Last: 20250530_154740_0 (36 moves, outcome: -1.0)
+Progress: 43/100 (43.0%) - 0.07 games/s - Last: 20250530_154801_0 (26 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 19
+  Avg moves/game: 9.50
+  Avg game time: 46293.52 ms
+  Total searches: 19
+  Avg search time: 1516.99 ms
+  Avg move time: 1517.81 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.21
+  MCTS searches/second: 0.21
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 19
+  Avg moves/game: 9.50
+  Avg game time: 46293.52 ms
+  Total searches: 19
+  Avg search time: 1516.99 ms
+  Avg move time: 1517.81 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.21
+  MCTS searches/second: 0.21
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 19
+  Avg moves/game: 9.50
+  Avg game time: 46293.52 ms
+  Total searches: 19
+  Avg search time: 1516.99 ms
+  Avg move time: 1517.81 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.21
+  MCTS searches/second: 0.21
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 2
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 2
+  Avg search time: 1210.33 ms
+  Avg move time: 1210.45 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 44/100 (44.0%) - 0.06 games/s - Last: 20250530_154830_0 (31 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 89
+  Avg moves/game: 89.00
+  Avg game time: 45272.89 ms
+  Total searches: 89
+  Avg search time: 1662.66 ms
+  Avg move time: 1662.85 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.97
+  MCTS searches/second: 1.97
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 89
+  Avg moves/game: 89.00
+  Avg game time: 45272.89 ms
+  Total searches: 89
+  Avg search time: 1662.66 ms
+  Avg move time: 1662.85 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.97
+  MCTS searches/second: 1.97
+==============================
+
+Progress: 45/100 (45.0%) - 0.06 games/s - Last: 20250530_154831_0 (27 moves, outcome: 1.0)
+Progress: 46/100 (46.0%) - 0.06 games/s - Last: 20250530_154840_0 (32 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 24
+  Avg moves/game: 12.00
+  Avg game time: 50359.09 ms
+  Total searches: 24
+  Avg search time: 1471.74 ms
+  Avg move time: 1471.94 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.24
+  MCTS searches/second: 0.24
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 26
+  Avg moves/game: 13.00
+  Avg game time: 50359.09 ms
+  Total searches: 26
+  Avg search time: 1439.15 ms
+  Avg move time: 1439.35 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.26
+  MCTS searches/second: 0.26
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 26
+  Avg moves/game: 13.00
+  Avg game time: 50359.09 ms
+  Total searches: 26
+  Avg search time: 1439.15 ms
+  Avg move time: 1439.35 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.26
+  MCTS searches/second: 0.26
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 2
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 2
+  Avg search time: 1045.96 ms
+  Avg move time: 1047.93 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 47/100 (47.0%) - 0.07 games/s - Last: 20250530_154841_0 (33 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 19
+  Avg moves/game: 19.00
+  Avg game time: 51962.92 ms
+  Total searches: 19
+  Avg search time: 1410.97 ms
+  Avg move time: 1411.10 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.37
+  MCTS searches/second: 0.37
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 19
+  Avg moves/game: 19.00
+  Avg game time: 51962.92 ms
+  Total searches: 19
+  Avg search time: 1410.97 ms
+  Avg move time: 1411.10 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.37
+  MCTS searches/second: 0.37
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 20
+  Avg moves/game: 20.00
+  Avg game time: 51962.92 ms
+  Total searches: 20
+  Avg search time: 1405.14 ms
+  Avg move time: 1405.27 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.38
+  MCTS searches/second: 0.38
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 20
+  Avg moves/game: 20.00
+  Avg game time: 51962.92 ms
+  Total searches: 20
+  Avg search time: 1405.14 ms
+  Avg move time: 1405.27 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.38
+  MCTS searches/second: 0.38
+==============================
+
+Progress: 48/100 (48.0%) - 0.06 games/s - Last: 20250530_154920_0 (38 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 93
+  Avg moves/game: 93.00
+  Avg game time: 55058.48 ms
+  Total searches: 93
+  Avg search time: 1649.47 ms
+  Avg move time: 1649.69 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.69
+  MCTS searches/second: 1.69
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 93
+  Avg moves/game: 93.00
+  Avg game time: 55058.48 ms
+  Total searches: 93
+  Avg search time: 1649.47 ms
+  Avg move time: 1649.69 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.69
+  MCTS searches/second: 1.69
+==============================
+
+Progress: 49/100 (49.0%) - 0.06 games/s - Last: 20250530_154931_0 (30 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 23
+  Avg moves/game: 23.00
+  Avg game time: 54096.12 ms
+  Total searches: 23
+  Avg search time: 1514.26 ms
+  Avg move time: 1514.50 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.43
+  MCTS searches/second: 0.43
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 23
+  Avg moves/game: 23.00
+  Avg game time: 54096.12 ms
+  Total searches: 23
+  Avg search time: 1514.26 ms
+  Avg move time: 1514.50 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.43
+  MCTS searches/second: 0.43
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 24
+  Avg moves/game: 24.00
+  Avg game time: 54096.12 ms
+  Total searches: 24
+  Avg search time: 1513.03 ms
+  Avg move time: 1513.26 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.44
+  MCTS searches/second: 0.44
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 26
+  Avg moves/game: 26.00
+  Avg game time: 54096.12 ms
+  Total searches: 26
+  Avg search time: 1502.27 ms
+  Avg move time: 1502.50 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.48
+  MCTS searches/second: 0.48
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 26
+  Avg moves/game: 26.00
+  Avg game time: 54096.12 ms
+  Total searches: 26
+  Avg search time: 1502.27 ms
+  Avg move time: 1502.50 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.48
+  MCTS searches/second: 0.48
+==============================
+
+Progress: 50/100 (50.0%) - 0.06 games/s - Last: 20250530_154941_0 (33 moves, outcome: 1.0)
+Progress: 51/100 (51.0%) - 0.07 games/s - Last: 20250530_154930_0 (45 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 60074.09 ms
+  Total searches: 20
+  Avg search time: 1345.64 ms
+  Avg move time: 1346.00 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.17
+  MCTS searches/second: 0.17
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 60074.09 ms
+  Total searches: 20
+  Avg search time: 1345.64 ms
+  Avg move time: 1346.00 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.17
+  MCTS searches/second: 0.17
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 60074.09 ms
+  Total searches: 20
+  Avg search time: 1345.64 ms
+  Avg move time: 1346.00 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.17
+  MCTS searches/second: 0.17
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 2
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 2
+  Avg search time: 1158.01 ms
+  Avg move time: 1158.12 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 73
+  Avg moves/game: 73.00
+  Avg game time: 51038.78 ms
+  Total searches: 73
+  Avg search time: 1639.66 ms
+  Avg move time: 1639.83 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.43
+  MCTS searches/second: 1.43
+==============================
+
+Progress: 0/1 games completed (0.0%)
+Progress: 52/100 (52.0%) - 0.06 games/s - Last: 20250530_155020_0 (36 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 93
+  Avg moves/game: 93.00
+  Avg game time: 51038.78 ms
+  Total searches: 93
+  Avg search time: 1581.23 ms
+  Avg move time: 1581.37 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.82
+  MCTS searches/second: 1.82
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 93
+  Avg moves/game: 93.00
+  Avg game time: 51038.78 ms
+  Total searches: 93
+  Avg search time: 1581.23 ms
+  Avg move time: 1581.37 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.82
+  MCTS searches/second: 1.82
+==============================
+
+Progress: 53/100 (53.0%) - 0.06 games/s - Last: 20250530_155040_0 (30 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 21
+  Avg moves/game: 21.00
+  Avg game time: 45690.23 ms
+  Total searches: 21
+  Avg search time: 1626.89 ms
+  Avg move time: 1627.13 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.46
+  MCTS searches/second: 0.46
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 45690.23 ms
+  Total searches: 22
+  Avg search time: 1621.70 ms
+  Avg move time: 1621.93 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.48
+  MCTS searches/second: 0.48
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 45690.23 ms
+  Total searches: 22
+  Avg search time: 1621.70 ms
+  Avg move time: 1621.93 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.48
+  MCTS searches/second: 0.48
+==============================
+
+Progress: 54/100 (54.0%) - 0.06 games/s - Last: 20250530_155032_0 (37 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 63173.05 ms
+  Total searches: 22
+  Avg search time: 1470.74 ms
+  Avg move time: 1471.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.35
+  MCTS searches/second: 0.35
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 24
+  Avg moves/game: 24.00
+  Avg game time: 63173.05 ms
+  Total searches: 24
+  Avg search time: 1460.50 ms
+  Avg move time: 1460.84 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.38
+  MCTS searches/second: 0.38
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 63173.05 ms
+  Total searches: 25
+  Avg search time: 1456.98 ms
+  Avg move time: 1457.30 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.40
+  MCTS searches/second: 0.40
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 26
+  Avg moves/game: 26.00
+  Avg game time: 63173.05 ms
+  Total searches: 26
+  Avg search time: 1445.34 ms
+  Avg move time: 1445.65 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.41
+  MCTS searches/second: 0.41
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 26
+  Avg moves/game: 26.00
+  Avg game time: 63173.05 ms
+  Total searches: 26
+  Avg search time: 1445.34 ms
+  Avg move time: 1445.65 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.41
+  MCTS searches/second: 0.41
+==============================
+
+Progress: 55/100 (55.0%) - 0.06 games/s - Last: 20250530_155041_0 (57 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 68
+  Avg moves/game: 68.00
+  Avg game time: 87304.19 ms
+  Total searches: 68
+  Avg search time: 1648.44 ms
+  Avg move time: 1648.60 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.78
+  MCTS searches/second: 0.78
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 70
+  Avg moves/game: 70.00
+  Avg game time: 87304.19 ms
+  Total searches: 70
+  Avg search time: 1637.93 ms
+  Avg move time: 1638.09 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.80
+  MCTS searches/second: 0.80
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 71
+  Avg moves/game: 71.00
+  Avg game time: 87304.19 ms
+  Total searches: 71
+  Avg search time: 1636.61 ms
+  Avg move time: 1636.76 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.81
+  MCTS searches/second: 0.81
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 71
+  Avg moves/game: 71.00
+  Avg game time: 87304.19 ms
+  Total searches: 71
+  Avg search time: 1636.61 ms
+  Avg move time: 1636.76 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.81
+  MCTS searches/second: 0.81
+==============================
+
+Progress: 56/100 (56.0%) - 0.06 games/s - Last: 20250530_155130_0 (29 moves, outcome: 1.0)
+Progress: 57/100 (57.0%) - 0.06 games/s - Last: 20250530_155120_0 (40 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 50653.54 ms
+  Total searches: 20
+  Avg search time: 1412.41 ms
+  Avg move time: 1412.73 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.20
+  MCTS searches/second: 0.20
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 50653.54 ms
+  Total searches: 20
+  Avg search time: 1412.41 ms
+  Avg move time: 1412.73 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.20
+  MCTS searches/second: 0.20
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 0
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 0
+  Avg search time: 0.00 ms
+  Avg move time: 0.00 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 58/100 (58.0%) - 0.06 games/s - Last: 20250530_155142_0 (33 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 70
+  Avg moves/game: 70.00
+  Avg game time: 63819.75 ms
+  Total searches: 70
+  Avg search time: 1616.17 ms
+  Avg move time: 1616.92 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.10
+  MCTS searches/second: 1.10
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 71
+  Avg moves/game: 71.00
+  Avg game time: 63819.75 ms
+  Total searches: 71
+  Avg search time: 1609.49 ms
+  Avg move time: 1610.24 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.11
+  MCTS searches/second: 1.11
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 73
+  Avg moves/game: 73.00
+  Avg game time: 63819.75 ms
+  Total searches: 73
+  Avg search time: 1602.38 ms
+  Avg move time: 1603.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.14
+  MCTS searches/second: 1.14
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 73
+  Avg moves/game: 73.00
+  Avg game time: 63819.75 ms
+  Total searches: 73
+  Avg search time: 1602.38 ms
+  Avg move time: 1603.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.14
+  MCTS searches/second: 1.14
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 73
+  Avg moves/game: 73.00
+  Avg game time: 63819.75 ms
+  Total searches: 73
+  Avg search time: 1602.38 ms
+  Avg move time: 1603.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.14
+  MCTS searches/second: 1.14
+==============================
+
+Progress: 59/100 (59.0%) - 0.06 games/s - Last: 20250530_155220_0 (24 moves, outcome: -1.0)
+Progress: 60/100 (60.0%) - 0.07 games/s - Last: 20250530_155220_0 (27 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 37484.59 ms
+  Total searches: 20
+  Avg search time: 1560.43 ms
+  Avg move time: 1560.78 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.27
+  MCTS searches/second: 0.27
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 20
+  Avg moves/game: 10.00
+  Avg game time: 37484.59 ms
+  Total searches: 20
+  Avg search time: 1560.43 ms
+  Avg move time: 1560.78 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.27
+  MCTS searches/second: 0.27
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 1
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 1
+  Avg search time: 1310.85 ms
+  Avg move time: 1310.85 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 61/100 (61.0%) - 0.07 games/s - Last: 20250530_155211_0 (42 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 46
+  Avg moves/game: 46.00
+  Avg game time: 65242.36 ms
+  Total searches: 46
+  Avg search time: 1607.09 ms
+  Avg move time: 1607.34 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.71
+  MCTS searches/second: 0.71
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 47
+  Avg moves/game: 47.00
+  Avg game time: 65242.36 ms
+  Total searches: 47
+  Avg search time: 1600.13 ms
+  Avg move time: 1600.37 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.72
+  MCTS searches/second: 0.72
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 48
+  Avg moves/game: 48.00
+  Avg game time: 65242.36 ms
+  Total searches: 48
+  Avg search time: 1594.88 ms
+  Avg move time: 1595.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.74
+  MCTS searches/second: 0.74
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 48
+  Avg moves/game: 48.00
+  Avg game time: 65242.36 ms
+  Total searches: 48
+  Avg search time: 1594.88 ms
+  Avg move time: 1595.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.74
+  MCTS searches/second: 0.74
+==============================
+
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 46
+  Avg moves/game: 46.00
+  Avg game time: 40186.91 ms
+  Total searches: 46
+  Avg search time: 1657.18 ms
+  Avg move time: 1657.46 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.14
+  MCTS searches/second: 1.14
+==============================
+
+Progress: 0/1 games completed (0.0%)
+Progress: 63/100 (63.0%) - 0.07 games/s - Last: 20250530_155252_0 (26 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 48
+  Avg moves/game: 24.00
+  Avg game time: 44722.16 ms
+  Total searches: 48
+  Avg search time: 1659.84 ms
+  Avg move time: 1660.12 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.54
+  MCTS searches/second: 0.54
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 49
+  Avg moves/game: 24.50
+  Avg game time: 44722.16 ms
+  Total searches: 49
+  Avg search time: 1662.35 ms
+  Avg move time: 1662.63 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.55
+  MCTS searches/second: 0.55
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 49
+  Avg moves/game: 24.50
+  Avg game time: 44722.16 ms
+  Total searches: 49
+  Avg search time: 1662.35 ms
+  Avg move time: 1662.63 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.55
+  MCTS searches/second: 0.55
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 18
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 18
+  Avg search time: 1361.59 ms
+  Avg move time: 1361.81 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 64/100 (64.0%) - 0.07 games/s - Last: 20250530_155300_0 (35 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 20
+  Avg moves/game: 20.00
+  Avg game time: 53726.78 ms
+  Total searches: 20
+  Avg search time: 1625.53 ms
+  Avg move time: 1625.59 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.37
+  MCTS searches/second: 0.37
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 53726.78 ms
+  Total searches: 22
+  Avg search time: 1618.74 ms
+  Avg move time: 1618.79 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.41
+  MCTS searches/second: 0.41
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 53726.78 ms
+  Total searches: 22
+  Avg search time: 1618.74 ms
+  Avg move time: 1618.79 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.41
+  MCTS searches/second: 0.41
+==============================
+
+Progress: 65/100 (65.0%) - 0.06 games/s - Last: 20250530_155342_0 (35 moves, outcome: 1.0)
+Progress: 66/100 (66.0%) - 0.06 games/s - Last: 20250530_155321_0 (48 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 91
+  Avg moves/game: 45.50
+  Avg game time: 64973.53 ms
+  Total searches: 91
+  Avg search time: 1654.50 ms
+  Avg move time: 1654.65 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.70
+  MCTS searches/second: 0.70
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 93
+  Avg moves/game: 46.50
+  Avg game time: 64973.53 ms
+  Total searches: 93
+  Avg search time: 1641.07 ms
+  Avg move time: 1641.22 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.72
+  MCTS searches/second: 0.72
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 93
+  Avg moves/game: 46.50
+  Avg game time: 64973.53 ms
+  Total searches: 93
+  Avg search time: 1641.07 ms
+  Avg move time: 1641.22 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.72
+  MCTS searches/second: 0.72
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 93
+  Avg moves/game: 46.50
+  Avg game time: 64973.53 ms
+  Total searches: 93
+  Avg search time: 1641.07 ms
+  Avg move time: 1641.22 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.72
+  MCTS searches/second: 0.72
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 2
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 2
+  Avg search time: 1124.08 ms
+  Avg move time: 1124.09 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 67/100 (67.0%) - 0.06 games/s - Last: 20250530_155400_0 (35 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 42
+  Avg moves/game: 42.00
+  Avg game time: 53252.96 ms
+  Total searches: 42
+  Avg search time: 1547.28 ms
+  Avg move time: 1547.64 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.79
+  MCTS searches/second: 0.79
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 53252.96 ms
+  Total searches: 45
+  Avg search time: 1535.99 ms
+  Avg move time: 1536.33 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.85
+  MCTS searches/second: 0.85
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 53252.96 ms
+  Total searches: 45
+  Avg search time: 1535.99 ms
+  Avg move time: 1536.33 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.85
+  MCTS searches/second: 0.85
+==============================
+
+Progress: 68/100 (68.0%) - 0.07 games/s - Last: 20250530_155350_0 (42 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 20
+  Avg moves/game: 20.00
+  Avg game time: 74653.71 ms
+  Total searches: 20
+  Avg search time: 1527.38 ms
+  Avg move time: 1528.59 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.27
+  MCTS searches/second: 0.27
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 20
+  Avg moves/game: 20.00
+  Avg game time: 74653.71 ms
+  Total searches: 20
+  Avg search time: 1527.38 ms
+  Avg move time: 1528.59 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.27
+  MCTS searches/second: 0.27
+==============================
+
+Progress: 69/100 (69.0%) - 0.07 games/s - Last: 20250530_155441_0 (23 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 24
+  Avg moves/game: 24.00
+  Avg game time: 33349.20 ms
+  Total searches: 24
+  Avg search time: 1453.31 ms
+  Avg move time: 1453.68 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.72
+  MCTS searches/second: 0.72
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 24
+  Avg moves/game: 24.00
+  Avg game time: 33349.20 ms
+  Total searches: 24
+  Avg search time: 1453.31 ms
+  Avg move time: 1453.68 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.72
+  MCTS searches/second: 0.72
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 27
+  Avg moves/game: 27.00
+  Avg game time: 33349.20 ms
+  Total searches: 27
+  Avg search time: 1445.63 ms
+  Avg move time: 1445.96 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.81
+  MCTS searches/second: 0.81
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 27
+  Avg moves/game: 27.00
+  Avg game time: 33349.20 ms
+  Total searches: 27
+  Avg search time: 1445.63 ms
+  Avg move time: 1445.96 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.81
+  MCTS searches/second: 0.81
+==============================
+
+Progress: 71/100 (71.0%) - 0.06 games/s - Last: 20250530_155442_0 (50 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 91
+  Avg moves/game: 45.50
+  Avg game time: 57786.19 ms
+  Total searches: 91
+  Avg search time: 1696.42 ms
+  Avg move time: 1696.70 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.79
+  MCTS searches/second: 0.79
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 92
+  Avg moves/game: 46.00
+  Avg game time: 57786.19 ms
+  Total searches: 92
+  Avg search time: 1691.26 ms
+  Avg move time: 1691.54 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.80
+  MCTS searches/second: 0.80
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 93
+  Avg moves/game: 46.50
+  Avg game time: 57786.19 ms
+  Total searches: 93
+  Avg search time: 1684.25 ms
+  Avg move time: 1684.52 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.80
+  MCTS searches/second: 0.80
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 93
+  Avg moves/game: 46.50
+  Avg game time: 57786.19 ms
+  Total searches: 93
+  Avg search time: 1684.25 ms
+  Avg move time: 1684.52 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.80
+  MCTS searches/second: 0.80
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 1
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 1
+  Avg search time: 956.40 ms
+  Avg move time: 956.66 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 72/100 (72.0%) - 0.06 games/s - Last: 20250530_155500_0 (54 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 47
+  Avg moves/game: 47.00
+  Avg game time: 80469.44 ms
+  Total searches: 47
+  Avg search time: 1675.70 ms
+  Avg move time: 1676.46 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.58
+  MCTS searches/second: 0.58
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 47
+  Avg moves/game: 47.00
+  Avg game time: 80469.44 ms
+  Total searches: 47
+  Avg search time: 1675.70 ms
+  Avg move time: 1676.46 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.58
+  MCTS searches/second: 0.58
+==============================
+
+Progress: 0/1 games completed (0.0%)
+Progress: 73/100 (73.0%) - 0.06 games/s - Last: 20250530_155510_0 (35 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 64
+  Avg moves/game: 32.00
+  Avg game time: 76494.77 ms
+  Total searches: 64
+  Avg search time: 1529.78 ms
+  Avg move time: 1530.35 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.42
+  MCTS searches/second: 0.42
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 64
+  Avg moves/game: 32.00
+  Avg game time: 76494.77 ms
+  Total searches: 64
+  Avg search time: 1529.78 ms
+  Avg move time: 1530.35 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.42
+  MCTS searches/second: 0.42
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 0
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 0
+  Avg search time: 0.00 ms
+  Avg move time: 0.00 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 74/100 (74.0%) - 0.06 games/s - Last: 20250530_155601_0 (29 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 44
+  Avg moves/game: 44.00
+  Avg game time: 41298.94 ms
+  Total searches: 44
+  Avg search time: 1605.15 ms
+  Avg move time: 1605.33 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.07
+  MCTS searches/second: 1.07
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 41298.94 ms
+  Total searches: 45
+  Avg search time: 1596.30 ms
+  Avg move time: 1596.48 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.09
+  MCTS searches/second: 1.09
+==============================
+
+Progress: 0/1 games completed (0.0%)
+Progress: 75/100 (75.0%) - 0.07 games/s - Last: 20250530_155602_0 (34 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 47
+  Avg moves/game: 23.50
+  Avg game time: 45226.45 ms
+  Total searches: 47
+  Avg search time: 1588.11 ms
+  Avg move time: 1588.28 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.52
+  MCTS searches/second: 0.52
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 2
+  Total moves: 47
+  Avg moves/game: 23.50
+  Avg game time: 45226.45 ms
+  Total searches: 47
+  Avg search time: 1588.11 ms
+  Avg move time: 1588.28 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.52
+  MCTS searches/second: 0.52
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 0
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 0
+  Avg search time: 0.00 ms
+  Avg move time: 0.00 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+Progress: 76/100 (76.0%) - 0.07 games/s - Last: 20250530_155630_0 (23 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 44
+  Avg moves/game: 44.00
+  Avg game time: 35653.10 ms
+  Total searches: 44
+  Avg search time: 1593.30 ms
+  Avg move time: 1593.72 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 1.23
+  MCTS searches/second: 1.23
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 44
+  Avg moves/game: 44.00
+  Avg game time: 35653.10 ms
+  Total searches: 44
+  Avg search time: 1593.30 ms
+  Avg move time: 1593.72 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 1.23
+  MCTS searches/second: 1.23
+==============================
+
+Progress: 77/100 (77.0%) - 0.07 games/s - Last: 20250530_155651_0 (19 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 24
+  Avg moves/game: 24.00
+  Avg game time: 27401.86 ms
+  Total searches: 24
+  Avg search time: 1561.29 ms
+  Avg move time: 1561.48 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.04
+  Moves/second: 0.88
+  MCTS searches/second: 0.88
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 27401.86 ms
+  Total searches: 25
+  Avg search time: 1550.07 ms
+  Avg move time: 1550.26 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.04
+  Moves/second: 0.91
+  MCTS searches/second: 0.91
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 27
+  Avg moves/game: 27.00
+  Avg game time: 27401.86 ms
+  Total searches: 27
+  Avg search time: 1541.59 ms
+  Avg move time: 1541.76 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.04
+  Moves/second: 0.99
+  MCTS searches/second: 0.99
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 27
+  Avg moves/game: 27.00
+  Avg game time: 27401.86 ms
+  Total searches: 27
+  Avg search time: 1541.59 ms
+  Avg move time: 1541.76 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.04
+  Moves/second: 0.99
+  MCTS searches/second: 0.99
+==============================
+
+Progress: 78/100 (78.0%) - 0.07 games/s - Last: 20250530_155652_0 (27 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 44
+  Avg moves/game: 44.00
+  Avg game time: 42491.75 ms
+  Total searches: 44
+  Avg search time: 1583.83 ms
+  Avg move time: 1584.11 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.04
+  MCTS searches/second: 1.04
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 42491.75 ms
+  Total searches: 45
+  Avg search time: 1579.78 ms
+  Avg move time: 1580.05 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.06
+  MCTS searches/second: 1.06
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 42491.75 ms
+  Total searches: 45
+  Avg search time: 1579.78 ms
+  Avg move time: 1580.05 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.06
+  MCTS searches/second: 1.06
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 48
+  Avg moves/game: 48.00
+  Avg game time: 42491.75 ms
+  Total searches: 48
+  Avg search time: 1567.53 ms
+  Avg move time: 1567.79 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.13
+  MCTS searches/second: 1.13
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 48
+  Avg moves/game: 48.00
+  Avg game time: 42491.75 ms
+  Total searches: 48
+  Avg search time: 1567.53 ms
+  Avg move time: 1567.79 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 1.13
+  MCTS searches/second: 1.13
+==============================
+
+Progress: 79/100 (79.0%) - 0.06 games/s - Last: 20250530_155630_0 (50 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 43
+  Avg moves/game: 43.00
+  Avg game time: 88570.00 ms
+  Total searches: 43
+  Avg search time: 1642.48 ms
+  Avg move time: 1642.67 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.49
+  MCTS searches/second: 0.49
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 88570.00 ms
+  Total searches: 45
+  Avg search time: 1633.31 ms
+  Avg move time: 1633.49 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.51
+  MCTS searches/second: 0.51
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 45
+  Avg moves/game: 45.00
+  Avg game time: 88570.00 ms
+  Total searches: 45
+  Avg search time: 1633.31 ms
+  Avg move time: 1633.49 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.51
+  MCTS searches/second: 0.51
+==============================
+
+Progress: 80/100 (80.0%) - 0.07 games/s - Last: 20250530_155710_0 (35 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 20
+  Avg moves/game: 20.00
+  Avg game time: 52901.86 ms
+  Total searches: 20
+  Avg search time: 1404.67 ms
+  Avg move time: 1404.86 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.38
+  MCTS searches/second: 0.38
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 20
+  Avg moves/game: 20.00
+  Avg game time: 52901.86 ms
+  Total searches: 20
+  Avg search time: 1404.67 ms
+  Avg move time: 1404.86 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.38
+  MCTS searches/second: 0.38
+==============================
+
+Progress: 81/100 (81.0%) - 0.06 games/s - Last: 20250530_155721_0 (53 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 73
+  Avg moves/game: 73.00
+  Avg game time: 76295.07 ms
+  Total searches: 73
+  Avg search time: 1632.13 ms
+  Avg move time: 1632.28 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.96
+  MCTS searches/second: 0.96
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 74
+  Avg moves/game: 74.00
+  Avg game time: 76295.07 ms
+  Total searches: 74
+  Avg search time: 1627.51 ms
+  Avg move time: 1627.66 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 0.97
+  MCTS searches/second: 0.97
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 76
+  Avg moves/game: 76.00
+  Avg game time: 76295.07 ms
+  Total searches: 76
+  Avg search time: 1622.38 ms
+  Avg move time: 1622.53 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 1.00
+  MCTS searches/second: 1.00
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 76
+  Avg moves/game: 76.00
+  Avg game time: 76295.07 ms
+  Total searches: 76
+  Avg search time: 1622.38 ms
+  Avg move time: 1622.53 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.01
+  Moves/second: 1.00
+  MCTS searches/second: 1.00
+==============================
+
+Progress: 82/100 (82.0%) - 0.06 games/s - Last: 20250530_155810_0 (25 moves, outcome: 1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 22
+  Avg moves/game: 22.00
+  Avg game time: 39963.87 ms
+  Total searches: 22
+  Avg search time: 1591.56 ms
+  Avg move time: 1591.80 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.55
+  MCTS searches/second: 0.55
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 23
+  Avg moves/game: 23.00
+  Avg game time: 39963.87 ms
+  Total searches: 23
+  Avg search time: 1590.35 ms
+  Avg move time: 1590.62 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.58
+  MCTS searches/second: 0.58
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 23
+  Avg moves/game: 23.00
+  Avg game time: 39963.87 ms
+  Total searches: 23
+  Avg search time: 1590.35 ms
+  Avg move time: 1590.62 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.58
+  MCTS searches/second: 0.58
+==============================
+
+Progress: 0/1 games completed (0.0%)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 1
+  Total moves: 25
+  Avg moves/game: 25.00
+  Avg game time: 39963.87 ms
+  Total searches: 25
+  Avg search time: 1599.16 ms
+  Avg move time: 1599.41 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.03
+  Moves/second: 0.63
+  MCTS searches/second: 0.63
+==============================
+
+Progress: 0/1 games completed (0.0%)
+Progress: 83/100 (83.0%) - 0.06 games/s - Last: 20250530_155800_0 (33 moves, outcome: 1.0)
+Progress: 84/100 (84.0%) - 0.07 games/s - Last: 20250530_155742_0 (50 moves, outcome: -1.0)
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 3
+  Total moves: 44
+  Avg moves/game: 14.67
+  Avg game time: 58322.38 ms
+  Total searches: 44
+  Avg search time: 1463.84 ms
+  Avg move time: 1464.01 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.25
+  MCTS searches/second: 0.25
+==============================
+
+Progress: 1/1 games completed (100.0%)
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 3
+  Total moves: 44
+  Avg moves/game: 14.67
+  Avg game time: 58322.38 ms
+  Total searches: 44
+  Avg search time: 1463.84 ms
+  Avg move time: 1464.01 ms
+
+[NEURAL NETWORK]
+  Total inferences: 400
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+
+[THROUGHPUT]
+  Games/second: 0.02
+  Moves/second: 0.25
+  MCTS searches/second: 0.25
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 0
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 0
+  Avg search time: 0.00 ms
+  Avg move time: 0.00 ms
+
+[NEURAL NETWORK]
+  Total inferences: 0
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+
+
+🎯 FINAL PERFORMANCE REPORT:
+
+=== PERFORMANCE STATISTICS ===
+[GAMES]
+  Total games: 0
+  Total moves: 3
+  Avg moves/game: 0.00
+  Avg game time: 0.00 ms
+  Total searches: 3
+  Avg search time: 825.03 ms
+  Avg move time: 827.35 ms
+
+[NEURAL NETWORK]
+  Total inferences: 800
+  Total batches: 0
+  Avg batch size: 0.00
+  Avg inference time: 0.00 ms
+==============================
+

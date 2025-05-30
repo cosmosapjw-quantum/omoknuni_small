@@ -30,12 +30,16 @@ void MCTSEngine::addDirichletNoise(std::shared_ptr<MCTSNode> root) {
             if (settings_.num_threads == 0) {
                 std::vector<std::unique_ptr<core::IGameState>> states;
                 states.push_back(std::unique_ptr<core::IGameState>(state_clone->clone().release()));
-                // TODO: Replace with UnifiedInferenceServer synchronous call
                 std::vector<NetworkOutput> outputs;
-                // Create default outputs since inference server was removed
-                outputs.resize(1);
-                outputs[0].policy.resize(root->getState().getActionSpaceSize(), 1.0f / root->getState().getActionSpaceSize());
-                outputs[0].value = 0.0f;
+                if (direct_inference_fn_) {
+                    // Use the direct inference function if available
+                    outputs = direct_inference_fn_(states);
+                } else {
+                    // Create default outputs as fallback
+                    outputs.resize(1);
+                    outputs[0].policy.resize(root->getState().getActionSpaceSize(), 1.0f / root->getState().getActionSpaceSize());
+                    outputs[0].value = 0.0f;
+                }
                 if (!outputs.empty()) {
                     root->setPriorProbabilities(outputs[0].policy);
                 } else {
@@ -181,6 +185,10 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
     
     // Expand the leaf node
     try {
+        if (settings_.num_simulations == 100 && use_transposition_table_) {
+            // std::cout << "DEBUG: About to expand leaf and store in TT, use_tt=" << use_transposition_table_ 
+            //           << ", tt_ptr=" << (transposition_table_ ? "valid" : "null") << std::endl;
+        }
         leaf->expand(settings_.use_progressive_widening, 
                     settings_.progressive_widening_c, 
                     settings_.progressive_widening_k);
@@ -190,6 +198,8 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
             try {
                 if (transposition_table_) {
                     transposition_table_->store(leaf_state_hash, leaf, path.size());
+                } else if (settings_.num_simulations == 100) {
+                    // std::cout << "DEBUG: TT is null despite use_transposition_table_=true" << std::endl;
                 }
             } catch (const std::exception& e) {
                 std::cerr << "Transposition table store failed: " << e.what() << std::endl;
@@ -202,7 +212,6 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
         
         // Evaluate with the neural network
         if (settings_.num_threads == 0) { // SERIAL MODE
-            std::cout << "🔍 MCTSEngine::expandAndEvaluate - Using SERIAL MODE for evaluation" << std::endl;
             auto state_clone_serial = cloneGameState(leaf->getState());
             if (!state_clone_serial) {
                 throw std::runtime_error("Failed to clone state for evaluation");
@@ -212,10 +221,15 @@ float MCTSEngine::expandAndEvaluate(std::shared_ptr<MCTSNode> leaf, const std::v
             
             // Direct neural network evaluation for synchronous mode
             std::vector<NetworkOutput> outputs;
-            // Create default outputs since inference server was removed
-            outputs.resize(1);
-            outputs[0].policy.resize(leaf->getState().getActionSpaceSize(), 1.0f / leaf->getState().getActionSpaceSize());
-            outputs[0].value = 0.0f;
+            if (direct_inference_fn_) {
+                // Use the direct inference function if available
+                outputs = direct_inference_fn_(states_serial);
+            } else {
+                // Fallback to default outputs
+                outputs.resize(1);
+                outputs[0].policy.resize(leaf->getState().getActionSpaceSize(), 1.0f / leaf->getState().getActionSpaceSize());
+                outputs[0].value = 0.0f;
+            }
             
             if (!outputs.empty()) {
                 leaf->setPriorProbabilities(outputs[0].policy);

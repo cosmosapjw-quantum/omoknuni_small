@@ -181,16 +181,14 @@ public:
             
             // Log progress
             if ((i + 1) % 10 == 0) {
-                LOG(INFO) << "Arena progress: " << (i + 1) << "/" << config_.num_games
-                         << " games. Champion: " << result.champion_wins
-                         << ", Contender: " << result.contender_wins
-                         << ", Draws: " << result.draws;
+                // LOG_SYSTEM_INFO("Arena progress: {}/{} games. Champion: {}, Contender: {}, Draws: {}",
+                //                (i + 1), config_.num_games, result.champion_wins,
+                //                result.contender_wins, result.draws);
             }
         }
         
-        LOG(INFO) << "Arena match complete. Champion win rate: " 
-                 << (result.champion_win_rate() * 100) << "%"
-                 << ", Contender win rate: " << (result.contender_win_rate() * 100) << "%";
+        // LOG_SYSTEM_INFO("Arena match complete. Champion win rate: {:.1f}%, Contender win rate: {:.1f}%",
+        //                result.champion_win_rate() * 100, result.contender_win_rate() * 100);
         
         return result;
     }
@@ -205,11 +203,15 @@ public:
         std::shared_ptr<nn::NeuralNetwork> contender_model;
         
         // Create ResNet models (or use factory if available)
+#ifdef WITH_TORCH
         champion_model = std::make_shared<nn::ResNetModel>(config_.board_size, 256, 20);
         champion_model->load(champion_path);
         
         contender_model = std::make_shared<nn::ResNetModel>(config_.board_size, 256, 20);
         contender_model->load(contender_path);
+#else
+        throw std::runtime_error("Neural network models require torch support");
+#endif
         
         // Play match
         return playMatch(champion_model, contender_model);

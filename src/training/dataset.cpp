@@ -4,13 +4,17 @@
 #include <iostream>
 #include <random> // For std::random_device and std::mt19937
 
+#ifdef WITH_TORCH
 // Add necessary headers for CUDA API calls
 #include <c10/cuda/CUDACachingAllocator.h>
 #include <c10/cuda/CUDAFunctions.h>
 #include <ATen/cuda/CUDAContext.h>
+#endif
 
 namespace alphazero {
 namespace training {
+
+#ifdef WITH_TORCH
 
 AlphaZeroDataset::AlphaZeroDataset(
     const std::vector<std::vector<std::vector<std::vector<float>>>>& states,
@@ -299,6 +303,8 @@ AlphaZeroDataset& AlphaZeroDataset::to(const torch::Device& device) {
     
     return *this;
 }
+
+#endif // WITH_TORCH
 
 } // namespace training
 } // namespace alphazero

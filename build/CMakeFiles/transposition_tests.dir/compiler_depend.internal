@@ -42,10 +42,7 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
  /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
- /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
- /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h
- /home/cosmos/omoknuni_small/include/nn/resnet_model.h
  /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h
  /home/cosmos/omoknuni_small/include/utils/logger.h
  /home/cosmos/omoknuni_small/include/utils/memory_allocator.h

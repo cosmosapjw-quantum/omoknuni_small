@@ -2700,6 +2700,7 @@ CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o: /ho
   /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
+  /home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
   /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h \
@@ -24474,10 +24475,7 @@ CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.o: /home/
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
-  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
-  /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
-  /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
   /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h \
   /home/cosmos/omoknuni_small/include/utils/logger.h \
   /home/cosmos/omoknuni_small/include/utils/memory_allocator.h \
@@ -34897,7 +34895,6 @@ CMakeFiles/all_tests.dir/tests/mcts/transposition_table_test.cpp.o: /home/cosmos
 CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/virtual_loss_test.cpp \
   _deps/mimalloc-src/include/mimalloc.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
-  /home/cosmos/omoknuni_small/include/core/game_export.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
   /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
@@ -35017,7 +35014,6 @@ CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o: /home/cosmos/omoknu
   /usr/include/c++/13/bits/streambuf_iterator.h \
   /usr/include/c++/13/bits/string_view.tcc \
   /usr/include/c++/13/bits/stringfwd.h \
-  /usr/include/c++/13/bits/this_thread_sleep.h \
   /usr/include/c++/13/bits/uniform_int_dist.h \
   /usr/include/c++/13/bits/unique_lock.h \
   /usr/include/c++/13/bits/unique_ptr.h \
@@ -35087,7 +35083,6 @@ CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o: /home/cosmos/omoknu
   /usr/include/c++/13/string \
   /usr/include/c++/13/string_view \
   /usr/include/c++/13/system_error \
-  /usr/include/c++/13/thread \
   /usr/include/c++/13/tr1/bessel_function.tcc \
   /usr/include/c++/13/tr1/beta_function.tcc \
   /usr/include/c++/13/tr1/ell_integral.tcc \
@@ -40529,6 +40524,7 @@ CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o: /home/cosm
   /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
+  /home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
   /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
@@ -45760,6 +45756,7 @@ CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o: /home/
   /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
+  /home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
   /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
@@ -56466,9 +56463,7 @@ CMakeFiles/all_tests.dir/tests/all_tests_main.cpp.o:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/types.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/cummaxmin_backward_ops.h:
-
-/usr/include/c++/13/bits/stl_multiset.h:
+/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_addmm_activation_ops.h:
 
@@ -56489,6 +56484,10 @@ CMakeFiles/all_tests.dir/tests/all_tests_main.cpp.o:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cummin_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/addmv.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/cummaxmin_backward_ops.h:
+
+/usr/include/c++/13/bits/stl_multiset.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/cudnn_grid_sampler_ops.h:
 
@@ -58518,12 +58517,6 @@ CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/squeeze_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_bsc_tensor_args_ops.h:
-
-/home/cosmos/omoknuni_small/include/core/igamestate.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_cond_ops.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/addcdiv.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_batch_norm_impl_index_ops.h:
@@ -60010,6 +60003,12 @@ _deps/tracy-src/public/client/TracyProfiler.hpp:
 
 /usr/include/x86_64-linux-gnu/sys/wait.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_bsc_tensor_args_ops.h:
+
+/home/cosmos/omoknuni_small/include/core/igamestate.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_cond_ops.h:
+
 /usr/include/assert.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fake_quantize_per_tensor_affine_cachemask_backward_ops.h:
@@ -60221,6 +60220,10 @@ _deps/tracy-src/public/client/TracyProfiler.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/masked_select_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/refine_names_ops.h:
+
+/usr/include/c++/13/bits/stl_pair.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/vstack.h:
 
 /usr/include/c++/13/bits/locale_classes.tcc:
 
@@ -60849,10 +60852,6 @@ _deps/tracy-src/public/common/TracyMutex.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/conv_tbc_backward.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/from_file_ops.h:
-
-/usr/include/c++/13/bits/stl_pair.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/vstack.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/addr_native.h:
 
@@ -61865,6 +61864,8 @@ _deps/tracy-src/public/client/TracySysTime.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_masked_softmax_backward_native.h:
 
 /usr/include/c++/13/bits/requires_hosted.h:
+
+/home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_addcdiv_native.h:
 
@@ -66865,5 +66866,3 @@ CMakeFiles/all_tests.dir/tests/mcts/progressive_widening_test.cpp.o:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/mps_convolution_transpose_backward_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/special.h:
-
-/opt/libtorch-2.7.0-cu128/include/torch/csrc/api/include/torch/torch.h:

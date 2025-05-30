@@ -270,4 +270,35 @@ CMakeFiles/alphazero.dir/src/mcts/shared_inference_queue.cpp.o: \
  /usr/include/c++/13/bits/locale_conv.h \
  /usr/include/c++/13/bits/quoted_string.h \
  /usr/include/c++/13/unordered_set \
- /usr/include/c++/13/bits/unordered_set.h /usr/include/c++/13/iostream
+ /usr/include/c++/13/bits/unordered_set.h \
+ /home/cosmos/omoknuni_small/include/utils/logger.h \
+ /usr/include/spdlog/spdlog.h /usr/include/spdlog/common.h \
+ /usr/include/spdlog/tweakme.h /usr/include/spdlog/details/null_mutex.h \
+ /usr/include/c++/13/functional /usr/include/spdlog/fmt/fmt.h \
+ /usr/include/fmt/core.h /usr/include/c++/13/cstring \
+ /usr/include/string.h /usr/include/strings.h \
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /usr/include/c++/13/iterator /usr/include/c++/13/bits/stream_iterator.h \
+ /usr/include/fmt/format.h /usr/include/fmt/core.h \
+ /usr/include/spdlog/details/registry.h \
+ /usr/include/spdlog/details/periodic_worker.h \
+ /usr/include/spdlog/logger.h /usr/include/spdlog/details/log_msg.h \
+ /usr/include/spdlog/details/backtracer.h \
+ /usr/include/spdlog/details/log_msg_buffer.h \
+ /usr/include/spdlog/details/circular_q.h /usr/include/spdlog/version.h \
+ /usr/include/spdlog/details/synchronous_factory.h \
+ /usr/include/spdlog/sinks/stdout_color_sinks.h \
+ /usr/include/spdlog/sinks/ansicolor_sink.h \
+ /usr/include/spdlog/details/console_globals.h \
+ /usr/include/spdlog/sinks/sink.h /usr/include/spdlog/formatter.h \
+ /usr/include/spdlog/sinks/rotating_file_sink.h \
+ /usr/include/spdlog/sinks/base_sink.h \
+ /usr/include/spdlog/details/file_helper.h \
+ /usr/include/spdlog/sinks/daily_file_sink.h \
+ /usr/include/spdlog/fmt/chrono.h /usr/include/fmt/chrono.h \
+ /usr/include/fmt/format.h /usr/include/spdlog/details/os.h \
+ /usr/include/spdlog/async.h /usr/include/spdlog/async_logger.h \
+ /usr/include/spdlog/details/thread_pool.h \
+ /usr/include/spdlog/details/mpmc_blocking_q.h \
+ /usr/include/c++/13/iostream

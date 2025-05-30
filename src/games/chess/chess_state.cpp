@@ -2,7 +2,6 @@
 #include "games/chess/chess_state.h"
 #include "games/chess/chess_rules.h"
 #include "games/chess/chess960.h"
-#include "core/tensor_pool.h"            // For GlobalTensorPool optimization
 #include "utils/attack_defense_module.h"  // For GPU attack/defense computation
 #include <sstream>
 #include <iostream>
@@ -696,8 +695,9 @@ std::vector<std::vector<std::vector<float>>> ChessState::getTensorRepresentation
         return cached_tensor_repr_;
     }
     
-    // PERFORMANCE FIX: Use global tensor pool for efficient memory reuse
-    auto tensor = core::GlobalTensorPool::getInstance().getTensor(12, 8, 8);
+    // Create tensor directly without pooling
+    auto tensor = std::vector<std::vector<std::vector<float>>>(
+        12, std::vector<std::vector<float>>(8, std::vector<float>(8, 0.0f)));
     
     // Fill tensor with piece positions
     for (int square = 0; square < NUM_SQUARES; ++square) {
@@ -1269,20 +1269,9 @@ ChessState::~ChessState() {
 }
 
 void ChessState::clearTensorCache() const {
-    // Return cached tensors to the global pool
-    if (!cached_tensor_repr_.empty()) {
-        core::GlobalTensorPool::getInstance().returnTensor(
-            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_tensor_repr_),
-            20, 8, 8);  // Chess uses 20 channels for basic representation
-        cached_tensor_repr_.clear();
-    }
-    
-    if (!cached_enhanced_tensor_repr_.empty()) {
-        core::GlobalTensorPool::getInstance().returnTensor(
-            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_enhanced_tensor_repr_),
-            119, 8, 8);  // Chess uses 119 channels for enhanced representation
-        cached_enhanced_tensor_repr_.clear();
-    }
+    // Simply clear the cached tensors
+    cached_tensor_repr_.clear();
+    cached_enhanced_tensor_repr_.clear();
 }
 
 void ChessState::updateHash() const {

@@ -1,226 +1,208 @@
-# Hybrid MCTS Optimization Plan
+# Hybrid CPU-GPU MCTS Optimization Plan
 
-## Current Performance Issues
-- Move time: 2815ms (99.4% CPU overhead)
-- Many tiny batches (1-15 states) despite 120 minimum threshold
-- Sequential tree traversal is the bottleneck
+## Executive Summary
+
+This document outlines a comprehensive plan to transform the current CPU-bound MCTS implementation into a high-performance hybrid CPU-GPU system. Based on analysis of the current bottlenecks and GPU MCTS research, we propose a staged implementation that can achieve 10-50x performance improvements.
+
+## Current Bottlenecks Analysis
+
+1. **Tree Traversal Dominance**: 98.5% of time spent in sequential tree operations
+2. **GPU Underutilization**: Small batch sizes (1-15) despite 256 capacity
+3. **Memory Inefficiency**: Poor cache locality due to scattered nodes
+4. **Atomic Contention**: Heavy atomic operations for updates
 
 ## Proposed Hybrid Architecture
 
-### 1. Batch Tree Selection (Immediate Impact)
-Instead of sequential traversal, collect multiple paths simultaneously:
+### Phase 1: Tensorized Tree Representation
 
-```cpp
-// Current: Sequential per-thread traversal
-for (int sim = 0; sim < num_simulations; sim++) {
-    auto leaf = traverseToLeaf();  // Each thread does this independently
-    leaf_queue.push(leaf);
+#### Mathematical Foundation
+
+The core insight is to represent the MCTS tree as dense tensors suitable for GPU operations:
+
+**State Tensor**: $S \in \mathbb{R}^{B \times M \times D}$
+- B: Batch size (parallel trees)
+- M: Maximum nodes per tree
+- D: State dimension
+
+**Statistics Tensors**:
+- $Q \in \mathbb{R}^{B \times M \times A}$: Action values
+- $N \in \mathbb{Z}^{B \times M \times A}$: Visit counts
+- $P \in \mathbb{R}^{B \times M \times A}$: Prior probabilities
+- $W \in \mathbb{R}^{B \times M \times A}$: Cumulative values
+
+**UCB Computation** (fully parallelized):
+$$\text{UCB}[b,m,a] = Q[b,m,a] + c_{\text{puct}} \cdot P[b,m,a] \cdot \frac{\sqrt{\sum_i N[b,m,i]}}{1 + N[b,m,a]}$$
+
+### Phase 2: GPU Kernel Implementation
+
+#### 1. Batch Selection Kernel
+```cuda
+__global__ void batchSelectPaths(
+    float* Q,        // [B, M, A]
+    int* N,          // [B, M, A]
+    float* P,        // [B, M, A]
+    int* paths,      // [B, MAX_DEPTH, 2] (node, action)
+    float c_puct,
+    int batch_size
+);
+```
+
+**Algorithm**:
+1. Each thread block handles one tree
+2. Cooperatively compute UCB scores for all children
+3. Use warp shuffle for efficient argmax
+4. Apply virtual loss atomically
+5. Continue until leaf reached
+
+#### 2. Batch Neural Network Evaluation
+```cuda
+__global__ void prepareNNBatch(
+    int* leaf_nodes,     // [B]
+    float* states,       // [B, M, D]
+    float* nn_input,     // [B, D]
+    int batch_size
+);
+```
+
+#### 3. Batch Backup Kernel
+```cuda
+__global__ void batchBackup(
+    float* values,       // [B] from NN
+    int* paths,         // [B, MAX_DEPTH, 2]
+    float* W,           // [B, M, A]
+    int* N,             // [B, M, A]
+    int batch_size
+);
+```
+
+### Phase 3: Memory Optimization
+
+#### GPU Memory Layout
+```
+Unified Memory Region:
+├── Tree Statistics (Q, N, P, W)
+├── Node Metadata (parent, children indices)
+├── State Cache (frequently accessed states)
+└── Transposition Table (GPU-accelerated lookup)
+
+Device Memory:
+├── NN Weights (persistent)
+├── Batch Buffers (double buffered)
+└── Temporary Computation Space
+```
+
+#### Data Structure Optimizations
+1. **SoA Layout**: Separate arrays for Q, N, P instead of AoS
+2. **Compressed Indices**: 16-bit indices for nodes < 65K
+3. **Sparse Storage**: CSR format for nodes with many children
+4. **Aligned Access**: Ensure coalesced memory patterns
+
+### Phase 4: Pipeline Architecture
+
+```
+CPU Thread Pool          GPU Execution
+┌─────────────┐         ┌──────────────────┐
+│ Tree Manager│         │ Selection Kernel │
+│   (Host)    │ ──────> │  (UCB + Virtual │
+└─────────────┘         │     Loss)        │
+                        └──────────────────┘
+                                 │
+                                 ▼
+┌─────────────┐         ┌──────────────────┐
+│State Prepare│ <────── │  Leaf Detection  │
+│   (Host)    │         │    (Device)      │
+└─────────────┘         └──────────────────┘
+                                 │
+                                 ▼
+┌─────────────┐         ┌──────────────────┐
+│ Expansion   │         │   NN Inference   │
+│   Logic     │ ──────> │   (TorchScript)  │
+└─────────────┘         └──────────────────┘
+                                 │
+                                 ▼
+┌─────────────┐         ┌──────────────────┐
+│Tree Update  │ <────── │  Backup Kernel   │
+│  (Host)     │         │ (Scatter Add)    │
+└─────────────┘         └──────────────────┘
+```
+
+### Implementation Strategy
+
+#### Stage 1: Basic GPU Tree Operations (Week 1)
+- [ ] Implement tensorized tree representation
+- [ ] Basic UCB calculation kernel
+- [ ] Simple batch selection kernel
+- [ ] Integration with existing code
+
+#### Stage 2: Advanced GPU Features (Week 2)
+- [ ] Virtual loss mechanism
+- [ ] Sparse tensor support for large branching
+- [ ] CUDA graph optimization
+- [ ] Multi-stream execution
+
+#### Stage 3: Memory Optimization (Week 3)
+- [ ] Unified memory implementation
+- [ ] GPU-resident transposition table
+- [ ] Zero-copy state transfers
+- [ ] Memory pool enhancements
+
+#### Stage 4: Full Integration (Week 4)
+- [ ] Complete hybrid pipeline
+- [ ] Performance tuning
+- [ ] Multi-GPU support
+- [ ] Production deployment
+
+## Performance Projections
+
+Based on similar implementations and our analysis:
+
+1. **Tree Selection**: 50x speedup (GPU parallel vs CPU sequential)
+2. **NN Inference**: 2x improvement (better batching)
+3. **Backup Phase**: 20x speedup (parallel updates)
+4. **Overall**: 10-30x end-to-end improvement
+
+## Specific Optimizations for Large Branching (Mid/End-game)
+
+### Progressive Widening on GPU
+```cuda
+__device__ int getExplorationWidth(int visits) {
+    return min(MAX_ACTIONS, (int)(C_w * powf(visits, ALPHA_w)));
 }
+```
 
-// Optimized: Batch traversal
-struct TraversalBatch {
-    std::vector<MCTSNode*> current_nodes;
-    std::vector<std::vector<MCTSNode*>> paths;
-    std::vector<std::unique_ptr<GameState>> states;
-};
+### Sparse UCB for Wide Nodes
+For nodes with >64 children:
+1. Store only visited children in sparse format
+2. Compute UCB only for promising actions
+3. Use two-stage selection (coarse then fine)
 
-// Process level by level
-TraversalBatch batch;
-batch.current_nodes.resize(batch_size, root);
-while (!all_leaves) {
-    // Select children for all nodes in parallel
-    parallelSelectChildren(batch.current_nodes);
-    // Move to next level
-    updateBatch(batch);
+### Adaptive Batch Sizing
+```
+if (avg_branching_factor > 32) {
+    batch_size = min(64, GPU_MEMORY / (avg_branching * state_size));
+} else {
+    batch_size = 256;  // Standard batch
 }
 ```
 
-### 2. Virtual Tree Traversal
-Reduce memory access by traversing "virtual" paths:
+## Validation Metrics
 
-```cpp
-struct VirtualPath {
-    uint32_t node_indices[MAX_DEPTH];
-    float path_values[MAX_DEPTH];
-    int depth;
-};
+1. **Simulations per second**: Target 10x improvement
+2. **GPU Utilization**: Target >80% (currently <20%)
+3. **Batch Efficiency**: Average batch size >64 (currently ~10)
+4. **ELO Preservation**: No degradation in play strength
 
-// Traverse without touching actual nodes until leaf
-VirtualPath paths[BATCH_SIZE];
-parallelVirtualTraverse(paths);
-// Then update real nodes in batch
-batchUpdateNodes(paths);
-```
+## Risk Mitigation
 
-### 3. State Pool with Zero-Copy
-Eliminate state cloning overhead:
+1. **Correctness**: Extensive unit tests for each kernel
+2. **Compatibility**: Maintain CPU fallback path
+3. **Memory**: Graceful degradation for large trees
+4. **Debugging**: Comprehensive logging and profiling
 
-```cpp
-class StatePool {
-    // Pre-allocated states
-    std::vector<GameState> pool;
-    std::queue<GameState*> available;
-    
-    GameState* acquire() {
-        auto* state = available.front();
-        available.pop();
-        return state;
-    }
-    
-    void release(GameState* state) {
-        state->reset();
-        available.push(state);
-    }
-};
-```
+## Next Steps
 
-### 4. Pipeline Architecture
-Three-stage pipeline with dedicated threads:
-
-```
-Stage 1: Tree Traversal (CPU)
-- Batch select paths
-- Use virtual traversal
-- Output: leaf nodes + states
-
-Stage 2: Batch Collection (CPU)
-- Aggregate leaves from multiple games
-- Enforce minimum batch size
-- Output: full batches
-
-Stage 3: NN Inference (GPU)
-- Process full batches only
-- Use CUDA streams for overlap
-- Output: policy + value
-```
-
-### 5. Implementation Steps
-
-#### Step 1: Implement Batch Selection
-File: `mcts_engine_batch_selection.cpp`
-```cpp
-void MCTSEngine::batchTraverseToLeaves(
-    std::vector<MCTSNode*>& roots,
-    std::vector<LeafInfo>& leaves,
-    int batch_size) {
-    
-    // Initialize traversal state
-    std::vector<MCTSNode*> current(batch_size);
-    std::vector<std::vector<MCTSNode*>> paths(batch_size);
-    
-    // Traverse level by level
-    bool all_terminal = false;
-    while (!all_terminal) {
-        // Parallel select best children
-        #pragma omp parallel for
-        for (int i = 0; i < batch_size; i++) {
-            if (!current[i]->isLeaf()) {
-                current[i] = current[i]->selectChild();
-                paths[i].push_back(current[i]);
-            }
-        }
-        
-        // Check termination
-        all_terminal = std::all_of(current.begin(), current.end(),
-            [](MCTSNode* n) { return n->isLeaf(); });
-    }
-    
-    // Collect results
-    for (int i = 0; i < batch_size; i++) {
-        leaves.emplace_back(current[i], paths[i]);
-    }
-}
-```
-
-#### Step 2: State Pool Implementation
-File: `game_state_pool.cpp`
-```cpp
-class GameStatePool {
-    static constexpr size_t POOL_SIZE = 10000;
-    
-    struct PooledState {
-        alignas(64) uint8_t data[sizeof(GomokuState)];
-        std::atomic<bool> in_use{false};
-    };
-    
-    std::vector<PooledState> pool;
-    std::atomic<size_t> next_idx{0};
-    
-public:
-    GameState* acquire() {
-        for (size_t attempts = 0; attempts < POOL_SIZE; attempts++) {
-            size_t idx = next_idx.fetch_add(1) % POOL_SIZE;
-            bool expected = false;
-            if (pool[idx].in_use.compare_exchange_strong(expected, true)) {
-                return reinterpret_cast<GameState*>(&pool[idx].data);
-            }
-        }
-        // Fallback to allocation
-        return new GomokuState();
-    }
-    
-    void release(GameState* state) {
-        // Find in pool and mark as free
-        auto* pooled = reinterpret_cast<PooledState*>(state);
-        pooled->in_use.store(false);
-    }
-};
-```
-
-#### Step 3: Pipeline Thread Coordination
-```cpp
-class PipelinedMCTSEngine {
-    // Stage 1: Traversal threads
-    void traversalThread() {
-        while (running) {
-            TraversalBatch batch;
-            fillBatchFromGames(batch);
-            batchTraverseToLeaves(batch);
-            leaf_queue.enqueue_bulk(batch.leaves);
-        }
-    }
-    
-    // Stage 2: Batch collection
-    void collectionThread() {
-        std::vector<LeafInfo> batch;
-        while (running) {
-            // Wait for minimum batch size
-            while (batch.size() < MIN_BATCH_SIZE) {
-                LeafInfo leaf;
-                if (leaf_queue.try_dequeue(leaf)) {
-                    batch.push_back(leaf);
-                }
-            }
-            
-            // Submit to GPU
-            gpu_queue.enqueue(std::move(batch));
-            batch.clear();
-        }
-    }
-    
-    // Stage 3: GPU inference
-    void inferenceThread() {
-        while (running) {
-            std::vector<LeafInfo> batch;
-            if (gpu_queue.try_dequeue(batch)) {
-                auto results = neural_net->inference(batch);
-                distributeResults(batch, results);
-            }
-        }
-    }
-};
-```
-
-## Expected Performance Gains
-
-1. **Batch Selection**: 5-10x reduction in tree traversal overhead
-2. **State Pool**: Eliminate allocation/cloning overhead (~20% speedup)
-3. **Pipeline**: Better CPU/GPU overlap, consistent batch sizes
-4. **Overall**: 3-5x speedup, reaching 500-800ms per move
-
-## Implementation Priority
-
-1. **Immediate**: Implement batch selection for multiple simulations
-2. **Short-term**: Add state pooling to eliminate cloning
-3. **Medium-term**: Full pipeline architecture
-4. **Long-term**: Virtual traversal optimization
+1. Implement basic tensorized tree structure
+2. Develop and test UCB calculation kernel
+3. Integrate with existing SharedInferenceQueue
+4. Benchmark against current implementation
+5. Iterate based on profiling results

@@ -1,0 +1,45 @@
+[2025-05-30 15:17:52.810] [system] [info] [31803] Logging system initialized. Log directory: logs
+
+Progress: 0/100 (0.0%)
+[TT_DEBUG] PHMapTranspositionTable constructor called
+[TT_DEBUG] max_entries calculated: 1342177
+[TT_DEBUG] num_shards: 48
+[TT_DEBUG] About to reserve capacity
+[TT_DEBUG] Reserved capacity successfully
+[TT_DEBUG] Skipping progress manager check to avoid potential deadlock
+[TT_DEBUG] PHMapTranspositionTable constructor completed
+[2025-05-30 15:17:56.514] [system] [info] [31853] GPU warmup completed
+[TT_DEBUG] PHMapTranspositionTable constructor called
+[TT_DEBUG] max_entries calculated: 1342177
+[TT_DEBUG] num_shards: 48
+[TT_DEBUG] About to reserve capacity
+[TT_DEBUG] Reserved capacity successfully
+[TT_DEBUG] Skipping progress manager check to avoid potential deadlock
+[TT_DEBUG] PHMapTranspositionTable constructor completed
+[2025-05-30 15:17:56.966] [system] [info] [31854] GPU warmup completed
+[TT_DEBUG] PHMapTranspositionTable constructor called
+[TT_DEBUG] max_entries calculated: 1342177
+[TT_DEBUG] num_shards: 48
+[TT_DEBUG] About to reserve capacity
+[2025-05-30 15:17:57.237] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=1
+[TT_DEBUG] Reserved capacity successfully
+[TT_DEBUG] Skipping progress manager check to avoid potential deadlock
+[TT_DEBUG] PHMapTranspositionTable constructor completed
+[2025-05-30 15:17:57.600] [system] [info] [31855] GPU warmup completed
+[2025-05-30 15:17:57.639] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=2
+[TT_DEBUG] PHMapTranspositionTable constructor called
+[TT_DEBUG] max_entries calculated: 1342177
+[TT_DEBUG] num_shards: 48
+[TT_DEBUG] About to reserve capacity
+[TT_DEBUG] Reserved capacity successfully
+[TT_DEBUG] Skipping progress manager check to avoid potential deadlock
+[TT_DEBUG] PHMapTranspositionTable constructor completed
+[2025-05-30 15:17:58.217] [system] [info] [31858] GPU warmup completed
+[2025-05-30 15:17:58.912] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=3
+[2025-05-30 15:17:59.357] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=4
+[2025-05-30 15:17:59.927] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=5
+[2025-05-30 15:18:01.815] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=6
+[2025-05-30 15:18:02.379] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=7
+[2025-05-30 15:18:02.546] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=8
+[2025-05-30 15:18:04.236] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=2, total_states=32, count=9
+[2025-05-30 15:18:04.372] [system] [error] [31860] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=10

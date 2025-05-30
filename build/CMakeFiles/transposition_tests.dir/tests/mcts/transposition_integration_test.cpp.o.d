@@ -5135,8 +5135,5 @@ CMakeFiles/transposition_tests.dir/tests/mcts/transposition_integration_test.cpp
  /usr/local/cuda-12.8/include/vector_functions.h \
  /usr/local/cuda-12.8/include/vector_functions.hpp \
  /home/cosmos/omoknuni_small/include/nn/neural_network.h \
- /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h \
- /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
- /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h

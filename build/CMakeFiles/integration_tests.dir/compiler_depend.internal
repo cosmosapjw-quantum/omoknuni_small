@@ -41,6 +41,7 @@ CMakeFiles/integration_tests.dir/tests/integration/games/self_play_games_test.cp
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
  /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
+ /home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
  /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h

@@ -1,0 +1,79 @@
+[2025-05-30 12:09:22.163] [system] [info] [11573] [:] Logging system initialized. Log directory: logs
+[2025-05-30 12:09:22.163] [system] [error] [11573] [mcts_engine_main.cpp:348] MCTSEngine::search - Exception during runSearch: Simulated inference error
+[2025-05-30 12:29:16.253] [system] [info] [16305] [:] Logging system initialized. Log directory: logs
+[2025-05-30 12:29:16.253] [system] [error] [16305] [omoknuni_cli_final.cpp:351] Failed to load config file: bad file: config_fixed_memory_cpu.yaml
+[2025-05-30 12:29:31.053] [system] [info] [16325] [:] Logging system initialized. Log directory: logs
+[2025-05-30 12:29:31.053] [system] [error] [16325] [omoknuni_cli_final.cpp:351] Failed to load config file: bad file: config_fixed_memory_cpu.yaml
+[2025-05-30 12:30:23.852] [system] [info] [16687] [:] Logging system initialized. Log directory: logs
+[2025-05-30 12:30:27.454] [system] [info] [16714] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 12:30:27.617] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=1
+[2025-05-30 12:30:27.913] [system] [info] [16715] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 12:30:28.017] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=2
+[2025-05-30 12:30:28.355] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=3
+[2025-05-30 12:30:28.576] [system] [info] [16716] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 12:30:28.897] [system] [info] [16717] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 12:30:28.915] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=4
+[2025-05-30 12:30:29.154] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=5
+[2025-05-30 12:30:29.217] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=6
+[2025-05-30 12:30:29.460] [system] [info] [16718] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 12:30:30.116] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=7
+[2025-05-30 12:30:30.205] [system] [info] [16719] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 12:30:31.532] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=8
+[2025-05-30 12:30:33.352] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=9
+[2025-05-30 12:30:37.322] [system] [error] [16727] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=72, count=10
+[2025-05-30 13:02:49.723] [system] [info] [936] [:] Logging system initialized. Log directory: logs
+[2025-05-30 13:02:49.723] [system] [error] [936] [mcts_engine_main.cpp:348] MCTSEngine::search - Exception during runSearch: Simulated inference error
+[2025-05-30 13:06:13.991] [system] [info] [2077] [:] Logging system initialized. Log directory: logs
+[2025-05-30 13:06:13.991] [system] [error] [2077] [mcts_engine_main.cpp:348] MCTSEngine::search - Exception during runSearch: Simulated inference error
+[2025-05-30 13:19:32.889] [system] [info] [5294] [:] Logging system initialized. Log directory: logs
+[2025-05-30 13:19:32.889] [system] [error] [5294] [mcts_engine_main.cpp:348] MCTSEngine::search - Exception during runSearch: Simulated inference error
+[2025-05-30 13:22:13.113] [system] [info] [6087] [:] Logging system initialized. Log directory: logs
+[2025-05-30 13:22:13.113] [system] [error] [6087] [mcts_engine_main.cpp:348] MCTSEngine::search - Exception during runSearch: Simulated inference error
+[2025-05-30 13:22:29.700] [system] [info] [6087] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 13:22:30.756] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=1
+[2025-05-30 13:22:31.860] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=2
+[2025-05-30 13:22:32.964] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=3
+[2025-05-30 13:22:34.066] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=4
+[2025-05-30 13:22:35.166] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=5
+[2025-05-30 13:22:36.262] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=6
+[2025-05-30 13:22:37.361] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=7
+[2025-05-30 13:22:38.465] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=8
+[2025-05-30 13:22:39.564] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=9
+[2025-05-30 13:22:40.247] [system] [info] [6087] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 13:22:40.666] [system] [error] [6321] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=0, total_states=0, count=10
+[2025-05-30 13:26:19.091] [system] [info] [7430] [:] Logging system initialized. Log directory: logs
+[2025-05-30 13:26:19.091] [system] [error] [7430] [mcts_engine_main.cpp:348] MCTSEngine::search - Exception during runSearch: Simulated inference error
+[2025-05-30 13:30:37.611] [system] [info] [9052] [:] Logging system initialized. Log directory: logs
+[2025-05-30 13:30:37.611] [system] [error] [9052] [mcts_engine_main.cpp:348] MCTSEngine::search - Exception during runSearch: Simulated inference error
+[2025-05-30 13:34:15.864] [system] [info] [10409] [:] Logging system initialized. Log directory: logs
+[2025-05-30 13:34:15.864] [system] [error] [10409] [mcts_engine_main.cpp:348] MCTSEngine::search - Exception during runSearch: Simulated inference error
+[2025-05-30 13:43:52.654] [system] [info] [12478] [:] Logging system initialized. Log directory: logs
+[2025-05-30 13:43:55.628] [system] [info] [12530] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 13:43:56.139] [system] [info] [12531] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 13:43:56.309] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=1
+[2025-05-30 13:43:56.734] [system] [info] [12532] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 13:43:56.815] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=2
+[2025-05-30 13:43:57.375] [system] [info] [12533] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 13:43:58.128] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=3
+[2025-05-30 13:43:58.571] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=4
+[2025-05-30 13:43:59.493] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=5
+[2025-05-30 13:44:00.444] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=2, total_states=32, count=6
+[2025-05-30 13:44:00.959] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=7
+[2025-05-30 13:44:01.699] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=8
+[2025-05-30 13:44:02.841] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=9
+[2025-05-30 13:44:02.956] [system] [error] [12542] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=10
+[2025-05-30 15:17:52.810] [system] [info] [31803] [:] Logging system initialized. Log directory: logs
+[2025-05-30 15:17:56.514] [system] [info] [31853] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 15:17:56.966] [system] [info] [31854] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 15:17:57.237] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=1
+[2025-05-30 15:17:57.600] [system] [info] [31855] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 15:17:57.639] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=2
+[2025-05-30 15:17:58.217] [system] [info] [31858] [self_play_manager.cpp:292] GPU warmup completed
+[2025-05-30 15:17:58.912] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=3
+[2025-05-30 15:17:59.357] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=4
+[2025-05-30 15:17:59.927] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=5
+[2025-05-30 15:18:01.815] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=6
+[2025-05-30 15:18:02.379] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=7
+[2025-05-30 15:18:02.546] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=8
+[2025-05-30 15:18:04.236] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=2, total_states=32, count=9
+[2025-05-30 15:18:04.372] [system] [error] [31860] [shared_inference_queue.cpp:278] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=10

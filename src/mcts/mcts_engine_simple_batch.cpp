@@ -43,16 +43,16 @@ void MCTSEngine::executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MC
               << "batch_size=" << batch_size << ", threads=" << num_threads << std::endl;
     
     // DEBUG: Add timing information for each phase
-    struct DebugStats {
-        std::atomic<int> leaves_collected{0};
-        std::atomic<int> batches_processed{0};
-        std::atomic<int> nodes_expanded{0};
-        std::atomic<int> nodes_skipped{0};
-        std::atomic<int64_t> total_collection_time_us{0};
-        std::atomic<int64_t> total_inference_time_us{0};
-        std::atomic<int64_t> total_backprop_time_us{0};
-        std::atomic<int64_t> queue_wait_time_us{0};
-    } debug_stats;
+    // struct DebugStats {
+    //     std::atomic<int> leaves_collected{0};
+    //     std::atomic<int> batches_processed{0};
+    //     std::atomic<int> nodes_expanded{0};
+    //     std::atomic<int> nodes_skipped{0};
+    //     std::atomic<int64_t> total_collection_time_us{0};
+    //     std::atomic<int64_t> total_inference_time_us{0};
+    //     std::atomic<int64_t> total_backprop_time_us{0};
+    //     std::atomic<int64_t> queue_wait_time_us{0};
+    // } debug_stats;
     
     // Ensure root is expanded
     if (!root->isTerminal() && !root->isExpanded()) {
@@ -166,8 +166,8 @@ void MCTSEngine::executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MC
                     // Brief yield before retry
                     std::this_thread::yield();
                     auto dequeue_end = std::chrono::high_resolution_clock::now();
-                    debug_stats.queue_wait_time_us.fetch_add(
-                        std::chrono::duration_cast<std::chrono::microseconds>(dequeue_end - dequeue_start).count());
+                    // debug_stats.queue_wait_time_us.fetch_add(
+                    //     std::chrono::duration_cast<std::chrono::microseconds>(dequeue_end - dequeue_start).count());
                     continue;
                 }
                 
@@ -204,8 +204,8 @@ void MCTSEngine::executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MC
                             
                             // Increment counter
                             int count = leaves_collected.fetch_add(1, std::memory_order_release) + 1;
-                            debug_stats.leaves_collected.fetch_add(1);
-                            debug_stats.nodes_expanded.fetch_add(1);
+                            // debug_stats.leaves_collected.fetch_add(1);
+                            // debug_stats.nodes_expanded.fetch_add(1);
                             if (count >= batch_to_collect) {
                                 collection_done.store(true, std::memory_order_release);
                                 break;
@@ -215,7 +215,7 @@ void MCTSEngine::executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MC
                         // Process expanded nodes - add children to work queue
                         auto& children = current->getChildren();
                         if (!children.empty()) {
-                            debug_stats.nodes_skipped.fetch_add(1);
+                            // debug_stats.nodes_skipped.fetch_add(1);
                             // Find best children using simplified UCB (no OpenMP overhead)
                             std::vector<std::pair<float, size_t>> scores;
                             scores.reserve(children.size());
@@ -411,6 +411,7 @@ void MCTSEngine::executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MC
                     
                     // Fallback to direct inference
                     // Only use CUDA graphs for large batches to reduce overhead
+#ifdef WITH_TORCH
                     if (use_batch_accumulator && states.size() >= 256 && 
                         neural_network_->isDeterministic() && gpu_optimizer.getConfig().enable_cuda_graphs) {
                         // Try to use CUDA graph for fixed pattern
@@ -427,6 +428,7 @@ void MCTSEngine::executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MC
                                 example_tensor);
                         }
                     }
+#endif
                     
                     return direct_inference_fn_(states);
                 });
@@ -481,15 +483,15 @@ void MCTSEngine::executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MC
                 
                 auto nn_end = std::chrono::steady_clock::now();
                 auto nn_time_us = std::chrono::duration_cast<std::chrono::microseconds>(nn_end - nn_start).count();
-                debug_stats.total_inference_time_us.fetch_add(nn_time_us);
-                debug_stats.batches_processed.fetch_add(1);
+                // debug_stats.total_inference_time_us.fetch_add(nn_time_us);
+                // debug_stats.batches_processed.fetch_add(1);
                 
                 // DEBUG: Log inference time
-                if (simulations_completed % 100 == 0 || batch.size() != target_batch_size) {
-                    std::cout << "[DEBUG] NN inference completed in " << nn_time_us / 1000.0 
-                              << "ms for batch size " << states.size() 
-                              << " (target was " << target_batch_size << ")" << std::endl;
-                }
+                // if (simulations_completed % 100 == 0 || batch.size() != target_batch_size) {
+                //     std::cout << "[DEBUG] NN inference completed in " << nn_time_us / 1000.0 
+                //               << "ms for batch size " << states.size() 
+                //               << " (target was " << target_batch_size << ")" << std::endl;
+                // }
                 
                 // Dynamic batch manager removed
                 /*
@@ -533,28 +535,28 @@ void MCTSEngine::executeSimpleBatchedSearch(const std::vector<std::shared_ptr<MC
             auto backprop_end = std::chrono::steady_clock::now();
             auto backprop_time_us = std::chrono::duration_cast<std::chrono::microseconds>(
                 backprop_end - backprop_start).count();
-            debug_stats.total_backprop_time_us.fetch_add(backprop_time_us);
+            // debug_stats.total_backprop_time_us.fetch_add(backprop_time_us);
             
             simulations_completed += batch.size();
             
             // DEBUG: Log complete batch timing every 10 batches
-            if (debug_stats.batches_processed.load() % 10 == 0) {
-                auto batch_total_time = std::chrono::duration_cast<std::chrono::microseconds>(
-                    std::chrono::steady_clock::now() - batch_start_total).count();
-                
-                int avg_collection_us = debug_stats.total_collection_time_us.load() / std::max(1, debug_stats.batches_processed.load());
-                int avg_inference_us = debug_stats.total_inference_time_us.load() / std::max(1, debug_stats.batches_processed.load());
-                int avg_backprop_us = debug_stats.total_backprop_time_us.load() / std::max(1, debug_stats.batches_processed.load());
-                
-                std::cout << "\n[DEBUG SUMMARY] After " << debug_stats.batches_processed.load() << " batches:\n"
-                          << "  Avg collection time: " << avg_collection_us / 1000.0 << "ms\n"
-                          << "  Avg inference time: " << avg_inference_us / 1000.0 << "ms\n"
-                          << "  Avg backprop time: " << avg_backprop_us / 1000.0 << "ms\n"
-                          << "  Avg batch size: " << (float)simulations_completed / debug_stats.batches_processed.load() << "\n"
-                          << "  Total nodes expanded: " << debug_stats.nodes_expanded.load() << "\n"
-                          << "  Total nodes skipped: " << debug_stats.nodes_skipped.load() << "\n"
-                          << std::endl;
-            }
+            // if (debug_stats.batches_processed.load() % 10 == 0) {
+            //     auto batch_total_time = std::chrono::duration_cast<std::chrono::microseconds>(
+            //         std::chrono::steady_clock::now() - batch_start_total).count();
+            //     
+            //     int avg_collection_us = debug_stats.total_collection_time_us.load() / std::max(1, debug_stats.batches_processed.load());
+            //     int avg_inference_us = debug_stats.total_inference_time_us.load() / std::max(1, debug_stats.batches_processed.load());
+            //     int avg_backprop_us = debug_stats.total_backprop_time_us.load() / std::max(1, debug_stats.batches_processed.load());
+            //     
+            //     std::cout << "\n[DEBUG SUMMARY] After " << debug_stats.batches_processed.load() << " batches:\n"
+            //               << "  Avg collection time: " << avg_collection_us / 1000.0 << "ms\n"
+            //               << "  Avg inference time: " << avg_inference_us / 1000.0 << "ms\n"
+            //               << "  Avg backprop time: " << avg_backprop_us / 1000.0 << "ms\n"
+            //               << "  Avg batch size: " << (float)simulations_completed / debug_stats.batches_processed.load() << "\n"
+            //               << "  Total nodes expanded: " << debug_stats.nodes_expanded.load() << "\n"
+            //               << "  Total nodes skipped: " << debug_stats.nodes_skipped.load() << "\n"
+            //               << std::endl;
+            // }
             
             // Log GPU utilization info periodically
             static int total_batches = 0;

@@ -24,10 +24,10 @@ GPUOptimizer::GPUOptimizer(const Config& config) : config_(config) {
         setupPersistentKernels();
     }
     
-    LOG_SYSTEM_INFO("GPU Optimizer initialized with {} streams, max batch {}", 
-                   config_.num_streams, config_.max_batch_size);
-    LOG_SYSTEM_INFO("GPU Optimizations: CUDA Graphs={}, Persistent Kernels={}, TorchScript={}", 
-                   config_.enable_cuda_graphs, config_.enable_persistent_kernels, config_.enable_torch_script);
+    // LOG_SYSTEM_INFO("GPU Optimizer initialized with {} streams, max batch {}", 
+    //                config_.num_streams, config_.max_batch_size);
+    // LOG_SYSTEM_INFO("GPU Optimizations: CUDA Graphs={}, Persistent Kernels={}, TorchScript={}", 
+    //                config_.enable_cuda_graphs, config_.enable_persistent_kernels, config_.enable_torch_script);
 }
 
 GPUOptimizer::~GPUOptimizer() {
@@ -114,9 +114,9 @@ void GPUOptimizer::allocatePinnedMemory() {
         buffer.in_use.store(false, std::memory_order_release);
     }
     
-    LOG_SYSTEM_INFO("Allocated {} pinned memory tensors and {} buffer pairs of size {}x{}x{}x{}", 
-                   config_.tensor_cache_size, num_buffer_pairs, config_.max_batch_size, 
-                   config_.num_channels, config_.board_height, config_.board_width);
+    // LOG_SYSTEM_INFO("Allocated {} pinned memory tensors and {} buffer pairs of size {}x{}x{}x{}", 
+    //                config_.tensor_cache_size, num_buffer_pairs, config_.max_batch_size, 
+    //                config_.num_channels, config_.board_height, config_.board_width);
 }
 
 torch::Tensor GPUOptimizer::prepareStatesBatch(const std::vector<std::unique_ptr<core::IGameState>>& states, 
@@ -338,7 +338,7 @@ void GPUOptimizer::preallocateTensors(size_t batch_size) {
     
     // This method is called during initialization
     // The actual allocation is done in allocatePinnedMemory()
-    LOG_SYSTEM_INFO("Pre-allocated tensors for batch size {}", batch_size);
+    // LOG_SYSTEM_INFO("Pre-allocated tensors for batch size {}", batch_size);
 }
 
 GPUOptimizer::BufferPair& GPUOptimizer::getNextBufferPair(size_t batch_size) {
@@ -384,16 +384,16 @@ void GPUOptimizer::setupPersistentKernels() {
         size_t persistL2Size = prop.persistingL2CacheMaxSize;
         cudaDeviceSetLimit(cudaLimitPersistingL2CacheSize, persistL2Size);
         
-        LOG_SYSTEM_INFO("Enabled persistent L2 cache: {} MB", 
-                       persistL2Size / (1024 * 1024));
+        // LOG_SYSTEM_INFO("Enabled persistent L2 cache: {} MB", 
+        //                persistL2Size / (1024 * 1024));
     }
     
     // Enable tensor core usage for supported operations
     if (config_.enable_tensor_cores && prop.major >= 7) {
         at::globalContext().setAllowTF32CuBLAS(true);
         at::globalContext().setAllowTF32CuDNN(true);
-        LOG_SYSTEM_INFO("Enabled TensorCore acceleration for compute capability {}.{}", 
-                       prop.major, prop.minor);
+        // LOG_SYSTEM_INFO("Enabled TensorCore acceleration for compute capability {}.{}", 
+        //                prop.major, prop.minor);
     }
 }
 
@@ -421,8 +421,8 @@ bool GPUOptimizer::captureCudaGraph(
     // Warmup phase
     if (handle.warmup_count < config_.cuda_graph_warmup_steps) {
         handle.warmup_count++;
-        LOG_SYSTEM_DEBUG("CUDA Graph warmup {}/{} for {}", 
-                        handle.warmup_count, config_.cuda_graph_warmup_steps, graph_id);
+        // LOG_SYSTEM_DEBUG("CUDA Graph warmup {}/{} for {}", 
+        //                 handle.warmup_count, config_.cuda_graph_warmup_steps, graph_id);
         return false;
     }
     
@@ -447,7 +447,7 @@ bool GPUOptimizer::captureCudaGraph(
         cudaGraphInstantiate(&handle.exec, handle.graph, nullptr, nullptr, 0);
         
         handle.is_valid = true;
-        LOG_SYSTEM_INFO("Successfully captured CUDA graph for {}", graph_id);
+        // LOG_SYSTEM_INFO("Successfully captured CUDA graph for {}", graph_id);
         
         return true;
     } catch (const std::exception& e) {
@@ -534,7 +534,7 @@ torch::jit::Module GPUOptimizer::loadTorchScriptModel(
         if (optimize_for_inference && torch::jit::optimize_for_inference) {
             // Apply inference optimizations
             model = torch::jit::optimize_for_inference(model);
-            LOG_SYSTEM_INFO("Applied TorchScript inference optimizations to model from: {}", model_path);
+            // LOG_SYSTEM_INFO("Applied TorchScript inference optimizations to model from: {}", model_path);
         }
         
         // Cache the model
@@ -543,7 +543,7 @@ torch::jit::Module GPUOptimizer::loadTorchScriptModel(
             torch_script_models_[model_path] = model;
         }
         
-        LOG_SYSTEM_INFO("Successfully loaded TorchScript model from: {}", model_path);
+        // LOG_SYSTEM_INFO("Successfully loaded TorchScript model from: {}", model_path);
         return model;
         
     } catch (const c10::Error& e) {

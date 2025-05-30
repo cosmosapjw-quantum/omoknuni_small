@@ -11,9 +11,13 @@ namespace mcts {
 PHMapTranspositionTable::PHMapTranspositionTable(const Config& config) 
     : config_(config) {
     
+    // std::cout << "[TT_DEBUG] PHMapTranspositionTable constructor called" << std::endl;
+    
     // Calculate maximum entries based on memory limit
     // Estimate ~100 bytes per entry including overhead
     max_entries_ = (config.size_mb * 1024 * 1024) / 100;
+    
+    // std::cout << "[TT_DEBUG] max_entries calculated: " << max_entries_ << std::endl;
     
     // Configure the hash map
     size_t num_shards = config.num_shards;
@@ -22,14 +26,22 @@ PHMapTranspositionTable::PHMapTranspositionTable(const Config& config)
         num_shards = std::max(size_t(16), size_t(std::thread::hardware_concurrency() * 2));
     }
     
-    // Reserve capacity to avoid rehashing
-    entries_.reserve(max_entries_);
+    // std::cout << "[TT_DEBUG] num_shards: " << num_shards << std::endl;
     
-    auto& progress_manager = alphazero::utils::SelfPlayProgressManager::getInstance();
-    if (progress_manager.isVerboseLoggingEnabled()) {
-        LOG_MCTS_INFO("PHMap Transposition Table initialized: {} MB, {} max entries, {} shards",
-                      config.size_mb, max_entries_, entries_.subcnt());
-    }
+    // Reserve capacity to avoid rehashing
+    // std::cout << "[TT_DEBUG] About to reserve capacity" << std::endl;
+    entries_.reserve(max_entries_);
+    // std::cout << "[TT_DEBUG] Reserved capacity successfully" << std::endl;
+    
+    // std::cout << "[TT_DEBUG] Skipping progress manager check to avoid potential deadlock" << std::endl;
+    // COMMENTED OUT: This appears to cause deadlock in tests
+    // auto& progress_manager = alphazero::utils::SelfPlayProgressManager::getInstance();
+    // if (progress_manager.isVerboseLoggingEnabled()) {
+    //     LOG_MCTS_INFO("PHMap Transposition Table initialized: {} MB, {} max entries, {} shards",
+    //                   config.size_mb, max_entries_, entries_.subcnt());
+    // }
+    
+    // std::cout << "[TT_DEBUG] PHMapTranspositionTable constructor completed" << std::endl;
 }
 
 PHMapTranspositionTable::~PHMapTranspositionTable() {
@@ -184,7 +196,7 @@ void PHMapTranspositionTable::enforceMemoryLimit() {
         }
     }
     
-    LOG_MCTS_DEBUG("Transposition table cleanup: {} -> {} entries", initial_size, entries_.size());
+    // LOG_MCTS_DEBUG("Transposition table cleanup: {} -> {} entries", initial_size, entries_.size());
 }
 
 PHMapTranspositionTable::EntryPtr PHMapTranspositionTable::createEntry(

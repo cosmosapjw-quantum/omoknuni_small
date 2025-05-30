@@ -411,10 +411,7 @@ public:
     
     int64_t getPolicySize() const override;
     
-    /**
-     * @brief Clean up tensor pool to free memory
-     */
-    void cleanupTensorPool();
+    // Tensor pool cleanup method removed - no longer using tensor pools
     
     /**
      * @brief Set GPU memory pool for efficient tensor allocation
@@ -481,21 +478,7 @@ private:
         const std::vector<std::unique_ptr<core::IGameState>>& states,
         torch::Device target_device);
     
-    // Tensor pool for efficient memory management
-    struct TensorPool {
-        std::vector<torch::Tensor> cpu_tensors;
-        std::vector<torch::Tensor> gpu_tensors;
-        size_t current_cpu_idx = 0;
-        size_t current_gpu_idx = 0;
-        size_t pool_size = 4;
-        
-        void init(const std::vector<int64_t>& shape, size_t size = 4);
-        torch::Tensor getCPUTensor(const std::vector<int64_t>& shape);
-        torch::Tensor getGPUTensor(const std::vector<int64_t>& shape, torch::Device device);
-        void cleanup();
-    };
-    
-    TensorPool tensor_pool_;
+    // Tensor pool removed - direct allocation is used instead
     
     // GPU memory pool for efficient tensor allocation
     std::shared_ptr<mcts::GPUMemoryPool> gpu_memory_pool_;

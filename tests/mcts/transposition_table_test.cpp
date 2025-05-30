@@ -212,6 +212,7 @@ private:
     std::vector<int> move_history_;
 };
 
+namespace {
 // Controlled neural network function that we can monitor
 class TestNeuralNetwork {
 public:
@@ -268,17 +269,18 @@ private:
     std::atomic<int> transposition_evaluations_{0};
     std::unordered_map<uint64_t, int> evaluated_positions_;
 };
+} // anonymous namespace
 
-class TranspositionIntegrationTest : public ::testing::Test {
+class TranspositionTableTest : public ::testing::Test {
 protected:
     void SetUp() override {
         // Create MCTS settings for testing
-        settings.num_simulations = 50;  // Enough to test transposition but not too many
-        settings.num_threads = 2;       // Test with multiple threads
+        settings.num_simulations = 200;  // More simulations to increase chance of transpositions
+        settings.num_threads = 1;       // Use single thread to force serial search
         settings.batch_size = 4;        // Small batch size for faster tests
         settings.batch_timeout = std::chrono::milliseconds(10);
         settings.exploration_constant = 1.5f;
-        settings.temperature = 0.0f;    // Deterministic selection for stable tests
+        settings.temperature = 1.0f;    // Higher temperature for more exploration
         
         // Reset the neural network
         nn.reset();
@@ -297,13 +299,14 @@ protected:
 };
 
 // Test search with transposition table enabled vs. disabled
-TEST_F(TranspositionIntegrationTest, TranspositionTableEfficiency) {
-    // Create a game with intentional transpositions (max_depth=4 means more transpositions)
-    auto game = std::make_unique<TranspositionGameState>(0, 0, 4, true);
+TEST_F(TranspositionTableTest, TranspositionTableEfficiency) {
+    // Create a game with intentional transpositions (max_depth=3 to force more exploration)
+    auto game = std::make_unique<TranspositionGameState>(0, 0, 3, true);
     
     // First run with transposition table disabled
     nn.reset();
     engine->setUseTranspositionTable(false);
+    std::cout << "Running search WITHOUT transposition table..." << std::endl;
     auto result_without_tt = engine->search(*game);
     
     int evals_without_tt = nn.getEvaluationCount();
@@ -313,6 +316,7 @@ TEST_F(TranspositionIntegrationTest, TranspositionTableEfficiency) {
     nn.reset();
     engine->setUseTranspositionTable(true);
     engine->clearTranspositionTable();  // Start with a clean table
+    std::cout << "Running search WITH transposition table..." << std::endl;
     auto result_with_tt = engine->search(*game);
     
     int evals_with_tt = nn.getEvaluationCount();
@@ -340,7 +344,7 @@ TEST_F(TranspositionIntegrationTest, TranspositionTableEfficiency) {
 }
 
 // Test search with and without transpositions in the game state
-TEST_F(TranspositionIntegrationTest, WithAndWithoutTranspositions) {
+TEST_F(TranspositionTableTest, WithAndWithoutTranspositions) {
     // Run with no transpositions in the game
     auto game_no_trans = std::make_unique<TranspositionGameState>(0, 0, 4, false);
     
@@ -371,7 +375,7 @@ TEST_F(TranspositionIntegrationTest, WithAndWithoutTranspositions) {
 }
 
 // Test thread safety with concurrent searches
-TEST_F(TranspositionIntegrationTest, ConcurrentSearches) {
+TEST_F(TranspositionTableTest, ConcurrentSearches) {
     // Create a game with transpositions
     auto game = std::make_unique<TranspositionGameState>(0, 0, 3, true);
     

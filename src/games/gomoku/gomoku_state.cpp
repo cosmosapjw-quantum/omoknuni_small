@@ -2,7 +2,6 @@
 #include "games/gomoku/gomoku_state.h"
 #include "games/gomoku/gomoku_rules.h"     // For rules_engine_
 #include "core/illegal_move_exception.h" // For core::IllegalMoveException
-#include "core/tensor_pool.h"            // For GlobalTensorPool optimization
 // #include "mcts/aggressive_memory_manager.h" // Removed - not needed
 #include "utils/attack_defense_module.h"  // For attack/defense planes
 #include "utils/performance_profiler.h"  // For profiling
@@ -284,6 +283,7 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
 #endif
             {
                 // Use GPU batch computation if available
+#ifdef WITH_TORCH
                 if (alphazero::utils::AttackDefenseModule::isGPUAvailable()) {
                     std::vector<const GomokuState*> single_batch = {this};
                     auto gpu_result = alphazero::utils::AttackDefenseModule::computeGomokuAttackDefenseGPU(single_batch);
@@ -303,6 +303,7 @@ std::vector<std::vector<std::vector<float>>> GomokuState::getEnhancedTensorRepre
                         return tensor;
                     }
                 }
+#endif
                 
                 // CPU fallback
                 auto attack_defense_module = std::make_unique<alphazero::GomokuAttackDefenseModule>(board_size_);

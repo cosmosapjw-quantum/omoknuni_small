@@ -26,6 +26,7 @@
 /home/cosmos/omoknuni_small/build/CMakeFiles/ContinuousCoverage.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/ContinuousMemCheck.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/ContinuousSubmit.dir
+/home/cosmos/omoknuni_small/build/CMakeFiles/gpu_mcts_cuda_objects.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/alphazero.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/omoknuni_cli_final.dir
 /home/cosmos/omoknuni_small/build/CMakeFiles/core_tests.dir

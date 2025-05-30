@@ -1,13 +1,18 @@
 #ifndef ALPHAZERO_GPU_OPTIMIZER_H
 #define ALPHAZERO_GPU_OPTIMIZER_H
 
-#include <torch/torch.h>
-#include <torch/script.h>
-#include <cuda_runtime.h>
 #include <vector>
 #include <memory>
 #include <chrono>
 #include <atomic>
+#include <functional>
+#include <string>
+
+#ifdef WITH_TORCH
+#include <torch/torch.h>
+#include <torch/script.h>
+#include <cuda_runtime.h>
+#endif
 #include <cmath>
 #include <unordered_map>
 #include <mutex>
@@ -18,6 +23,7 @@
 namespace alphazero {
 namespace nn {
 
+#ifdef WITH_TORCH
 /**
  * GPU Optimization utilities for MCTS batch inference
  * 
@@ -278,6 +284,44 @@ private:
 
 // Global GPU optimizer instance
 ALPHAZERO_API GPUOptimizer& getGlobalGPUOptimizer();
+
+#else // !WITH_TORCH
+// Dummy class when torch is not available
+class ALPHAZERO_API GPUOptimizer {
+public:
+    struct Config {
+        bool enable_cuda_graphs;
+        Config() : enable_cuda_graphs(false) {}
+    };
+    
+    class DynamicBatchAccumulator {
+    public:
+        void updateOptimalSize(int, float) {}
+    };
+    
+    explicit GPUOptimizer(const Config& config = Config()) {}
+    void warmup() {}
+    void cleanup() {}
+    
+    const Config& getConfig() const { 
+        static Config config;
+        return config; 
+    }
+    
+    std::unique_ptr<DynamicBatchAccumulator> createBatchAccumulator(int = 64, int = 256) {
+        return std::make_unique<DynamicBatchAccumulator>();
+    }
+    
+    bool isCudaGraphAvailable(const std::string&) const { return false; }
+    void prepareStatesBatch(const std::vector<std::unique_ptr<core::IGameState>>&, bool = true) {}
+    void captureCudaGraph(const std::string&, std::function<void()>, const void*) {}
+};
+
+inline GPUOptimizer& getGlobalGPUOptimizer() {
+    static GPUOptimizer instance;
+    return instance;
+}
+#endif // WITH_TORCH
 
 } // namespace nn
 } // namespace alphazero

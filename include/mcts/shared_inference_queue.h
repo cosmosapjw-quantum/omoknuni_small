@@ -71,10 +71,6 @@ private:
     // High-performance lock-free queue
     moodycamel::ConcurrentQueue<InferenceRequest> request_queue_;
     
-    // Token for bulk operations
-    moodycamel::ProducerToken producer_token_;
-    moodycamel::ConsumerToken consumer_token_;
-    
     // Notification mechanism (kept for timeout handling)
     std::mutex notify_mutex_;
     std::condition_variable notify_cv_;

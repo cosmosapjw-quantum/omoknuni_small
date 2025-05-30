@@ -5247,6 +5247,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: \
  /home/cosmos/omoknuni_small/include/nn/resnet_model.h \
  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
  /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h \
+ /home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h \
  /home/cosmos/omoknuni_small/include/utils/progress_bar.h \
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
  /home/cosmos/omoknuni_small/include/utils/zobrist_hash.h \

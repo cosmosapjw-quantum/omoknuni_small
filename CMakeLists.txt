@@ -18,7 +18,7 @@ list(APPEND CMAKE_PREFIX_PATH  "/usr/local")
 list(APPEND CMAKE_LIBRARY_PATH "/usr/local/lib")
 list(APPEND CMAKE_INCLUDE_PATH "/usr/local/include")
 
-project(AlphaZero VERSION 0.1.0 LANGUAGES CXX)
+project(AlphaZero VERSION 0.1.0 LANGUAGES CXX CUDA)
 
 # ────────────────────────────────────── Threads ──────────────────────────
 find_package(Threads QUIET)
@@ -86,6 +86,7 @@ endif()
 if(BUILD_TESTS)
     include(CTest)
     enable_testing()
+    
 
     # Setup googletest first before defining any of our libraries or targets
     # Use find_package for system-installed GTest
@@ -613,11 +614,11 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 # ─────────────────────────────────── Source sets ───────────────────────────────
-set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp src/core/tensor_pool.cpp src/core/lock_free_tensor_pool.cpp)
+set(CORE_SOURCES      src/core/igamestate.cpp src/core/game_export.cpp)
 set(CHESS_SOURCES     src/games/chess/chess_state.cpp src/games/chess/chess_rules.cpp src/games/chess/chess960.cpp)
 set(GO_SOURCES        src/games/go/go_state.cpp   src/games/go/go_rules.cpp)
 set(GOMOKU_SOURCES    src/games/gomoku/gomoku_state.cpp src/games/gomoku/gomoku_rules.cpp)
-set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/gpu_attack_defense_gomoku.cpp src/utils/gpu_attack_defense_chess.cpp src/utils/gpu_attack_defense_go.cpp src/utils/attack_defense_gpu_manager.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/gpu_memory_manager.cpp src/utils/resource_monitor.cpp src/utils/advanced_memory_monitor.cpp src/utils/thread_local_memory_manager.cpp src/utils/shutdown_manager.cpp src/utils/performance_profiler.cpp)
+set(UTIL_SOURCES      src/utils/zobrist_hash.cpp src/utils/attack_defense_module.cpp src/utils/hash_specializations.cpp src/utils/debug_monitor.cpp src/utils/gamestate_pool.cpp src/utils/memory_tracker.cpp src/utils/logger.cpp src/utils/resource_monitor.cpp src/utils/advanced_memory_monitor.cpp src/utils/thread_local_memory_manager.cpp src/utils/shutdown_manager.cpp src/utils/performance_profiler.cpp)
 
 # Conditionally define NN_SOURCES based on WITH_TORCH
 set(NN_SOURCES "") # Initialize with non-Torch NN files if any, or empty
@@ -652,10 +653,86 @@ set(MCTS_SOURCES
     src/mcts/mcts_engine_memory_pressure.cpp
     src/mcts/transposition_table.cpp
     src/mcts/node_tracker.cpp
-    src/mcts/gpu_memory_pool.cpp
     src/mcts/phmap_transposition_table.cpp
     src/mcts/shared_inference_queue.cpp
+    src/mcts/shared_evaluation_server.cpp
+    src/mcts/shared_eval_wrapper.cpp
 )
+
+# GPU-specific MCTS sources (only included when WITH_TORCH is enabled)
+set(GPU_MCTS_SOURCES "")
+if(WITH_TORCH)
+    set(GPU_MCTS_SOURCES
+        src/mcts/gpu_memory_pool.cpp
+        src/mcts/gpu_batch_evaluator.cpp
+        src/mcts/gpu_mcts_engine.cpp
+        src/mcts/gpu_virtual_loss.cpp
+        src/mcts/gpu_tree_storage.cpp
+        src/mcts/gpu_node.cpp
+        src/mcts/cuda_graph_capture.cpp
+        src/mcts/gpu_enhanced_mcts_engine.cpp
+        src/mcts/gpu_vram_monitor.cpp
+    )
+    
+    # GPU utility sources
+    set(GPU_UTIL_SOURCES
+        src/utils/gpu_memory_manager.cpp
+        src/utils/gpu_attack_defense_gomoku.cpp
+        src/utils/gpu_attack_defense_chess.cpp
+        src/utils/gpu_attack_defense_go.cpp
+        src/utils/attack_defense_gpu_manager.cpp
+    )
+else()
+    set(GPU_UTIL_SOURCES "")
+endif()
+
+# CUDA sources for GPU MCTS
+set(CUDA_SOURCES "")
+if(CUDA_FOUND AND WITH_TORCH)
+    # Compile CUDA files as object library to avoid nvcc issues
+    set(CUDA_OBJECTS "")
+    
+    # Compile each CUDA file separately
+    foreach(cuda_file 
+        src/mcts/gpu_batch_evaluator_kernels.cu
+        src/mcts/gpu_virtual_loss_kernels.cu
+        src/mcts/gpu_tree_traversal_kernel.cu
+    )
+        get_filename_component(cuda_name ${cuda_file} NAME_WE)
+        set(cuda_obj "${CMAKE_CURRENT_BINARY_DIR}/${cuda_name}.cu.o")
+        
+        # Build include flags properly
+        set(CUDA_INCLUDE_FLAGS "")
+        list(APPEND CUDA_INCLUDE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include")
+        list(APPEND CUDA_INCLUDE_FLAGS "-I${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
+        list(APPEND CUDA_INCLUDE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/_deps/mimalloc-src/include")
+        foreach(inc_dir ${TORCH_INCLUDE_DIRS})
+            list(APPEND CUDA_INCLUDE_FLAGS "-I${inc_dir}")
+        endforeach()
+        
+        add_custom_command(
+            OUTPUT ${cuda_obj}
+            COMMAND ${CMAKE_CUDA_COMPILER}
+                ${CUDA_INCLUDE_FLAGS}
+                --expt-relaxed-constexpr
+                -use_fast_math
+                -Xcompiler=-fPIC
+                -std=c++17
+                -O3
+                -DNDEBUG
+                -arch=sm_70
+                -c ${CMAKE_CURRENT_SOURCE_DIR}/${cuda_file}
+                -o ${cuda_obj}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${cuda_file}
+            COMMENT "Building CUDA object ${cuda_name}.cu.o"
+        )
+        
+        list(APPEND CUDA_OBJECTS ${cuda_obj})
+    endforeach()
+    
+    # Create a custom target for CUDA objects
+    add_custom_target(gpu_mcts_cuda_objects DEPENDS ${CUDA_OBJECTS})
+endif()
 set(SELFPLAY_SOURCES
     src/selfplay/self_play_manager.cpp
     src/selfplay/self_play_manager_parallel.cpp
@@ -685,12 +762,44 @@ endif()
 
 set(ALL_SOURCES
     ${CORE_SOURCES} ${CHESS_SOURCES} ${GO_SOURCES} ${GOMOKU_SOURCES}
-    ${UTIL_SOURCES} ${NN_SOURCES} ${MCTS_SOURCES} ${CLI_SOURCES}
+    ${UTIL_SOURCES} ${NN_SOURCES} ${MCTS_SOURCES} ${GPU_MCTS_SOURCES} ${GPU_UTIL_SOURCES} ${CLI_SOURCES}
     ${SELFPLAY_SOURCES} ${TRAINING_SOURCES} ${EVALUATION_SOURCES}
 )
 
+# Add CUDA objects if they exist
+if(CUDA_FOUND AND WITH_TORCH AND CUDA_OBJECTS)
+    list(APPEND ALL_SOURCES ${CUDA_OBJECTS})
+endif()
+
 # ───────────────────────────── alphazero library target ───────────────────────
 add_library(alphazero ${ALL_SOURCES})
+
+# Make sure CUDA objects are built before alphazero
+if(TARGET gpu_mcts_cuda_objects)
+    add_dependencies(alphazero gpu_mcts_cuda_objects)
+endif()
+
+# Set CUDA properties if CUDA is found
+if(CUDA_FOUND AND WITH_TORCH)
+    set_target_properties(alphazero PROPERTIES
+        CUDA_STANDARD 17
+        CUDA_STANDARD_REQUIRED ON
+        CUDA_SEPARABLE_COMPILATION ON
+    )
+    
+    # CUDA compiler flags
+    target_compile_options(alphazero PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:
+            -gencode arch=compute_70,code=sm_70
+            -gencode arch=compute_75,code=sm_75
+            -gencode arch=compute_80,code=sm_80
+            -gencode arch=compute_86,code=sm_86
+            --expt-relaxed-constexpr
+            -use_fast_math
+            -Xcompiler -fPIC
+        >
+    )
+endif()
 
 # Force recompilation of MCTS engine for GPU optimization
 set_source_files_properties(

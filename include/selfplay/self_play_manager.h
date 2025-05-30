@@ -12,6 +12,7 @@
 #include "core/export_macros.h"
 #include <moodycamel/concurrentqueue.h>
 #include "mcts/evaluation_types.h"
+#include "mcts/shared_evaluation_server.h"
 
 namespace alphazero {
 namespace selfplay {
@@ -67,8 +68,12 @@ struct ALPHAZERO_API SelfPlaySettings {
     // MCTS settings
     mcts::MCTSSettings mcts_settings;
     
+    // MCTS mode: "cpu" or "gpu"
+    std::string mcts_mode = "cpu";
+    
     // Number of parallel games
     int num_parallel_games = 1;
+    int parallel_games = 1;  // Alias for compatibility
     
     // IMPORTANT: num_mcts_engines is deprecated, use root parallelization instead
     // Configure mcts_settings.use_root_parallelization and mcts_settings.num_root_workers
@@ -76,6 +81,7 @@ struct ALPHAZERO_API SelfPlaySettings {
     
     // Maximum number of moves before forcing a draw
     int max_moves = 0;
+    int max_game_length = 0;  // Alias for compatibility
     
     // Number of start positions (for chess, using Fischer Random)
     int num_start_positions = 1;
@@ -97,6 +103,10 @@ struct ALPHAZERO_API SelfPlaySettings {
     
     // Game-specific configuration
     GameConfig game_config;
+    
+    // Additional settings for true parallel mode
+    float temperature = 1.0f;  // Temperature for action selection
+    float starting_position_diversity = 0.0f;  // Diversity for starting positions
 };
 
 /**
@@ -176,7 +186,13 @@ public:
      */
     void updateSettings(const SelfPlaySettings& settings);
     
+    
 private:
+    /**
+     * @brief Initialize shared evaluation server if needed
+     */
+    void initializeSharedEvaluation();
+    
     /**
      * @brief Generate a single game
      * 
@@ -199,6 +215,14 @@ private:
                                                 int board_size, 
                                                 int position_id);
     
+    /**
+     * @brief Generate unique game ID
+     * 
+     * @param game_number Game number
+     * @return Game ID string
+     */
+    std::string generateGameId(int game_number);
+    
 protected:
     // Neural network
     std::shared_ptr<nn::NeuralNetwork> neural_net_;
@@ -217,6 +241,9 @@ private:
     
     // Sequential game counter (no longer using atomic for parallel operations)
     int game_counter_;
+    
+    // Shared evaluation server for GPU mode
+    std::shared_ptr<mcts::SharedEvaluationServer> shared_evaluator_;
     
     // NOTE: Legacy shared queues - no longer used with new optimized architecture
     // Each MCTSEngine now has its own UnifiedInferenceServer + BurstCoordinator

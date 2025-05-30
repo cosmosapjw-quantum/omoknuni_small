@@ -2,8 +2,11 @@
 #ifndef ALPHAZERO_GPU_MEMORY_POOL_H
 #define ALPHAZERO_GPU_MEMORY_POOL_H
 
+#ifdef WITH_TORCH
 #include <torch/torch.h>
 #include <cuda_runtime.h>
+#endif
+
 #include <memory>
 #include <vector>
 #include <queue>
@@ -16,6 +19,7 @@
 namespace alphazero {
 namespace mcts {
 
+#ifdef WITH_TORCH
 /**
  * @brief GPU Memory Pool for zero-copy tensor operations
  * 
@@ -197,6 +201,21 @@ public:
         });
     }
 };
+
+#else // !WITH_TORCH
+// Dummy class when torch is not available
+class ALPHAZERO_API GPUMemoryPool {
+public:
+    struct PoolConfig {};
+    GPUMemoryPool(const PoolConfig& = {}) {}
+    static GPUMemoryPool& getInstance() {
+        static GPUMemoryPool instance;
+        return instance;
+    }
+    void trim(float = 0.5f) {}
+    static void initialize(const PoolConfig& = {}) {}
+};
+#endif // WITH_TORCH
 
 } // namespace mcts
 } // namespace alphazero

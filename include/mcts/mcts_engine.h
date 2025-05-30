@@ -111,6 +111,14 @@ struct ALPHAZERO_API MCTSSettings {
     bool use_rave = true;
     float rave_constant = 3000.0f;  // Constant for RAVE weight calculation
     
+    // Tensor MCTS configuration (loaded from config file)
+    int tensor_batch_size = 64;
+    int tensor_max_nodes = 2048;
+    int tensor_max_actions = 512;
+    int tensor_max_depth = 64;
+    bool use_cuda_graphs = false;
+    bool use_persistent_kernels = true;
+    
     // Constructor to initialize batch parameters from legacy settings
     MCTSSettings() {
         syncBatchParametersFromLegacy();
@@ -252,10 +260,10 @@ public:
     MCTSEngine(const MCTSEngine&) = delete;
     MCTSEngine& operator=(const MCTSEngine&) = delete;
     
-    ~MCTSEngine();
+    virtual ~MCTSEngine();
     
     // Search from given state
-    SearchResult search(const core::IGameState& state);
+    virtual SearchResult search(const core::IGameState& state);
     
     // PERFORMANCE FIX: Search with tree reuse for sequential moves
     SearchResult searchWithTreeReuse(const core::IGameState& state, int last_action = -1);

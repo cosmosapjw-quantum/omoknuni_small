@@ -556,6 +556,19 @@ ContinuousSubmit/fast:
 .PHONY : ContinuousSubmit/fast
 
 #=============================================================================
+# Target rules for targets named gpu_mcts_cuda_objects
+
+# Build rule for target.
+gpu_mcts_cuda_objects: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gpu_mcts_cuda_objects
+.PHONY : gpu_mcts_cuda_objects
+
+# fast build rule for target.
+gpu_mcts_cuda_objects/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gpu_mcts_cuda_objects.dir/build.make CMakeFiles/gpu_mcts_cuda_objects.dir/build
+.PHONY : gpu_mcts_cuda_objects/fast
+
+#=============================================================================
 # Target rules for targets named alphazero
 
 # Build rule for target.
@@ -898,54 +911,6 @@ src/core/igamestate.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/igamestate.cpp.s
 .PHONY : src/core/igamestate.cpp.s
 
-src/core/lock_free_tensor_pool.o: src/core/lock_free_tensor_pool.cpp.o
-.PHONY : src/core/lock_free_tensor_pool.o
-
-# target to build an object file
-src/core/lock_free_tensor_pool.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.o
-.PHONY : src/core/lock_free_tensor_pool.cpp.o
-
-src/core/lock_free_tensor_pool.i: src/core/lock_free_tensor_pool.cpp.i
-.PHONY : src/core/lock_free_tensor_pool.i
-
-# target to preprocess a source file
-src/core/lock_free_tensor_pool.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.i
-.PHONY : src/core/lock_free_tensor_pool.cpp.i
-
-src/core/lock_free_tensor_pool.s: src/core/lock_free_tensor_pool.cpp.s
-.PHONY : src/core/lock_free_tensor_pool.s
-
-# target to generate assembly for a file
-src/core/lock_free_tensor_pool.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.s
-.PHONY : src/core/lock_free_tensor_pool.cpp.s
-
-src/core/tensor_pool.o: src/core/tensor_pool.cpp.o
-.PHONY : src/core/tensor_pool.o
-
-# target to build an object file
-src/core/tensor_pool.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.o
-.PHONY : src/core/tensor_pool.cpp.o
-
-src/core/tensor_pool.i: src/core/tensor_pool.cpp.i
-.PHONY : src/core/tensor_pool.i
-
-# target to preprocess a source file
-src/core/tensor_pool.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.i
-.PHONY : src/core/tensor_pool.cpp.i
-
-src/core/tensor_pool.s: src/core/tensor_pool.cpp.s
-.PHONY : src/core/tensor_pool.s
-
-# target to generate assembly for a file
-src/core/tensor_pool.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.s
-.PHONY : src/core/tensor_pool.cpp.s
-
 src/evaluation/arena.o: src/evaluation/arena.cpp.o
 .PHONY : src/evaluation/arena.o
 
@@ -1138,6 +1103,30 @@ src/games/gomoku/gomoku_state.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_state.cpp.s
 .PHONY : src/games/gomoku/gomoku_state.cpp.s
 
+src/mcts/cuda_graph_capture.o: src/mcts/cuda_graph_capture.cpp.o
+.PHONY : src/mcts/cuda_graph_capture.o
+
+# target to build an object file
+src/mcts/cuda_graph_capture.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/cuda_graph_capture.cpp.o
+.PHONY : src/mcts/cuda_graph_capture.cpp.o
+
+src/mcts/cuda_graph_capture.i: src/mcts/cuda_graph_capture.cpp.i
+.PHONY : src/mcts/cuda_graph_capture.i
+
+# target to preprocess a source file
+src/mcts/cuda_graph_capture.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/cuda_graph_capture.cpp.i
+.PHONY : src/mcts/cuda_graph_capture.cpp.i
+
+src/mcts/cuda_graph_capture.s: src/mcts/cuda_graph_capture.cpp.s
+.PHONY : src/mcts/cuda_graph_capture.s
+
+# target to generate assembly for a file
+src/mcts/cuda_graph_capture.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/cuda_graph_capture.cpp.s
+.PHONY : src/mcts/cuda_graph_capture.cpp.s
+
 src/mcts/evaluation_types.o: src/mcts/evaluation_types.cpp.o
 .PHONY : src/mcts/evaluation_types.o
 
@@ -1162,6 +1151,78 @@ src/mcts/evaluation_types.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/evaluation_types.cpp.s
 .PHONY : src/mcts/evaluation_types.cpp.s
 
+src/mcts/gpu_batch_evaluator.o: src/mcts/gpu_batch_evaluator.cpp.o
+.PHONY : src/mcts/gpu_batch_evaluator.o
+
+# target to build an object file
+src/mcts/gpu_batch_evaluator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_batch_evaluator.cpp.o
+.PHONY : src/mcts/gpu_batch_evaluator.cpp.o
+
+src/mcts/gpu_batch_evaluator.i: src/mcts/gpu_batch_evaluator.cpp.i
+.PHONY : src/mcts/gpu_batch_evaluator.i
+
+# target to preprocess a source file
+src/mcts/gpu_batch_evaluator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_batch_evaluator.cpp.i
+.PHONY : src/mcts/gpu_batch_evaluator.cpp.i
+
+src/mcts/gpu_batch_evaluator.s: src/mcts/gpu_batch_evaluator.cpp.s
+.PHONY : src/mcts/gpu_batch_evaluator.s
+
+# target to generate assembly for a file
+src/mcts/gpu_batch_evaluator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_batch_evaluator.cpp.s
+.PHONY : src/mcts/gpu_batch_evaluator.cpp.s
+
+src/mcts/gpu_enhanced_mcts_engine.o: src/mcts/gpu_enhanced_mcts_engine.cpp.o
+.PHONY : src/mcts/gpu_enhanced_mcts_engine.o
+
+# target to build an object file
+src/mcts/gpu_enhanced_mcts_engine.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_enhanced_mcts_engine.cpp.o
+.PHONY : src/mcts/gpu_enhanced_mcts_engine.cpp.o
+
+src/mcts/gpu_enhanced_mcts_engine.i: src/mcts/gpu_enhanced_mcts_engine.cpp.i
+.PHONY : src/mcts/gpu_enhanced_mcts_engine.i
+
+# target to preprocess a source file
+src/mcts/gpu_enhanced_mcts_engine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_enhanced_mcts_engine.cpp.i
+.PHONY : src/mcts/gpu_enhanced_mcts_engine.cpp.i
+
+src/mcts/gpu_enhanced_mcts_engine.s: src/mcts/gpu_enhanced_mcts_engine.cpp.s
+.PHONY : src/mcts/gpu_enhanced_mcts_engine.s
+
+# target to generate assembly for a file
+src/mcts/gpu_enhanced_mcts_engine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_enhanced_mcts_engine.cpp.s
+.PHONY : src/mcts/gpu_enhanced_mcts_engine.cpp.s
+
+src/mcts/gpu_mcts_engine.o: src/mcts/gpu_mcts_engine.cpp.o
+.PHONY : src/mcts/gpu_mcts_engine.o
+
+# target to build an object file
+src/mcts/gpu_mcts_engine.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_mcts_engine.cpp.o
+.PHONY : src/mcts/gpu_mcts_engine.cpp.o
+
+src/mcts/gpu_mcts_engine.i: src/mcts/gpu_mcts_engine.cpp.i
+.PHONY : src/mcts/gpu_mcts_engine.i
+
+# target to preprocess a source file
+src/mcts/gpu_mcts_engine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_mcts_engine.cpp.i
+.PHONY : src/mcts/gpu_mcts_engine.cpp.i
+
+src/mcts/gpu_mcts_engine.s: src/mcts/gpu_mcts_engine.cpp.s
+.PHONY : src/mcts/gpu_mcts_engine.s
+
+# target to generate assembly for a file
+src/mcts/gpu_mcts_engine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_mcts_engine.cpp.s
+.PHONY : src/mcts/gpu_mcts_engine.cpp.s
+
 src/mcts/gpu_memory_pool.o: src/mcts/gpu_memory_pool.cpp.o
 .PHONY : src/mcts/gpu_memory_pool.o
 
@@ -1185,6 +1246,102 @@ src/mcts/gpu_memory_pool.s: src/mcts/gpu_memory_pool.cpp.s
 src/mcts/gpu_memory_pool.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.s
 .PHONY : src/mcts/gpu_memory_pool.cpp.s
+
+src/mcts/gpu_node.o: src/mcts/gpu_node.cpp.o
+.PHONY : src/mcts/gpu_node.o
+
+# target to build an object file
+src/mcts/gpu_node.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_node.cpp.o
+.PHONY : src/mcts/gpu_node.cpp.o
+
+src/mcts/gpu_node.i: src/mcts/gpu_node.cpp.i
+.PHONY : src/mcts/gpu_node.i
+
+# target to preprocess a source file
+src/mcts/gpu_node.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_node.cpp.i
+.PHONY : src/mcts/gpu_node.cpp.i
+
+src/mcts/gpu_node.s: src/mcts/gpu_node.cpp.s
+.PHONY : src/mcts/gpu_node.s
+
+# target to generate assembly for a file
+src/mcts/gpu_node.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_node.cpp.s
+.PHONY : src/mcts/gpu_node.cpp.s
+
+src/mcts/gpu_tree_storage.o: src/mcts/gpu_tree_storage.cpp.o
+.PHONY : src/mcts/gpu_tree_storage.o
+
+# target to build an object file
+src/mcts/gpu_tree_storage.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_tree_storage.cpp.o
+.PHONY : src/mcts/gpu_tree_storage.cpp.o
+
+src/mcts/gpu_tree_storage.i: src/mcts/gpu_tree_storage.cpp.i
+.PHONY : src/mcts/gpu_tree_storage.i
+
+# target to preprocess a source file
+src/mcts/gpu_tree_storage.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_tree_storage.cpp.i
+.PHONY : src/mcts/gpu_tree_storage.cpp.i
+
+src/mcts/gpu_tree_storage.s: src/mcts/gpu_tree_storage.cpp.s
+.PHONY : src/mcts/gpu_tree_storage.s
+
+# target to generate assembly for a file
+src/mcts/gpu_tree_storage.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_tree_storage.cpp.s
+.PHONY : src/mcts/gpu_tree_storage.cpp.s
+
+src/mcts/gpu_virtual_loss.o: src/mcts/gpu_virtual_loss.cpp.o
+.PHONY : src/mcts/gpu_virtual_loss.o
+
+# target to build an object file
+src/mcts/gpu_virtual_loss.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_virtual_loss.cpp.o
+.PHONY : src/mcts/gpu_virtual_loss.cpp.o
+
+src/mcts/gpu_virtual_loss.i: src/mcts/gpu_virtual_loss.cpp.i
+.PHONY : src/mcts/gpu_virtual_loss.i
+
+# target to preprocess a source file
+src/mcts/gpu_virtual_loss.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_virtual_loss.cpp.i
+.PHONY : src/mcts/gpu_virtual_loss.cpp.i
+
+src/mcts/gpu_virtual_loss.s: src/mcts/gpu_virtual_loss.cpp.s
+.PHONY : src/mcts/gpu_virtual_loss.s
+
+# target to generate assembly for a file
+src/mcts/gpu_virtual_loss.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_virtual_loss.cpp.s
+.PHONY : src/mcts/gpu_virtual_loss.cpp.s
+
+src/mcts/gpu_vram_monitor.o: src/mcts/gpu_vram_monitor.cpp.o
+.PHONY : src/mcts/gpu_vram_monitor.o
+
+# target to build an object file
+src/mcts/gpu_vram_monitor.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_vram_monitor.cpp.o
+.PHONY : src/mcts/gpu_vram_monitor.cpp.o
+
+src/mcts/gpu_vram_monitor.i: src/mcts/gpu_vram_monitor.cpp.i
+.PHONY : src/mcts/gpu_vram_monitor.i
+
+# target to preprocess a source file
+src/mcts/gpu_vram_monitor.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_vram_monitor.cpp.i
+.PHONY : src/mcts/gpu_vram_monitor.cpp.i
+
+src/mcts/gpu_vram_monitor.s: src/mcts/gpu_vram_monitor.cpp.s
+.PHONY : src/mcts/gpu_vram_monitor.s
+
+# target to generate assembly for a file
+src/mcts/gpu_vram_monitor.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/gpu_vram_monitor.cpp.s
+.PHONY : src/mcts/gpu_vram_monitor.cpp.s
 
 src/mcts/mcts_engine_batch_tree_simple.o: src/mcts/mcts_engine_batch_tree_simple.cpp.o
 .PHONY : src/mcts/mcts_engine_batch_tree_simple.o
@@ -1641,6 +1798,54 @@ src/mcts/phmap_transposition_table.s: src/mcts/phmap_transposition_table.cpp.s
 src/mcts/phmap_transposition_table.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.s
 .PHONY : src/mcts/phmap_transposition_table.cpp.s
+
+src/mcts/shared_eval_wrapper.o: src/mcts/shared_eval_wrapper.cpp.o
+.PHONY : src/mcts/shared_eval_wrapper.o
+
+# target to build an object file
+src/mcts/shared_eval_wrapper.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/shared_eval_wrapper.cpp.o
+.PHONY : src/mcts/shared_eval_wrapper.cpp.o
+
+src/mcts/shared_eval_wrapper.i: src/mcts/shared_eval_wrapper.cpp.i
+.PHONY : src/mcts/shared_eval_wrapper.i
+
+# target to preprocess a source file
+src/mcts/shared_eval_wrapper.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/shared_eval_wrapper.cpp.i
+.PHONY : src/mcts/shared_eval_wrapper.cpp.i
+
+src/mcts/shared_eval_wrapper.s: src/mcts/shared_eval_wrapper.cpp.s
+.PHONY : src/mcts/shared_eval_wrapper.s
+
+# target to generate assembly for a file
+src/mcts/shared_eval_wrapper.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/shared_eval_wrapper.cpp.s
+.PHONY : src/mcts/shared_eval_wrapper.cpp.s
+
+src/mcts/shared_evaluation_server.o: src/mcts/shared_evaluation_server.cpp.o
+.PHONY : src/mcts/shared_evaluation_server.o
+
+# target to build an object file
+src/mcts/shared_evaluation_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/shared_evaluation_server.cpp.o
+.PHONY : src/mcts/shared_evaluation_server.cpp.o
+
+src/mcts/shared_evaluation_server.i: src/mcts/shared_evaluation_server.cpp.i
+.PHONY : src/mcts/shared_evaluation_server.i
+
+# target to preprocess a source file
+src/mcts/shared_evaluation_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/shared_evaluation_server.cpp.i
+.PHONY : src/mcts/shared_evaluation_server.cpp.i
+
+src/mcts/shared_evaluation_server.s: src/mcts/shared_evaluation_server.cpp.s
+.PHONY : src/mcts/shared_evaluation_server.s
+
+# target to generate assembly for a file
+src/mcts/shared_evaluation_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/alphazero.dir/build.make CMakeFiles/alphazero.dir/src/mcts/shared_evaluation_server.cpp.s
+.PHONY : src/mcts/shared_evaluation_server.cpp.s
 
 src/mcts/shared_inference_queue.o: src/mcts/shared_inference_queue.cpp.o
 .PHONY : src/mcts/shared_inference_queue.o
@@ -2987,6 +3192,7 @@ help:
 	@echo "... NightlySubmit"
 	@echo "... NightlyTest"
 	@echo "... NightlyUpdate"
+	@echo "... gpu_mcts_cuda_objects"
 	@echo "... mimalloc-obj-target"
 	@echo "... TracyClient"
 	@echo "... all_tests"
@@ -3018,12 +3224,6 @@ help:
 	@echo "... src/core/igamestate.o"
 	@echo "... src/core/igamestate.i"
 	@echo "... src/core/igamestate.s"
-	@echo "... src/core/lock_free_tensor_pool.o"
-	@echo "... src/core/lock_free_tensor_pool.i"
-	@echo "... src/core/lock_free_tensor_pool.s"
-	@echo "... src/core/tensor_pool.o"
-	@echo "... src/core/tensor_pool.i"
-	@echo "... src/core/tensor_pool.s"
 	@echo "... src/evaluation/arena.o"
 	@echo "... src/evaluation/arena.i"
 	@echo "... src/evaluation/arena.s"
@@ -3048,12 +3248,36 @@ help:
 	@echo "... src/games/gomoku/gomoku_state.o"
 	@echo "... src/games/gomoku/gomoku_state.i"
 	@echo "... src/games/gomoku/gomoku_state.s"
+	@echo "... src/mcts/cuda_graph_capture.o"
+	@echo "... src/mcts/cuda_graph_capture.i"
+	@echo "... src/mcts/cuda_graph_capture.s"
 	@echo "... src/mcts/evaluation_types.o"
 	@echo "... src/mcts/evaluation_types.i"
 	@echo "... src/mcts/evaluation_types.s"
+	@echo "... src/mcts/gpu_batch_evaluator.o"
+	@echo "... src/mcts/gpu_batch_evaluator.i"
+	@echo "... src/mcts/gpu_batch_evaluator.s"
+	@echo "... src/mcts/gpu_enhanced_mcts_engine.o"
+	@echo "... src/mcts/gpu_enhanced_mcts_engine.i"
+	@echo "... src/mcts/gpu_enhanced_mcts_engine.s"
+	@echo "... src/mcts/gpu_mcts_engine.o"
+	@echo "... src/mcts/gpu_mcts_engine.i"
+	@echo "... src/mcts/gpu_mcts_engine.s"
 	@echo "... src/mcts/gpu_memory_pool.o"
 	@echo "... src/mcts/gpu_memory_pool.i"
 	@echo "... src/mcts/gpu_memory_pool.s"
+	@echo "... src/mcts/gpu_node.o"
+	@echo "... src/mcts/gpu_node.i"
+	@echo "... src/mcts/gpu_node.s"
+	@echo "... src/mcts/gpu_tree_storage.o"
+	@echo "... src/mcts/gpu_tree_storage.i"
+	@echo "... src/mcts/gpu_tree_storage.s"
+	@echo "... src/mcts/gpu_virtual_loss.o"
+	@echo "... src/mcts/gpu_virtual_loss.i"
+	@echo "... src/mcts/gpu_virtual_loss.s"
+	@echo "... src/mcts/gpu_vram_monitor.o"
+	@echo "... src/mcts/gpu_vram_monitor.i"
+	@echo "... src/mcts/gpu_vram_monitor.s"
 	@echo "... src/mcts/mcts_engine_batch_tree_simple.o"
 	@echo "... src/mcts/mcts_engine_batch_tree_simple.i"
 	@echo "... src/mcts/mcts_engine_batch_tree_simple.s"
@@ -3111,6 +3335,12 @@ help:
 	@echo "... src/mcts/phmap_transposition_table.o"
 	@echo "... src/mcts/phmap_transposition_table.i"
 	@echo "... src/mcts/phmap_transposition_table.s"
+	@echo "... src/mcts/shared_eval_wrapper.o"
+	@echo "... src/mcts/shared_eval_wrapper.i"
+	@echo "... src/mcts/shared_eval_wrapper.s"
+	@echo "... src/mcts/shared_evaluation_server.o"
+	@echo "... src/mcts/shared_evaluation_server.i"
+	@echo "... src/mcts/shared_evaluation_server.s"
 	@echo "... src/mcts/shared_inference_queue.o"
 	@echo "... src/mcts/shared_inference_queue.i"
 	@echo "... src/mcts/shared_inference_queue.s"

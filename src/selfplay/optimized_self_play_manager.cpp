@@ -116,8 +116,8 @@ void OptimizedSelfPlayManager::workerLoop(WorkerContext* context) {
                 total_games_completed_++;
             }
             
-            LOG_GAME_DEBUG("Worker {} completed game {} in {}s ({} moves)", 
-                          context->worker_id, game_id, duration, record.states.size());
+            // LOG_GAME_DEBUG("Worker {} completed game {} in {}s ({} moves)", 
+            //               context->worker_id, game_id, duration, record.states.size());
         }
     }
     

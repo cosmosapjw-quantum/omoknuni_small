@@ -4,10 +4,14 @@
 #include <vector>
 #include <random>
 #include <memory>
+#ifdef WITH_TORCH
 #include <torch/torch.h>
+#endif
 
 namespace alphazero {
 namespace training {
+
+#ifdef WITH_TORCH
 
 /**
  * @brief Abstract dataset interface for AlphaZero training
@@ -117,6 +121,25 @@ private:
     // Random number generator for shuffling
     std::mt19937 rng_;
 };
+
+#else // !WITH_TORCH
+// Dummy classes when torch is not available
+class Dataset {
+public:
+    virtual ~Dataset() = default;
+    virtual size_t size() const { return 0; }
+};
+
+class AlphaZeroDataset : public Dataset {
+public:
+    AlphaZeroDataset() {}
+    void add(const std::vector<std::vector<std::vector<float>>>&,
+            const std::vector<float>&, float) {}
+    void add(void*, void*, float) {}
+    void shuffle() {}
+    AlphaZeroDataset& to(const void*) { return *this; }
+};
+#endif // WITH_TORCH
 
 } // namespace training
 } // namespace alphazero

@@ -51,17 +51,17 @@ void GPUMemoryManager::initialize(size_t initial_pool_size, size_t maximum_pool_
         // Set as default memory resource
         rmm::mr::set_current_device_resource(pool_mr_.get());
         
-        LOG_SYSTEM_INFO("RAPIDS RMM initialized with pool size {} MB - {} MB",
-                       initial_pool_size / (1024 * 1024),
-                       maximum_pool_size / (1024 * 1024));
+        // LOG_SYSTEM_INFO("RAPIDS RMM initialized with pool size {} MB - {} MB",
+        //                initial_pool_size / (1024 * 1024),
+        //                maximum_pool_size / (1024 * 1024));
     } catch (const std::exception& e) {
         LOG_SYSTEM_ERROR("Failed to initialize RMM: {}", e.what());
         throw;
     }
 #else
-    LOG_SYSTEM_INFO("GPU Memory Manager initialized (using standard CUDA allocation)");
+    // LOG_SYSTEM_INFO("GPU Memory Manager initialized (using standard CUDA allocation)");
     LOG_SYSTEM_WARN("RAPIDS RMM is not available. Using standard CUDA memory allocation.");
-    LOG_SYSTEM_INFO("To enable RMM, upgrade to CMake 3.26.4+ and rebuild with -DENABLE_RMM=ON");
+    // LOG_SYSTEM_INFO("To enable RMM, upgrade to CMake 3.26.4+ and rebuild with -DENABLE_RMM=ON");
 #endif
     
     initialized_ = true;
@@ -72,13 +72,13 @@ void GPUMemoryManager::initialize(size_t initial_pool_size, size_t maximum_pool_
     int current_device = 0;
     cudaGetDevice(&current_device);
     
-    LOG_SYSTEM_INFO("GPU Memory Manager initialized on device {}/{}", 
-                   current_device + 1, device_count);
+    // LOG_SYSTEM_INFO("GPU Memory Manager initialized on device {}/{}", 
+    //                current_device + 1, device_count);
                    
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, current_device);
-    LOG_SYSTEM_INFO("  Device name: {}", prop.name);
-    LOG_SYSTEM_INFO("  Total memory: {} MB", prop.totalGlobalMem / (1024 * 1024));
+    // LOG_SYSTEM_INFO("  Device name: {}", prop.name);
+    // LOG_SYSTEM_INFO("  Total memory: {} MB", prop.totalGlobalMem / (1024 * 1024));
 }
 
 void* GPUMemoryManager::allocate(size_t size, cudaStream_t stream) {
@@ -173,11 +173,11 @@ GPUMemoryManager::MemoryStats GPUMemoryManager::getStats() const {
     stats.peak_allocated = peak_allocated;
     
     // Log detailed memory info at debug level
-    LOG_SYSTEM_DEBUG("GPU Memory: Used {} MB, Free {} MB, Total {} MB, Peak {} MB",
-                    stats.allocated_bytes / (1024 * 1024),
-                    stats.free_bytes / (1024 * 1024),
-                    total_bytes / (1024 * 1024),
-                    peak_allocated / (1024 * 1024));
+    // LOG_SYSTEM_DEBUG("GPU Memory: Used {} MB, Free {} MB, Total {} MB, Peak {} MB",
+    //                 stats.allocated_bytes / (1024 * 1024),
+    //                 stats.free_bytes / (1024 * 1024),
+    //                 total_bytes / (1024 * 1024),
+    //                 peak_allocated / (1024 * 1024));
 #else
     stats.pool_size = 0;
 #endif
@@ -197,7 +197,7 @@ void GPUMemoryManager::reset() {
 #endif
     
     initialized_ = false;
-    LOG_SYSTEM_INFO("GPU Memory Manager reset");
+    // LOG_SYSTEM_INFO("GPU Memory Manager reset");
 }
 
 } // namespace utils

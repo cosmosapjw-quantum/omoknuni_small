@@ -20,13 +20,12 @@ void MCTSEngine::cleanupTree() {
         return;
     }
     
-    SPDLOG_DEBUG("MCTSEngine: Starting tree cleanup");
+    // SPDLOG_DEBUG("MCTSEngine: Starting tree cleanup");
     
     // Store the current tree statistics before cleanup
-    size_t nodes_before = 0;
     if (root_) {
         // Count nodes if we need the statistic
-        // nodes_before = countTreeNodes(root_);
+        // size_t nodes_before = countTreeNodes(root_);
     }
     
     // Clear all children of the root node recursively
@@ -55,18 +54,18 @@ void MCTSEngine::cleanupTree() {
         // Force synchronization to ensure cleanup completes
         torch::cuda::synchronize();
         
-        // Additional cleanup for tensor pools
+        // Additional cleanup for GPU memory pools
         if (gpu_memory_pool_) {
             gpu_memory_pool_->trim(0.5f);  // Keep only 50% of allocated memory
         }
     }
 #endif
     
-    SPDLOG_DEBUG("MCTSEngine: Tree cleanup completed");
+    // SPDLOG_DEBUG("MCTSEngine: Tree cleanup completed");
 }
 
 void MCTSEngine::cleanupPendingEvaluations() {
-    SPDLOG_DEBUG("MCTSEngine: Cleaning up pending evaluations");
+    // SPDLOG_DEBUG("MCTSEngine: Cleaning up pending evaluations");
     
     // Reset pending evaluation counter
     pending_evaluations_.store(0);
@@ -82,7 +81,7 @@ void MCTSEngine::cleanupPendingEvaluations() {
 }
 
 void MCTSEngine::resetForNewSearch() {
-    SPDLOG_DEBUG("MCTSEngine: Resetting for new search");
+    // SPDLOG_DEBUG("MCTSEngine: Resetting for new search");
     
     // Clean up the tree
     cleanupTree();
@@ -103,10 +102,10 @@ void MCTSEngine::resetForNewSearch() {
     if (memory_pool_) {
         // Get current pool stats before clearing
         auto pool_stats = memory_pool_->getStats();
-        SPDLOG_DEBUG("MCTSEngine: Memory pool stats - nodes in use: {}, nodes available: {}, "
-                     "states in use: {}, states available: {}",
-                     pool_stats.nodes_in_use, pool_stats.nodes_available,
-                     pool_stats.states_in_use, pool_stats.states_available);*/
+        // SPDLOG_DEBUG("MCTSEngine: Memory pool stats - nodes in use: {}, nodes available: {}, "
+        //              "states in use: {}, states available: {}",
+        //              pool_stats.nodes_in_use, pool_stats.nodes_available,
+        //              pool_stats.states_in_use, pool_stats.states_available);*/
         
         // Note: We don't clear the pool itself as memory may be reused
         // but we should ensure no allocations are marked as in use
@@ -126,7 +125,7 @@ void MCTSEngine::resetForNewSearch() {
         // Force synchronization
         torch::cuda::synchronize();
         
-        // Additional cleanup for tensor caches
+        // Additional cleanup for CUDA caches
         if (torch::cuda::is_available()) {
             torch::cuda::synchronize();
         }
@@ -140,13 +139,12 @@ void MCTSEngine::resetForNewSearch() {
                 auto stats = c10::cuda::CUDACachingAllocator::getDeviceStats(0);
                 gpu_allocated = stats.allocated_bytes[0].current;
                 gpu_reserved = stats.reserved_bytes[0].current;
+                // SPDLOG_DEBUG("MCTSEngine: GPU memory - allocated: {:.2f}MB, reserved: {:.2f}MB",
+                //              gpu_allocated / (1024.0 * 1024.0), gpu_reserved / (1024.0 * 1024.0));
             } catch (...) {
                 // Fallback for older versions or errors
-                gpu_allocated = 0;
                 gpu_reserved = 0;
             }
-            SPDLOG_DEBUG("MCTSEngine: GPU memory - allocated: {:.2f}MB, reserved: {:.2f}MB",
-                         gpu_allocated / (1024.0 * 1024.0), gpu_reserved / (1024.0 * 1024.0));
             
             // If GPU memory usage is high, force more aggressive cleanup
             const size_t GPU_MEMORY_THRESHOLD_MB = 4000;  // 4GB threshold
@@ -163,7 +161,7 @@ void MCTSEngine::resetForNewSearch() {
     }
 #endif
     
-    SPDLOG_DEBUG("MCTSEngine: Reset completed");
+    // SPDLOG_DEBUG("MCTSEngine: Reset completed");
 }
 
 } // namespace mcts

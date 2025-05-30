@@ -11314,7 +11314,6 @@ CMakeFiles/mcts_tests.dir/tests/mcts/progressive_widening_test.cpp.o: /home/cosm
 CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o: /home/cosmos/omoknuni_small/tests/mcts/virtual_loss_test.cpp \
   _deps/mimalloc-src/include/mimalloc.h \
   /home/cosmos/omoknuni_small/include/core/export_macros.h \
-  /home/cosmos/omoknuni_small/include/core/game_export.h \
   /home/cosmos/omoknuni_small/include/core/igamestate.h \
   /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h \
   /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h \
@@ -11434,7 +11433,6 @@ CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o: /home/cosmos/omokn
   /usr/include/c++/13/bits/streambuf_iterator.h \
   /usr/include/c++/13/bits/string_view.tcc \
   /usr/include/c++/13/bits/stringfwd.h \
-  /usr/include/c++/13/bits/this_thread_sleep.h \
   /usr/include/c++/13/bits/uniform_int_dist.h \
   /usr/include/c++/13/bits/unique_lock.h \
   /usr/include/c++/13/bits/unique_ptr.h \
@@ -11504,7 +11502,6 @@ CMakeFiles/mcts_tests.dir/tests/mcts/virtual_loss_test.cpp.o: /home/cosmos/omokn
   /usr/include/c++/13/string \
   /usr/include/c++/13/string_view \
   /usr/include/c++/13/system_error \
-  /usr/include/c++/13/thread \
   /usr/include/c++/13/tr1/bessel_function.tcc \
   /usr/include/c++/13/tr1/beta_function.tcc \
   /usr/include/c++/13/tr1/ell_integral.tcc \

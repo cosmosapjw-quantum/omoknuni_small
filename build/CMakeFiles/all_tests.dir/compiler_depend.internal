@@ -2708,6 +2708,7 @@ CMakeFiles/all_tests.dir/tests/integration/games/self_play_games_test.cpp.o
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
  /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
+ /home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
  /home/cosmos/omoknuni_small/include/selfplay/self_play_manager.h
@@ -24488,10 +24489,7 @@ CMakeFiles/all_tests.dir/tests/mcts/transposition_integration_test.cpp.o
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
  /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
- /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
- /home/cosmos/omoknuni_small/include/nn/neural_network_factory.h
- /home/cosmos/omoknuni_small/include/nn/resnet_model.h
  /home/cosmos/omoknuni_small/include/utils/gamestate_pool.h
  /home/cosmos/omoknuni_small/include/utils/logger.h
  /home/cosmos/omoknuni_small/include/utils/memory_allocator.h
@@ -34913,7 +34911,6 @@ CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o
  /home/cosmos/omoknuni_small/tests/mcts/virtual_loss_test.cpp
  /home/cosmos/omoknuni_small/build/_deps/mimalloc-src/include/mimalloc.h
  /home/cosmos/omoknuni_small/include/core/export_macros.h
- /home/cosmos/omoknuni_small/include/core/game_export.h
  /home/cosmos/omoknuni_small/include/core/igamestate.h
  /home/cosmos/omoknuni_small/include/core/illegal_move_exception.h
  /home/cosmos/omoknuni_small/include/games/gomoku/gomoku_state.h
@@ -35033,7 +35030,6 @@ CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o
  /usr/include/c++/13/bits/streambuf_iterator.h
  /usr/include/c++/13/bits/string_view.tcc
  /usr/include/c++/13/bits/stringfwd.h
- /usr/include/c++/13/bits/this_thread_sleep.h
  /usr/include/c++/13/bits/uniform_int_dist.h
  /usr/include/c++/13/bits/unique_lock.h
  /usr/include/c++/13/bits/unique_ptr.h
@@ -35103,7 +35099,6 @@ CMakeFiles/all_tests.dir/tests/mcts/virtual_loss_test.cpp.o
  /usr/include/c++/13/string
  /usr/include/c++/13/string_view
  /usr/include/c++/13/system_error
- /usr/include/c++/13/thread
  /usr/include/c++/13/tr1/bessel_function.tcc
  /usr/include/c++/13/tr1/beta_function.tcc
  /usr/include/c++/13/tr1/ell_integral.tcc
@@ -40547,6 +40542,7 @@ CMakeFiles/all_tests.dir/tests/selfplay/self_play_manager_test.cpp.o
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
  /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
+ /home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h
@@ -45779,6 +45775,7 @@ CMakeFiles/all_tests.dir/tests/training/training_data_manager_test.cpp.o
  /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h
  /home/cosmos/omoknuni_small/include/mcts/node_tracker.h
  /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h
+ /home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h
  /home/cosmos/omoknuni_small/include/mcts/transposition_table.h
  /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h
  /home/cosmos/omoknuni_small/include/nn/neural_network.h

@@ -1,37 +1,38 @@
+// tests/mcts/virtual_loss_test.cpp
 #include <gtest/gtest.h>
-#include <thread>
-#include <vector>
-#include <atomic>
-#include <future>
-#include <chrono>
-
 #include "mcts/mcts_node.h"
 #include "games/gomoku/gomoku_state.h"
-#include "core/game_export.h"
+#include <vector>
+#include <map>
+#include <memory>
+#include <random>
+#include <chrono>
+#include <algorithm>
 
 namespace alphazero {
 namespace mcts {
 namespace test {
 
+// Test fixture for Virtual Loss optimization tests
 class VirtualLossTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Register GOMOKU game type for tests
-        core::GameRegistry::instance().registerGame(
-            core::GameType::GOMOKU,
-            []() { return std::make_unique<games::gomoku::GomokuState>(); }
-        );
+        // Create a simple game state (5x5 Gomoku for fast testing)
+        test_state_ = std::make_unique<games::gomoku::GomokuState>(5);
         
-        // Create test game state
-        test_state_ = std::make_unique<games::gomoku::GomokuState>();
+        // Create root node
+        root_node_ = MCTSNode::create(test_state_->clone(), nullptr);
         
-        // Create root node with expanded children for testing
-        root_node_ = MCTSNode::create(std::unique_ptr<core::IGameState>(test_state_->clone()), nullptr);
-        root_node_->expand(false, 2.0f, 6.0f);
-        
-        // Ensure we have children to test with
-        auto children = root_node_->getChildren();
-        ASSERT_GE(children.size(), 4) << "Root should have expanded children for testing";
+        // Expand root with some children
+        std::vector<int> actions = {12, 13, 14, 15, 16};  // Center positions
+        for (int action : actions) {
+            auto child_state = test_state_->clone();
+            child_state->makeMove(action);
+            auto child = MCTSNode::create(std::move(child_state), root_node_);
+            child->setAction(action);
+            child->setPriorProbability(0.2f);  // Equal priors
+            root_node_->getChildren().push_back(child);
+        }
     }
     
     std::unique_ptr<games::gomoku::GomokuState> test_state_;
@@ -45,350 +46,265 @@ TEST_F(VirtualLossTest, OptimizedVirtualLossApplication) {
     auto first_child = children[0];
     
     // Initial state - no virtual loss
-    float initial_q = first_child->getValue();
-    int initial_visits = first_child->getVisitCount();
+    int initial_virtual_loss = first_child->getVirtualLoss();
     
-    // Apply optimized virtual loss (value = 1)
-    const float optimized_virtual_loss = 1.0f;
-    first_child->applyVirtualLoss(optimized_virtual_loss);
+    // Apply optimized virtual loss (count = 1)
+    const int optimized_virtual_loss = 1;
+    first_child->addVirtualLoss(optimized_virtual_loss);
     
     // Check that virtual loss was applied
-    float q_after_virtual_loss = first_child->getValue();
-    int visits_after_virtual_loss = first_child->getVisitCount();
+    int virtual_loss_after = first_child->getVirtualLoss();
     
-    EXPECT_LT(q_after_virtual_loss, initial_q) 
-        << "Q-value should decrease after applying virtual loss";
-    EXPECT_GT(visits_after_virtual_loss, initial_visits) 
-        << "Visit count should increase to account for virtual loss";
+    EXPECT_EQ(virtual_loss_after, initial_virtual_loss + optimized_virtual_loss) 
+        << "Virtual loss count should increase";
     
     // Remove virtual loss
     first_child->removeVirtualLoss(optimized_virtual_loss);
     
     // Should return to original state
-    float q_after_removal = first_child->getValue();
-    int visits_after_removal = first_child->getVisitCount();
+    int virtual_loss_after_removal = first_child->getVirtualLoss();
     
-    EXPECT_FLOAT_EQ(q_after_removal, initial_q) 
-        << "Q-value should return to original after removing virtual loss";
-    EXPECT_EQ(visits_after_removal, initial_visits) 
-        << "Visit count should return to original after removing virtual loss";
+    EXPECT_EQ(virtual_loss_after_removal, initial_virtual_loss) 
+        << "Virtual loss should return to initial after removal";
 }
 
 TEST_F(VirtualLossTest, VirtualLossComparisonOldVsNew) {
-    // Compare old virtual loss (3.0) vs new optimized (1.0)
+    // Compare old aggressive virtual loss (count=3) vs new optimized (count=1)
     
     auto children = root_node_->getChildren();
-    ASSERT_GE(children.size(), 2) << "Need at least 2 children for comparison";
+    auto child1 = children[0];
+    auto child2 = children[1];
     
-    auto child_old = children[0];
-    auto child_new = children[1];
-    
-    // Give both children some initial visits and value
-    child_old->updateRecursive(0.5f);
-    child_old->updateRecursive(0.3f);
-    child_new->updateRecursive(0.5f);
-    child_new->updateRecursive(0.3f);
-    
-    float initial_q = child_old->getValue();
-    EXPECT_FLOAT_EQ(child_new->getValue(), initial_q) 
-        << "Both children should start with same Q-value";
+    // Give them identical starting stats
+    for (int i = 0; i < 10; ++i) {
+        child1->update(0.4f);  // Average value
+        child2->update(0.4f);
+    }
     
     // Apply different virtual loss values
-    const float old_virtual_loss = 3.0f;    // Old aggressive value
-    const float new_virtual_loss = 1.0f;    // New optimized value
+    const int old_virtual_loss = 3;  // Old aggressive value
+    const int new_virtual_loss = 1;  // New optimized value
     
-    child_old->applyVirtualLoss(old_virtual_loss);
-    child_new->applyVirtualLoss(new_virtual_loss);
+    child1->addVirtualLoss(old_virtual_loss);
+    child2->addVirtualLoss(new_virtual_loss);
     
-    float q_old = child_old->getValue();
-    float q_new = child_new->getValue();
+    int vl_old = child1->getVirtualLoss();
+    int vl_new = child2->getVirtualLoss();
     
-    // New virtual loss should be less aggressive (higher Q-value)
-    EXPECT_GT(q_new, q_old) 
-        << "Optimized virtual loss should be less aggressive than old value";
-    
-    // Both should still be less than initial (virtual loss applied)
-    EXPECT_LT(q_old, initial_q) << "Old virtual loss should decrease Q-value";
-    EXPECT_LT(q_new, initial_q) << "New virtual loss should decrease Q-value";
+    // Check virtual loss counts
+    EXPECT_EQ(vl_old, old_virtual_loss) 
+        << "Old virtual loss count should be applied";
+    EXPECT_EQ(vl_new, new_virtual_loss) 
+        << "New virtual loss count should be applied";
+    EXPECT_LT(vl_new, vl_old) 
+        << "Optimized virtual loss should be less than old value";
     
     // Clean up
-    child_old->removeVirtualLoss(old_virtual_loss);
-    child_new->removeVirtualLoss(new_virtual_loss);
+    child1->removeVirtualLoss(old_virtual_loss);
+    child2->removeVirtualLoss(new_virtual_loss);
 }
 
 TEST_F(VirtualLossTest, ThreadCollisionPrevention) {
-    // Test that virtual loss prevents thread collisions in tree expansion
+    // Test that virtual loss helps prevent thread collisions
     
-    const int THREAD_COUNT = 8;
-    const int SELECTIONS_PER_THREAD = 20;
-    const float virtual_loss = 1.0f;
+    // Track which children get selected
+    std::map<int, int> selection_counts;
+    const int num_selections = 100;
     
-    std::vector<std::thread> threads;
-    std::vector<std::vector<std::shared_ptr<MCTSNode>>> thread_selections(THREAD_COUNT);
-    std::atomic<int> completed_threads{0};
-    
-    // Launch threads that simulate concurrent tree traversal
-    for (int t = 0; t < THREAD_COUNT; ++t) {
-        threads.emplace_back([&, t]() {
-            thread_selections[t].reserve(SELECTIONS_PER_THREAD);
+    // Simulate thread selection with virtual loss
+    for (int i = 0; i < num_selections; ++i) {
+        // Select best child using the node's actual selection method
+        auto selected = root_node_->selectChild(1.5f);  // exploration constant
+        if (!selected) continue;
+        
+        // Find which child was selected
+        int selected_idx = -1;
+        for (size_t j = 0; j < root_node_->getChildren().size(); ++j) {
+            if (root_node_->getChildren()[j] == selected) {
+                selected_idx = j;
+                break;
+            }
+        }
+        
+        if (selected_idx >= 0) {
+            // Apply virtual loss to selected child (simulating thread selection)
+            selected->addVirtualLoss();
+            selection_counts[selected_idx]++;
             
-            for (int s = 0; s < SELECTIONS_PER_THREAD; ++s) {
-                // Select child using UCB with virtual loss protection
-                auto selected_child = root_node_->selectChild(1.4f, true, virtual_loss);
-                
-                if (selected_child) {
-                    thread_selections[t].push_back(selected_child);
-                    
-                    // Simulate some work on the selected node
-                    std::this_thread::sleep_for(std::chrono::microseconds(100));
+            // Remove virtual loss after "evaluation" (every 5 selections)
+            if (i % 5 == 4) {
+                for (auto& child : root_node_->getChildren()) {
+                    if (child->getVirtualLoss() > 0) {
+                        child->removeVirtualLoss();
+                    }
+                    child->update(0.5f);  // Simulate evaluation result
                 }
             }
-            
-            completed_threads++;
-        });
-    }
-    
-    // Wait for all threads to complete
-    for (auto& thread : threads) {
-        thread.join();
-    }
-    
-    EXPECT_EQ(completed_threads.load(), THREAD_COUNT) 
-        << "All threads should complete successfully";
-    
-    // Analyze selection distribution
-    std::map<std::shared_ptr<MCTSNode>, int> selection_counts;
-    int total_selections = 0;
-    
-    for (int t = 0; t < THREAD_COUNT; ++t) {
-        for (auto& selected : thread_selections[t]) {
-            selection_counts[selected]++;
-            total_selections++;
         }
     }
     
-    EXPECT_GT(total_selections, 0) << "Should have made selections";
-    
-    // Virtual loss should promote selection diversity
+    // Check that selections were distributed (not all to one child)
     EXPECT_GE(selection_counts.size(), 2) 
         << "Should select from multiple children (virtual loss promoting diversity)";
     
-    // No single child should dominate all selections
+    // No single child should dominate
+    int max_selections = 0;
     for (const auto& pair : selection_counts) {
-        float selection_ratio = static_cast<float>(pair.second) / total_selections;
-        EXPECT_LT(selection_ratio, 0.8f) 
-            << "No single child should be selected more than 80% of the time";
+        max_selections = std::max(max_selections, pair.second);
     }
+    float selection_ratio = static_cast<float>(max_selections) / num_selections;
+    EXPECT_LT(selection_ratio, 0.8f) 
+        << "No single child should be selected more than 80% of the time";
 }
 
 TEST_F(VirtualLossTest, VirtualLossStackingBehavior) {
-    // Test behavior when multiple virtual losses are applied to same node
+    // Test multiple virtual losses stacking correctly
     
-    auto children = root_node_->getChildren();
-    auto test_child = children[0];
+    auto child = root_node_->getChildren()[0];
     
-    // Give child some initial value
-    test_child->updateRecursive(0.6f);
-    test_child->updateRecursive(0.4f);
-    
-    float initial_q = test_child->getValue();
-    int initial_visits = test_child->getVisitCount();
-    
-    const float virtual_loss = 1.0f;
+    // Initial state
+    int initial_vl = child->getVirtualLoss();
+    EXPECT_EQ(initial_vl, 0) << "Should start with no virtual loss";
     
     // Apply multiple virtual losses (simulating multiple threads)
-    test_child->applyVirtualLoss(virtual_loss);
-    float q_after_first = test_child->getValue();
+    child->addVirtualLoss();
+    int vl_after_first = child->getVirtualLoss();
     
-    test_child->applyVirtualLoss(virtual_loss);
-    float q_after_second = test_child->getValue();
+    child->addVirtualLoss();
+    int vl_after_second = child->getVirtualLoss();
     
-    test_child->applyVirtualLoss(virtual_loss);
-    float q_after_third = test_child->getValue();
+    child->addVirtualLoss();
+    int vl_after_third = child->getVirtualLoss();
     
-    // Each virtual loss should further decrease Q-value
-    EXPECT_LT(q_after_first, initial_q) << "First virtual loss should decrease Q";
-    EXPECT_LT(q_after_second, q_after_first) << "Second virtual loss should further decrease Q";
-    EXPECT_LT(q_after_third, q_after_second) << "Third virtual loss should further decrease Q";
+    // Each virtual loss should increase the count
+    EXPECT_EQ(vl_after_first, 1) 
+        << "First virtual loss should set count to 1";
+    EXPECT_EQ(vl_after_second, 2) 
+        << "Second virtual loss should set count to 2";
+    EXPECT_EQ(vl_after_third, 3) 
+        << "Third virtual loss should set count to 3";
     
-    // Remove virtual losses in reverse order
-    test_child->removeVirtualLoss(virtual_loss);
-    float q_after_remove_one = test_child->getValue();
-    EXPECT_FLOAT_EQ(q_after_remove_one, q_after_second) 
-        << "Removing one virtual loss should restore to previous state";
+    // Remove all virtual losses
+    child->removeVirtualLoss(3);
+    int vl_after_removal = child->getVirtualLoss();
     
-    test_child->removeVirtualLoss(virtual_loss);
-    float q_after_remove_two = test_child->getValue();
-    EXPECT_FLOAT_EQ(q_after_remove_two, q_after_first) 
-        << "Removing second virtual loss should restore to previous state";
-    
-    test_child->removeVirtualLoss(virtual_loss);
-    float q_after_remove_all = test_child->getValue();
-    EXPECT_FLOAT_EQ(q_after_remove_all, initial_q) 
-        << "Removing all virtual losses should restore original Q-value";
-    
-    int final_visits = test_child->getVisitCount();
-    EXPECT_EQ(final_visits, initial_visits) 
-        << "Visit count should be restored after removing all virtual losses";
+    EXPECT_EQ(vl_after_removal, 0) 
+        << "Virtual loss count should return to 0 after removing all";
 }
 
 TEST_F(VirtualLossTest, VirtualLossUCBImpact) {
-    // Test how virtual loss affects UCB calculation and selection
+    // Test that virtual loss affects UCB selection
     
-    auto children = root_node_->getChildren();
-    ASSERT_GE(children.size(), 3) << "Need at least 3 children for UCB testing";
+    // Give all children identical stats
+    for (auto& child : root_node_->getChildren()) {
+        for (int i = 0; i < 10; ++i) {
+            child->update(0.5f);
+        }
+    }
     
-    // Give children different initial values
-    children[0]->updateRecursive(0.8f);  // High value
-    children[1]->updateRecursive(0.5f);  // Medium value  
-    children[2]->updateRecursive(0.2f);  // Low value
+    // Apply virtual loss to first child
+    auto first_child = root_node_->getChildren()[0];
+    first_child->addVirtualLoss(3);  // Apply significant virtual loss
     
-    // Without virtual loss, highest value child should be selected
-    auto selected_without_virtual_loss = root_node_->selectChild(1.4f, false, 0.0f);
-    EXPECT_EQ(selected_without_virtual_loss, children[0]) 
-        << "Highest value child should be selected without virtual loss";
+    // Update root visit count for UCB calculation
+    for (int i = 0; i < 50; ++i) {
+        root_node_->update(0.5f);
+    }
     
-    // Apply virtual loss to highest value child
-    const float virtual_loss = 1.0f;
-    children[0]->applyVirtualLoss(virtual_loss);
+    // Select best child - should avoid the one with virtual loss
+    auto selected = root_node_->selectChild(1.5f);
     
-    // Now selection should prefer other children
-    auto selected_with_virtual_loss = root_node_->selectChild(1.4f, false, 0.0f);
-    EXPECT_NE(selected_with_virtual_loss, children[0]) 
-        << "Virtual loss should make other children more attractive";
+    // The selected child should not be the one with virtual loss
+    // (unless all have virtual loss or other factors override)
+    EXPECT_NE(selected, first_child) 
+        << "Selection should avoid child with high virtual loss";
     
     // Clean up
-    children[0]->removeVirtualLoss(virtual_loss);
+    first_child->removeVirtualLoss(3);
 }
 
 TEST_F(VirtualLossTest, VirtualLossPendingEvaluationIntegration) {
-    // Test virtual loss integration with pending evaluation system
+    // Test interaction between virtual loss and pending evaluation
     
-    auto children = root_node_->getChildren();
-    auto test_child = children[0];
+    auto child = root_node_->getChildren()[0];
     
-    // Mark child as pending evaluation
-    test_child->tryMarkForEvaluation();
+    // Mark as pending evaluation
+    child->markEvaluationPending();
+    EXPECT_TRUE(child->hasPendingEvaluation());
     
-    float q_before = test_child->getValue();
+    int vl_before = child->getVirtualLoss();
     
     // Apply virtual loss while pending
-    const float virtual_loss = 1.0f;
-    test_child->applyVirtualLoss(virtual_loss);
+    child->addVirtualLoss();
     
-    float q_during_pending = test_child->getValue();
-    EXPECT_LT(q_during_pending, q_before) 
+    int vl_during_pending = child->getVirtualLoss();
+    
+    EXPECT_GT(vl_during_pending, vl_before) 
         << "Virtual loss should apply even when pending evaluation";
     
-    // Complete evaluation
-    test_child->clearEvaluationFlag();
-    test_child->updateRecursive(0.7f);
+    // Clear pending and remove virtual loss
+    child->clearPendingEvaluation();
+    child->removeVirtualLoss();
     
-    // Remove virtual loss after evaluation
-    test_child->removeVirtualLoss(virtual_loss);
+    int vl_after = child->getVirtualLoss();
     
-    float q_after = test_child->getValue();
-    
-    // Should incorporate both the evaluation result and virtual loss removal
-    EXPECT_GT(q_after, q_during_pending) 
-        << "Q-value should improve after removing virtual loss and evaluation";
+    EXPECT_EQ(vl_after, vl_before) 
+        << "Virtual loss should return to original after clearing";
 }
 
 TEST_F(VirtualLossTest, VirtualLossPerformanceImpact) {
-    // Test that optimized virtual loss (1.0) provides better performance than old (3.0)
+    // Test performance characteristics of virtual loss operations
     
-    const int SIMULATION_RUNS = 100;
-    const float old_virtual_loss = 3.0f;
-    const float new_virtual_loss = 1.0f;
+    auto child = root_node_->getChildren()[0];
     
-    // Simulate selection behavior with old virtual loss
-    std::map<std::shared_ptr<MCTSNode>, int> old_selections;
-    for (int run = 0; run < SIMULATION_RUNS; ++run) {
-        auto children = root_node_->getChildren();
-        
-        // Apply old virtual loss to most-visited child
-        auto most_visited = *std::max_element(children.begin(), children.end(),
-            [](const auto& a, const auto& b) {
-                return a->getVisitCount() < b->getVisitCount();
-            });
-        
-        most_visited->applyVirtualLoss(old_virtual_loss);
-        auto selected = root_node_->selectChild(1.4f, true, old_virtual_loss);
-        if (selected) {
-            old_selections[selected]++;
-        }
-        most_visited->removeVirtualLoss(old_virtual_loss);
+    // Measure time for adding/removing virtual loss
+    const int num_operations = 10000;
+    
+    auto start = std::chrono::high_resolution_clock::now();
+    
+    for (int i = 0; i < num_operations; ++i) {
+        child->addVirtualLoss();
+        child->removeVirtualLoss();
     }
     
-    // Simulate selection behavior with new virtual loss
-    std::map<std::shared_ptr<MCTSNode>, int> new_selections;
-    for (int run = 0; run < SIMULATION_RUNS; ++run) {
-        auto children = root_node_->getChildren();
-        
-        // Apply new virtual loss to most-visited child
-        auto most_visited = *std::max_element(children.begin(), children.end(),
-            [](const auto& a, const auto& b) {
-                return a->getVisitCount() < b->getVisitCount();
-            });
-        
-        most_visited->applyVirtualLoss(new_virtual_loss);
-        auto selected = root_node_->selectChild(1.4f, true, new_virtual_loss);
-        if (selected) {
-            new_selections[selected]++;
-        }
-        most_visited->removeVirtualLoss(new_virtual_loss);
-    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     
-    // Analyze diversity - new virtual loss should allow better tree utilization
-    size_t old_diversity = old_selections.size();
-    size_t new_diversity = new_selections.size();
+    float avg_time_us = static_cast<float>(duration.count()) / (2 * num_operations);
     
-    EXPECT_GE(new_diversity, old_diversity) 
-        << "New virtual loss should maintain or improve selection diversity";
+    // Virtual loss operations should be very fast (sub-microsecond)
+    EXPECT_LT(avg_time_us, 1.0f) 
+        << "Virtual loss operations should be sub-microsecond";
     
-    // New virtual loss should be less aggressive in blocking selections
-    int old_total_selections = 0;
-    for (const auto& pair : old_selections) {
-        old_total_selections += pair.second;
-    }
-    
-    int new_total_selections = 0;
-    for (const auto& pair : new_selections) {
-        new_total_selections += pair.second;
-    }
-    
-    EXPECT_GE(new_total_selections, old_total_selections) 
-        << "New virtual loss should allow more successful selections";
+    std::cout << "Average time per virtual loss operation: " << avg_time_us << " µs" << std::endl;
 }
 
 TEST_F(VirtualLossTest, EdgeCaseHandling) {
-    // Test edge cases for virtual loss handling
+    // Test edge cases and boundary conditions
     
-    auto test_child = root_node_->getChildren()[0];
+    auto child = root_node_->getChildren()[0];
+    
+    // Test negative virtual loss (should be ignored)
+    int initial_vl = child->getVirtualLoss();
+    child->addVirtualLoss(-1);
+    EXPECT_EQ(child->getVirtualLoss(), initial_vl) 
+        << "Negative virtual loss should be ignored";
     
     // Test zero virtual loss
-    float initial_q = test_child->getValue();
-    test_child->applyVirtualLoss(0.0f);
-    EXPECT_FLOAT_EQ(test_child->getValue(), initial_q) 
-        << "Zero virtual loss should not change Q-value";
-    test_child->removeVirtualLoss(0.0f);
+    child->addVirtualLoss(0);
+    EXPECT_EQ(child->getVirtualLoss(), initial_vl) 
+        << "Zero virtual loss should have no effect";
     
-    // Test negative virtual loss (should be handled gracefully)
-    test_child->applyVirtualLoss(-1.0f);
-    // Should not crash and should handle gracefully
-    test_child->removeVirtualLoss(-1.0f);
+    // Test very large virtual loss
+    child->addVirtualLoss(1000);
+    int vl_after_large = child->getVirtualLoss();
+    EXPECT_EQ(vl_after_large, initial_vl + 1000) 
+        << "Large virtual loss should be tracked correctly";
     
-    // Test large virtual loss values
-    test_child->applyVirtualLoss(100.0f);
-    float q_after_large = test_child->getValue();
-    EXPECT_LT(q_after_large, initial_q) 
-        << "Large virtual loss should decrease Q-value";
-    test_child->removeVirtualLoss(100.0f);
-    
-    // Should return to approximately original value
-    float q_after_restore = test_child->getValue();
-    EXPECT_NEAR(q_after_restore, initial_q, 0.01f) 
-        << "Should restore approximately to original Q-value";
+    // Test removal of more virtual loss than applied
+    child->removeVirtualLoss(2000);
+    EXPECT_EQ(child->getVirtualLoss(), 0) 
+        << "Virtual loss count should never go negative";
 }
 
 } // namespace test

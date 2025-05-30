@@ -4,8 +4,6 @@ lib/Release/libalphazero.so: \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtoffloadbegin.o \
   CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o \
   CMakeFiles/alphazero.dir/src/core/game_export.cpp.o \
-  CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.o \
-  CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/games/chess/chess_state.cpp.o \
   CMakeFiles/alphazero.dir/src/games/chess/chess_rules.cpp.o \
   CMakeFiles/alphazero.dir/src/games/chess/chess960.cpp.o \
@@ -15,16 +13,11 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/games/gomoku/gomoku_rules.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o \
-  CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_gomoku.cpp.o \
-  CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_chess.cpp.o \
-  CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_go.cpp.o \
-  CMakeFiles/alphazero.dir/src/utils/attack_defense_gpu_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/gamestate_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/logger.cpp.o \
-  CMakeFiles/alphazero.dir/src/utils/gpu_memory_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/advanced_memory_monitor.cpp.o \
   CMakeFiles/alphazero.dir/src/utils/thread_local_memory_manager.cpp.o \
@@ -55,9 +48,24 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/mcts/mcts_engine_memory_pressure.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o \
-  CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o \
   CMakeFiles/alphazero.dir/src/mcts/shared_inference_queue.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/shared_evaluation_server.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/shared_eval_wrapper.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/gpu_batch_evaluator.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/gpu_mcts_engine.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/gpu_virtual_loss.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/gpu_tree_storage.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/gpu_node.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/cuda_graph_capture.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/gpu_enhanced_mcts_engine.cpp.o \
+  CMakeFiles/alphazero.dir/src/mcts/gpu_vram_monitor.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/gpu_memory_manager.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_gomoku.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_chess.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_go.cpp.o \
+  CMakeFiles/alphazero.dir/src/utils/attack_defense_gpu_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/self_play_manager.cpp.o \
   CMakeFiles/alphazero.dir/src/selfplay/self_play_manager_parallel.cpp.o \
@@ -66,6 +74,9 @@ lib/Release/libalphazero.so: \
   CMakeFiles/alphazero.dir/src/training/dataset.cpp.o \
   CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o \
   CMakeFiles/alphazero.dir/src/evaluation/arena.cpp.o \
+  gpu_batch_evaluator_kernels.cu.o \
+  gpu_virtual_loss_kernels.cu.o \
+  gpu_tree_traversal_kernel.cu.o \
   /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0 \
   /opt/libtorch-2.7.0-cu128/lib/libtorch.so \
   /opt/libtorch-2.7.0-cu128/lib/libc10.so \
@@ -128,10 +139,6 @@ CMakeFiles/alphazero.dir/src/core/igamestate.cpp.o:
 
 CMakeFiles/alphazero.dir/src/core/game_export.cpp.o:
 
-CMakeFiles/alphazero.dir/src/core/tensor_pool.cpp.o:
-
-CMakeFiles/alphazero.dir/src/core/lock_free_tensor_pool.cpp.o:
-
 CMakeFiles/alphazero.dir/src/games/chess/chess_state.cpp.o:
 
 CMakeFiles/alphazero.dir/src/games/chess/chess_rules.cpp.o:
@@ -150,14 +157,6 @@ CMakeFiles/alphazero.dir/src/utils/zobrist_hash.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/attack_defense_module.cpp.o:
 
-CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_gomoku.cpp.o:
-
-CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_chess.cpp.o:
-
-CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_go.cpp.o:
-
-CMakeFiles/alphazero.dir/src/utils/attack_defense_gpu_manager.cpp.o:
-
 CMakeFiles/alphazero.dir/src/utils/hash_specializations.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/debug_monitor.cpp.o:
@@ -167,8 +166,6 @@ CMakeFiles/alphazero.dir/src/utils/gamestate_pool.cpp.o:
 CMakeFiles/alphazero.dir/src/utils/memory_tracker.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/logger.cpp.o:
-
-CMakeFiles/alphazero.dir/src/utils/gpu_memory_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/utils/resource_monitor.cpp.o:
 
@@ -230,11 +227,41 @@ CMakeFiles/alphazero.dir/src/mcts/transposition_table.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/node_tracker.cpp.o:
 
-CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o:
-
 CMakeFiles/alphazero.dir/src/mcts/phmap_transposition_table.cpp.o:
 
 CMakeFiles/alphazero.dir/src/mcts/shared_inference_queue.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/shared_evaluation_server.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/shared_eval_wrapper.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/gpu_memory_pool.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/gpu_batch_evaluator.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/gpu_mcts_engine.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/gpu_virtual_loss.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/gpu_tree_storage.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/gpu_node.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/cuda_graph_capture.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/gpu_enhanced_mcts_engine.cpp.o:
+
+CMakeFiles/alphazero.dir/src/mcts/gpu_vram_monitor.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/gpu_memory_manager.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_gomoku.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_chess.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/gpu_attack_defense_go.cpp.o:
+
+CMakeFiles/alphazero.dir/src/utils/attack_defense_gpu_manager.cpp.o:
 
 CMakeFiles/alphazero.dir/src/cli/cli_manager.cpp.o:
 
@@ -251,6 +278,12 @@ CMakeFiles/alphazero.dir/src/training/dataset.cpp.o:
 CMakeFiles/alphazero.dir/src/training/data_loader.cpp.o:
 
 CMakeFiles/alphazero.dir/src/evaluation/arena.cpp.o:
+
+gpu_batch_evaluator_kernels.cu.o:
+
+gpu_virtual_loss_kernels.cu.o:
+
+gpu_tree_traversal_kernel.cu.o:
 
 /usr/lib/x86_64-linux-gnu/libyaml-cpp.so.0.8.0:
 

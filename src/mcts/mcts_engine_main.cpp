@@ -135,13 +135,7 @@ MCTSEngine::MCTSEngine(std::shared_ptr<nn::NeuralNetwork> neural_net, const MCTS
                     gpu_memory_pool_->trim(0.5f); // Keep only 50% of unused memory
                 }
                 
-                // Clean neural network tensor pools
-                if (neural_network_) {
-                    auto resnet = std::dynamic_pointer_cast<nn::ResNetModel>(neural_network_);
-                    if (resnet) {
-                        resnet->cleanupTensorPool();
-                    }
-                }
+                // Neural network cleanup (tensor pools removed)
                 
                 // Force CUDA cache cleanup
                 #ifdef WITH_TORCH
@@ -191,10 +185,23 @@ MCTSEngine::MCTSEngine(InferenceFunction inference_fn, const MCTSSettings& setti
       use_advanced_memory_pool_(true),
       direct_inference_fn_(inference_fn) {
     
+    fprintf(stderr, "[CONSTRUCTOR_DEBUG] MCTSEngine constructor START\n");
+    fflush(stderr);
+    
+    // std::cout << "[MCTS_DEBUG] MCTSEngine constructor (InferenceFunction) called" << std::endl;
+    // std::cout << "[MCTS_DEBUG] Settings: num_simulations=" << settings.num_simulations 
+    //           << ", num_threads=" << settings.num_threads 
+    //           << ", batch_size=" << settings.batch_size 
+    //           << ", use_transposition_table=" << settings.use_transposition_table << std::endl;
+    
+    fprintf(stderr, "[CONSTRUCTOR_DEBUG] Basic initialization complete\n");
+    fflush(stderr);
+    
     // Advanced memory pool removed - using simpler memory management
     
     // Create transposition table if enabled (always use PHMap)
     if (use_transposition_table_) {
+        // std::cout << "[MCTS_DEBUG] Creating transposition table" << std::endl;
         size_t tt_size_mb = settings.transposition_table_size_mb > 0 ? 
                            settings.transposition_table_size_mb : 128;
         
@@ -248,12 +255,16 @@ bool MCTSEngine::ensureEvaluatorStarted() {
 // Main search method
 SearchResult MCTSEngine::search(const core::IGameState& state) {
     // Search started
+    std::stringstream thread_ss;
+    thread_ss << std::this_thread::get_id();
+    // LOG_SYSTEM_INFO("MCTSEngine::search - Starting search (thread_id={})", thread_ss.str());
     
     auto start_time = std::chrono::steady_clock::now();
 
     // Validate the state
+    // LOG_SYSTEM_INFO("MCTSEngine::search - Validating game state");
     if (!safeGameStateValidation(state)) {
-        std::cerr << "Invalid game state, returning default result" << std::endl;
+        LOG_SYSTEM_ERROR("MCTSEngine::search - Invalid game state, returning default result");
         SearchResult result;
         result.action = -1;
         result.value = 0.0f;
@@ -266,6 +277,7 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
         }
         return result;
     }
+    // LOG_SYSTEM_INFO("MCTSEngine::search - Game state validated successfully");
 
     // CRITICAL FIX: Don't clear entire table, just old entries
     if (use_transposition_table_ && transposition_table_) {
@@ -329,15 +341,15 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
     
     // Run the search with enhanced error handling
     try {
-        // Running search
+        // LOG_SYSTEM_INFO("MCTSEngine::search - About to call runSearch");
         runSearch(state);
-        // Search completed
+        // LOG_SYSTEM_INFO("MCTSEngine::search - runSearch completed successfully");
     } catch (const std::exception& e) {
-        std::cerr << "CRITICAL ERROR: MCTSEngine::search - Exception during runSearch: " << e.what() << std::endl;
+        LOG_SYSTEM_ERROR("MCTSEngine::search - Exception during runSearch: {}", e.what());
         safelyStopEvaluator();
         throw;
     } catch (...) {
-        std::cerr << "CRITICAL ERROR: MCTSEngine::search - Unknown exception during runSearch" << std::endl;
+        LOG_SYSTEM_ERROR("MCTSEngine::search - Unknown exception during runSearch");
         safelyStopEvaluator();
         throw std::runtime_error("Unknown error during search");
     }
@@ -468,6 +480,15 @@ SearchResult MCTSEngine::search(const core::IGameState& state) {
         auto tt_stats = transposition_table_->getStats();
         last_stats_.tt_hit_rate = tt_stats.hit_rate;
         last_stats_.tt_size = transposition_table_->size();
+        
+        // Debug logging for TT stats
+        if (settings_.num_simulations == 100) { // Only log for test scenario
+            std::cout << "TT Stats: lookups=" << tt_stats.total_lookups 
+                      << ", hits=" << tt_stats.successful_lookups
+                      << ", stores=" << tt_stats.total_stores
+                      << ", size=" << last_stats_.tt_size
+                      << ", hit_rate=" << last_stats_.tt_hit_rate << std::endl;
+        }
     }
     
     result.stats = last_stats_;
@@ -501,6 +522,19 @@ void MCTSEngine::setSharedExternalQueues(
 // Accessor methods for transposition table
 void MCTSEngine::setUseTranspositionTable(bool use) {
     use_transposition_table_ = use;
+    
+    // If enabling transposition table and it doesn't exist, create it
+    if (use && !transposition_table_) {
+        size_t tt_size_mb = settings_.transposition_table_size_mb > 0 ? 
+                           settings_.transposition_table_size_mb : 128;
+        
+        PHMapTranspositionTable::Config config;
+        config.size_mb = tt_size_mb;
+        config.num_shards = 0;  // Auto-determine
+        config.enable_compression = true;
+        config.enable_stats = true;
+        transposition_table_ = std::make_unique<PHMapTranspositionTable>(config);
+    }
 }
 
 bool MCTSEngine::isUsingTranspositionTable() const {

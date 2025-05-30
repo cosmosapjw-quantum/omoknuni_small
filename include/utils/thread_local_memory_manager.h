@@ -5,7 +5,9 @@
 #include <vector>
 #include <mutex>
 #include <algorithm>
+#ifdef WITH_TORCH
 #include <cuda_runtime.h>
+#endif
 #include "core/export_macros.h"
 #include "utils/logger.h"
 
@@ -125,7 +127,9 @@ public:
             auto& manager = ThreadLocalMemoryManager::getInstance();
             if (is_gpu_) {
                 manager.trackGpuDeallocation(size_);
+#ifdef WITH_TORCH
                 cudaFree(ptr_);
+#endif
             } else {
                 manager.trackCpuDeallocation(size_);
                 delete[] reinterpret_cast<char*>(ptr_);

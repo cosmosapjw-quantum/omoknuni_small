@@ -1,6 +1,5 @@
 // src/games/go/go_state.cpp
 #include "games/go/go_state.h"
-#include "core/tensor_pool.h"            // For GlobalTensorPool optimization
 #include "utils/attack_defense_module.h"  // For GPU attack/defense computation
 #include <iostream>
 #include <algorithm>
@@ -561,8 +560,9 @@ std::vector<std::vector<std::vector<float>>> GoState::getTensorRepresentation() 
         return cached_tensor_repr_;
     }
     
-    // PERFORMANCE FIX: Use global tensor pool for efficient memory reuse
-    auto tensor = core::GlobalTensorPool::getInstance().getTensor(3, board_size_, board_size_);
+    // Create tensor directly without pooling
+    auto tensor = std::vector<std::vector<std::vector<float>>>(
+        3, std::vector<std::vector<float>>(board_size_, std::vector<float>(board_size_, 0.0f)));
     
     // Fill first two planes with stone positions
     for (int y = 0; y < board_size_; ++y) {
@@ -1211,20 +1211,9 @@ GoState::~GoState() {
 }
 
 void GoState::clearTensorCache() const {
-    // Return cached tensors to the global pool
-    if (!cached_tensor_repr_.empty()) {
-        core::GlobalTensorPool::getInstance().returnTensor(
-            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_tensor_repr_),
-            17, board_size_, board_size_);  // Go uses 17 channels for basic representation
-        cached_tensor_repr_.clear();
-    }
-    
-    if (!cached_enhanced_tensor_repr_.empty()) {
-        core::GlobalTensorPool::getInstance().returnTensor(
-            const_cast<std::vector<std::vector<std::vector<float>>>&>(cached_enhanced_tensor_repr_),
-            17, board_size_, board_size_);  // Go uses 17 channels for enhanced representation
-        cached_enhanced_tensor_repr_.clear();
-    }
+    // Simply clear the cached tensors
+    cached_tensor_repr_.clear();
+    cached_enhanced_tensor_repr_.clear();
 }
 
 void GoState::captureGroup(const StoneGroup& group) {

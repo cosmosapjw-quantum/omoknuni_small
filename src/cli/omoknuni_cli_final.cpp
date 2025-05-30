@@ -70,7 +70,7 @@ void signalHandler(int signal) {
         int count = ++g_signal_count;
         
         if (count == 1) {
-            LOG_SYSTEM_INFO("Shutdown requested. Gracefully stopping all workers...");
+            // LOG_SYSTEM_INFO("Shutdown requested. Gracefully stopping all workers...");
             std::cout << "\n*** Shutdown requested. Gracefully stopping all workers... ***" << std::endl;
             std::cout << "*** Press Ctrl+C again to force immediate exit ***" << std::endl;
             utils::requestShutdown();
@@ -97,7 +97,7 @@ void signalHandler(int signal) {
             watchdog.detach();
             
         } else if (count == 2) {
-            LOG_SYSTEM_INFO("Force shutdown requested. Terminating immediately...");
+            // LOG_SYSTEM_INFO("Force shutdown requested. Terminating immediately...");
             std::cout << "\n*** Force shutdown requested. Terminating immediately... ***" << std::endl;
             g_force_exit.store(true);
             
@@ -253,21 +253,41 @@ public:
             int games_generated = 0;
             
             // Generate games
-            while (games_generated < games_per_worker && !utils::isShutdownRequested()) {
-                // Generate one game at a time for better debugging
-                int batch_size = 1;
-                
+            if (settings_.mcts_mode == "tensor" && settings_.parallel_games > 1) {
+                // For tensor MCTS with true parallelism, generate all games at once
+                // LOG_SYSTEM_INFO("Worker {} using true parallel tensor MCTS to generate {} games", 
+                //                id_, games_per_worker);
                 try {
-                    auto games = manager.generateGames(game_type_, batch_size, board_size_);
-                
-                if (!games.empty()) {
-                    // Add to collector
-                    collector_->addGames(games);
-                    games_generated += games.size();
-                }
+                    auto games = manager.generateGames(game_type_, games_per_worker, board_size_);
+                    
+                    if (!games.empty()) {
+                        // Add all games to collector
+                        collector_->addGames(games);
+                        games_generated += games.size();
+                        // LOG_SYSTEM_INFO("Worker {} completed {} games in true parallel mode", 
+                        //                id_, games.size());
+                    }
                 } catch (const std::exception& e) {
-                    LOG_SYSTEM_ERROR("Worker {} failed to generate game: {}", id_, e.what());
-                    break;
+                    LOG_SYSTEM_ERROR("Worker {} failed in true parallel generation: {}", id_, e.what());
+                }
+            } else {
+                // Regular mode - generate one game at a time
+                while (games_generated < games_per_worker && !utils::isShutdownRequested()) {
+                    // Generate one game at a time for better debugging
+                    int batch_size = 1;
+                    
+                    try {
+                        auto games = manager.generateGames(game_type_, batch_size, board_size_);
+                    
+                    if (!games.empty()) {
+                        // Add to collector
+                        collector_->addGames(games);
+                        games_generated += games.size();
+                    }
+                    } catch (const std::exception& e) {
+                        LOG_SYSTEM_ERROR("Worker {} failed to generate game: {}", id_, e.what());
+                        break;
+                    }
                 }
             }
             
@@ -297,16 +317,25 @@ private:
 int runSelfPlay(const std::vector<std::string>& args) {
     
     if (args.size() < 1) {
-        LOG_SYSTEM_ERROR("Usage: omoknuni_cli_final self-play <config.yaml> [--verbose]");
+        LOG_SYSTEM_ERROR("Usage: omoknuni_cli_final self-play <config.yaml> [--verbose] [--mcts-mode=cpu|gpu]");
+        LOG_SYSTEM_ERROR("  --mcts-mode=cpu   Use CPU-based MCTS (default)");
+        LOG_SYSTEM_ERROR("  --mcts-mode=gpu   Use GPU-enhanced MCTS with tree operations on GPU");
         return 1;
     }
     
-    // Check for verbose flag
+    // Check for verbose flag and MCTS mode
     bool verbose = false;
+    std::string mcts_mode = "cpu";  // Default to CPU
+    
     for (const auto& arg : args) {
         if (arg == "--verbose" || arg == "-v") {
             verbose = true;
-            break;
+        } else if (arg.substr(0, 12) == "--mcts-mode=") {
+            mcts_mode = arg.substr(12);
+            if (mcts_mode != "cpu" && mcts_mode != "gpu" && mcts_mode != "tensor") {
+                LOG_SYSTEM_ERROR("Invalid MCTS mode: {}. Use 'cpu', 'gpu', or 'tensor'", mcts_mode);
+                return 1;
+            }
         }
     }
     
@@ -392,6 +421,14 @@ int runSelfPlay(const std::vector<std::string>& args) {
         mcts_settings.batch_params.minimum_viable_batch_size = mcts_config["min_batch_size"].as<int>(512);
         mcts_settings.batch_params.optimal_batch_size = mcts_config["batch_size"].as<int>(1024);
         mcts_settings.max_concurrent_simulations = mcts_config["max_pending_evaluations"].as<int>(2048);
+        
+        // Read tensor MCTS configuration
+        mcts_settings.tensor_batch_size = mcts_config["tensor_batch_size"].as<int>(64);
+        mcts_settings.tensor_max_nodes = mcts_config["tensor_max_nodes"].as<int>(2048);
+        mcts_settings.tensor_max_actions = mcts_config["tensor_max_actions"].as<int>(512);
+        mcts_settings.tensor_max_depth = mcts_config["tensor_max_depth"].as<int>(64);
+        mcts_settings.use_cuda_graphs = mcts_config["use_cuda_graphs"].as<bool>(false);
+        mcts_settings.use_persistent_kernels = mcts_config["use_persistent_kernels"].as<bool>(true);
     } else {
         // Fallback to old format
         mcts_settings.num_simulations = config["mcts_simulations"].as<int>(400);
@@ -411,20 +448,78 @@ int runSelfPlay(const std::vector<std::string>& args) {
     // Self-play settings
     selfplay::SelfPlaySettings sp_settings;
     sp_settings.mcts_settings = mcts_settings;
-    sp_settings.num_parallel_games = 1; // Each worker handles 1 game at a time
+    sp_settings.mcts_mode = mcts_mode;  // Pass the CLI option
+    sp_settings.num_parallel_games = 1; // Default: Each worker handles 1 game at a time
+    sp_settings.parallel_games = 1; // Default
     sp_settings.temperature_threshold = config["mcts_temp_threshold"].as<int>(30);
     sp_settings.high_temperature = config["mcts_temperature"].as<float>(1.0f);
     sp_settings.low_temperature = 0.1f;
     
+    // Read game-specific configuration
+    if (config["game_config"].IsDefined()) {
+        auto game_cfg = config["game_config"];
+        
+        // Gomoku settings
+        if (game_cfg["gomoku_use_renju"].IsDefined()) {
+            sp_settings.game_config.gomoku_use_renju = game_cfg["gomoku_use_renju"].as<bool>();
+        }
+        if (game_cfg["gomoku_use_omok"].IsDefined()) {
+            sp_settings.game_config.gomoku_use_omok = game_cfg["gomoku_use_omok"].as<bool>();
+        }
+        if (game_cfg["gomoku_use_pro_long_opening"].IsDefined()) {
+            sp_settings.game_config.gomoku_use_pro_long_opening = game_cfg["gomoku_use_pro_long_opening"].as<bool>();
+        }
+        
+        // Chess settings
+        if (game_cfg["chess_use_chess960"].IsDefined()) {
+            sp_settings.game_config.chess_use_chess960 = game_cfg["chess_use_chess960"].as<bool>();
+        }
+        
+        // Go settings
+        if (game_cfg["go_komi"].IsDefined()) {
+            sp_settings.game_config.go_komi = game_cfg["go_komi"].as<float>();
+        }
+        if (game_cfg["go_chinese_rules"].IsDefined()) {
+            sp_settings.game_config.go_chinese_rules = game_cfg["go_chinese_rules"].as<bool>();
+        }
+        if (game_cfg["go_enforce_superko"].IsDefined()) {
+            sp_settings.game_config.go_enforce_superko = game_cfg["go_enforce_superko"].as<bool>();
+        }
+    }
+    
+    // Log MCTS mode
+    // LOG_SYSTEM_INFO("MCTS mode: {}", mcts_mode);
+    
     // Parallel settings
     // First try to read from self_play section for consistency
     int num_workers = 4; // default
-    if (config["self_play"]["parallel_games"].IsDefined()) {
-        num_workers = config["self_play"]["parallel_games"].as<int>();
-    } else if (config["pipeline"]["parallel_self_play_workers"].IsDefined()) {
-        num_workers = config["pipeline"]["parallel_self_play_workers"].as<int>();
-    } else if (config["num_parallel_workers"].IsDefined()) {
-        num_workers = config["num_parallel_workers"].as<int>();
+    int tensor_batch_size = 1; // default for non-tensor mode
+    
+    // For tensor MCTS mode, use only 1 worker and let the tensor engine handle parallelism
+    if (mcts_mode == "tensor") {
+        num_workers = 1;  // Single worker for true parallel tensor MCTS
+        
+        // Get the tensor batch size for true parallelism
+        if (mcts_config.IsDefined() && mcts_config["tensor_batch_size"].IsDefined()) {
+            tensor_batch_size = mcts_config["tensor_batch_size"].as<int>(32);
+        } else if (config["self_play"]["parallel_games"].IsDefined()) {
+            tensor_batch_size = config["self_play"]["parallel_games"].as<int>(32);
+        }
+        
+        // Pass tensor batch size to self-play settings for true parallelism
+        sp_settings.parallel_games = tensor_batch_size;
+        sp_settings.num_parallel_games = tensor_batch_size;
+        
+        // LOG_SYSTEM_INFO("Tensor MCTS mode enabled: Using 1 worker with {} games in true parallel", tensor_batch_size);
+    } else {
+        // Regular mode - use multiple workers
+        if (config["self_play"]["parallel_games"].IsDefined()) {
+            num_workers = config["self_play"]["parallel_games"].as<int>();
+        } else if (config["pipeline"]["parallel_self_play_workers"].IsDefined()) {
+            num_workers = config["pipeline"]["parallel_self_play_workers"].as<int>();
+        } else if (config["num_parallel_workers"].IsDefined()) {
+            num_workers = config["num_parallel_workers"].as<int>();
+        }
     }
     
     int num_games = 100; // default
@@ -484,7 +579,7 @@ int runSelfPlay(const std::vector<std::string>& args) {
         auto collector = std::make_shared<GameCollector>();
         
         // Initialize global progress bar for all workers
-        LOG_SYSTEM_INFO("Starting self-play with {} workers for {} total games", num_workers, num_games);
+        // LOG_SYSTEM_INFO("Starting self-play with {} workers for {} total games", num_workers, num_games);
         auto& progress_manager = alphazero::utils::SelfPlayProgressManager::getInstance();
         progress_manager.reset(); // Clear any existing progress
         progress_manager.startGlobalProgress(num_games);
@@ -496,11 +591,11 @@ int runSelfPlay(const std::vector<std::string>& args) {
         if (network_type == "ddw_randwire") {
             std::ifstream model_check(model_path);
             if (!model_check.good()) {
-                LOG_SYSTEM_INFO("Creating initial DDW-RandWire-ResNet model in main thread...");
+                // LOG_SYSTEM_INFO("Creating initial DDW-RandWire-ResNet model in main thread...");
                 auto initial_model = nn::NeuralNetworkFactory::createDDWRandWireResNet(ddw_config);
                 try {
                     std::dynamic_pointer_cast<nn::DDWRandWireResNet>(initial_model)->save(model_path);
-                    LOG_SYSTEM_INFO("Initial model saved to: {}", model_path);
+                    // LOG_SYSTEM_INFO("Initial model saved to: {}", model_path);
                 } catch (const std::exception& e) {
                     LOG_SYSTEM_ERROR("Failed to save initial model: {}", e.what());
                 }
@@ -691,7 +786,7 @@ int runSelfPlay(const std::vector<std::string>& args) {
         }
         
         // Comprehensive cleanup sequence
-        LOG_SYSTEM_INFO("Starting cleanup sequence...");
+        // LOG_SYSTEM_INFO("Starting cleanup sequence...");
         
         // Finish the progress bar
         progress_manager.finish();
@@ -741,7 +836,7 @@ int runSelfPlay(const std::vector<std::string>& args) {
         // Give time for any remaining cleanup
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
         
-        LOG_SYSTEM_INFO("Cleanup sequence completed");
+        // LOG_SYSTEM_INFO("Cleanup sequence completed");
         
         return 0;
         
@@ -797,7 +892,7 @@ int main(int argc, char* argv[]) {
     }
     
     // Ensure all singletons are properly shut down before exit
-    LOG_SYSTEM_INFO("Starting final cleanup...");
+    // LOG_SYSTEM_INFO("Starting final cleanup...");
     
     try {
         // Set global shutdown flag

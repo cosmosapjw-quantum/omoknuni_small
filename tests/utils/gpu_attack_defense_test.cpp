@@ -1,4 +1,7 @@
 #include <gtest/gtest.h>
+
+#ifdef WITH_TORCH
+
 #include "utils/attack_defense_module.h"
 #include "games/gomoku/gomoku_state.h"
 #include "games/chess/chess_state.h"
@@ -388,3 +391,12 @@ TEST_F(GPUAttackDefenseTest, PerformanceBenchmark) {
 } // namespace test
 } // namespace utils
 } // namespace alphazero
+
+#else // !WITH_TORCH
+
+// Dummy test when torch is not available
+TEST(GPUAttackDefenseTest, Disabled) {
+    GTEST_SKIP() << "GPU tests disabled - built without torch support";
+}
+
+#endif // WITH_TORCH

@@ -1,11 +1,23 @@
 // tests/mcts/transposition_integration_test.cpp
 #include <gtest/gtest.h>
 #include "mcts/mcts_engine.h"
-#include "mcts/transposition_table.h"
-#include "nn/neural_network_factory.h"
+// #include "mcts/transposition_table.h"  // REMOVED - not needed
+// #include "nn/neural_network_factory.h"  // REMOVED - not needed
 #include "games/gomoku/gomoku_state.h"
 #include <memory>
 #include <chrono>
+#include <iostream>
+
+// Add early debug output
+namespace {
+    struct EarlyDebugger {
+        EarlyDebugger() {
+            std::cout << "[EARLY_DEBUG] TranspositionIntegrationTest file loaded" << std::endl << std::flush;
+            std::cerr << "[EARLY_DEBUG] TranspositionIntegrationTest file loaded (stderr)" << std::endl << std::flush;
+        }
+    };
+    static EarlyDebugger early_debugger;
+}
 
 using namespace alphazero;
 
@@ -227,15 +239,48 @@ std::vector<alphazero::mcts::NetworkOutput> mockNeuralNetwork(
 class TranspositionIntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        std::cout << "[TEST_DEBUG] SetUp() starting" << std::endl << std::flush;
+        std::cerr << "[TEST_DEBUG] SetUp() starting (stderr)" << std::endl << std::flush;
+        
+        std::cout << "[TEST_DEBUG] About to create settings" << std::endl << std::flush;
+        
         // Create MCTS settings for testing - dramatically reducing for fast tests
         settings.num_simulations = 1;  // Absolute minimum to avoid timeouts
+        std::cout << "[TEST_DEBUG] Set num_simulations" << std::endl << std::flush;
+        
         settings.num_threads = 0;      // Use serial mode to avoid threading issues
+        std::cout << "[TEST_DEBUG] Set num_threads" << std::endl << std::flush;
+        
         settings.batch_size = 1;       // No batching
+        std::cout << "[TEST_DEBUG] Set batch_size" << std::endl << std::flush;
+        
         settings.batch_timeout = std::chrono::milliseconds(1); // Minimal timeout
+        std::cout << "[TEST_DEBUG] Set batch_timeout" << std::endl << std::flush;
+        
         settings.exploration_constant = 1.5f;
+        std::cout << "[TEST_DEBUG] Set exploration_constant" << std::endl << std::flush;
+        
+        settings.use_transposition_table = false;  // Start with TT disabled
+        std::cout << "[TEST_DEBUG] Set use_transposition_table" << std::endl << std::flush;
 
-        // Create MCTS engine
-        engine = std::make_unique<alphazero::mcts::MCTSEngine>(mockNeuralNetwork, settings);
+        std::cout << "[TEST_DEBUG] About to create MCTS engine with mockNeuralNetwork" << std::endl << std::flush;
+        std::cerr << "[TEST_DEBUG] About to create MCTS engine with mockNeuralNetwork (stderr)" << std::endl << std::flush;
+        
+        // Create MCTS engine - THIS IS WHERE SEGFAULT LIKELY OCCURS
+        try {
+            std::cout << "[TEST_DEBUG] Calling MCTSEngine constructor..." << std::endl << std::flush;
+            engine = std::make_unique<alphazero::mcts::MCTSEngine>(mockNeuralNetwork, settings);
+            std::cout << "[TEST_DEBUG] MCTSEngine constructor completed successfully" << std::endl << std::flush;
+        } catch (const std::exception& e) {
+            std::cout << "[TEST_DEBUG] Exception in MCTSEngine constructor: " << e.what() << std::endl << std::flush;
+            throw;
+        } catch (...) {
+            std::cout << "[TEST_DEBUG] Unknown exception in MCTSEngine constructor" << std::endl << std::flush;
+            throw;
+        }
+        
+        std::cout << "[TEST_DEBUG] SetUp() completed" << std::endl << std::flush;
+        std::cerr << "[TEST_DEBUG] SetUp() completed (stderr)" << std::endl << std::flush;
     }
     
     alphazero::mcts::MCTSSettings settings;
@@ -244,9 +289,12 @@ protected:
 
 // Test search with transposition table
 TEST_F(TranspositionIntegrationTest, SearchWithTranspositionTable) {
+    std::cout << "[TEST_DEBUG] Test starting" << std::endl;
+    
     // Create an even more minimal game with no transpositions and minimal depth
     // to absolutely ensure we don't trigger any pathological search behavior
     auto game = std::make_unique<TranspositionGameState>(0, 0, 1);
+    std::cout << "[TEST_DEBUG] Game state created" << std::endl;
 
     // Explicitly set the most conservative settings
     auto settings = engine->getSettings();
@@ -254,11 +302,18 @@ TEST_F(TranspositionIntegrationTest, SearchWithTranspositionTable) {
     settings.temperature = 0.0f; // Deterministic for test stability
     settings.num_threads = 0;
     settings.batch_timeout = std::chrono::milliseconds(1);
+    
+    std::cout << "[TEST_DEBUG] Updating engine settings" << std::endl;
     engine->updateSettings(settings);
 
+    std::cout << "[TEST_DEBUG] Enabling transposition table" << std::endl;
     // Run one search with transposition table
     engine->setUseTranspositionTable(true);
+    
+    std::cout << "[TEST_DEBUG] Starting search" << std::endl;
     auto result = engine->search(*game);
+    
+    std::cout << "[TEST_DEBUG] Search completed, result action: " << result.action << std::endl;
 
     // Just verify that the result is valid (no timeouts or hangs)
     EXPECT_GE(result.action, 0);

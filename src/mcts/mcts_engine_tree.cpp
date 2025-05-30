@@ -3,30 +3,48 @@
 #include "utils/debug_monitor.h"
 #include <iostream>
 #include <algorithm>
+#include <unordered_set>
 
 namespace alphazero {
 namespace mcts {
 
 // Helper method to handle transposition table lookups
 bool MCTSEngine::handleTranspositionMatch(std::shared_ptr<MCTSNode>& selected_child, std::shared_ptr<MCTSNode>& parent) {
+    // std::cout << "[MCTS_DEBUG] handleTranspositionMatch called" << std::endl;
+    
     if (!use_transposition_table_ || !selected_child || selected_child->isTerminal()) {
+        // std::cout << "[MCTS_DEBUG] TT lookup skipped - TT disabled or invalid child" << std::endl;
         return false;
     }
     
     // Check if transposition table exists
     if (!transposition_table_) {
+        // std::cout << "[MCTS_DEBUG] TT lookup skipped - no transposition table" << std::endl;
         return false;
     }
     
     try {
         uint64_t hash = selected_child->getState().getHash();
+        // std::cout << "[MCTS_DEBUG] Looking up hash: " << hash << std::endl;
+        
         std::shared_ptr<MCTSNode> transposition_entry;
         
         transposition_entry = transposition_table_->lookup(hash);
 
-        if (!transposition_entry || transposition_entry == selected_child) {
+        if (!transposition_entry) {
+            // std::cout << "[MCTS_DEBUG] No transposition entry found" << std::endl;
+            // Store this node in the transposition table for future lookups
+            transposition_table_->store(hash, selected_child, 0);
             return false;
         }
+        
+        if (transposition_entry == selected_child) {
+            // std::cout << "[MCTS_DEBUG] Transposition entry is same as selected child" << std::endl;
+            return false;
+        }
+        
+        // std::cout << "[MCTS_DEBUG] Found transposition entry ptr: " << transposition_entry.get() 
+        //           << ", visits: " << transposition_entry->getVisitCount() << std::endl;
         
         // Validate the transposition entry
         bool valid_transposition = false;
@@ -41,11 +59,15 @@ bool MCTSEngine::handleTranspositionMatch(std::shared_ptr<MCTSNode>& selected_ch
         }
         
         if (!valid_transposition) {
+            // std::cout << "[MCTS_DEBUG] Invalid transposition entry" << std::endl;
             return false;
         }
         
+        // std::cout << "[MCTS_DEBUG] Valid transposition, updating parent reference" << std::endl;
+        
         // Update parent's reference from selected_child to transposition_entry
         if (!parent->updateChildReference(selected_child, transposition_entry)) {
+            // std::cout << "[MCTS_DEBUG] Failed to update parent child reference" << std::endl;
             return false;
         }
         
@@ -60,10 +82,15 @@ bool MCTSEngine::handleTranspositionMatch(std::shared_ptr<MCTSNode>& selected_ch
         
         // Update the reference to use the transposition table entry
         selected_child = transposition_entry;
+        // std::cout << "[MCTS_DEBUG] Successfully used transposition entry" << std::endl;
         return true;
-    } catch (...) {
+    } catch (const std::exception& e) {
+        std::cerr << "[MCTS_ERROR] Exception in handleTranspositionMatch: " << e.what() << std::endl;
         // If any exception occurs during transposition table lookup or use,
         // continue with the current selected_child.
+        return false;
+    } catch (...) {
+        std::cerr << "[MCTS_ERROR] Unknown exception in handleTranspositionMatch" << std::endl;
         return false;
     }
 }
@@ -88,8 +115,25 @@ std::shared_ptr<MCTSNode> MCTSEngine::traverseTreeForLeaf(std::shared_ptr<MCTSNo
     traversal_count++;
     int depth = 0;
     
+    // DEBUG: Track nodes visited to detect circular references
+    std::unordered_set<void*> visited_nodes;
+    visited_nodes.insert(current.get());
+    
+    // std::cout << "[MCTS_DEBUG] Starting tree traversal #" << traversal_count << std::endl;
+    
     while (current && !current->isLeaf() && !current->isTerminal()) {
         depth++;
+        
+        // std::cout << "[MCTS_DEBUG] At depth " << depth << ", node ptr: " << current.get() 
+        //           << ", hash: " << current->getState().getHash() 
+        //           << ", visits: " << current->getVisitCount() 
+        //           << ", children: " << current->getChildren().size() << std::endl;
+        
+        // Check for infinite loop
+        if (depth > 100) {
+            std::cerr << "[MCTS_ERROR] Tree traversal exceeded depth 100 - possible infinite loop!" << std::endl;
+            return nullptr;
+        }
         
         // Allow traversal through nodes with pending evaluation 
         // during early iterations to break potential deadlocks
@@ -97,6 +141,7 @@ std::shared_ptr<MCTSNode> MCTSEngine::traverseTreeForLeaf(std::shared_ptr<MCTSNo
         
         // Check if current node has pending evaluation
         if (current->hasPendingEvaluation() && !allow_pending_traversal) {
+            // std::cout << "[MCTS_DEBUG] Node has pending evaluation, returning null" << std::endl;
             // Remove virtual loss from path since we're not going deeper
             for (auto& node_in_path : path) {
                 node_in_path->removeVirtualLoss(settings_.virtual_loss);
@@ -111,9 +156,21 @@ std::shared_ptr<MCTSNode> MCTSEngine::traverseTreeForLeaf(std::shared_ptr<MCTSNo
             settings_.exploration_constant, settings_.use_rave, settings_.rave_constant);
         
         if (!selected_child) {
+            // std::cout << "[MCTS_DEBUG] No child selected, returning parent as leaf" << std::endl;
             // If no child is selected, remove virtual loss from parent and return parent as leaf
             parent_for_selection->removeVirtualLoss(settings_.virtual_loss);
             break;  
+        }
+
+        // std::cout << "[MCTS_DEBUG] Selected child ptr: " << selected_child.get() 
+        //           << ", action: " << selected_child->getAction() << std::endl;
+
+        // Check for circular reference before adding virtual loss
+        if (visited_nodes.count(selected_child.get()) > 0) {
+            std::cerr << "[MCTS_ERROR] Circular reference detected! Child " << selected_child.get() 
+                      << " already visited in this traversal!" << std::endl;
+            parent_for_selection->removeVirtualLoss(settings_.virtual_loss);
+            return nullptr;
         }
 
         // Tentatively, the traversal will proceed with selected_child
@@ -121,12 +178,22 @@ std::shared_ptr<MCTSNode> MCTSEngine::traverseTreeForLeaf(std::shared_ptr<MCTSNo
         
         // Handle transposition table lookup
         if (use_transposition_table_ && transposition_table_) {
-            handleTranspositionMatch(selected_child, parent_for_selection);
+            // std::cout << "[MCTS_DEBUG] Checking transposition table for hash: " 
+            //           << selected_child->getState().getHash() << std::endl;
+            bool tt_match = handleTranspositionMatch(selected_child, parent_for_selection);
+            if (tt_match) {
+                // std::cout << "[MCTS_DEBUG] Transposition match found, updated to ptr: " 
+                //           << selected_child.get() << std::endl;
+            }
         }
         
         current = selected_child;
         path.push_back(current);
+        visited_nodes.insert(current.get());
     }
+    
+    // std::cout << "[MCTS_DEBUG] Tree traversal complete at depth " << depth 
+    //           << ", returning node ptr: " << (current ? current.get() : nullptr) << std::endl;
     
     return current;
 }
@@ -334,6 +401,7 @@ std::vector<float> MCTSEngine::getActionProbabilities(std::shared_ptr<MCTSNode> 
     for (auto child : children) {
         counts.push_back(static_cast<float>(child->getVisitCount()));
     }
+    
 
     // Handle different temperature regimes
     std::vector<float> probabilities;

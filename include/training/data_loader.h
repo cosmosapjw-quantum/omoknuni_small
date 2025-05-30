@@ -10,11 +10,15 @@
 #include <thread>
 #include <queue>
 #include <future>
+#ifdef WITH_TORCH
 #include <torch/torch.h>
+#endif
 #include "training/dataset.h"
 
 namespace alphazero {
 namespace training {
+
+#ifdef WITH_TORCH
 
 /**
  * @brief Batch of training data
@@ -169,6 +173,14 @@ private:
     // Worker thread function
     void worker_function();
 };
+
+#else // !WITH_TORCH
+// Dummy class when torch is not available
+class DataLoader {
+public:
+    DataLoader(std::shared_ptr<Dataset>, size_t = 32, size_t = 4, bool = true) {}
+};
+#endif // WITH_TORCH
 
 } // namespace training
 } // namespace alphazero

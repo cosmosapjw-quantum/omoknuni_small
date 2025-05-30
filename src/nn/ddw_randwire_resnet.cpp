@@ -675,11 +675,7 @@ DDWRandWireResNet::DDWRandWireResNet(const DDWRandWireResNetConfig& config)
     // Set device to CPU by default (will be moved by factory if needed)
     device_ = torch::kCPU;
     
-    // Initialize tensor pool
-    std::vector<int64_t> default_shape = {
-        32, config.input_channels, config.board_height, config.board_width
-    };
-    tensor_pool_.init(default_shape, 4);
+    // No longer using tensor pool
 }
 
 std::tuple<torch::Tensor, torch::Tensor> DDWRandWireResNet::forward(torch::Tensor x) {
@@ -841,9 +837,7 @@ int64_t DDWRandWireResNet::getPolicySize() const {
     return config_.output_size;
 }
 
-void DDWRandWireResNet::cleanupTensorPool() {
-    tensor_pool_.cleanup();
-}
+// cleanupTensorPool method removed - no longer using tensor pools
 
 torch::Tensor DDWRandWireResNet::prepareInputTensor(
     const std::vector<std::unique_ptr<core::IGameState>>& states) {
@@ -878,7 +872,7 @@ torch::Tensor DDWRandWireResNet::prepareInputTensor(
         static_cast<int64_t>(width)
     };
     
-    // Use tensor pool if available
+    // Allocate tensor directly
     torch::Tensor input_tensor;
     if (target_device.is_cuda() && gpu_memory_pool_) {
         // GPUMemoryPool requires dtype, device_id, and optional stream
@@ -886,7 +880,7 @@ torch::Tensor DDWRandWireResNet::prepareInputTensor(
         input_tensor = gpu_memory_pool_->allocateTensor(
             tensor_shape, torch::kFloat32, device_id, nullptr);
     } else {
-        input_tensor = tensor_pool_.getCPUTensor(tensor_shape);
+        input_tensor = torch::empty(tensor_shape, torch::kFloat32);
     }
     
     // Fill tensor with state observations
@@ -908,69 +902,6 @@ torch::Tensor DDWRandWireResNet::prepareInputTensor(
     return input_tensor.to(target_device);
 }
 
-// TensorPool implementation
-void DDWRandWireResNet::TensorPool::init(const std::vector<int64_t>& shape, size_t size) {
-    pool_size = size;
-    cpu_tensors.clear();
-    gpu_tensors.clear();
-    
-    // Pre-allocate CPU tensors
-    for (size_t i = 0; i < pool_size; ++i) {
-        cpu_tensors.push_back(torch::empty(shape, torch::kFloat32));
-    }
-    
-    // GPU tensors will be allocated on demand
-    current_cpu_idx = 0;
-    current_gpu_idx = 0;
-}
-
-torch::Tensor DDWRandWireResNet::TensorPool::getCPUTensor(const std::vector<int64_t>& shape) {
-    if (cpu_tensors.empty() || current_cpu_idx >= cpu_tensors.size()) {
-        return torch::empty(shape, torch::kFloat32);
-    }
-    
-    auto& tensor = cpu_tensors[current_cpu_idx];
-    current_cpu_idx = (current_cpu_idx + 1) % pool_size;
-    
-    // Resize if necessary
-    if (tensor.sizes() != shape) {
-        tensor.resize_(shape);
-    }
-    
-    return tensor;
-}
-
-torch::Tensor DDWRandWireResNet::TensorPool::getGPUTensor(
-    const std::vector<int64_t>& shape, torch::Device device) {
-    if (gpu_tensors.empty()) {
-        // Allocate GPU tensors on first use
-        for (size_t i = 0; i < pool_size; ++i) {
-            gpu_tensors.push_back(
-                torch::empty(shape, torch::TensorOptions().dtype(torch::kFloat32).device(device)));
-        }
-    }
-    
-    if (current_gpu_idx >= gpu_tensors.size()) {
-        return torch::empty(shape, torch::TensorOptions().dtype(torch::kFloat32).device(device));
-    }
-    
-    auto& tensor = gpu_tensors[current_gpu_idx];
-    current_gpu_idx = (current_gpu_idx + 1) % pool_size;
-    
-    // Resize if necessary
-    if (tensor.sizes() != shape) {
-        tensor.resize_(shape);
-    }
-    
-    return tensor;
-}
-
-void DDWRandWireResNet::TensorPool::cleanup() {
-    cpu_tensors.clear();
-    gpu_tensors.clear();
-    current_cpu_idx = 0;
-    current_gpu_idx = 0;
-}
 
 } // namespace nn
 } // namespace alphazero

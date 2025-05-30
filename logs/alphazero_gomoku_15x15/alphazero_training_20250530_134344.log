@@ -1,0 +1,341 @@
+[2025-05-30 13:43:52.654] [system] [info] [12478] Logging system initialized. Log directory: logs
+
+Progress: 0/100 (0.0%)
+[TT_DEBUG] PHMapTranspositionTable constructor called
+[TT_DEBUG] max_entries calculated: 1342177
+[TT_DEBUG] num_shards: 48
+[TT_DEBUG] About to reserve capacity
+[TT_DEBUG] Reserved capacity successfully
+[TT_DEBUG] Skipping progress manager check to avoid potential deadlock
+[TT_DEBUG] PHMapTranspositionTable constructor completed
+[2025-05-30 13:43:55.628] [system] [info] [12530] GPU warmup completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x44f58280000
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[TT_DEBUG] PHMapTranspositionTable constructor called
+[TT_DEBUG] max_entries calculated: 1342177
+[TT_DEBUG] num_shards: 48
+[TT_DEBUG] About to reserve capacity
+[TT_DEBUG] Reserved capacity successfully
+[TT_DEBUG] Skipping progress manager check to avoid potential deadlock
+[TT_DEBUG] PHMapTranspositionTable constructor completed
+[2025-05-30 13:43:56.139] [system] [info] [12531] GPU warmup completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x44fd0280000
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[2025-05-30 13:43:56.309] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=1
+[TT_DEBUG] PHMapTranspositionTable constructor called
+[TT_DEBUG] max_entries calculated: 1342177
+[TT_DEBUG] num_shards: 48
+[TT_DEBUG] About to reserve capacity
+[TT_DEBUG] Reserved capacity successfully
+[TT_DEBUG] Skipping progress manager check to avoid potential deadlock
+[TT_DEBUG] PHMapTranspositionTable constructor completed
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x44f58288180
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[2025-05-30 13:43:56.734] [system] [info] [12532] GPU warmup completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x44fea280000
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[2025-05-30 13:43:56.815] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=2
+[TT_DEBUG] PHMapTranspositionTable constructor called
+[TT_DEBUG] max_entries calculated: 1342177
+[TT_DEBUG] num_shards: 48
+[TT_DEBUG] About to reserve capacity
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x44fd0289d80
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[TT_DEBUG] Reserved capacity successfully
+[TT_DEBUG] Skipping progress manager check to avoid potential deadlock
+[TT_DEBUG] PHMapTranspositionTable constructor completed
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[2025-05-30 13:43:57.375] [system] [info] [12533] GPU warmup completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45188970000
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[2025-05-30 13:43:58.128] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=3
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45010017000
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x44f5828dc80
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[2025-05-30 13:43:58.571] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=4
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45188978180
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[2025-05-30 13:43:59.493] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=5
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x4510201c080
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[2025-05-30 13:44:00.444] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=2, total_states=32, count=6
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45018011f80
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45054471f80
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[2025-05-30 13:44:00.959] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=7
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x450ee01d900
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[2025-05-30 13:44:01.699] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=8
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45102010e00
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[2025-05-30 13:44:02.841] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=9
+[2025-05-30 13:44:02.956] [system] [error] [12542] SharedInferenceQueue::processingLoop - Hit iteration limit! batch_size=1, total_states=16, count=10
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x450ea01fc00
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x44f5828dc80
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45188978180
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45102011180
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45018011f80
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x7fcc6401f880
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x7fcc2a01f180
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x4513219fc00
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x7fcc64013800
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Batched tree search completed
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x45188978180
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Starting search execution
+[MCTS_DEBUG] runSearch: Creating root node
+[MCTS_DEBUG] runSearch: Root node created successfully, ptr: 0x44f58286c80
+[MCTS_DEBUG] runSearch: Initializing game state pool
+[MCTS_DEBUG] runSearch: Setting up batch parameters
+[MCTS_DEBUG] runSearch: Expanding root node (isTerminal=0)
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Root node expanded successfully
+[MCTS_DEBUG] runSearch: Starting main search execution (num_threads=6)
+[MCTS_DEBUG] runSearch: About to call executeBatchedTreeSearch
+[MCTS_DEBUG] runSearch: Creating root_state clone
+[MCTS_DEBUG] runSearch: root_state cloned successfully, calling executeBatchedTreeSearch

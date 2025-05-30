@@ -46,6 +46,7 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o: /home/cosmos
   /home/cosmos/omoknuni_small/include/mcts/memory_pressure_monitor.h \
   /home/cosmos/omoknuni_small/include/mcts/node_tracker.h \
   /home/cosmos/omoknuni_small/include/mcts/phmap_transposition_table.h \
+  /home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h \
   /home/cosmos/omoknuni_small/include/mcts/transposition_table.h \
   /home/cosmos/omoknuni_small/include/nn/ddw_randwire_resnet.h \
   /home/cosmos/omoknuni_small/include/nn/neural_network.h \
@@ -5806,6 +5807,8 @@ CMakeFiles/omoknuni_cli_final.dir/src/cli/omoknuni_cli_final.cpp.o:
 
 /usr/include/x86_64-linux-gnu/bits/select.h:
 
+/usr/include/x86_64-linux-gnu/bits/sched.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/greater_equal_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/gradient_native.h:
@@ -8260,12 +8263,6 @@ _deps/tracy-src/public/common/TracyMutex.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_pow_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cudnn_rnn_flatten_weight.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_conv_depthwise2d_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_reshape_from_tensor_ops.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_sinh.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cudnn_rnn_backward_ops.h:
@@ -8576,6 +8573,10 @@ _deps/tracy-src/public/common/TracyApi.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_sobol_engine_initialize_state_ops.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/to_sparse_bsc_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_choose_qparams_per_tensor_native.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_dimI_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_log1p_native.h:
@@ -8688,10 +8689,6 @@ _deps/tracy-src/public/common/TracyApi.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/complex_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/greater_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_clamp_max.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/atleast_1d_native.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Char_ops.h:
@@ -8779,6 +8776,12 @@ _deps/tracy-src/public/common/TracyApi.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/mkldnn_linear_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/threshold_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_test_autograd_multiple_dispatch_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Byte_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_broadcast_to.h:
 
 _deps/tracy-src/public/client/TracySysTime.hpp:
 
@@ -9128,6 +9131,14 @@ _deps/tracy-src/public/common/TracyAlloc.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_adaptive_avg_pool3d_backward_ops.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/angle_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_get_lengths_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/triangular_solve_meta.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_new_zeros_with_same_feature_meta.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_rowwise_prune.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/linalg_matrix_rank_ops.h:
@@ -9260,6 +9271,10 @@ _deps/tracy-src/public/common/TracyForceInline.hpp:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_dyn_quant_matmul_4bit_ops.h:
 
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_test_functorch_fallback.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/TensorMeta.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cslt_sparse_mm_search.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/special_shifted_chebyshev_polynomial_w_native.h:
@@ -9329,10 +9344,6 @@ _deps/tracy-src/public/common/TracyForceInline.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/trapezoid.h:
 
 /opt/libtorch-2.7.0-cu128/include/c10/util/Metaprogramming.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_test_functorch_fallback.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/TensorMeta.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_validate_sparse_bsc_tensor_args_ops.h:
 
@@ -9443,28 +9454,6 @@ _deps/tracy-src/public/client/TracyCallstack.hpp:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_nnpack_available_native.h:
 
 _deps/tracy-src/public/client/TracyProfiler.hpp:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_unsafe_masked_index_put_accumulate_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_adaptive_avg_pool3d_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_conj_physical_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_norm_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/to_sparse_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/combinations_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/core/TensorBase.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dimI_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/minimum_meta.h:
-
-/home/cosmos/omoknuni_small/include/core/game_export.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_tanh.h:
 
 /lib/x86_64-linux-gnu/libmvec.so.1:
 
@@ -9669,6 +9658,34 @@ _deps/tracy-src/public/client/TracyCallstack.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_log_softmax_backward_data.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/set_data.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_adaptive_avg_pool3d_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_conj_physical_ops.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_norm_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/to_sparse_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_tanh.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/combinations_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/core/TensorBase.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_dimI_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/minimum_meta.h:
+
+/home/cosmos/omoknuni_small/include/core/game_export.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_unsafe_masked_index_put_accumulate_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cudnn_rnn_flatten_weight.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_conv_depthwise2d_native.h:
+
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_reshape_from_tensor_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/TensorNames.h:
 
@@ -10028,14 +10045,6 @@ _deps/tracy-src/public/client/TracyCallstack.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/detail/PrivateUse1HooksInterface.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_expm1_native.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_rfftfreq_ops.h:
-
-/usr/include/c++/13/array:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fused_sdp_choice_native.h:
-
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Half_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_select_backward.h:
@@ -10260,19 +10269,13 @@ _deps/mimalloc-src/include/mimalloc.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Byte.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_test_autograd_multiple_dispatch_native.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_fused_sdp_choice_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_cast_Byte_native.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_expm1_native.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_broadcast_to.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_rfftfreq_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/angle_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_nested_get_lengths_ops.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_new_zeros_with_same_feature_meta.h:
-
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/triangular_solve_meta.h:
+/usr/include/c++/13/array:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/fft_fftshift_native.h:
 
@@ -11048,6 +11051,8 @@ lib/Release/libmimalloc.a:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/sparse_bsr_tensor_native.h:
 
+/home/cosmos/omoknuni_small/include/mcts/shared_evaluation_server.h:
+
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_masked_softmax_backward_native.h:
 
 /usr/include/c++/13/bits/requires_hosted.h:
@@ -11682,9 +11687,9 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/_sparse_semi_structured_apply_ops.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/_choose_qparams_per_tensor_native.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/_foreach_clamp_max.h:
 
-/opt/libtorch-2.7.0-cu128/include/ATen/ops/to_sparse_bsc_ops.h:
+/opt/libtorch-2.7.0-cu128/include/ATen/ops/greater_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/hardtanh_ops.h:
 
@@ -12653,8 +12658,6 @@ _deps/tracy-src/public/client/tracy_concurrentqueue.h:
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/erf_ops.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/log_sigmoid_backward_ops.h:
-
-/usr/include/x86_64-linux-gnu/bits/sched.h:
 
 /opt/libtorch-2.7.0-cu128/include/ATen/ops/log_sigmoid_forward.h:
 

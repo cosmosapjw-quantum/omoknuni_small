@@ -224,7 +224,15 @@ std::shared_ptr<GPUMemoryPool::MemoryBlock> GPUMemoryPool::allocateBlock(
                 
                 total_in_use_.fetch_add(alloc.block->size, std::memory_order_relaxed);
                 
-                return std::shared_ptr<MemoryBlock>(alloc.block.get(), [](MemoryBlock*){});
+                // Create shared_ptr with proper cleanup
+                auto* pool_ptr = this;
+                size_t block_size = alloc.block->size;
+                return std::shared_ptr<MemoryBlock>(alloc.block.get(), 
+                    [pool_ptr, block_size](MemoryBlock* block) {
+                        // Mark as not in use and update stats
+                        block->in_use.store(false, std::memory_order_release);
+                        pool_ptr->total_in_use_.fetch_sub(block_size, std::memory_order_relaxed);
+                    });
             }
         }
     }
@@ -245,23 +253,27 @@ std::shared_ptr<GPUMemoryPool::MemoryBlock> GPUMemoryPool::allocateBlock(
     total_allocated_.fetch_add(size, std::memory_order_relaxed);
     total_in_use_.fetch_add(size, std::memory_order_relaxed);
 
-    // Create shared_ptr from the block
-    auto shared_block = std::make_shared<MemoryBlock>();
-    shared_block->size = block->size;
-    shared_block->device_id = block->device_id;
-    shared_block->device_ptr = block->device_ptr;
-    shared_block->host_pinned_ptr = block->host_pinned_ptr;
-    shared_block->in_use.store(true);
-    shared_block->last_stream = block->last_stream;
+    // Store in large_allocations_ before creating shared_ptr
+    LargeAllocation large_alloc;
+    large_alloc.block = std::move(block);
+    large_alloc.last_used = std::chrono::steady_clock::now();
     
-    // Store for future reuse
-    std::lock_guard<std::mutex> lock(large_alloc_mutex_);
-    LargeAllocation alloc;
-    alloc.block = std::move(block);
-    alloc.last_used = std::chrono::steady_clock::now();
-    large_allocations_.push_back(std::move(alloc));
+    // Get raw pointer before moving
+    MemoryBlock* raw_ptr = large_alloc.block.get();
     
-    return shared_block;
+    {
+        std::lock_guard<std::mutex> lock(large_alloc_mutex_);
+        large_allocations_.push_back(std::move(large_alloc));
+    }
+    
+    // Create shared_ptr with proper cleanup
+    auto* pool_ptr = this;
+    return std::shared_ptr<MemoryBlock>(raw_ptr, 
+        [pool_ptr, size](MemoryBlock* block) {
+            // Mark as not in use and update stats
+            block->in_use.store(false, std::memory_order_release);
+            pool_ptr->total_in_use_.fetch_sub(size, std::memory_order_relaxed);
+        });
 }
 
 torch::Tensor GPUMemoryPool::tensorFromMemory(
@@ -270,8 +282,8 @@ torch::Tensor GPUMemoryPool::tensorFromMemory(
     torch::ScalarType dtype,
     int device_id
 ) {
-    // CRITICAL FIX: Don't use torch::from_blob for GPU memory as it doesn't manage lifecycle
-    // Instead, create a proper tensor and copy data
+    // For now, we need to copy to ensure proper memory management
+    // TODO: Implement a custom storage that can share ownership with our memory pool
     
     auto options = torch::TensorOptions()
         .dtype(dtype)
@@ -283,8 +295,11 @@ torch::Tensor GPUMemoryPool::tensorFromMemory(
     // Calculate total bytes
     size_t total_bytes = tensor.numel() * tensor.element_size();
     
-    // Copy data to the tensor (this creates a managed copy)
-    cudaMemcpy(tensor.data_ptr(), data, total_bytes, cudaMemcpyDeviceToDevice);
+    // Copy data to the tensor
+    cudaError_t err = cudaMemcpy(tensor.data_ptr(), data, total_bytes, cudaMemcpyDeviceToDevice);
+    if (err != cudaSuccess) {
+        LOG_SYSTEM_ERROR("Failed to copy tensor data: {}", cudaGetErrorString(err));
+    }
     
     return tensor;
 }

@@ -9,7 +9,7 @@
 #include "games/gomoku/gomoku_state.h"
 #include "utils/memory_tracker.h"
 #include "utils/shutdown_manager.h"
-#include "core/tensor_pool.h"
+// #include "core/tensor_pool.h"  // File doesn't exist
 #include "utils/progress_bar.h"
 #include "utils/profiler.h"  // Use Tracy profiler that exists
 #include "mcts/shared_inference_queue.h"
@@ -27,8 +27,10 @@
 #include "core/game_export.h"
 
 // PyTorch/LibTorch headers for CUDA memory management
+#ifdef WITH_TORCH
 #include <torch/torch.h>
 #include <c10/cuda/CUDACachingAllocator.h>
+#endif
 
 namespace alphazero {
 namespace selfplay {
@@ -150,7 +152,7 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     }
     
     // Enable tensor pool periodic logging for memory monitoring
-    core::GlobalTensorPool::getInstance().setPeriodicLogging(true, std::chrono::seconds(30));
+    // core::GlobalTensorPool::getInstance().setPeriodicLogging(true, std::chrono::seconds(30)); // Removed - file doesn't exist
     
     // Track initial memory
     // alphazero::utils::trackMemory("SelfPlayManager created");
@@ -285,11 +287,11 @@ SelfPlayManager::SelfPlayManager(std::shared_ptr<nn::NeuralNetwork> neural_net,
     }
     
     // PERFORMANCE FIX: Remove synchronization after warmup - let GPU run async
-    #ifdef WITH_TORCH
+#ifdef WITH_TORCH
     if (torch::cuda::is_available()) {
-        LOG_SYSTEM_INFO("GPU warmup completed");
+        // LOG_SYSTEM_INFO("GPU warmup completed");
     }
-    #endif
+#endif
 }
 
 SelfPlayManager::~SelfPlayManager() {
@@ -434,7 +436,7 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
                     utils::GameStatePoolManager::getInstance().clearAllPools();
                     
                     // Skip GPU sync on shutdown to avoid hanging
-                    #ifdef WITH_TORCH
+#ifdef WITH_TORCH
                     if (torch::cuda::is_available() && !utils::isShutdownRequested()) {
                     try {
                         // Use a separate thread with timeout for GPU operations
@@ -464,7 +466,7 @@ std::vector<alphazero::selfplay::GameData> alphazero::selfplay::SelfPlayManager:
                         }
                     } catch (...) {}
                     }
-                    #endif
+#endif
                 }
             }
         });
@@ -688,10 +690,12 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                     if (monitor.isMemoryPressureHigh()) {
                         monitor.logEvent("HIGH MEMORY PRESSURE DETECTED - Triggering aggressive cleanup");
                         utils::GameStatePoolManager::getInstance().clearAllPools();
+#ifdef WITH_TORCH
                         if (torch::cuda::is_available()) {
                             torch::cuda::synchronize();
                             c10::cuda::CUDACachingAllocator::emptyCache();
                         }
+#endif
                     }
                 }
                 
@@ -747,14 +751,14 @@ alphazero::selfplay::GameData alphazero::selfplay::SelfPlayManager::generateGame
                 // CRITICAL FIX: Remove aggressive cleanup after every move - only clean up periodically
                 if (move_count % 20 == 0) {
                     utils::GameStatePoolManager::getInstance().clearAllPools();
-                    #ifdef WITH_TORCH
+#ifdef WITH_TORCH
                     if (torch::cuda::is_available() && move_count % 50 == 0) {
                         // Only clear CUDA cache every 50 moves
                         try {
                             c10::cuda::CUDACachingAllocator::emptyCache();
                         } catch (...) {}
                     }
-                    #endif
+#endif
                 }
                 
                 // Capture memory snapshot after search
